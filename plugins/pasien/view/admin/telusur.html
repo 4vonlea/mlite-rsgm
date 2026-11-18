@@ -1,0 +1,481 @@
+<style>
+  .rsgm-telusur-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 12px 16px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  .rsgm-krit-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    color: #334155;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .rsgm-krit-btn:hover {
+    border-color: #93c5fd;
+    background: #f0f9ff;
+    color: #0369a1;
+  }
+  .rsgm-krit-btn.is-active {
+    background: #0284c7;
+    border-color: #0284c7;
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(2, 132, 199, 0.22);
+  }
+  .rsgm-krit-cnt {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 1px 7px;
+    border-radius: 999px;
+    background: #f1f5f9;
+    color: #475569;
+  }
+  .rsgm-krit-btn.is-active .rsgm-krit-cnt {
+    background: rgba(255, 255, 255, 0.22);
+    color: #ffffff;
+  }
+  .rsgm-telusur-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 16px;
+    background: #ffffff;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  .rsgm-telusur-tag {
+    display: inline-flex;
+    align-items: center;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 999px;
+    border: 1px solid #e2e8f0;
+    background: #f1f5f9;
+    color: #475569;
+    margin: 2px 4px 2px 0;
+  }
+  .rsgm-telusur-tag.tone-emerald { background: #ecfdf5; border-color: #a7f3d0; color: #047857; }
+  .rsgm-telusur-tag.tone-amber { background: #fffbeb; border-color: #fde68a; color: #b45309; }
+  .rsgm-telusur-tag.tone-rose { background: #fff1f2; border-color: #fecdd3; color: #be123c; }
+  .rsgm-telusur-tag.tone-indigo { background: #eef2ff; border-color: #c7d2fe; color: #4338ca; }
+  .rsgm-telusur-tag.tone-purple { background: #faf5ff; border-color: #e9d5ff; color: #7e22ce; }
+  .rsgm-telusur-tag.tone-orange { background: #fff7ed; border-color: #fed7aa; color: #c2410c; }
+  .rsgm-telusur-tag.tone-sky { background: #f0f9ff; border-color: #bae6fd; color: #0369a1; }
+  .rsgm-stat-pill {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 5px;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    color: #334155;
+    margin: 1px 3px 1px 0;
+  }
+  .rsgm-stat-pill.has-val {
+    background: #f0f9ff;
+    border-color: #bae6fd;
+    color: #0369a1;
+  }
+  .rsgm-act-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+  .rsgm-act-btn {
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 11.5px;
+    padding: 4px 9px;
+  }
+</style>
+
+<div class="row" style="margin-bottom:80px;">
+  <div class="col-md-12">
+    <div class="panel panel-default" style="border-color:#e2e8f0; box-shadow:0 1px 3px rgba(15,23,42,0.04);">
+      <div class="panel-heading rsgm-panel-head" style="background:#ffffff; border-bottom:1px solid #e2e8f0;">
+        <h3 class="panel-title" style="color:#0f172a; font-weight:700;">
+          <i class="fa fa-search-plus" style="margin-right:6px; color:#0284c7;"></i> Telusur e-RM Pasien (Masuk s.d. Kondisi Akhir)
+        </h3>
+        <div style="font-size:12px; color:#64748b;">
+          Telusur rekam medis elektronik lengkap lintas kunjungan untuk operasional RM &amp; survei akreditasi (MRMIK)
+        </div>
+      </div>
+
+      <!-- FILTER KRITERIA 1-KLIK -->
+      <div class="rsgm-telusur-pills" id="telusurKriteriaBar">
+        <button type="button" class="rsgm-krit-btn" data-kriteria="all">
+          <i class="fa fa-list"></i> <span>Semua Kunjungan</span> <span class="rsgm-krit-cnt" id="cnt-all">0</span>
+        </button>
+        <button type="button" class="rsgm-krit-btn" data-kriteria="pulang">
+          <i class="fa fa-check-circle-o"></i> <span>Masuk &rarr; Pulang</span> <span class="rsgm-krit-cnt" id="cnt-pulang">0</span>
+        </button>
+        <button type="button" class="rsgm-krit-btn" data-kriteria="dirujuk">
+          <i class="fa fa-ambulance"></i> <span>Dirujuk</span> <span class="rsgm-krit-cnt" id="cnt-dirujuk">0</span>
+        </button>
+        <button type="button" class="rsgm-krit-btn" data-kriteria="meninggal">
+          <i class="fa fa-heartbeat"></i> <span>Meninggal</span> <span class="rsgm-krit-cnt" id="cnt-meninggal">0</span>
+        </button>
+        <button type="button" class="rsgm-krit-btn" data-kriteria="operasi">
+          <i class="fa fa-scissors"></i> <span>Operasi</span> <span class="rsgm-krit-cnt" id="cnt-operasi">0</span>
+        </button>
+        <button type="button" class="rsgm-krit-btn" data-kriteria="icu">
+          <i class="fa fa-bed"></i> <span>ICU</span> <span class="rsgm-krit-cnt" id="cnt-icu">0</span>
+        </button>
+        <button type="button" class="rsgm-krit-btn" data-kriteria="aps">
+          <i class="fa fa-sign-out"></i> <span>APS</span> <span class="rsgm-krit-cnt" id="cnt-aps">0</span>
+        </button>
+      </div>
+
+      <!-- TOOLBAR TANGGAL & PENCARIAN -->
+      <div class="rsgm-telusur-toolbar">
+        <div style="display:flex; flex-wrap:wrap; align-items:center; gap:8px;">
+          <div class="rsgm-date-range">
+            <i class="fa fa-calendar rsgm-date-ico"></i>
+            <input type="text" id="telusurTglAwal" class="form-control input-sm telusur-date" placeholder="Dari Tgl (Semua)" autocomplete="off">
+            <span class="rsgm-date-sep">&ndash;</span>
+            <input type="text" id="telusurTglAkhir" class="form-control input-sm telusur-date" placeholder="Sampai Tgl (Semua)" autocomplete="off">
+          </div>
+          <button type="button" class="btn btn-sm btn-default" id="btnTelusurResetDate" title="Kosongkan filter tanggal untuk melihat seluruh periode">
+            Semua Periode
+          </button>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:6px; flex:1 1 280px; max-width:440px;">
+          <input type="text" id="telusurSearch" class="form-control input-sm" value="{$init_search}" placeholder="Cari No. RM, No. Rawat, Nama Pasien, Poli, Dokter...">
+          <button type="button" class="btn btn-sm btn-primary" id="btnTelusurCari">
+            <i class="fa fa-search"></i> Cari
+          </button>
+        </div>
+      </div>
+
+      <div class="panel-body" style="padding:0;">
+        <div class="table-responsive" style="margin:0;">
+          <table class="table table-hover" style="margin:0; width:100%;">
+            <thead>
+              <tr style="background:#f8fafc; color:#334155;">
+                <th style="white-space:nowrap;">Tgl Masuk / No. Rawat</th>
+                <th>Pasien</th>
+                <th>Unit, DPJP &amp; Diagnosa</th>
+                <th>Kriteria / Status Akhir</th>
+                <th>Kelengkapan e-RM</th>
+                <th style="width:240px;">Aksi Telusur</th>
+              </tr>
+            </thead>
+            <tbody id="telusurTableBody">
+              <tr><td colspan="6" class="text-center" style="padding:28px; color:#64748b;">Memuat data kunjungan...</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <nav class="rsgm-table-footer" style="padding:12px 16px; border-top:1px solid #e2e8f0; background:#ffffff;">
+          <div>
+            <span class="rsgm-total-pill" id="telusurTotalInfo">Total: 0 kunjungan</span>
+          </div>
+          <div>
+            <ul class="pagination no-margin" id="telusurPagination"></ul>
+          </div>
+        </nav>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ERM TERINTEGRASI -->
+<div class="modal fade" id="riwayatModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-full" role="document">
+    <div class="modal-content"></div>
+  </div>
+</div>
+
+<script type="text/javascript">
+(function($) {
+  'use strict';
+  if (!$) return;
+
+  var endpointUrl = '{?=url([ADMIN, "pasien", "telusurdata"])?}';
+  var activeKriteria = '{$init_kriteria}' || 'all';
+  var currentPage = 1;
+
+  function isSafeHttpUrl(url) {
+    var s = String(url || '').trim();
+    return s !== '' && (/^(https?:\/\/|\/)/i.test(s));
+  }
+
+  function makeEl(tag, className, text) {
+    var el = document.createElement(tag);
+    if (className) el.className = className;
+    if (text !== undefined && text !== null) el.textContent = String(text);
+    return el;
+  }
+
+  function renderStatusRow(msg, isError) {
+    var tbody = document.getElementById('telusurTableBody');
+    if (!tbody) return;
+    var tr = makeEl('tr');
+    var td = makeEl('td', isError ? 'text-center text-danger' : 'text-center', msg);
+    td.setAttribute('colspan', '6');
+    td.style.padding = '30px';
+    if (!isError) td.style.color = '#64748b';
+    tr.appendChild(td);
+    tbody.replaceChildren(tr);
+  }
+
+  function updateKriteriaButtons(counts) {
+    var btns = document.querySelectorAll('#telusurKriteriaBar .rsgm-krit-btn');
+    for (var i = 0; i < btns.length; i++) {
+      var k = btns[i].getAttribute('data-kriteria');
+      if (k === activeKriteria) {
+        btns[i].classList.add('is-active');
+      } else {
+        btns[i].classList.remove('is-active');
+      }
+      if (counts && typeof counts[k] !== 'undefined') {
+        var cntEl = document.getElementById('cnt-' + k);
+        if (cntEl) cntEl.textContent = String(counts[k]);
+      }
+    }
+  }
+
+  function renderRows(items) {
+    var tbody = document.getElementById('telusurTableBody');
+    if (!tbody) return;
+
+    if (!items || !items.length) {
+      renderStatusRow('Tidak ada kunjungan ditemukan untuk kriteria ini pada periode/filter tersebut.', false);
+      return;
+    }
+
+    var frag = document.createDocumentFragment();
+    items.forEach(function(item) {
+      var tr = makeEl('tr');
+
+      // Kolom 1: Tgl & No Rawat
+      var td1 = makeEl('td');
+      td1.style.whiteSpace = 'nowrap';
+      var tglDiv = makeEl('div', null, (item.tgl_registrasi || '-') + ' ' + (item.jam_reg || ''));
+      tglDiv.style.fontWeight = '700';
+      tglDiv.style.color = '#0f172a';
+      td1.appendChild(tglDiv);
+      var nrDiv = makeEl('div', null, item.no_rawat || '-');
+      nrDiv.style.fontFamily = 'monospace';
+      nrDiv.style.fontSize = '11.5px';
+      nrDiv.style.color = '#475569';
+      td1.appendChild(nrDiv);
+      var jnsBadge = makeEl('span', 'rsgm-telusur-tag tone-sky', item.status_lanjut || 'Ralan');
+      td1.appendChild(jnsBadge);
+      tr.appendChild(td1);
+
+      // Kolom 2: Pasien
+      var td2 = makeEl('td');
+      var nmLink = makeEl('a', null, item.nm_pasien || '-');
+      nmLink.style.fontWeight = '700';
+      nmLink.style.color = '#0369a1';
+      nmLink.setAttribute('href', isSafeHttpUrl(item.url_erm) ? item.url_erm : '#');
+      nmLink.setAttribute('data-toggle', 'modal');
+      nmLink.setAttribute('data-target', '#riwayatModal');
+      td2.appendChild(nmLink);
+      var rmMeta = makeEl('div', null, 'RM: ' + (item.no_rkm_medis || '-') + (item.jk ? ' (' + item.jk + ')' : '') + ' • ' + (item.png_jawab || '-'));
+      rmMeta.style.fontSize = '11.5px';
+      rmMeta.style.color = '#475569';
+      td2.appendChild(rmMeta);
+      tr.appendChild(td2);
+
+      // Kolom 3: Unit, DPJP & Diagnosa
+      var td3 = makeEl('td');
+      var poliDiv = makeEl('div', null, item.nm_poli || '-');
+      poliDiv.style.fontWeight = '600';
+      poliDiv.style.color = '#1e293b';
+      td3.appendChild(poliDiv);
+      var docDiv = makeEl('div', null, 'DPJP: ' + (item.nm_dokter || '-'));
+      docDiv.style.fontSize = '11.5px';
+      docDiv.style.color = '#475569';
+      td3.appendChild(docDiv);
+      if (item.diagnosa_ringkas) {
+        var diagDiv = makeEl('div', null, 'Dx: ' + item.diagnosa_ringkas);
+        diagDiv.style.fontSize = '11.5px';
+        diagDiv.style.color = '#0f172a';
+        diagDiv.style.marginTop = '2px';
+        td3.appendChild(diagDiv);
+      }
+      tr.appendChild(td3);
+
+      // Kolom 4: Kriteria / Status Akhir
+      var td4 = makeEl('td');
+      if (item.tags && item.tags.length > 0) {
+        item.tags.forEach(function(tg) {
+          td4.appendChild(makeEl('span', 'rsgm-telusur-tag tone-' + (tg.tone || 'sky'), tg.label || tg.key));
+        });
+      } else {
+        td4.appendChild(makeEl('span', 'rsgm-telusur-tag', item.stts || '-'));
+      }
+      if (item.stts_pulang_list && item.stts_pulang_list.length > 0) {
+        var kiDiv = makeEl('div', null, 'Ranap: ' + item.stts_pulang_list.join(', '));
+        kiDiv.style.fontSize = '11px';
+        kiDiv.style.color = '#475569';
+        kiDiv.style.marginTop = '3px';
+        td4.appendChild(kiDiv);
+      }
+      if (item.status_bayar) {
+        var sbDiv = makeEl('div', null, item.status_bayar);
+        sbDiv.style.fontSize = '10.5px';
+        sbDiv.style.color = '#64748b';
+        sbDiv.style.marginTop = '2px';
+        td4.appendChild(sbDiv);
+      }
+      tr.appendChild(td4);
+
+      // Kolom 5: Kelengkapan e-RM
+      var td5 = makeEl('td');
+      td5.appendChild(makeEl('span', 'rsgm-stat-pill' + (item.rme_count > 0 ? ' has-val' : ''), item.rme_count + ' Form RME'));
+      td5.appendChild(makeEl('span', 'rsgm-stat-pill' + (item.soap_count > 0 ? ' has-val' : ''), item.soap_count + ' SOAP'));
+      td5.appendChild(makeEl('span', 'rsgm-stat-pill' + (item.penunjang_count > 0 ? ' has-val' : ''), item.penunjang_count + ' Penunjang'));
+      td5.appendChild(makeEl('span', 'rsgm-stat-pill' + (item.tindakan_count > 0 ? ' has-val' : ''), item.tindakan_count + ' Tindakan'));
+      tr.appendChild(td5);
+
+      // Kolom 6: Aksi Telusur
+      var td6 = makeEl('td');
+      var actWrap = makeEl('div', 'rsgm-act-group');
+
+      var btnErm = makeEl('a', 'btn btn-xs btn-primary rsgm-act-btn', 'Buka e-RM');
+      btnErm.setAttribute('href', isSafeHttpUrl(item.url_erm) ? item.url_erm : '#');
+      btnErm.setAttribute('data-toggle', 'modal');
+      btnErm.setAttribute('data-target', '#riwayatModal');
+      var icoErm = makeEl('i', 'fa fa-folder-open-o');
+      icoErm.style.marginRight = '4px';
+      btnErm.insertBefore(icoErm, btnErm.firstChild);
+      actWrap.appendChild(btnErm);
+
+      if (isSafeHttpUrl(item.url_lembar_kerja)) {
+        var btnLk = makeEl('a', 'btn btn-xs btn-default rsgm-act-btn', 'Lembar Kerja');
+        btnLk.setAttribute('href', item.url_lembar_kerja);
+        btnLk.setAttribute('target', '_blank');
+        var icoLk = makeEl('i', 'fa fa-pencil-square-o');
+        icoLk.style.marginRight = '4px';
+        btnLk.insertBefore(icoLk, btnLk.firstChild);
+        actWrap.appendChild(btnLk);
+      }
+
+      if (isSafeHttpUrl(item.url_pdf)) {
+        var btnPdf = makeEl('a', 'btn btn-xs rsgm-fpill rsgm-fpill-pdf rsgm-act-btn', 'PDF');
+        btnPdf.setAttribute('href', item.url_pdf);
+        btnPdf.setAttribute('target', '_blank');
+        var icoPdf = makeEl('i', 'fa fa-file-pdf-o');
+        icoPdf.style.marginRight = '4px';
+        btnPdf.insertBefore(icoPdf, btnPdf.firstChild);
+        actWrap.appendChild(btnPdf);
+      }
+
+      td6.appendChild(actWrap);
+      tr.appendChild(td6);
+
+      frag.appendChild(tr);
+    });
+
+    tbody.replaceChildren(frag);
+  }
+
+  function renderPagination(meta) {
+    var el = document.getElementById('telusurPagination');
+    if (!el) return;
+    var page = (meta && meta.page) ? meta.page : 1;
+    var totalPages = (meta && meta.total_page) ? meta.total_page : 1;
+    var total = (meta && typeof meta.total !== 'undefined') ? meta.total : 0;
+
+    $('#telusurTotalInfo').text('Total: ' + total + ' kunjungan (Hal ' + page + ' / ' + totalPages + ')');
+
+    var frag = document.createDocumentFragment();
+    function addBtn(label, targetPage, disabled) {
+      var li = makeEl('li', disabled ? 'disabled' : '');
+      var a = makeEl('a', null, label);
+      a.setAttribute('href', '#');
+      a.addEventListener('click', function(ev) {
+        ev.preventDefault();
+        if (!disabled) loadTelusur(targetPage);
+      });
+      li.appendChild(a);
+      frag.appendChild(li);
+    }
+    addBtn('\u00AB', 1, page <= 1);
+    addBtn('\u2039', page - 1, page <= 1);
+    addBtn('Hal ' + page + ' dari ' + totalPages, page, true);
+    addBtn('\u203A', page + 1, page >= totalPages);
+    addBtn('\u00BB', totalPages, page >= totalPages);
+    el.replaceChildren(frag);
+  }
+
+  function loadTelusur(page) {
+    currentPage = page || 1;
+    updateKriteriaButtons(null);
+    renderStatusRow('Memuat data telusur e-RM...', false);
+
+    $.ajax({
+      url: endpointUrl,
+      type: 'GET',
+      dataType: 'json',
+      data: {
+        kriteria: activeKriteria,
+        tgl_awal: $.trim($('#telusurTglAwal').val() || ''),
+        tgl_akhir: $.trim($('#telusurTglAkhir').val() || ''),
+        q: $.trim($('#telusurSearch').val() || ''),
+        page: currentPage,
+        per_page: 15
+      },
+      success: function(resp) {
+        if (!resp || resp.status !== 'success') {
+          renderStatusRow((resp && resp.message) || 'Gagal memuat data telusur.', true);
+          return;
+        }
+        updateKriteriaButtons(resp.counts || {});
+        renderRows(resp.data || []);
+        renderPagination(resp.meta || {});
+      },
+      error: function() {
+        renderStatusRow('Gagal terhubung ke server untuk memuat telusur e-RM.', true);
+      }
+    });
+  }
+
+  $(function() {
+    $('.telusur-date').datetimepicker({
+      format: 'YYYY-MM-DD',
+      locale: 'id'
+    });
+
+    $('#telusurKriteriaBar').on('click', '.rsgm-krit-btn', function() {
+      activeKriteria = $(this).attr('data-kriteria') || 'all';
+      loadTelusur(1);
+    });
+
+    $('#btnTelusurCari').on('click', function() {
+      loadTelusur(1);
+    });
+
+    $('#telusurSearch').on('keypress', function(e) {
+      if (e.which === 13) {
+        loadTelusur(1);
+      }
+    });
+
+    $('#btnTelusurResetDate').on('click', function() {
+      $('#telusurTglAwal, #telusurTglAkhir').val('');
+      loadTelusur(1);
+    });
+
+    loadTelusur(1);
+  });
+})(window.jQuery);
+</script>
+

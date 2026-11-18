@@ -106,10 +106,12 @@
                       </div>
                       {/if}
                     </td>
-                    <td style="vertical-align: middle; white-space: nowrap;">
-                      <span class="rsgm-badge {if: $value.kategori == 'Bedah'}rsgm-badge-rose{elseif: $value.kategori == 'Ranap'}rsgm-badge-emerald{elseif: $value.kategori == 'Rajal'}rsgm-badge-sky{elseif: $value.kategori == 'UGD' || $value.kategori == 'IGD'}rsgm-badge-amber{else}rsgm-badge-purple{/if}">
-                        {$value.kategori}
-                      </span>
+                    <td style="vertical-align: middle;">
+                      <div style="display: flex; flex-wrap: wrap; gap: 3px;">
+                        {loop: $value.kategori_badges as $kb}
+                        <span class="rsgm-badge {$kb.badge_class}">{$kb.nama}</span>
+                        {/loop}
+                      </div>
                     </td>
                     <td class="text-center" style="vertical-align: middle; white-space: nowrap;">
                       {if: !empty($value.status) && $value.status == '1'}
@@ -334,7 +336,7 @@
                         <th width="45" class="text-center" style="white-space: nowrap;">No</th>
                         <th width="100" style="white-space: nowrap;">Kode</th>
                         <th>Nama Formulir & Keterangan</th>
-                        <th width="100" style="white-space: nowrap;">Kategori</th>
+                        <th width="175" style="white-space: nowrap;">Kategori</th>
                         <th width="220" style="white-space: nowrap;">Hak Akses Pengisian</th>
                         <th width="100" class="text-center" style="white-space: nowrap;">Status</th>
                         <th width="90" class="text-center" style="white-space: nowrap;">Aksi</th>
@@ -374,10 +376,49 @@
                           </div>
                           {/if}
                         </td>
-                        <td style="vertical-align: middle; white-space: nowrap;">
-                          <span class="rsgm-badge {if: $f.kategori == 'Bedah'}rsgm-badge-rose{elseif: $f.kategori == 'Ranap'}rsgm-badge-emerald{elseif: $f.kategori == 'Rajal'}rsgm-badge-sky{elseif: $f.kategori == 'UGD' || $f.kategori == 'IGD'}rsgm-badge-amber{else}rsgm-badge-purple{/if}">
-                            {$f.kategori}
-                          </span>
+                        <td style="vertical-align: middle;">
+                          <div class="rsgm-kat-wrapper" id="kat-wrapper-{$f.id}" style="display: flex; align-items: center; gap: 5px; flex-wrap: wrap; min-width: 145px;">
+                            <div class="rsgm-kat-badges" id="kat-badges-{$f.id}" style="display: flex; flex-wrap: wrap; gap: 3px;">
+                              {loop: $f.kategori_badges as $kb}
+                              <span class="rsgm-badge {$kb.badge_class}">{$kb.nama}</span>
+                              {/loop}
+                            </div>
+
+                            <!-- Dropdown Quick-Edit Multi & Custom Kategori -->
+                            <div class="dropdown rsgm-kat-dropdown" style="display: inline-block;">
+                              <button type="button" class="btn btn-xs btn-default dropdown-toggle btn-kelola-kat" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" title="Atur / Custom Kategori" style="border-radius: 4px; padding: 2px 7px; color: #475569; font-weight: 600; border: 1px solid #cbd5e1; background: #ffffff;">
+                                <i class="fa fa-pencil text-primary"></i> <span class="caret"></span>
+                              </button>
+                              <div class="dropdown-menu dropdown-menu-right rsgm-kat-popover" style="padding: 10px 14px; min-width: 265px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); border-radius: 8px; border: 1px solid #cbd5e1; z-index: 1050; text-align: left;">
+                                <div style="font-size: 11.5px; font-weight: 700; color: #0f172a; margin-bottom: 8px; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; display: flex; align-items: center; justify-content: space-between;">
+                                  <span><i class="fa fa-tags text-primary"></i> Kategori Formulir</span>
+                                  <span class="rsgm-code-chip" style="font-size: 10px;">{$f.kode_form}</span>
+                                </div>
+                                <div class="kat-checkbox-container" data-form-id="{$f.id}" style="max-height: 170px; overflow-y: auto; margin-bottom: 8px;">
+                                  {loop: $f.kategori_with_check as $kat}
+                                  <div style="margin-bottom: 5px;">
+                                    <label style="font-weight: 500; font-size: 11.5px; cursor: pointer; display: flex; align-items: center; gap: 7px; margin: 0; user-select: none;">
+                                      <input type="checkbox" class="chk-kat-quick" data-form-id="{$f.id}" value="{$kat.nama}" {if: $kat.checked}checked{/if} style="width: 15px; height: 15px; margin: 0; accent-color: #2563eb; cursor: pointer;">
+                                      <span class="rsgm-badge {$kat.badge_class}">{$kat.nama}</span>
+                                    </label>
+                                  </div>
+                                  {/loop}
+                                </div>
+                                <div style="border-top: 1px solid #e2e8f0; padding-top: 8px;">
+                                  <label style="font-size: 10.5px; font-weight: 600; color: #334155; margin-bottom: 4px; display: block;">Tambah Kategori Custom:</label>
+                                  <div class="input-group input-group-sm">
+                                    <input type="text" class="form-control txt-kat-custom" data-form-id="{$f.id}" placeholder="cth: Anastesi, Poli Gigi" style="height: 28px; font-size: 11.5px; border-radius: 4px 0 0 4px;">
+                                    <span class="input-group-btn">
+                                      <button type="button" class="btn btn-primary btn-add-kat-custom" data-form-id="{$f.id}" style="height: 28px; padding: 2px 10px; font-size: 11.5px; border-radius: 0 4px 4px 0;">Tambah</button>
+                                    </span>
+                                  </div>
+                                  <div style="font-size: 10px; color: #64748b; margin-top: 4px;">
+                                    <i class="fa fa-info-circle text-info"></i> Bisa pilih lebih dari 1 atau pisahkan koma
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
                         </td>
                         <td style="vertical-align: middle;">
                           <div class="rsgm-role-wrapper" id="role-wrapper-{$f.id}" style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; min-width: 170px;">
@@ -561,14 +602,19 @@
 
                   <div class="form-group">
                     <label class="col-sm-3 control-label" style="font-size: 12.5px; font-weight: 600;">Kategori Unit <span class="text-danger">*</span></label>
-                    <div class="col-sm-5">
-                      <select name="kategori" class="form-control input-sm" style="border-radius: 6px;">
-                        <option value="UGD">UGD (Gawat Darurat)</option>
-                        <option value="Rajal">Rajal (Rawat Jalan)</option>
-                        <option value="Ranap">Ranap (Rawat Inap)</option>
-                        <option value="Bedah">Bedah (Bedah Mulut / Kamar Operasi)</option>
-                        <option value="Penunjang">Penunjang</option>
-                      </select>
+                    <div class="col-sm-8">
+                      <div class="row" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 8px; margin: 0 0 8px 0;">
+                        {loop: $kategori_list}
+                        <div class="col-xs-6 col-sm-4" style="margin-bottom: 6px;">
+                          <label style="font-weight: 500; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; margin: 0; user-select: none;">
+                            <input type="checkbox" name="kategori_items[]" value="{$value}" {if: $value == 'Rajal'}checked{/if} style="width: 15px; height: 15px; margin: 0; accent-color: #2563eb; cursor: pointer;">
+                            <span>{$value}</span>
+                          </label>
+                        </div>
+                        {/loop}
+                      </div>
+                      <input type="text" name="kategori_custom" class="form-control input-sm" placeholder="Kategori custom lain, pisahkan koma (cth: Anastesi, Poli Gigi)" style="border-radius: 6px;">
+                      <span class="help-block text-muted" style="font-size: 11px; margin-top: 4px;">Dapat memilih lebih dari 1 kategori (misal Ranap &amp; Rajal) atau menambahkan kategori custom.</span>
                     </div>
                   </div>
 
@@ -657,28 +703,30 @@
                 <input type="text" name="nama_form" id="edit_nama_form" class="form-control input-sm" required style="border-radius: 6px;">
               </div>
 
-              <div class="row">
-                <div class="col-sm-6">
-                  <div class="form-group">
-                    <label style="font-size: 12.5px; font-weight: 600; color: #334155;">Kategori Unit</label>
-                    <select name="kategori" id="edit_kategori" class="form-control input-sm" style="border-radius: 6px;">
-                      <option value="UGD">UGD (Gawat Darurat)</option>
-                      <option value="Rajal">Rajal (Rawat Jalan)</option>
-                      <option value="Ranap">Ranap (Rawat Inap)</option>
-                      <option value="Bedah">Bedah (Bedah Mulut / Kamar Operasi)</option>
-                      <option value="Penunjang">Penunjang</option>
-                    </select>
+              <div class="form-group">
+                <label style="font-size: 12.5px; font-weight: 600; color: #334155;">
+                  <i class="fa fa-tags text-primary"></i> Kategori Unit (Bisa Lebih dari 1 &amp; Custom)
+                </label>
+                <div class="row" id="edit_kat_checkbox_list" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 8px; margin: 0 0 8px 0;">
+                  {loop: $kategori_list}
+                  <div class="col-xs-6 col-sm-4 edit-kat-opt-item" style="margin-bottom: 6px;">
+                    <label style="font-weight: 500; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; margin: 0; user-select: none;">
+                      <input type="checkbox" name="kategori_items[]" value="{$value}" class="edit-chk-kat" style="width: 15px; height: 15px; margin: 0; accent-color: #2563eb; cursor: pointer;">
+                      <span>{$value}</span>
+                    </label>
                   </div>
+                  {/loop}
                 </div>
-                <div class="col-sm-6">
-                  <div class="form-group">
-                    <label style="font-size: 12.5px; font-weight: 600; color: #334155;">Status Publikasi</label>
-                    <select name="status" id="edit_status" class="form-control input-sm" style="border-radius: 6px;">
-                      <option value="1">Aktif (Dipublikasikan ke Petugas & Menu)</option>
-                      <option value="0">Nonaktif (Disembunyikan / Sedang Dalam Perbaikan)</option>
-                    </select>
-                  </div>
-                </div>
+                <input type="text" name="kategori_custom" id="edit_kategori_custom" class="form-control input-sm" placeholder="Tambah kategori custom baru, pisahkan koma (cth: Anastesi, Poli Gigi)" style="border-radius: 6px;">
+                <span class="help-block text-muted" style="font-size: 11px; margin-top: 4px;">Centang satu/beberapa kategori yang tersedia atau ketik kategori custom baru.</span>
+              </div>
+
+              <div class="form-group">
+                <label style="font-size: 12.5px; font-weight: 600; color: #334155;">Status Publikasi</label>
+                <select name="status" id="edit_status" class="form-control input-sm" style="border-radius: 6px;">
+                  <option value="1">Aktif (Dipublikasikan ke Petugas &amp; Menu)</option>
+                  <option value="0">Nonaktif (Disembunyikan / Sedang Dalam Perbaikan)</option>
+                </select>
               </div>
 
               <div class="form-group">
@@ -797,7 +845,9 @@
             var rowSearch = String(row.attr('data-search') || '').toLowerCase();
 
             var matchStatus = (currentStatusFilter === 'all') || (rowStatus === currentStatusFilter);
-            var matchCategory = (currentCategoryFilter === 'all') || (rowCategory === currentCategoryFilter);
+            var rowCategoryTokens = rowCategory.split(',').map(function(s) { return s.trim().toLowerCase(); }).filter(Boolean);
+            var filterCatLower = String(currentCategoryFilter || '').trim().toLowerCase();
+            var matchCategory = (currentCategoryFilter === 'all') || (rowCategoryTokens.indexOf(filterCatLower) !== -1);
             var matchAktor = (currentAktorFilter === 'all') || (rowAktor && rowAktor.split(',').indexOf(currentAktorFilter) !== -1);
             var matchSearch = (currentSearchKeyword === '') || (rowSearch.indexOf(currentSearchKeyword) !== -1);
 
@@ -1102,6 +1152,222 @@
         });
 
         // ==========================================
+        // 3B. QUICK EDIT MULTI & CUSTOM KATEGORI
+        // ==========================================
+        function showSafeAjaxNotif(msg) {
+          var container = document.getElementById('ajax-notif-container');
+          if (!container) return;
+          var alertDiv = document.createElement('div');
+          alertDiv.className = 'alert alert-success alert-dismissible fade in';
+          alertDiv.setAttribute('role', 'alert');
+          alertDiv.style.borderRadius = '6px';
+          alertDiv.style.marginBottom = '14px';
+
+          var closeBtn = document.createElement('button');
+          closeBtn.type = 'button';
+          closeBtn.className = 'close';
+          closeBtn.setAttribute('data-dismiss', 'alert');
+          closeBtn.setAttribute('aria-label', 'Close');
+          closeBtn.textContent = '\u00d7';
+
+          var icon = document.createElement('i');
+          icon.className = 'fa fa-check-circle';
+
+          var textNode = document.createTextNode(' ' + String(msg || 'Kategori berhasil diperbarui!'));
+
+          alertDiv.appendChild(closeBtn);
+          alertDiv.appendChild(icon);
+          alertDiv.appendChild(textNode);
+
+          container.replaceChildren(alertDiv);
+          $(container).slideDown();
+          setTimeout(function() {
+            $(alertDiv).slideUp(500, function() { $(this).remove(); });
+          }, 4000);
+        }
+
+        function renderKatBadges(formId, badges) {
+          var badgesEl = document.getElementById('kat-badges-' + formId);
+          if (!badgesEl || !Array.isArray(badges)) return;
+          var frag = document.createDocumentFragment();
+          badges.forEach(function(b) {
+            var span = document.createElement('span');
+            span.className = 'rsgm-badge ' + String(b.badge_class || 'rsgm-badge-purple');
+            span.textContent = String(b.nama || '');
+            frag.appendChild(span);
+          });
+          badgesEl.replaceChildren(frag);
+        }
+
+        function ensureCategoryOptionEverywhere(catName, badgeClass) {
+          var val = String(catName || '').trim();
+          if (!val) return;
+          var lower = val.toLowerCase();
+
+          var filterSelect = document.getElementById('selectCategoryFilter');
+          if (filterSelect) {
+            var existsInFilter = Array.prototype.some.call(filterSelect.options, function(opt) {
+              return String(opt.value || '').toLowerCase() === lower;
+            });
+            if (!existsInFilter) {
+              var opt = document.createElement('option');
+              opt.value = val;
+              opt.textContent = val;
+              filterSelect.appendChild(opt);
+            }
+          }
+
+          document.querySelectorAll('.kat-checkbox-container').forEach(function(box) {
+            var fId = box.getAttribute('data-form-id');
+            var hasChk = Array.prototype.some.call(box.querySelectorAll('.chk-kat-quick'), function(inp) {
+              return String(inp.value || '').toLowerCase() === lower;
+            });
+            if (!hasChk) {
+              var wrap = document.createElement('div');
+              wrap.style.marginBottom = '5px';
+              var lbl = document.createElement('label');
+              lbl.style.cssText = 'font-weight: 500; font-size: 11.5px; cursor: pointer; display: flex; align-items: center; gap: 7px; margin: 0; user-select: none;';
+              var inp = document.createElement('input');
+              inp.type = 'checkbox';
+              inp.className = 'chk-kat-quick';
+              inp.setAttribute('data-form-id', fId);
+              inp.value = val;
+              inp.style.cssText = 'width: 15px; height: 15px; margin: 0; accent-color: #2563eb; cursor: pointer;';
+              var bdg = document.createElement('span');
+              bdg.className = 'rsgm-badge ' + String(badgeClass || 'rsgm-badge-purple');
+              bdg.textContent = val;
+              lbl.appendChild(inp);
+              lbl.appendChild(bdg);
+              wrap.appendChild(lbl);
+              box.appendChild(wrap);
+            }
+          });
+
+          var editList = document.getElementById('edit_kat_checkbox_list');
+          if (editList) {
+            var hasEditChk = Array.prototype.some.call(editList.querySelectorAll('.edit-chk-kat'), function(inp) {
+              return String(inp.value || '').toLowerCase() === lower;
+            });
+            if (!hasEditChk) {
+              var col = document.createElement('div');
+              col.className = 'col-xs-6 col-sm-4 edit-kat-opt-item';
+              col.style.marginBottom = '6px';
+              var lblEdit = document.createElement('label');
+              lblEdit.style.cssText = 'font-weight: 500; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; margin: 0; user-select: none;';
+              var inpEdit = document.createElement('input');
+              inpEdit.type = 'checkbox';
+              inpEdit.name = 'kategori_items[]';
+              inpEdit.className = 'edit-chk-kat';
+              inpEdit.value = val;
+              inpEdit.style.cssText = 'width: 15px; height: 15px; margin: 0; accent-color: #2563eb; cursor: pointer;';
+              var txt = document.createElement('span');
+              txt.textContent = val;
+              lblEdit.appendChild(inpEdit);
+              lblEdit.appendChild(txt);
+              col.appendChild(lblEdit);
+              editList.appendChild(col);
+            }
+          }
+        }
+
+        function syncFormKategoriUpdate(formId, selectedCats, revertFn) {
+          $.ajax({
+            url: '{?=url([ADMIN, "form_rme", "updatekategoriform"])?}',
+            type: 'POST',
+            dataType: 'json',
+            data: { id: formId, categories: selectedCats, t: "{$token}" },
+            success: function(res) {
+              if (res && (res.status === 'success' || res.status === 'ok')) {
+                var row = $('#form-row-' + formId);
+                row.attr('data-kategori-filter', res.kategori);
+                var existingSearch = String(row.attr('data-search') || '');
+                row.attr('data-search', existingSearch + ' ' + String(res.kategori || '').toLowerCase());
+                row.find('.btn-edit-form').data('kategori', res.kategori).attr('data-kategori', res.kategori);
+
+                if (Array.isArray(res.badges)) {
+                  res.badges.forEach(function(b) {
+                    ensureCategoryOptionEverywhere(b.nama, b.badge_class);
+                  });
+                }
+
+                var selectedLower = (res.categories || []).map(function(c) { return String(c).toLowerCase(); });
+                var box = row.find('.kat-checkbox-container');
+                box.find('.chk-kat-quick').each(function() {
+                  var vLower = String($(this).val() || '').toLowerCase();
+                  $(this).prop('checked', selectedLower.indexOf(vLower) !== -1);
+                });
+
+                renderKatBadges(formId, res.badges || []);
+                applyFilters();
+                showSafeAjaxNotif(res.message);
+              } else {
+                if (typeof revertFn === 'function') revertFn();
+                alert('Gagal memperbarui kategori: ' + (res && res.message ? res.message : 'Error'));
+              }
+            },
+            error: function() {
+              if (typeof revertFn === 'function') revertFn();
+              alert('Terjadi kesalahan koneksi saat memperbarui kategori.');
+            }
+          });
+        }
+
+        $(document).on('click', '.rsgm-kat-popover', function(e) {
+          e.stopPropagation();
+        });
+
+        $(document).on('change', '.chk-kat-quick', function() {
+          var chk = $(this);
+          var formId = chk.data('form-id');
+          var container = chk.closest('.kat-checkbox-container');
+          var selected = [];
+          container.find('.chk-kat-quick:checked').each(function() {
+            selected.push($(this).val());
+          });
+
+          if (selected.length === 0) {
+            alert('Minimal harus memilih 1 kategori!');
+            chk.prop('checked', true);
+            return;
+          }
+
+          syncFormKategoriUpdate(formId, selected, function() {
+            chk.prop('checked', !chk.prop('checked'));
+          });
+        });
+
+        $(document).on('click', '.btn-add-kat-custom', function() {
+          var btn = $(this);
+          var formId = btn.data('form-id');
+          var popover = btn.closest('.rsgm-kat-popover');
+          var input = popover.find('.txt-kat-custom');
+          var rawCustom = String(input.val() || '').trim();
+          if (!rawCustom) {
+            input.focus();
+            return;
+          }
+
+          var selected = [];
+          popover.find('.chk-kat-quick:checked').each(function() {
+            selected.push($(this).val());
+          });
+          rawCustom.split(',').forEach(function(item) {
+            var cleaned = item.trim();
+            if (cleaned) selected.push(cleaned);
+          });
+
+          syncFormKategoriUpdate(formId, selected, null);
+          input.val('');
+        });
+
+        $(document).on('keydown', '.txt-kat-custom', function(e) {
+          if (e.key === 'Enter' || e.which === 13) {
+            e.preventDefault();
+            $(this).closest('.input-group').find('.btn-add-kat-custom').trigger('click');
+          }
+        });
+
+        // ==========================================
         // 4. MODAL EDIT FORMULIR
         // ==========================================
         $(document).on('click', '.btn-edit-form', function(e) {
@@ -1110,8 +1376,19 @@
           $('#edit_form_id').val(btn.data('id'));
           $('#edit_modal_kode_title').text(btn.data('kode'));
           $('#edit_nama_form').val(btn.data('nama'));
-          $('#edit_kategori').val(btn.data('kategori'));
-          
+
+          var katStr = String(btn.attr('data-kategori') || btn.data('kategori') || '');
+          var katArrLower = katStr.split(',').map(function(s){ return s.trim().toLowerCase(); }).filter(Boolean);
+          katStr.split(',').forEach(function(s) {
+            var trimmed = s.trim();
+            if (trimmed) ensureCategoryOptionEverywhere(trimmed, 'rsgm-badge-purple');
+          });
+          $('.edit-chk-kat').each(function() {
+            var valLower = String($(this).val() || '').toLowerCase();
+            $(this).prop('checked', katArrLower.indexOf(valLower) !== -1);
+          });
+          $('#edit_kategori_custom').val('');
+
           var aktorStr = String(btn.data('aktor') || 'medis,paramedis');
           var aktorArr = aktorStr.split(',').map(function(s){ return s.trim(); });
           $('.edit-chk-role').each(function() {

@@ -12,6 +12,7 @@ class Admin extends AdminModule
   {
     return [
       'Kelola' => 'manage',
+      'Telusur e-RM' => 'telusur',
     ];
   }
 
@@ -664,6 +665,7 @@ class Admin extends AdminModule
   public function getRiwayatPerawatan($no_rkm_medis)
   {
     $riwayat = $this->_getRiwayatData($no_rkm_medis);
+    $riwayat['focus_rawat'] = trim((string)($_GET['focus_rawat'] ?? ''));
     $this->tpl->set('riwayat', $this->tpl->noParse_array(htmlspecialchars_array($riwayat)));
     echo $this->draw('riwayat.perawatan.html');
     exit();
@@ -948,12 +950,147 @@ class Admin extends AdminModule
 
     $reg_periksa = $regQuery
       ->desc('tgl_registrasi')
+      ->desc('jam_reg')
       ->toArray();
 
     if ($detail == false) {
       $riwayat['reg_periksa'] = $reg_periksa;
       return $riwayat;
     }
+
+    // Batch pre-load Formulir RME yang terisi lintas kunjungan pasien (1 query per tabel RME)
+    $pdo = $this->db()->pdo();
+    $noRawatList = array_values(array_unique(array_filter(array_column($reg_periksa, 'no_rawat'))));
+    $rmeFormsByRawat = [];
+    $rsgmTablesCache = [];
+
+    if (!empty($noRawatList) && DBDRIVER == 'mysql') {
+      try {
+        $existingTables = $this->_getExistingTablesMap($pdo);
+        foreach ($existingTables as $tblName => $_unused) {
+          if (strpos($tblName, 'rsgm__') === 0) {
+            $rsgmTablesCache[] = $tblName;
+          }
+        }
+
+        if (!empty($existingTables['mlite_rme_form'])) {
+          $rmeMetaList = $this->db('mlite_rme_form')
+            ->where('status', '1')
+            ->asc('kategori')
+            ->asc('urutan')
+            ->toArray();
+
+          $inPlaceholders = implode(',', array_fill(0, count($noRawatList), '?'));
+          $rowsByTable = [];
+
+          foreach ($rmeMetaList as $mf) {
+            $tbl = trim((string)($mf['nama_tabel'] ?? ''));
+            if ($tbl === '' || !preg_match('/^[a-zA-Z0-9_]+$/', $tbl) || empty($existingTables[$tbl])) {
+              continue;
+            }
+            if (!array_key_exists($tbl, $rowsByTable)) {
+              $rowsByTable[$tbl] = [];
+              try {
+                $stRows = $pdo->prepare("SELECT * FROM `{$tbl}` WHERE `no_rawat` IN ({$inPlaceholders})");
+                $stRows->execute($noRawatList);
+                foreach ($stRows->fetchAll(\PDO::FETCH_ASSOC) as $entry) {
+                  $nrKey = (string)($entry['no_rawat'] ?? '');
+                  if ($nrKey !== '') {
+                    $rowsByTable[$tbl][$nrKey][] = $entry;
+                  }
+                }
+                foreach ($rowsByTable[$tbl] as $nrKey => &$nrEntries) {
+                  usort($nrEntries, function ($a, $b) {
+                    $idA = (int)($a['id'] ?? ($a['id_triase'] ?? 0));
+                    $idB = (int)($b['id'] ?? ($b['id_triase'] ?? 0));
+                    return $idB <=> $idA;
+                  });
+                }
+                unset($nrEntries);
+              } catch (\Throwable $e) {
+                $rowsByTable[$tbl] = [];
+              }
+            }
+
+            foreach ($noRawatList as $nrKey) {
+              $entries = $rowsByTable[$tbl][$nrKey] ?? [];
+              if (empty($entries)) {
+                continue;
+              }
+              $lastRow = null;
+              foreach ($entries as $cand) {
+                if (empty($cand['deleted_at'])) {
+                  $lastRow = $cand;
+                  break;
+                }
+              }
+              if ($lastRow === null) {
+                $lastRow = $entries[0];
+              }
+              $isRegisteredRev = class_exists('\Systems\Lib\RmeFormRevision') && \Systems\Lib\RmeFormRevision::isRegisteredTable($tbl);
+              if ($isRegisteredRev && is_array($lastRow)) {
+                $lastRow = \Systems\Lib\RmeFormRevision::enrichSingleRow($this->core, $tbl, $lastRow);
+              }
+              $rowId = (int)($lastRow['id'] ?? ($lastRow['id_triase'] ?? 0));
+              $routeForm = trim((string)($mf['route_form'] ?? ''));
+              $routeCetak = trim((string)($mf['route_cetak'] ?? ''));
+              if ($routeCetak === '' && $routeForm !== '') {
+                $routeCetak = str_replace('form', 'cetak', $routeForm);
+              }
+              $hasTte = false;
+              foreach ($lastRow as $lk => $lv) {
+                if ((strpos((string)$lk, 'tte_') === 0 || strpos((string)$lk, 'ttd_') === 0) && is_string($lv) && preg_match('/^[a-f0-9]{64}$/i', trim($lv))) {
+                  $hasTte = true;
+                  break;
+                }
+              }
+              if (!$hasTte && !empty($lastRow['form_data']) && preg_match('/[a-f0-9]{64}/i', (string)$lastRow['form_data'])) {
+                $hasTte = true;
+              }
+
+              $urlForm = $routeForm !== '' ? url([ADMIN, 'form_rme', $routeForm]) . ($rowId > 0 ? '&id=' . $rowId : '') . '&no_rawat=' . urlencode($nrKey) : '';
+              $urlCetak = $routeCetak !== '' ? url([ADMIN, 'form_rme', $routeCetak]) . ($rowId > 0 ? '&id=' . $rowId : '') . '&no_rawat=' . urlencode($nrKey) : '';
+
+              $rmeFormsByRawat[$nrKey][] = [
+                'id'               => $rowId,
+                'kode_form'        => (string)($mf['kode_form'] ?? ''),
+                'nama_form'        => (string)($mf['nama_form'] ?? ''),
+                'kategori'         => (string)($mf['kategori'] ?? 'Umum'),
+                'nama_tabel'       => $tbl,
+                'fill_count'       => count($entries),
+                'revision_count'   => (int)($lastRow['revision_count'] ?? 0),
+                'is_voided'        => !empty($lastRow['is_voided']) ? '1' : '',
+                'is_tte_outdated'  => !empty($lastRow['is_tte_outdated']) ? '1' : '',
+                'has_tte'          => $hasTte ? '1' : '',
+                'last_revised_at'  => (string)($lastRow['last_revised_at_fmt'] ?? ''),
+                'last_revised_by'  => (string)($lastRow['last_revised_by'] ?? ''),
+                'url_form'         => $urlForm,
+                'url_cetak'        => $urlCetak,
+                'url_cetak_pdf'    => $urlCetak !== '' ? $urlCetak . '&pdf=1' : '',
+                'raw_row'          => $lastRow,
+              ];
+            }
+          }
+        }
+      } catch (\Throwable $e) {
+      }
+    }
+
+    $tagsByRawat = (DBDRIVER == 'mysql' && !empty($reg_periksa))
+      ? $this->_extractJourneyTagsForVisits($pdo, $reg_periksa)
+      : [];
+
+    $totalRmeTerisi = 0;
+    $alergiList = [];
+    $collectAlergi = function ($val) use (&$alergiList) {
+      $val = trim((string)$val);
+      if ($val === '' || in_array(strtolower($val), ['-', 'tidak', 'tidak ada', 'none', '0', 'disangkal'], true)) {
+        return;
+      }
+      if (!in_array($val, $alergiList, true)) {
+        $alergiList[] = $val;
+      }
+    };
 
     $riwayat['reg_periksa'] = [];
     foreach ($reg_periksa as $row) {
@@ -968,10 +1105,15 @@ class Admin extends AdminModule
         ->where('no_rawat', $row['no_rawat'])
         ->asc('prioritas')
         ->toArray();
-      $row['pemeriksaan_ralan'] = $this->db('pemeriksaan_ralan')
+      $ralanRaw = $this->db('pemeriksaan_ralan')
         ->join('pegawai', 'pegawai.nik=pemeriksaan_ralan.nip')
         ->where('no_rawat', $row['no_rawat'])
+        ->desc('tgl_perawatan')
+        ->desc('jam_rawat')
         ->toArray();
+      $row['pemeriksaan_ralan'] = class_exists('\Systems\Lib\SoapRevision')
+        ? \Systems\Lib\SoapRevision::enrichRows($this->core, 'pemeriksaan_ralan', $ralanRaw)
+        : $ralanRaw;
       $row['rawat_jl_dr'] = $this->db('rawat_jl_dr')
         ->join('jns_perawatan', 'jns_perawatan.kd_jenis_prw=rawat_jl_dr.kd_jenis_prw')
         ->join('dokter', 'dokter.kd_dokter=rawat_jl_dr.kd_dokter')
@@ -1005,12 +1147,15 @@ class Admin extends AdminModule
       $row['rawat_inap_pr'] = [];
       $row['rawat_inap_drpr'] = [];
 
-      $row['pemeriksaan_ranap'] = $this->db('pemeriksaan_ranap')
+      $ranapRaw = $this->db('pemeriksaan_ranap')
         ->join('pegawai', 'pegawai.nik=pemeriksaan_ranap.nip')
         ->where('no_rawat', $row['no_rawat'])
         ->desc('tgl_perawatan')
         ->desc('jam_rawat')
         ->toArray();
+      $row['pemeriksaan_ranap'] = class_exists('\Systems\Lib\SoapRevision')
+        ? \Systems\Lib\SoapRevision::enrichRows($this->core, 'pemeriksaan_ranap', $ranapRaw)
+        : $ranapRaw;
       $row['rawat_inap_dr'] = $this->db('rawat_inap_dr')
         ->join('jns_perawatan_inap', 'jns_perawatan_inap.kd_jenis_prw=rawat_inap_dr.kd_jenis_prw')
         ->join('dokter', 'dokter.kd_dokter=rawat_inap_dr.kd_dokter')
@@ -1223,14 +1368,9 @@ class Admin extends AdminModule
         ->desc('tgl_input')
         ->toArray();
 
-      $rsgm_tables = [];
       $row['rsgm_data'] = [];
-      if (DBDRIVER == 'mysql') {
-        $stmt = $this->db()->pdo()->query("SHOW TABLES LIKE 'rsgm__%'");
-        while ($r = $stmt->fetch(\PDO::FETCH_NUM)) {
-          $rsgm_tables[] = $r[0];
-        }
-        foreach ($rsgm_tables as $rsgm_table) {
+      if (!empty($rsgmTablesCache) && DBDRIVER == 'mysql') {
+        foreach ($rsgmTablesCache as $rsgm_table) {
           $data = $this->db($rsgm_table)->where('no_rawat', $row['no_rawat'])->toArray();
           if (!empty($data)) {
             $row['rsgm_data'][$rsgm_table] = $data;
@@ -1238,8 +1378,69 @@ class Admin extends AdminModule
         }
       }
 
+      // Kumpulkan alergi lintas sumber klinis
+      foreach ($row['pemeriksaan_ralan'] as $pr) {
+        $collectAlergi($pr['alergi'] ?? '');
+      }
+      foreach ($row['pemeriksaan_ranap'] as $pn) {
+        $collectAlergi($pn['alergi'] ?? '');
+      }
+      foreach ($row['penilaian_medis_ralan'] as $pm) {
+        $collectAlergi($pm['alergi'] ?? '');
+      }
+      foreach ($row['penilaian_medis_igd'] as $pm) {
+        $collectAlergi($pm['alergi'] ?? '');
+      }
+      foreach ($row['penilaian_medis_ranap'] as $pm) {
+        $collectAlergi($pm['alergi'] ?? '');
+      }
+
+      // Attach Form RME terisi untuk kunjungan ini
+      $visitRmeForms = [];
+      foreach (($rmeFormsByRawat[$row['no_rawat']] ?? []) as $rfItem) {
+        $rawRow = $rfItem['raw_row'] ?? [];
+        if (is_array($rawRow)) {
+          $collectAlergi($rawRow['alergi_obat'] ?? '');
+          $collectAlergi($rawRow['alergi_makanan'] ?? '');
+          $collectAlergi($rawRow['alergi_lainnya'] ?? '');
+          $collectAlergi($rawRow['riwayat_alergi_ket'] ?? '');
+          $collectAlergi($rawRow['rpm_alergi_ket'] ?? '');
+          $collectAlergi($rawRow['rp_alergi_ket'] ?? '');
+        }
+        unset($rfItem['raw_row']);
+        $visitRmeForms[] = $rfItem;
+      }
+      $row['rme_forms'] = $visitRmeForms;
+      $totalRmeTerisi += count($visitRmeForms);
+
+      $row['no_rawat_clean'] = convertNorawat($row['no_rawat']);
+      $row['url_lembar_kerja'] = url([ADMIN, 'form_rme', 'pasien']) . '&no_rawat=' . urlencode($row['no_rawat']);
+      $row['url_pdf_kunjungan'] = url([ADMIN, 'pasien', 'pdfriwayatperawatan', $no_rkm_medis, $row['no_rawat_clean']]);
+
+      $row['rme_count'] = count($visitRmeForms);
+      $row['soap_count'] = count($row['pemeriksaan_ralan']) + count($row['pemeriksaan_ranap']);
+      $row['obat_count'] = count($row['pemberian_obat']) + count($row['obat_operasi']);
+      $row['tindakan_count'] = count($row['rawat_jl_dr']) + count($row['rawat_jl_pr']) + count($row['rawat_jl_drpr']) + count($row['rawat_inap_dr']) + count($row['rawat_inap_pr']) + count($row['rawat_inap_drpr']) + count($row['operasi']);
+      $row['penunjang_count'] = count($row['periksa_lab']) + count($row['periksa_radiologi']) + count($row['berkas_digital']) + count($row['mlite_odontogram']) + (!empty($row['lokalis']) ? 1 : 0);
+      $row['asesmen_count'] = count($row['penilaian_medis_ralan']) + count($row['penilaian_medis_igd']) + count($row['penilaian_medis_ranap']) + count($row['triase_igd']) + count($row['penilaian_keperawatan_igd']) + count($row['penilaian_awal_keperawatan_ralan']) + count($row['penilaian_awal_keperawatan_ranap']) + count($row['catatan_adime_gizi']) + count($row['penilaian_ulang_nyeri']) + count($row['resume_pasien']) + count($row['laporan_operasi']) + count($row['rsgm_data']) + (!empty($row['catatan_perawatan']) ? 1 : 0);
+
+      $diagSummaryParts = [];
+      foreach ($row['diagnosa_pasien'] as $dg) {
+        $diagSummaryParts[] = trim(($dg['kd_penyakit'] ?? '') . ' ' . ($dg['nm_penyakit'] ?? ''));
+      }
+      $row['diagnosa_ringkas'] = implode('; ', $diagSummaryParts);
+      $row['journey_tags'] = $tagsByRawat[$row['no_rawat']] ?? [];
+
       $riwayat['reg_periksa'][] = $row;
     }
+
+    $riwayat['summary'] = [
+      'total_kunjungan'  => count($riwayat['reg_periksa']),
+      'total_rme_terisi' => $totalRmeTerisi,
+      'alergi_text'      => implode(', ', $alergiList),
+      'alergi_count'     => count($alergiList),
+      'has_alergi'       => !empty($alergiList) ? '1' : '',
+    ];
 
     return $riwayat;
   }
@@ -1861,6 +2062,493 @@ class Admin extends AdminModule
     }
   }
 
+  /**
+   * Halaman Telusur e-RM berdasarkan kriteria perjalanan & status akhir pasien (MRMIK).
+   */
+  public function getTelusur()
+  {
+    $userId = !empty($_SESSION['mlite_user']) ? $this->core->getUserInfo('id') : 0;
+    $perms = !empty($userId) ? $this->core->loadCrudPermissions('pasien') : ['can_read' => 'false'];
+    if (empty($userId) || ($perms['can_read'] ?? 'false') !== 'true') {
+      $this->notify('failure', 'Anda tidak memiliki hak akses membaca data rekam medis pasien.');
+      redirect(url([ADMIN, 'dashboard', 'main']));
+    }
 
+    $this->_addHeaderFiles();
+    $allowedKriteria = ['all', 'pulang', 'dirujuk', 'meninggal', 'operasi', 'icu', 'aps'];
+    $initKriteria = strtolower(trim((string)($_GET['kriteria'] ?? 'all')));
+    if (!in_array($initKriteria, $allowedKriteria, true)) {
+      $initKriteria = 'all';
+    }
+
+    return $this->draw('telusur.html', [
+      'init_kriteria' => htmlspecialchars($initKriteria, ENT_QUOTES, 'UTF-8'),
+      'init_search'   => htmlspecialchars(trim((string)($_GET['q'] ?? '')), ENT_QUOTES, 'UTF-8'),
+      'token'         => $_SESSION['token'] ?? '',
+      'mlite_crud_permissions' => htmlspecialchars_array($perms),
+    ]);
+  }
+
+  public function getTelusurdata()
+  {
+    return $this->anyTelusurdata();
+  }
+
+  /**
+   * Endpoint JSON Telusur e-RM berdasarkan kriteria perjalanan & status akhir pasien.
+   */
+  public function anyTelusurdata()
+  {
+    header('Content-Type: application/json; charset=utf-8');
+
+    $userId = !empty($_SESSION['mlite_user']) ? $this->core->getUserInfo('id') : 0;
+    $perms = !empty($userId) ? $this->core->loadCrudPermissions('pasien') : ['can_read' => 'false'];
+    if (empty($userId) || ($perms['can_read'] ?? 'false') !== 'true') {
+      http_response_code(403);
+      echo json_encode(['status' => 'error', 'message' => 'Akses ditolak.'], JSON_UNESCAPED_UNICODE);
+      exit();
+    }
+
+    $allowedKriteria = ['all', 'pulang', 'dirujuk', 'meninggal', 'operasi', 'icu', 'aps'];
+    $kriteria = strtolower(trim((string)($_REQUEST['kriteria'] ?? 'all')));
+    if (!in_array($kriteria, $allowedKriteria, true)) {
+      $kriteria = 'all';
+    }
+
+    $tglAwal = trim((string)($_REQUEST['tgl_awal'] ?? ''));
+    $tglAkhir = trim((string)($_REQUEST['tgl_akhir'] ?? ''));
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $tglAwal)) {
+      $tglAwal = '';
+    }
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $tglAkhir)) {
+      $tglAkhir = '';
+    }
+
+    $phrase = mb_substr(trim((string)($_REQUEST['q'] ?? '')), 0, 80, 'UTF-8');
+    $page = max(1, (int)($_REQUEST['page'] ?? 1));
+    $perPage = (int)($_REQUEST['per_page'] ?? 15);
+    if ($perPage < 10) $perPage = 10;
+    if ($perPage > 50) $perPage = 50;
+    $offset = ($page - 1) * $perPage;
+
+    try {
+      $pdo = $this->db()->pdo();
+      $criteriaSql = $this->_buildTelusurCriteriaSql($pdo);
+
+      $baseWhere = ['1=1'];
+      $baseBinds = [];
+      if ($tglAwal !== '' && $tglAkhir !== '') {
+        $baseWhere[] = 'rp.tgl_registrasi BETWEEN ? AND ?';
+        $baseBinds[] = $tglAwal;
+        $baseBinds[] = $tglAkhir;
+      } elseif ($tglAwal !== '') {
+        $baseWhere[] = 'rp.tgl_registrasi >= ?';
+        $baseBinds[] = $tglAwal;
+      } elseif ($tglAkhir !== '') {
+        $baseWhere[] = 'rp.tgl_registrasi <= ?';
+        $baseBinds[] = $tglAkhir;
+      }
+
+      if ($phrase !== '') {
+        $like = '%' . $phrase . '%';
+        $baseWhere[] = '(rp.no_rawat LIKE ? OR rp.no_rkm_medis LIKE ? OR p.nm_pasien LIKE ? OR pl.nm_poli LIKE ? OR d.nm_dokter LIKE ?)';
+        array_push($baseBinds, $like, $like, $like, $like, $like);
+      }
+
+      $baseSql = "FROM reg_periksa rp
+        INNER JOIN pasien p ON p.no_rkm_medis = rp.no_rkm_medis
+        LEFT JOIN poliklinik pl ON pl.kd_poli = rp.kd_poli
+        LEFT JOIN dokter d ON d.kd_dokter = rp.kd_dokter
+        LEFT JOIN penjab pj ON pj.kd_pj = rp.kd_pj
+        WHERE " . implode(' AND ', $baseWhere);
+
+      $countSql = "SELECT
+        COUNT(*) AS cnt_all,
+        SUM(CASE WHEN ({$criteriaSql['pulang']}) THEN 1 ELSE 0 END) AS cnt_pulang,
+        SUM(CASE WHEN ({$criteriaSql['dirujuk']}) THEN 1 ELSE 0 END) AS cnt_dirujuk,
+        SUM(CASE WHEN ({$criteriaSql['meninggal']}) THEN 1 ELSE 0 END) AS cnt_meninggal,
+        SUM(CASE WHEN ({$criteriaSql['operasi']}) THEN 1 ELSE 0 END) AS cnt_operasi,
+        SUM(CASE WHEN ({$criteriaSql['icu']}) THEN 1 ELSE 0 END) AS cnt_icu,
+        SUM(CASE WHEN ({$criteriaSql['aps']}) THEN 1 ELSE 0 END) AS cnt_aps
+        {$baseSql}";
+      $stCounts = $pdo->prepare($countSql);
+      $stCounts->execute($baseBinds);
+      $cRow = $stCounts->fetch(\PDO::FETCH_ASSOC) ?: [];
+      $counts = [
+        'all'       => (int)($cRow['cnt_all'] ?? 0),
+        'pulang'    => (int)($cRow['cnt_pulang'] ?? 0),
+        'dirujuk'   => (int)($cRow['cnt_dirujuk'] ?? 0),
+        'meninggal' => (int)($cRow['cnt_meninggal'] ?? 0),
+        'operasi'   => (int)($cRow['cnt_operasi'] ?? 0),
+        'icu'       => (int)($cRow['cnt_icu'] ?? 0),
+        'aps'       => (int)($cRow['cnt_aps'] ?? 0),
+      ];
+
+      $activeCriteriaSql = ($kriteria !== 'all' && isset($criteriaSql[$kriteria]))
+        ? " AND ({$criteriaSql[$kriteria]})"
+        : '';
+
+      $total = ($kriteria === 'all') ? $counts['all'] : ($counts[$kriteria] ?? 0);
+
+      $dataSql = "SELECT
+        rp.no_rawat, rp.no_rkm_medis, rp.tgl_registrasi, rp.jam_reg,
+        rp.status_lanjut, rp.stts, rp.status_bayar, rp.kd_poli, rp.kd_dokter,
+        p.nm_pasien, p.jk, p.tgl_lahir,
+        COALESCE(pl.nm_poli, '-') AS nm_poli,
+        COALESCE(d.nm_dokter, '-') AS nm_dokter,
+        COALESCE(pj.png_jawab, '-') AS png_jawab
+        {$baseSql} {$activeCriteriaSql}
+        ORDER BY rp.tgl_registrasi DESC, rp.jam_reg DESC
+        LIMIT {$perPage} OFFSET {$offset}";
+
+      $stRows = $pdo->prepare($dataSql);
+      $stRows->execute($baseBinds);
+      $rows = $stRows->fetchAll(\PDO::FETCH_ASSOC);
+
+      $noRawatList = array_values(array_filter(array_column($rows, 'no_rawat')));
+      $tagsByRawat = $this->_extractJourneyTagsForVisits($pdo, $rows);
+      $statsByRawat = $this->_collectTelusurVisitStats($pdo, $noRawatList);
+
+      $items = [];
+      foreach ($rows as $r) {
+        $nr = (string)$r['no_rawat'];
+        $noRm = (string)$r['no_rkm_medis'];
+        $st = $statsByRawat[$nr] ?? [];
+        $items[] = [
+          'no_rawat'         => $nr,
+          'no_rkm_medis'     => $noRm,
+          'nm_pasien'        => (string)($r['nm_pasien'] ?? '-'),
+          'jk'               => (string)($r['jk'] ?? ''),
+          'tgl_registrasi'   => (string)($r['tgl_registrasi'] ?? ''),
+          'jam_reg'          => (string)($r['jam_reg'] ?? ''),
+          'status_lanjut'    => (string)($r['status_lanjut'] ?? 'Ralan'),
+          'stts'             => (string)($r['stts'] ?? ''),
+          'status_bayar'     => (string)($r['status_bayar'] ?? ''),
+          'nm_poli'          => (string)($r['nm_poli'] ?? '-'),
+          'nm_dokter'        => (string)($r['nm_dokter'] ?? '-'),
+          'png_jawab'        => (string)($r['png_jawab'] ?? '-'),
+          'tags'             => $tagsByRawat[$nr] ?? [],
+          'diagnosa_ringkas' => (string)($st['diagnosa_ringkas'] ?? ''),
+          'stts_pulang_list' => $st['stts_pulang_list'] ?? [],
+          'rme_count'        => (int)($st['rme_count'] ?? 0),
+          'soap_count'       => (int)($st['soap_count'] ?? 0),
+          'penunjang_count'  => (int)($st['penunjang_count'] ?? 0),
+          'tindakan_count'   => (int)($st['tindakan_count'] ?? 0),
+          'url_erm'          => url([ADMIN, 'pasien', 'riwayatperawatan', $noRm]) . '&focus_rawat=' . urlencode($nr),
+          'url_lembar_kerja' => url([ADMIN, 'form_rme', 'pasien']) . '&no_rawat=' . urlencode($nr),
+          'url_pdf'          => url([ADMIN, 'pasien', 'pdfriwayatperawatan', $noRm, convertNorawat($nr)]),
+        ];
+      }
+
+      echo json_encode([
+        'status'   => 'success',
+        'kriteria' => $kriteria,
+        'counts'   => $counts,
+        'data'     => $items,
+        'meta'     => [
+          'page'       => $page,
+          'per_page'   => $perPage,
+          'total'      => $total,
+          'total_page' => max(1, (int)ceil($total / $perPage)),
+        ],
+      ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    } catch (\Throwable $e) {
+      error_log('[pasien/telusurdata] ' . $e->getMessage());
+      http_response_code(500);
+      echo json_encode(['status' => 'error', 'message' => 'Gagal memuat data telusur e-RM.'], JSON_UNESCAPED_UNICODE);
+    }
+    exit();
+  }
+
+  /**
+   * Cache daftar tabel yang tersedia di database saat runtime.
+   */
+  private function _getExistingTablesMap(\PDO $pdo)
+  {
+    static $cache = null;
+    if ($cache !== null) {
+      return $cache;
+    }
+    $cache = [];
+    if (DBDRIVER === 'mysql') {
+      $st = $pdo->query("SHOW TABLES");
+      while ($r = $st->fetch(\PDO::FETCH_NUM)) {
+        $cache[(string)$r[0]] = true;
+      }
+    }
+    return $cache;
+  }
+
+  /**
+   * Single source of truth ekspresi SQL kriteria pasien Telusur e-RM (MRMIK).
+   */
+  private function _buildTelusurCriteriaSql(\PDO $pdo)
+  {
+    $tbls = $this->_getExistingTablesMap($pdo);
+    $hasKamarInap = !empty($tbls['kamar_inap']);
+
+    $pulangParts = ["rp.stts = 'Sudah'"];
+    $dirujukParts = ["rp.stts = 'Dirujuk'"];
+    $meninggalParts = ["rp.stts = 'Meninggal'"];
+    $apsParts = ["rp.stts = 'Pulang Paksa'"];
+    $operasiParts = [];
+    $icuParts = [];
+
+    if ($hasKamarInap) {
+      $pulangParts[] = "EXISTS (SELECT 1 FROM kamar_inap ki WHERE ki.no_rawat = rp.no_rawat AND ki.stts_pulang IN ('Sehat','Sembuh','Membaik','Atas Persetujuan Dokter'))";
+      $dirujukParts[] = "EXISTS (SELECT 1 FROM kamar_inap ki WHERE ki.no_rawat = rp.no_rawat AND ki.stts_pulang = 'Rujuk')";
+      $meninggalParts[] = "EXISTS (SELECT 1 FROM kamar_inap ki WHERE ki.no_rawat = rp.no_rawat AND ki.stts_pulang IN ('Meninggal','+'))";
+      $apsParts[] = "EXISTS (SELECT 1 FROM kamar_inap ki WHERE ki.no_rawat = rp.no_rawat AND ki.stts_pulang IN ('APS','Pulang Paksa','Atas Permintaan Sendiri'))";
+      if (!empty($tbls['kamar']) && !empty($tbls['bangsal'])) {
+        $icuParts[] = "EXISTS (SELECT 1 FROM kamar_inap ki INNER JOIN kamar km ON km.kd_kamar = ki.kd_kamar INNER JOIN bangsal bg ON bg.kd_bangsal = km.kd_bangsal WHERE ki.no_rawat = rp.no_rawat AND UPPER(bg.nm_bangsal) LIKE '%ICU%')";
+      }
+    }
+
+    if (!empty($tbls['formulir_rujukan_rs'])) {
+      $dirujukParts[] = "EXISTS (SELECT 1 FROM formulir_rujukan_rs fr WHERE fr.no_rawat = rp.no_rawat)";
+    }
+    if (!empty($tbls['rm_surat_pulang_aps'])) {
+      $apsParts[] = "EXISTS (SELECT 1 FROM rm_surat_pulang_aps aps WHERE aps.no_rawat = rp.no_rawat)";
+    }
+    foreach (['operasi', 'laporan_operasi', 'rm_bm4_laporan_pembedahan', 'rm_bmi5_bedah_minor'] as $opTbl) {
+      if (!empty($tbls[$opTbl])) {
+        $alias = 't_' . substr(md5($opTbl), 0, 5);
+        $operasiParts[] = "EXISTS (SELECT 1 FROM `{$opTbl}` {$alias} WHERE {$alias}.no_rawat = rp.no_rawat)";
+      }
+    }
+    if (!empty($tbls['kriteria_masuk_keluar_icu'])) {
+      $icuParts[] = "EXISTS (SELECT 1 FROM kriteria_masuk_keluar_icu icu WHERE icu.no_rawat = rp.no_rawat)";
+    }
+
+    return [
+      'pulang'    => implode(' OR ', $pulangParts),
+      'dirujuk'   => implode(' OR ', $dirujukParts),
+      'meninggal' => implode(' OR ', $meninggalParts),
+      'operasi'   => !empty($operasiParts) ? implode(' OR ', $operasiParts) : '1=0',
+      'icu'       => !empty($icuParts) ? implode(' OR ', $icuParts) : '1=0',
+      'aps'       => implode(' OR ', $apsParts),
+    ];
+  }
+
+  /**
+   * Menghitung tag kriteria perjalanan pasien per kunjungan secara batch & konsisten.
+   */
+  private function _extractJourneyTagsForVisits(\PDO $pdo, array $visits)
+  {
+    $noRawatList = array_values(array_unique(array_filter(array_column($visits, 'no_rawat'))));
+    if (empty($noRawatList)) {
+      return [];
+    }
+
+    $tbls = $this->_getExistingTablesMap($pdo);
+    $ph = implode(',', array_fill(0, count($noRawatList), '?'));
+
+    $fetchRawatSet = function ($sql) use ($pdo, $noRawatList) {
+      $set = [];
+      try {
+        $st = $pdo->prepare($sql);
+        $st->execute($noRawatList);
+        while ($nr = $st->fetchColumn()) {
+          $set[(string)$nr] = true;
+        }
+      } catch (\Throwable $e) {
+      }
+      return $set;
+    };
+
+    $dirujukSet = !empty($tbls['formulir_rujukan_rs'])
+      ? $fetchRawatSet("SELECT DISTINCT no_rawat FROM formulir_rujukan_rs WHERE no_rawat IN ({$ph})")
+      : [];
+    $apsSet = !empty($tbls['rm_surat_pulang_aps'])
+      ? $fetchRawatSet("SELECT DISTINCT no_rawat FROM rm_surat_pulang_aps WHERE no_rawat IN ({$ph})")
+      : [];
+    $icuSet = !empty($tbls['kriteria_masuk_keluar_icu'])
+      ? $fetchRawatSet("SELECT DISTINCT no_rawat FROM kriteria_masuk_keluar_icu WHERE no_rawat IN ({$ph})")
+      : [];
+
+    $operasiSet = [];
+    foreach (['operasi', 'laporan_operasi', 'rm_bm4_laporan_pembedahan', 'rm_bmi5_bedah_minor'] as $opTbl) {
+      if (!empty($tbls[$opTbl])) {
+        $operasiSet += $fetchRawatSet("SELECT DISTINCT no_rawat FROM `{$opTbl}` WHERE no_rawat IN ({$ph})");
+      }
+    }
+
+    $kamarByRawat = [];
+    if (!empty($tbls['kamar_inap'])) {
+      try {
+        $joinBangsal = (!empty($tbls['kamar']) && !empty($tbls['bangsal']))
+          ? "LEFT JOIN kamar km ON km.kd_kamar = ki.kd_kamar LEFT JOIN bangsal bg ON bg.kd_bangsal = km.kd_bangsal"
+          : "";
+        $selBangsal = $joinBangsal !== '' ? ", COALESCE(bg.nm_bangsal, '') AS nm_bangsal" : ", '' AS nm_bangsal";
+        $stKi = $pdo->prepare("SELECT ki.no_rawat, ki.stts_pulang {$selBangsal} FROM kamar_inap ki {$joinBangsal} WHERE ki.no_rawat IN ({$ph})");
+        $stKi->execute($noRawatList);
+        while ($ki = $stKi->fetch(\PDO::FETCH_ASSOC)) {
+          $kamarByRawat[(string)$ki['no_rawat']][] = $ki;
+        }
+      } catch (\Throwable $e) {
+      }
+    }
+
+    $result = [];
+    foreach ($visits as $v) {
+      $nr = (string)($v['no_rawat'] ?? '');
+      if ($nr === '') continue;
+      $stts = (string)($v['stts'] ?? '');
+      $tags = [];
+      $added = [];
+      $pushTag = function ($key, $label, $tone) use (&$tags, &$added) {
+        if (!isset($added[$key])) {
+          $added[$key] = true;
+          $tags[] = ['key' => $key, 'label' => $label, 'tone' => $tone];
+        }
+      };
+
+      $kiRows = $kamarByRawat[$nr] ?? [];
+      $kiStatuses = array_column($kiRows, 'stts_pulang');
+      $hasIcuWard = false;
+      foreach ($kiRows as $ki) {
+        if (stripos((string)($ki['nm_bangsal'] ?? ''), 'ICU') !== false) {
+          $hasIcuWard = true;
+          break;
+        }
+      }
+
+      if ($stts === 'Dirujuk' || in_array('Rujuk', $kiStatuses, true) || !empty($dirujukSet[$nr])) {
+        $pushTag('dirujuk', 'Dirujuk', 'amber');
+      }
+      if ($stts === 'Meninggal' || in_array('Meninggal', $kiStatuses, true) || in_array('+', $kiStatuses, true)) {
+        $pushTag('meninggal', 'Meninggal', 'rose');
+      }
+      if (!empty($operasiSet[$nr])) {
+        $pushTag('operasi', 'Operasi', 'indigo');
+      }
+      if (!empty($icuSet[$nr]) || $hasIcuWard) {
+        $pushTag('icu', 'ICU', 'purple');
+      }
+      if ($stts === 'Pulang Paksa' || !empty(array_intersect($kiStatuses, ['APS', 'Pulang Paksa', 'Atas Permintaan Sendiri'])) || !empty($apsSet[$nr])) {
+        $pushTag('aps', 'APS', 'orange');
+      }
+      if ($stts === 'Sudah' || !empty(array_intersect($kiStatuses, ['Sehat', 'Sembuh', 'Membaik', 'Atas Persetujuan Dokter']))) {
+        $pushTag('pulang', 'Pulang', 'emerald');
+      } elseif ($stts === 'Dirawat') {
+        $pushTag('dirawat', 'Dirawat', 'sky');
+      }
+
+      $result[$nr] = $tags;
+    }
+
+    return $result;
+  }
+
+  /**
+   * Menghitung kelengkapan isi e-RM (SOAP, Form RME, Penunjang, Tindakan, Diagnosa) secara batch per halaman.
+   */
+  private function _collectTelusurVisitStats(\PDO $pdo, array $noRawatList)
+  {
+    $stats = [];
+    foreach ($noRawatList as $nr) {
+      $stats[$nr] = [
+        'soap_count'       => 0,
+        'rme_count'        => 0,
+        'penunjang_count'  => 0,
+        'tindakan_count'   => 0,
+        'diagnosa_ringkas' => '',
+        'stts_pulang_list' => [],
+      ];
+    }
+    if (empty($noRawatList)) {
+      return $stats;
+    }
+
+    $tbls = $this->_getExistingTablesMap($pdo);
+    $ph = implode(',', array_fill(0, count($noRawatList), '?'));
+
+    $addCounts = function ($table, $statKey) use ($pdo, $tbls, $ph, $noRawatList, &$stats) {
+      if (empty($tbls[$table])) return;
+      try {
+        $st = $pdo->prepare("SELECT no_rawat, COUNT(*) AS cnt FROM `{$table}` WHERE no_rawat IN ({$ph}) GROUP BY no_rawat");
+        $st->execute($noRawatList);
+        while ($row = $st->fetch(\PDO::FETCH_ASSOC)) {
+          $nr = (string)$row['no_rawat'];
+          if (isset($stats[$nr])) {
+            $stats[$nr][$statKey] += (int)$row['cnt'];
+          }
+        }
+      } catch (\Throwable $e) {
+      }
+    };
+
+    foreach (['pemeriksaan_ralan', 'pemeriksaan_ranap'] as $t) {
+      $addCounts($t, 'soap_count');
+    }
+    foreach (['periksa_lab', 'periksa_radiologi'] as $t) {
+      $addCounts($t, 'penunjang_count');
+    }
+    foreach (['rawat_jl_dr', 'rawat_jl_pr', 'rawat_jl_drpr', 'rawat_inap_dr', 'rawat_inap_pr', 'rawat_inap_drpr', 'operasi'] as $t) {
+      $addCounts($t, 'tindakan_count');
+    }
+
+    if (!empty($tbls['mlite_rme_form'])) {
+      try {
+        $rmeMeta = $pdo->query("SELECT DISTINCT nama_tabel FROM mlite_rme_form WHERE status = '1'")->fetchAll(\PDO::FETCH_COLUMN);
+        foreach ($rmeMeta as $tblName) {
+          $tblName = trim((string)$tblName);
+          if ($tblName === '' || !preg_match('/^[a-zA-Z0-9_]+$/', $tblName) || empty($tbls[$tblName])) {
+            continue;
+          }
+          try {
+            $stR = $pdo->prepare("SELECT DISTINCT no_rawat FROM `{$tblName}` WHERE no_rawat IN ({$ph})");
+            $stR->execute($noRawatList);
+            while ($nr = $stR->fetchColumn()) {
+              $nr = (string)$nr;
+              if (isset($stats[$nr])) {
+                $stats[$nr]['rme_count']++;
+              }
+            }
+          } catch (\Throwable $e) {
+          }
+        }
+      } catch (\Throwable $e) {
+      }
+    }
+
+    if (!empty($tbls['diagnosa_pasien']) && !empty($tbls['penyakit'])) {
+      try {
+        $stD = $pdo->prepare("SELECT dp.no_rawat, dp.kd_penyakit, pk.nm_penyakit
+          FROM diagnosa_pasien dp
+          LEFT JOIN penyakit pk ON pk.kd_penyakit = dp.kd_penyakit
+          WHERE dp.no_rawat IN ({$ph})
+          ORDER BY dp.prioritas ASC");
+        $stD->execute($noRawatList);
+        $diagMap = [];
+        while ($dr = $stD->fetch(\PDO::FETCH_ASSOC)) {
+          $nr = (string)$dr['no_rawat'];
+          $diagMap[$nr][] = trim(($dr['kd_penyakit'] ?? '') . ' ' . ($dr['nm_penyakit'] ?? ''));
+        }
+        foreach ($diagMap as $nr => $parts) {
+          if (isset($stats[$nr])) {
+            $stats[$nr]['diagnosa_ringkas'] = implode('; ', array_slice($parts, 0, 2));
+          }
+        }
+      } catch (\Throwable $e) {
+      }
+    }
+
+    if (!empty($tbls['kamar_inap'])) {
+      try {
+        $stKi = $pdo->prepare("SELECT no_rawat, stts_pulang FROM kamar_inap WHERE no_rawat IN ({$ph}) AND stts_pulang IS NOT NULL AND stts_pulang != '-'");
+        $stKi->execute($noRawatList);
+        while ($ki = $stKi->fetch(\PDO::FETCH_ASSOC)) {
+          $nr = (string)$ki['no_rawat'];
+          if (isset($stats[$nr]) && !in_array($ki['stts_pulang'], $stats[$nr]['stts_pulang_list'], true)) {
+            $stats[$nr]['stts_pulang_list'][] = (string)$ki['stts_pulang'];
+          }
+        }
+      } catch (\Throwable $e) {
+      }
+    }
+
+    return $stats;
+  }
 
 }

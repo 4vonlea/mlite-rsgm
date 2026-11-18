@@ -155,9 +155,14 @@
           if (timeline[c].action_type === 'VOID') isVoidedDoc = true;
         }
 
+        var noRawatDisplay = (keyParts.length >= 3 && keyParts[0]) ? keyParts[0] : (resp.no_rawat || recordKey || '-');
+        var waktuDisplay = (keyParts.length >= 3)
+          ? $.trim((keyParts[1] || '') + ' ' + (keyParts[2] || ''))
+          : ((timeline[0] && timeline[0].created_at) ? timeline[0].created_at : ('#' + recordKey));
+
         var html = '<div class="rsgm-rev-summary-bar">' +
-          '<div class="rsgm-rev-sum-item"><span class="rsgm-rev-sum-lbl">No. Rawat</span><strong>' + escapeHtml(keyParts[0] || resp.no_rawat || '-') + '</strong></div>' +
-          '<div class="rsgm-rev-sum-item"><span class="rsgm-rev-sum-lbl">Waktu Entri</span><strong>' + escapeHtml((keyParts[1] || '') + ' ' + (keyParts[2] || '')) + '</strong></div>' +
+          '<div class="rsgm-rev-sum-item"><span class="rsgm-rev-sum-lbl">No. Rawat</span><strong>' + escapeHtml(noRawatDisplay) + '</strong></div>' +
+          '<div class="rsgm-rev-sum-item"><span class="rsgm-rev-sum-lbl">Waktu Entri</span><strong>' + escapeHtml(waktuDisplay) + '</strong></div>' +
           '<div class="rsgm-rev-sum-item"><span class="rsgm-rev-sum-lbl">Total Koreksi</span><strong>' + revTotal + ' kali</strong></div>' +
           '<div class="rsgm-rev-sum-item"><span class="rsgm-rev-sum-lbl">Status</span>' +
             (isVoidedDoc ? '<span class="rsgm-rev-stat-pill is-void"><i class="fa fa-ban"></i> Dibatalkan (VOID)</span>' : '<span class="rsgm-rev-stat-pill is-active"><i class="fa fa-check-circle"></i> Aktif</span>') +
@@ -594,6 +599,198 @@
           $btn.find('.js-void-btn-lbl').text('Sembunyikan Dibatalkan');
         }
       });
+    },
+
+    promptReason: function(opts, onSubmit) {
+      promptReasonModal(opts || {}, onSubmit || function() {});
+    },
+
+    openHistory: function(moduleName, tableName, recordKey, focusField) {
+      openHistoryModal(moduleName || 'form_rme', tableName, String(recordKey || ''), focusField || '');
+    },
+
+    decorateRmeForm: function(meta) {
+      if (!meta || !meta.table_name || !meta.id) return;
+      var $form = $('form').filter(function() {
+        return !$(this).closest('.modal, #frm-rj03-delete, #frm-rj04-delete').length && ($(this).find('input, textarea, select').length >= 3 || $(this).attr('method'));
+      }).first();
+      if (!$form.length) return;
+
+      var map = meta.changed_fields_map || {};
+      var recKey = String(meta.id);
+      var tbl = String(meta.table_name);
+
+      // Highlight fields that have been formally amended
+      $.each(map, function(field, info) {
+        var $targets = $form.find('[data-rev-field="' + field + '"]');
+        if (!$targets.length) {
+          $targets = $form.find('[name="' + field + '"], [name="' + field + '[]"], .f-' + field + ', #' + field).filter('input, textarea, select');
+        }
+        if (!$targets.length && field === 'asesmen') {
+          $targets = $form.find('#tblAsesmen, .asesmen-row').first();
+        }
+        $targets.each(function() {
+          var $el = $(this);
+          if ($el.attr('type') === 'hidden') return;
+          $el.addClass('rsgm-rev-input-highlight');
+          var $grp = $el.closest('.form-group, td, div.col-md-12, div.col-md-6, div.col-md-4, div.col-md-3, .panel, .box');
+          var $lbl = $grp.find('label, .control-label, th').first();
+          if ($el.is('#tblAsesmen, .asesmen-row')) {
+            $lbl = $el.closest('.rsgm-reg-section, .panel, div').find('h4, h5, label').first();
+          }
+          if ($lbl.length && !$lbl.find('.rsgm-form-rev-pin[data-field="' + field + '"]').length) {
+            var revNumTxt = info.revision_no ? ('#' + info.revision_no) : '';
+            var $pin = $('<span class="rsgm-rev-pin rsgm-form-rev-pin js-soap-rev-open" title="Arahkan untuk pratinjau Semula \u2192 Menjadi / klik untuk riwayat"><i class="fa fa-history"></i> Koreksi' + (revNumTxt ? ' ' + revNumTxt : '') + '</span>');
+            $pin.data('revInfo', info);
+            $pin.attr('data-module', 'form_rme');
+            $pin.attr('data-table', tbl);
+            $pin.attr('data-key', recKey);
+            $pin.attr('data-field', field);
+            $lbl.append(' ').append($pin);
+          }
+        });
+      });
+
+      // Disable all controls cleanly if record is VOID
+      if (meta.is_voided) {
+        $form.find('input, textarea, select, button[type=submit]').not('.js-soap-rev-open, [type=hidden]').prop('disabled', true);
+        $('#btn-rme-quick-save, #btn-rme-done, #rme-toggle-autosave').prop('disabled', true).addClass('disabled');
+      }
+
+      // Guard form submission (normal POST) when correction requires reason
+      $form.off('submit.rsgmRmeRev').on('submit.rsgmRmeRev', function(e) {
+        if ($form.data('rsgmAllowSubmitOnce')) {
+          $form.removeData('rsgmAllowSubmitOnce');
+          return true;
+        }
+        if (meta.is_voided) {
+          e.preventDefault();
+          return false;
+        }
+        if (!meta.needs_reason) return true;
+        var existingReason = $.trim($form.find('input[name="revision_reason"]').val() || '');
+        if (existingReason.length >= 3) return true;
+
+        e.preventDefault();
+        promptReasonModal({
+          title: 'Alasan Koreksi Formulir RME (MRMIK 8)',
+          infoText: meta.why || 'Perubahan formulir yang sudah lewat masa tenggang 15 menit / ber-TTE wajib disertai alasan koreksi.',
+          required: true,
+          label: 'Alasan Koreksi Formulir',
+          confirmLabel: 'Simpan Koreksi',
+          confirmClass: 'btn-warning'
+        }, function(reason) {
+          var $ri = $form.find('input[name="revision_reason"]');
+          if (!$ri.length) {
+            $ri = $('<input type="hidden" name="revision_reason">').appendTo($form);
+          }
+          $ri.val(reason);
+          $form.triggerHandler('rme:beforeSave');
+          $form.data('rsgmAllowSubmitOnce', true);
+          $form[0].submit();
+        });
+        return false;
+      });
+    },
+
+    decorateRmeManage: function(metaPayload) {
+      if (!metaPayload || !metaPayload.table_name || !metaPayload.rows) return;
+      var tbl = String(metaPayload.table_name);
+      var rowsById = metaPayload.rows || {};
+      var $table = $('table').filter(function() {
+        return $(this).find('tbody tr').length > 0 && $(this).find('a[href*="cetak"], a[href*="form"]').length > 0;
+      }).first();
+      if (!$table.length) return;
+
+      $table.find('tbody tr').each(function() {
+        var $tr = $(this);
+        var rowId = '';
+        var $delTrigger = $tr.find('a[href*="hapus"], a[href*="delete"], button[data-id]').first();
+        if ($delTrigger.length) {
+          rowId = String($delTrigger.attr('data-id') || '');
+          if (!rowId) {
+            var href = $delTrigger.attr('href') || '';
+            var m = href.match(/[?&]id=(\d+)|\/(\d+)(?:\?|$)/);
+            if (m) rowId = m[1] || m[2] || '';
+          }
+        }
+        if (!rowId) {
+          var $editLink = $tr.find('a[href*="form"]').first();
+          if ($editLink.length) {
+            var m2 = ($editLink.attr('href') || '').match(/[?&]id=(\d+)|\/(\d+)(?:\?|$)/);
+            if (m2) rowId = m2[1] || m2[2] || '';
+          }
+        }
+        if (!rowId || !rowsById[rowId]) return;
+
+        var info = rowsById[rowId];
+        $tr.attr('data-record-key', rowId).attr('data-table-name', tbl);
+
+        // Find display cell (No Rawat or Nama Pasien - second column usually, or cell with strong)
+        var $badgeCell = $tr.find('td').eq(1);
+        if (!$badgeCell.length) $badgeCell = $tr.find('td').first();
+
+        if (!$badgeCell.find('.rsgm-rme-manage-badges').length) {
+          var badgesHtml = '<div class="rsgm-rme-manage-badges" style="margin-top:4px;display:flex;flex-wrap:wrap;gap:4px;align-items:center;">';
+          if (info.is_voided) {
+            $tr.addClass('rsgm-void-row').css('opacity', '0.72').css('background', '#fef2f2');
+            badgesHtml += '<span class="rsgm-soap-rev-badge js-soap-rev-open" style="background:#dc2626;color:#fff;border-color:#b91c1c;" data-module="form_rme" data-table="' + escapeHtml(tbl) + '" data-key="' + escapeHtml(rowId) + '" title="Klik untuk melihat detail pembatalan"><i class="fa fa-ban"></i> DIBATALKAN (VOID)</span>';
+            if (info.void_info && info.void_info.void_reason) {
+              badgesHtml += '<small style="color:#991b1b;font-size:10.5px;">Alasan: ' + escapeHtml(info.void_info.void_reason) + '</small>';
+            }
+          } else if (info.has_revisions) {
+            badgesHtml += '<button type="button" class="rsgm-soap-rev-badge js-soap-rev-open" data-module="form_rme" data-table="' + escapeHtml(tbl) + '" data-key="' + escapeHtml(rowId) + '" title="Lihat riwayat koreksi (MRMIK 8)"><i class="fa fa-history"></i> Dikoreksi ' + parseInt(info.revision_count, 10) + 'x</button>';
+          }
+          if (info.is_tte_outdated) {
+            badgesHtml += '<span class="rsgm-soap-tte-warn-badge" title="Formulir dikoreksi setelah TTE dibubuhkan — perlu TTE ulang"><i class="fa fa-exclamation-triangle"></i> TTE Sebelum Koreksi</span>';
+          }
+          badgesHtml += '</div>';
+          if (info.is_voided || info.has_revisions || info.is_tte_outdated) {
+            $badgeCell.append(badgesHtml);
+          }
+        }
+
+        // Upgrade delete link/button to capture void_reason (MRMIK 8)
+        $tr.find('a[href*="hapus"], a[href*="delete"], .btn-rj03-delete, .btn-rj04-delete').each(function() {
+          var $del = $(this);
+          if (info.is_voided) {
+            $del.addClass('disabled').attr('disabled', true).css('pointer-events', 'none').attr('title', 'Sudah dibatalkan (VOID)');
+            return;
+          }
+          $del.removeAttr('onclick').off('click.rsgmRmeVoid').on('click.rsgmRmeVoid', function(e) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            var targetUrl = $del.attr('href') || metaPayload.hapus_url || '';
+            if (!targetUrl && ($del.hasClass('btn-rj03-delete') || $del.hasClass('btn-rj04-delete'))) {
+              targetUrl = $('#frm-rj03-delete').attr('action') || $('#frm-rj04-delete').attr('action') || '';
+            }
+            if (!targetUrl) return;
+
+            promptReasonModal({
+              title: 'Konfirmasi Pembatalan / VOID Formulir RME (MRMIK 8)',
+              infoText: info.needs_reason
+                ? (info.why + '. Data tidak dihapus permanen, melainkan ditandai VOID dengan alasan.')
+                : 'Formulir masih dalam masa tenggang 15 menit. Pembatalan akan tetap dicatat pada log audit (VOID).',
+              required: !!info.needs_reason,
+              label: 'Alasan Pembatalan / VOID',
+              confirmLabel: 'Batalkan (VOID) Data',
+              confirmClass: 'btn-danger',
+              chips: ['Salah input pasien', 'Duplikasi pengisian formulir', 'Data tidak sesuai kunjungan', 'Batal tindakan']
+            }, function(reason) {
+              var $f = $('<form method="POST" style="display:none;"></form>').attr('action', targetUrl);
+              $f.append($('<input type="hidden" name="id">').val(rowId));
+              $f.append($('<input type="hidden" name="void_reason">').val(reason));
+              var t = getToken();
+              if (t && targetUrl.indexOf('t=') === -1) {
+                $f.attr('action', targetUrl + (targetUrl.indexOf('?') === -1 ? '?' : '&') + 't=' + encodeURIComponent(t));
+              }
+              $('body').append($f);
+              $f[0].submit();
+            });
+            return false;
+          });
+        });
+      });
     }
   };
 
@@ -620,7 +817,7 @@
     var $el = $(this);
     var mod = $el.attr('data-module') || '';
     if (!mod) {
-      var m = window.location.pathname.match(/\/([a-z0-9_]+)\/manage/i);
+      var m = window.location.pathname.match(/\/admin\/([a-z0-9_]+)\//i) || window.location.pathname.match(/\/([a-z0-9_]+)\/manage/i);
       mod = m ? m[1] : 'rawat_jalan';
     }
     var tbl = $el.attr('data-table') || 'pemeriksaan_ralan';
@@ -628,6 +825,27 @@
     var fld = $el.attr('data-field') || '';
     if (key) {
       openHistoryModal(mod, tbl, key, fld);
+    }
+  });
+
+  // Auto-init MRMIK 8 decorations when Rajal RME metadata scripts are present
+  $(document).ready(function() {
+    var $formMeta = $('#rsgm-rme-rev-form-meta');
+    if ($formMeta.length) {
+      var fMeta = parseJsonSafe($formMeta.text());
+      if (fMeta) {
+        RSGMSoapRevision.decorateRmeForm(fMeta);
+      }
+    }
+    var $manageMeta = $('#rsgm-rme-rev-manage-meta');
+    if ($manageMeta.length) {
+      var mMeta = parseJsonSafe($manageMeta.text());
+      if (mMeta) {
+        setTimeout(function() { RSGMSoapRevision.decorateRmeManage(mMeta); }, 60);
+        $(document).on('draw.dt', 'table', function() {
+          RSGMSoapRevision.decorateRmeManage(mMeta);
+        });
+      }
     }
   });
 

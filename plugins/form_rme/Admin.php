@@ -128,7 +128,107 @@ class Admin extends AdminModule
             $variables['actor_permission_message'] = $perm['message'];
         }
 
+        // MRMIK 8: Enrich data formulir RME Rawat Jalan pada manage / form / cetak
+        $rajalDir = explode('/', (string)$file)[0];
+        $rajalTable = $this->getRajalTableByViewDir($rajalDir);
+        $isRajalManage = ($rajalTable !== '' && (strpos($file, 'manage.html') !== false));
+        $isRajalForm = ($rajalTable !== '' && (strpos($file, 'form.html') !== false || strpos($file, '_form.html') !== false));
+        $isRajalCetak = ($rajalTable !== '' && strpos($file, 'cetak.html') !== false);
+        $rajalFormMeta = null;
+        $rajalCetakMeta = null;
+        $rajalManageRowsMeta = [];
+
+        if ($isRajalManage) {
+            $listKey = isset($variables['edukasi']) ? 'edukasi' : (isset($variables['data']) ? 'data' : '');
+            if ($listKey !== '' && is_array($variables[$listKey])) {
+                $variables[$listKey] = \Systems\Lib\RmeFormRevision::enrichRows($this->core, $rajalTable, $variables[$listKey]);
+                foreach ($variables[$listKey] as $mr) {
+                    if (!empty($mr['id'])) {
+                        $rajalManageRowsMeta[(string)$mr['id']] = [
+                            'id' => (int)$mr['id'],
+                            'is_voided' => !empty($mr['is_voided']),
+                            'void_info' => $mr['void_info'] ?? null,
+                            'revision_count' => (int)($mr['revision_count'] ?? 0),
+                            'has_revisions' => !empty($mr['has_revisions']),
+                            'is_tte_outdated' => !empty($mr['is_tte_outdated']),
+                            'needs_reason' => !empty($mr['needs_reason']),
+                            'why' => $mr['grace_why'] ?? '',
+                            'last_revised_by' => $mr['last_revised_by'] ?? '',
+                            'last_revised_at_fmt' => $mr['last_revised_at_fmt'] ?? '',
+                        ];
+                    }
+                }
+            }
+        } elseif ($isRajalForm) {
+            $row = (isset($variables['data']) && is_array($variables['data']) && !isset($variables['data'][0])) ? $variables['data'] : [];
+            $rowId = (int)($row['id'] ?? ($variables['id'] ?? ($_GET['id'] ?? 0)));
+            if ($rowId > 0) {
+                if (empty($row['id'])) {
+                    $row['id'] = $rowId;
+                }
+                $dbRow = $this->db($rajalTable)->where('id', $rowId)->oneArray();
+                if (is_array($dbRow)) {
+                    $row = array_merge($dbRow, $row);
+                }
+                $rajalFormMeta = \Systems\Lib\RmeFormRevision::enrichSingleRow($this->core, $rajalTable, $row);
+                $variables['revision_meta'] = $rajalFormMeta;
+            }
+        } elseif ($isRajalCetak) {
+            $row = (isset($variables['data']) && is_array($variables['data']) && !isset($variables['data'][0]))
+                ? $variables['data']
+                : ((isset($variables['d']) && is_array($variables['d'])) ? $variables['d'] : []);
+            $rowId = (int)($row['id'] ?? ($_REQUEST['id'] ?? 0));
+            if ($rowId <= 0 && empty($_POST)) {
+                $fallbackNr = trim((string)($row['no_rawat'] ?? ($_REQUEST['no_rawat'] ?? '')));
+                if ($fallbackNr !== '') {
+                    $dbByNr = $this->db($rajalTable)->where('no_rawat', $fallbackNr)->desc('id')->oneArray();
+                    if (is_array($dbByNr) && !empty($dbByNr['id'])) {
+                        $rowId = (int)$dbByNr['id'];
+                        $row = array_merge($dbByNr, $row);
+                    }
+                }
+            }
+            if ($rowId > 0 && empty($_POST)) {
+                $dbRow = $this->db($rajalTable)->where('id', $rowId)->oneArray();
+                if (is_array($dbRow)) {
+                    $row = array_merge($dbRow, $row);
+                }
+                $rajalCetakMeta = \Systems\Lib\RmeFormRevision::enrichSingleRow($this->core, $rajalTable, $row);
+                $variables['revision_meta'] = $rajalCetakMeta;
+            }
+        }
+
         $rendered = parent::draw($file, $variables);
+
+        if ($isRajalManage && !empty($rajalManageRowsMeta)) {
+            $metaObj = \Systems\Lib\RmeFormRevision::getMetaByTable($rajalTable);
+            $hapusRoute = ($metaObj['type'] === 'edukasi') ? 'edukasidelete' : ($metaObj['type'] . 'hapus');
+            $manageJson = json_encode([
+                'table_name' => $rajalTable,
+                'hapus_url' => url([ADMIN, 'form_rme', $hapusRoute]),
+                'rows' => $rajalManageRowsMeta,
+            ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            $rendered .= '<script type="application/json" id="rsgm-rme-rev-manage-meta">' . $manageJson . '</script>';
+        } elseif ($isRajalForm && !empty($rajalFormMeta)) {
+            $formJson = json_encode([
+                'id' => (int)($rajalFormMeta['id'] ?? 0),
+                'table_name' => $rajalTable,
+                'form_code' => $rajalFormMeta['form_code'] ?? '',
+                'needs_reason' => !empty($rajalFormMeta['needs_reason']),
+                'why' => $rajalFormMeta['grace_why'] ?? '',
+                'in_grace' => !empty($rajalFormMeta['in_grace']),
+                'minutes_left' => (int)($rajalFormMeta['minutes_left'] ?? 0),
+                'has_revisions' => !empty($rajalFormMeta['has_revisions']),
+                'revision_count' => (int)($rajalFormMeta['revision_count'] ?? 0),
+                'is_voided' => !empty($rajalFormMeta['is_voided']),
+                'is_tte_outdated' => !empty($rajalFormMeta['is_tte_outdated']),
+                'changed_fields_map' => $rajalFormMeta['changed_fields_map'] ?? [],
+            ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            $revBanner = $this->buildRajalFormRevisionBannerHtml($rajalTable, $rajalFormMeta);
+            $rendered = $revBanner . $rendered . '<script type="application/json" id="rsgm-rme-rev-form-meta">' . $formJson . '</script>';
+        } elseif ($isRajalCetak && !empty($rajalCetakMeta)) {
+            $rendered = $this->injectRajalCetakRevisionMarkers($rendered, $rajalCetakMeta);
+        }
 
         if (!empty($variables['is_readonly_actor']) && !empty($variables['actor_permission_message'])) {
             $banner = '<div class="alert alert-warning rsgm-actor-lock-banner" style="margin: 15px; border-radius: 8px; border-left: 5px solid #f59e0b; background: #fffbeb; color: #92400e; font-size: 13px;">'
@@ -150,6 +250,227 @@ class Admin extends AdminModule
         }
 
         return $rendered;
+    }
+
+    private function getRajalTableByViewDir($dir)
+    {
+        $map = [
+            'persetujuan_umum' => 'rm_persetujuan_umum',
+            'rj02a' => 'rm_rj02a_hak_kewajiban',
+            'rj03' => 'rm_rj03_asesmen_keperawatan_gigi',
+            'rj04' => 'rm_rj04_asesmen_medis_gigi',
+            'rj07' => 'rm_rj07_asesmen_ulang_nyeri',
+            'rj10' => 'rm_rj10_edukasi_terintegrasi',
+            'edukasipasienter' => 'rm_edukasi_pasien_terintegrasi',
+            'rj11' => 'rm_rj11_pemberian_informasi',
+            'lampiran_prmrj' => 'rm_lampiran_profil_ringkas_medis_rajal',
+            'lampiran_persetujuan_tindakan_radiologi' => 'rm_lampiran_persetujuan_tindakan_radiologi',
+            'ringkasan_riwayat_klinik' => 'ringkasan_riwayat_klinik',
+            'rj_jatuh_nyeri_anak' => 'rj_asesmen_jatuh_nyeri_anak',
+        ];
+        return $map[$dir] ?? '';
+    }
+
+    private function buildRajalFormRevisionBannerHtml($table, array $meta)
+    {
+        $recId = htmlspecialchars((string)($meta['id'] ?? ''), ENT_QUOTES, 'UTF-8');
+        $tblEsc = htmlspecialchars((string)$table, ENT_QUOTES, 'UTF-8');
+        $revCount = (int)($meta['revision_count'] ?? 0);
+        $isVoided = !empty($meta['is_voided']);
+        $isOutdated = !empty($meta['is_tte_outdated']);
+        $needsReason = !empty($meta['needs_reason']);
+
+        if (!$isVoided && $revCount === 0 && !$isOutdated && !$needsReason) {
+            $minLeft = (int)($meta['minutes_left'] ?? 0);
+            return '<div class="rsgm-soap-rev-banner" style="margin: 0 0 14px 0; padding: 9px 14px; border-radius: 8px; background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; font-size: 12px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">'
+                . '<div><i class="fa fa-clock-o"></i> <strong>Masa Tenggang Koreksi Langsung (MRMIK 8):</strong> Perubahan dalam &le; ' . $minLeft . ' menit oleh pembuat awal dapat disimpan langsung tanpa alasan formal.</div>'
+                . '</div>';
+        }
+
+        if ($isVoided) {
+            $vi = $meta['void_info'] ?? [];
+            return '<div class="rsgm-soap-rev-banner is-void" style="margin: 0 0 14px 0; padding: 12px 16px; border-radius: 8px; background: #fef2f2; border: 1px solid #fca5a5; border-left: 5px solid #dc2626; color: #7f1d1d; font-size: 12.5px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">'
+                . '<div>'
+                . '<span class="rsgm-soap-rev-badge" style="background:#dc2626;color:#fff;margin-right:8px;"><i class="fa fa-ban"></i> DIBATALKAN (VOID)</span>'
+                . '<strong>Alasan:</strong> ' . htmlspecialchars($vi['void_reason'] ?? '-', ENT_QUOTES, 'UTF-8')
+                . ' <span style="color:#991b1b;">(' . htmlspecialchars($vi['deleted_by'] ?? '', ENT_QUOTES, 'UTF-8') . ' &bull; ' . htmlspecialchars($vi['deleted_at_fmt'] ?? '', ENT_QUOTES, 'UTF-8') . ')</span>'
+                . '</div>'
+                . '<button type="button" class="btn btn-xs btn-default js-soap-rev-open" data-module="form_rme" data-table="' . $tblEsc . '" data-key="' . $recId . '"><i class="fa fa-history"></i> Lihat Riwayat Audit</button>'
+                . '</div>';
+        }
+
+        $bg = $revCount > 0 ? '#fffbeb' : '#eff6ff';
+        $bd = $revCount > 0 ? '#fde68a' : '#bfdbfe';
+        $col = $revCount > 0 ? '#92400e' : '#1e3a8a';
+
+        $badges = '';
+        if ($revCount > 0) {
+            $badges .= '<button type="button" class="rsgm-soap-rev-badge js-soap-rev-open" data-module="form_rme" data-table="' . $tblEsc . '" data-key="' . $recId . '" style="margin-right:6px;"><i class="fa fa-history"></i> Dikoreksi ' . $revCount . 'x</button>';
+        }
+        if ($isOutdated) {
+            $badges .= '<span class="rsgm-soap-tte-warn-badge" style="margin-right:6px;"><i class="fa fa-exclamation-triangle"></i> TTE Sebelum Koreksi (Perlu TTE Ulang)</span>';
+        }
+        if ($needsReason) {
+            $badges .= '<span class="label label-warning" style="font-size:10.5px;padding:3px 7px;"><i class="fa fa-shield"></i> Wajib Alasan Koreksi (MRMIK 8)</span>';
+        }
+
+        $detailText = '';
+        if ($revCount > 0) {
+            $detailText = '<div style="margin-top:4px;font-size:11.5px;">Terakhir dikoreksi oleh <strong>' . htmlspecialchars($meta['last_revised_by'] ?? '-', ENT_QUOTES, 'UTF-8') . '</strong> (' . htmlspecialchars($meta['last_revised_at_fmt'] ?? '-', ENT_QUOTES, 'UTF-8') . ') &mdash; <em>"' . htmlspecialchars($meta['last_revised_reason'] ?? '-', ENT_QUOTES, 'UTF-8') . '"</em></div>';
+        } elseif ($needsReason) {
+            $detailText = '<div style="margin-top:4px;font-size:11.5px;">' . htmlspecialchars($meta['grace_why'] ?? '', ENT_QUOTES, 'UTF-8') . '</div>';
+        }
+
+        return '<div class="rsgm-soap-rev-banner" style="margin: 0 0 14px 0; padding: 10px 14px; border-radius: 8px; background: ' . $bg . '; border: 1px solid ' . $bd . '; border-left: 5px solid #d97706; color: ' . $col . '; font-size: 12px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">'
+            . '<div>' . $badges . $detailText . '</div>'
+            . ($revCount > 0 ? '<button type="button" class="btn btn-xs btn-warning js-soap-rev-open" data-module="form_rme" data-table="' . $tblEsc . '" data-key="' . $recId . '"><i class="fa fa-history"></i> Lihat Diff &amp; Riwayat</button>' : '')
+            . '</div>';
+    }
+
+    private function injectRajalCetakRevisionMarkers($rendered, array $meta)
+    {
+        $topStampHtml = $this->buildRajalCetakTopStampHtml($meta);
+        $auditHtml = $this->buildRajalCetakAuditHtml($meta);
+        if ($topStampHtml === '' && $auditHtml === '') {
+            return $rendered;
+        }
+
+        $isPdf = isset($_REQUEST['pdf']) && (string)$_REQUEST['pdf'] === '1';
+        $hasPageWrapper = (bool)preg_match('/<div\s+class="[^"]*\b(?:sheet|page)\b[^"]*"[^>]*>/i', $rendered);
+
+        if ($topStampHtml !== '') {
+            if ($hasPageWrapper) {
+                $rendered = preg_replace('/(<div\s+class="[^"]*\b(?:sheet|page)\b[^"]*"[^>]*>)/i', '$1' . "\n" . $topStampHtml, $rendered, 1);
+            } else {
+                $wrappedTop = $isPdf ? $topStampHtml : ('<div style="max-width:210mm; margin:8px auto 4px;">' . $topStampHtml . '</div>');
+                if (preg_match('/(<div\s+class="[^"]*no-print[^"]*"[^>]*>[\s\S]*?<\/div>)/i', $rendered)) {
+                    $rendered = preg_replace('/(<div\s+class="[^"]*no-print[^"]*"[^>]*>[\s\S]*?<\/div>)/i', '$1' . "\n" . $wrappedTop, $rendered, 1);
+                } elseif (preg_match('/(<body[^>]*>)/i', $rendered)) {
+                    $rendered = preg_replace('/(<body[^>]*>)/i', '$1' . "\n" . $wrappedTop, $rendered, 1);
+                } else {
+                    $rendered = $wrappedTop . $rendered;
+                }
+            }
+        }
+
+        if ($auditHtml !== '') {
+            if ($hasPageWrapper && preg_match('/<\/div>(\s*(?:<script\b[\s\S]*?<\/script>\s*)*<\/body>)/i', $rendered)) {
+                $rendered = preg_replace('/<\/div>(\s*(?:<script\b[\s\S]*?<\/script>\s*)*<\/body>)/i', $auditHtml . "\n</div>$1", $rendered, 1);
+            } else {
+                $wrappedBottom = $isPdf ? $auditHtml : ('<div style="max-width:210mm; margin:10px auto;">' . $auditHtml . '</div>');
+                if (stripos($rendered, '</body>') !== false) {
+                    $rendered = preg_replace('/<\/body>/i', $wrappedBottom . '</body>', $rendered, 1);
+                } else {
+                    $rendered .= $wrappedBottom;
+                }
+            }
+        }
+
+        return $rendered;
+    }
+
+    private function buildRajalCetakTopStampHtml(array $meta)
+    {
+        $isVoided = !empty($meta['is_voided']);
+        $isOutdated = !empty($meta['is_tte_outdated']);
+        $revCount = (int)($meta['revision_count'] ?? 0);
+        $hasRevs = !empty($meta['has_revisions']) || $revCount > 0;
+        if (!$isVoided && !$isOutdated && !$hasRevs) {
+            return '';
+        }
+
+        $bg = $isVoided ? '#fef2f2' : '#fffbeb';
+        $bd = $isVoided ? '#dc2626' : '#d97706';
+        $fg = $isVoided ? '#991b1b' : '#92400e';
+
+        $pills = '';
+        if ($isVoided) {
+            $pills .= '<span style="display:inline-block; background:#dc2626; color:#ffffff; font-weight:bold; font-size:7.4pt; padding:2px 6px; border-radius:3px; margin-right:5px;">DIBATALKAN (VOID)</span>';
+        } elseif ($hasRevs) {
+            $pills .= '<span style="display:inline-block; background:#d97706; color:#ffffff; font-weight:bold; font-size:7.4pt; padding:2px 6px; border-radius:3px; margin-right:5px;">DIKOREKSI (REVISI #' . max(1, $revCount) . ')</span>';
+        }
+        if ($isOutdated) {
+            $pills .= '<span style="display:inline-block; background:#b45309; color:#ffffff; font-weight:bold; font-size:7.4pt; padding:2px 6px; border-radius:3px; margin-right:5px;">TTE KEDALUWARSA &bull; PERLU TTE ULANG</span>';
+        }
+
+        $detailLine = '';
+        if ($isVoided) {
+            $vi = $meta['void_info'] ?? [];
+            $detailLine = 'Alasan VOID: <em>' . htmlspecialchars((string)($vi['void_reason'] ?? '-'), ENT_QUOTES, 'UTF-8') . '</em>'
+                . ' &bull; Oleh: ' . htmlspecialchars((string)($vi['deleted_by'] ?? '-'), ENT_QUOTES, 'UTF-8')
+                . ' (' . htmlspecialchars((string)($vi['deleted_at_fmt'] ?? '-'), ENT_QUOTES, 'UTF-8') . ')';
+        } else {
+            $actor = htmlspecialchars((string)($meta['last_revised_by'] ?? '-'), ENT_QUOTES, 'UTF-8');
+            $atFmt = htmlspecialchars((string)($meta['last_revised_at_fmt'] ?? '-'), ENT_QUOTES, 'UTF-8');
+            $reason = htmlspecialchars((string)($meta['last_revised_reason'] ?? '-'), ENT_QUOTES, 'UTF-8');
+            $detailLine = 'Koreksi terakhir: <strong>' . $actor . '</strong> (' . $atFmt . ') &mdash; <em>&ldquo;' . $reason . '&rdquo;</em>';
+
+            $changedLabels = [];
+            if (!empty($meta['changed_fields_map']) && is_array($meta['changed_fields_map'])) {
+                foreach ($meta['changed_fields_map'] as $fKey => $fInfo) {
+                    $lbl = is_array($fInfo) && !empty($fInfo['label']) ? (string)$fInfo['label'] : (string)$fKey;
+                    $changedLabels[] = htmlspecialchars($lbl, ENT_QUOTES, 'UTF-8');
+                }
+            }
+            if (!empty($changedLabels)) {
+                $detailLine .= '<br><span style="color:#78350f;"><strong>Bagian dikoreksi:</strong> ' . implode(', ', array_unique($changedLabels)) . ' <em>(lihat rincian Semula &rarr; Menjadi pada tabel Audit MRMIK 8 di akhir formulir)</em></span>';
+            }
+        }
+
+        return '<div class="rsgm-mrmik8-print-header" style="margin:0 0 6px 0; padding:5px 8px; border:1px solid ' . $bd . '; border-left:4px solid ' . $bd . '; background:' . $bg . '; color:' . $fg . '; font-family:Arial,sans-serif; font-size:7.6pt; line-height:1.3; page-break-inside:avoid;">'
+            . '<div style="margin-bottom:2px;">' . $pills . '<strong style="color:#0f172a;">PENANDAAN KOREKSI REKAM MEDIS (MRMIK 8)</strong></div>'
+            . '<div>' . $detailLine . '</div>'
+            . '</div>';
+    }
+
+    private function buildRajalCetakAuditHtml(array $meta)
+    {
+        $isVoided = !empty($meta['is_voided']);
+        $isOutdated = !empty($meta['is_tte_outdated']);
+        $hasRevs = !empty($meta['has_revisions']) && !empty($meta['revisions_summary']);
+        if (!$isVoided && !$isOutdated && !$hasRevs) {
+            return '';
+        }
+
+        $html = '<div class="rsgm-mrmik8-print-audit" style="margin-top:8px; padding:7px 9px; border:1px solid #94a3b8; background:#f8fafc; font-family:Arial,sans-serif; font-size:8pt; page-break-inside:avoid;">';
+        $html .= '<div style="font-weight:bold; color:#0f172a; margin-bottom:4px; border-bottom:1px solid #cbd5e1; padding-bottom:3px;">PENANDAAN KOREKSI &amp; VALIDASI REKAM MEDIS (MRMIK 8)</div>';
+
+        if ($isVoided) {
+            $vi = $meta['void_info'] ?? [];
+            $html .= '<div style="padding:5px 7px; margin-bottom:5px; border:1px solid #dc2626; background:#fef2f2; color:#991b1b; font-size:8pt;">'
+                . '<strong>STATUS DOKUMEN: DIBATALKAN (VOID)</strong> &mdash; Alasan: <em>' . htmlspecialchars($vi['void_reason'] ?? '-', ENT_QUOTES, 'UTF-8') . '</em>'
+                . ' | Oleh: ' . htmlspecialchars($vi['deleted_by'] ?? '-', ENT_QUOTES, 'UTF-8')
+                . ' (' . htmlspecialchars($vi['deleted_at_fmt'] ?? '-', ENT_QUOTES, 'UTF-8') . ')'
+                . '</div>';
+        }
+
+        if ($isOutdated) {
+            $html .= '<div style="padding:4px 7px; margin-bottom:5px; border:1px solid #d97706; background:#fffbeb; color:#92400e; font-size:7.8pt;">'
+                . '<strong>PERHATIAN (TTE KEDALUWARSA):</strong> Formulir ini telah dikoreksi setelah pembubuhan tanda tangan elektronik (TTE). Diperlukan verifikasi TTE ulang.'
+                . '</div>';
+        }
+
+        if ($hasRevs) {
+            $html .= '<table style="width:100%; border-collapse:collapse; font-size:7.5pt; margin-top:4px;">'
+                . '<thead><tr style="background:#e2e8f0; color:#1e293b;">'
+                . '<th style="border:1px solid #cbd5e1; padding:3px 5px; width:12%;">Versi</th>'
+                . '<th style="border:1px solid #cbd5e1; padding:3px 5px; width:22%;">Waktu &amp; Pelaksana</th>'
+                . '<th style="border:1px solid #cbd5e1; padding:3px 5px; width:24%;">Alasan Koreksi</th>'
+                . '<th style="border:1px solid #cbd5e1; padding:3px 5px; width:42%;">Perubahan (Semula &rarr; Menjadi)</th>'
+                . '</tr></thead><tbody>';
+            foreach ($meta['revisions_summary'] as $rev) {
+                $html .= '<tr>'
+                    . '<td style="border:1px solid #cbd5e1; padding:3px 5px; font-weight:bold;">Koreksi #' . (int)$rev['revision_no'] . '</td>'
+                    . '<td style="border:1px solid #cbd5e1; padding:3px 5px;">' . htmlspecialchars($rev['created_at'], ENT_QUOTES, 'UTF-8') . '<br>' . htmlspecialchars($rev['actor_name'], ENT_QUOTES, 'UTF-8') . '</td>'
+                    . '<td style="border:1px solid #cbd5e1; padding:3px 5px; font-style:italic;">' . htmlspecialchars($rev['reason'], ENT_QUOTES, 'UTF-8') . '</td>'
+                    . '<td style="border:1px solid #cbd5e1; padding:3px 5px;">' . htmlspecialchars($rev['diff_text'] ?: '-', ENT_QUOTES, 'UTF-8') . '</td>'
+                    . '</tr>';
+            }
+            $html .= '</tbody></table>';
+        }
+
+        $html .= '</div>';
+        return $html;
     }
 
     public function getAvailableClinicalRoles()
@@ -1767,6 +2088,19 @@ public function getJs()
             }
         }
 
+        var rmeRevMeta = null;
+        try {
+            var $revMetaEl = $('#rsgm-rme-rev-form-meta');
+            if ($revMetaEl.length) {
+                rmeRevMeta = JSON.parse($revMetaEl.text());
+            }
+        } catch (e) {}
+
+        if (rmeRevMeta && (rmeRevMeta.needs_reason || rmeRevMeta.is_voided)) {
+            autoSaveEnabled = false;
+            $('#rme-toggle-autosave').prop('checked', false).closest('.rme-autosave-toggle').attr('title', 'Auto-Save dijeda: perubahan pada dokumen ini memerlukan alasan koreksi MRMIK 8');
+        }
+
         // Toggle Auto-Save
         $('#rme-toggle-autosave').on('change', function() {
             autoSaveEnabled = $(this).is(':checked');
@@ -1786,17 +2120,23 @@ public function getJs()
         });
 
         function scheduleAutoSave() {
+            if (rmeRevMeta && (rmeRevMeta.needs_reason || rmeRevMeta.is_voided)) return;
             clearTimeout(autoSaveTimer);
             autoSaveTimer = setTimeout(function() {
-                if (isDirty && !isSaving) {
+                if (isDirty && !isSaving && autoSaveEnabled) {
                     performSave(true);
                 }
             }, 3000);
         }
 
         // Fungsi Simpan AJAX
-        function performSave(isAuto, onComplete) {
+        function performSave(isAuto, onComplete, extraReason) {
             if (isSaving) return;
+            if (rmeRevMeta && rmeRevMeta.is_voided) {
+                showToast('Formulir ini telah dibatalkan (VOID) dan tidak dapat diubah.', 'error');
+                return;
+            }
+            if (isAuto && rmeRevMeta && rmeRevMeta.needs_reason) return;
             isSaving = true;
             setStatus('saving', isAuto ? 'Menyimpan draft...' : 'Menyimpan...');
 
@@ -1810,6 +2150,9 @@ public function getJs()
             $form.triggerHandler('rme:beforeSave');
             var formData = new FormData($form[0]);
             formData.append('ajax_save', '1');
+            if (extraReason) {
+                formData.set('revision_reason', extraReason);
+            }
 
             $.ajax({
                 url: url,
@@ -1821,6 +2164,38 @@ public function getJs()
                 dataType: 'json',
                 success: function(res) {
                     isSaving = false;
+                    if (res && res.status === 'needs_reason') {
+                        setStatus('dirty', 'Menunggu alasan koreksi...');
+                        if (rmeRevMeta) { rmeRevMeta.needs_reason = true; }
+                        autoSaveEnabled = false;
+                        $('#rme-toggle-autosave').prop('checked', false);
+                        if (window.RSGMSoapRevision && typeof window.RSGMSoapRevision.promptReason === 'function') {
+                            window.RSGMSoapRevision.promptReason({
+                                title: 'Alasan Koreksi Formulir RME (MRMIK 8)',
+                                infoText: res.message || 'Perubahan formulir ini memerlukan alasan koreksi.',
+                                changedFields: res.changed_fields || {},
+                                required: true,
+                                label: 'Alasan Koreksi Formulir',
+                                confirmLabel: 'Simpan Koreksi',
+                                confirmClass: 'btn-warning'
+                            }, function(reason) {
+                                performSave(false, onComplete, reason);
+                            });
+                        } else {
+                            var r = window.prompt((res.message || 'Alasan koreksi:') + '\nMinimal 3 karakter:');
+                            if (r && r.trim().length >= 3) {
+                                performSave(false, onComplete, r.trim());
+                            }
+                        }
+                        return;
+                    }
+                    if (res && res.status === 'error') {
+                        setStatus('error', 'Gagal menyimpan');
+                        showToast(res.message || 'Gagal menyimpan data.', 'error');
+                        if (typeof onComplete === 'function') onComplete(false, res);
+                        return;
+                    }
+
                     isDirty = false;
                     var now = new Date();
                     var timeStr = ('0' + now.getHours()).slice(-2) + ':' + ('0' + now.getMinutes()).slice(-2) + ':' + ('0' + now.getSeconds()).slice(-2);
@@ -1834,7 +2209,10 @@ public function getJs()
                     }
 
                     if (!isAuto) {
-                        showToast('✓ Data berhasil disimpan tanpa keluar halaman', 'success');
+                        var okMsg = (res && res.revision && res.revision.mode === 'amend')
+                            ? '✓ Koreksi #' + res.revision.revision_no + ' tercatat (MRMIK 8)'
+                            : '✓ Data berhasil disimpan tanpa keluar halaman';
+                        showToast(okMsg, 'success');
                     }
 
                     if (typeof onComplete === 'function') {
@@ -3716,11 +4094,14 @@ public function getPatientContext($no_rawat)
         $no_rawat = trim($data['no_rawat'] ?? ($_GET['no_rawat'] ?? ''));
 
         // Load saved DB row if id is provided (or latest PRMRJ row by no_rawat when live-previewing by URL)
-        $reqId = trim($data['id'] ?? ($_GET['id'] ?? ''));
-        if (!empty($reqId) && empty($_POST) && !empty($info['table'])) {
-            $savedRow = $this->db($info['table'])->where('id', $reqId)->oneArray();
+        $pkCol = (!empty($info['table']) && $info['table'] === 'mlite_triase_igd') ? 'id_triase' : 'id';
+        $reqId = trim((string)($data['id'] ?? ($data['id_triase'] ?? ($_GET['id'] ?? ''))));
+        if (!empty($reqId) && !empty($info['table'])) {
+            $savedRow = $this->db($info['table'])->where($pkCol, $reqId)->oneArray();
             if ($savedRow) {
-                $data = array_merge($savedRow, $data);
+                $data = array_merge($savedRow, array_filter($data, function ($v) {
+                    return $v !== '' && $v !== null;
+                }));
                 if (empty($no_rawat) && !empty($savedRow['no_rawat'])) {
                     $no_rawat = $savedRow['no_rawat'];
                 }
@@ -3729,6 +4110,12 @@ public function getPatientContext($no_rawat)
             $savedRow = $this->db('rm_lampiran_profil_ringkas_medis_rajal')->where('no_rawat', $no_rawat)->desc('id')->oneArray();
             if ($savedRow) {
                 $data = array_merge($savedRow, $data);
+            }
+        } elseif ($routeCetak === 'rmgd3cetak' && empty($_POST) && empty($reqId) && !empty($no_rawat)) {
+            $savedRow = $this->db('mlite_triase_igd')->where('no_rawat', $no_rawat)->desc('id_triase')->oneArray();
+            if ($savedRow) {
+                $data = array_merge($savedRow, $data);
+                $reqId = (string)($savedRow['id_triase'] ?? '');
             }
         }
 
@@ -3824,7 +4211,15 @@ public function getPatientContext($no_rawat)
             $data['cppt_list'] = $cList;
         }
 
+        $rawTriaseInput = $data;
         $prepData = $this->prepareCetakData($data, $template);
+        if ($routeCetak === 'rmgd3cetak') {
+            foreach (['id_triase', 'tgl_triase', 'jam_selesai_triase', 'petugas_id', 'ats_items', 'sdcep_items', 'doa_items', 'ats_skala', 'sdcep_skala', 'skala_triase', 'jam_doa', 'keluhan_utama', 'no_rkm_medis', 'nm_pasien', 'jk', 'tgl_lahir'] as $tk) {
+                if (isset($rawTriaseInput[$tk]) && $rawTriaseInput[$tk] !== '') {
+                    $prepData[$tk] = $rawTriaseInput[$tk];
+                }
+            }
+        }
         if ($routeCetak === 'prmrjcetak') {
             $prepData = $this->buildPrmrjPrintData($prepData);
         }
@@ -3851,19 +4246,24 @@ public function getPatientContext($no_rawat)
 
         $triaseLists = [];
         $doaMap = ['tanda_kehidupan' => false, 'pupil' => false, 'denyut_nadi' => false, 'ekg_flat' => false];
+        $rmgd3LiveVars = null;
         if ($routeCetak === 'rmgd3cetak') {
-            $atsChecked = !empty($prepData['ats_items_arr']) && is_array($prepData['ats_items_arr']) ? $prepData['ats_items_arr'] : [];
-            $sdcepChecked = !empty($prepData['sdcep_items_arr']) && is_array($prepData['sdcep_items_arr']) ? $prepData['sdcep_items_arr'] : [];
-            $doaChecked = !empty($prepData['doa_items_arr']) && is_array($prepData['doa_items_arr']) ? $prepData['doa_items_arr'] : [];
-            $triaseLists = $this->_getTriaseCriteriaLists($atsChecked, $sdcepChecked);
-            $doaMap = [
-                'tanda_kehidupan' => in_array('Tanda Kehidupan (-)', $doaChecked),
-                'pupil' => in_array('Pupil RCL/RCTL (-/-)', $doaChecked),
-                'denyut_nadi' => in_array('Denyut Nadi (-)', $doaChecked),
-                'ekg_flat' => in_array('EKG flat', $doaChecked),
+            $rmgd3LiveVars = $this->_buildRmgd3CetakVars($prepData, $is_mpdf);
+            $triaseLists = [
+                'ats1_list' => $rmgd3LiveVars['ats1_list'],
+                'ats2_list' => $rmgd3LiveVars['ats2_list'],
+                'ats3_list' => $rmgd3LiveVars['ats3_list'],
+                'ats4_list' => $rmgd3LiveVars['ats4_list'],
+                'ats5_list' => $rmgd3LiveVars['ats5_list'],
+                'sdcep1_list' => $rmgd3LiveVars['sdcep1_list'],
+                'sdcep2_list' => $rmgd3LiveVars['sdcep2_list'],
+                'sdcep3_list' => $rmgd3LiveVars['sdcep3_list'],
             ];
-            $ttePetugasLive = $this->resolveEsignature('rmgd3_triase', [$reqId, $no_rawat], 'Petugas Triase');
-            $prepData['qr_petugas'] = $ttePetugasLive['qr_data_uri'] ?? '';
+            $doaMap = $rmgd3LiveVars['doa_map'];
+            $prepData = array_merge($prepData, $rmgd3LiveVars['data']);
+            $prepData['rm_digits'] = $rmgd3LiveVars['rm_digits'];
+            $prepData['qr_petugas'] = $rmgd3LiveVars['qr_petugas'];
+            $prepData['kop_img'] = $rmgd3LiveVars['kop_img'];
         }
 
         if ($routeCetak === 'rj07cetak') {
@@ -4187,6 +4587,9 @@ public function getPatientContext($no_rawat)
             'skala_nyeri_img' => $this->getSkalaNyeriImgSrc($is_mpdf),
             'is_mpdf' => $is_mpdf
         ], $triaseLists);
+        if (is_array($rmgd3LiveVars)) {
+            $viewData = array_merge($viewData, $rmgd3LiveVars);
+        }
 
         $html = $this->draw($template, $viewData);
 
@@ -4873,7 +5276,19 @@ public function getPatientContext($no_rawat)
                                 return ($b['id'] ?? 0) <=> ($a['id'] ?? 0);
                             });
                         }
-                        $lastRow = $entries[0];
+                        // Prioritaskan entri aktif (non-VOID) terbaru jika tersedia
+                        foreach ($entries as $cand) {
+                            if (empty($cand['deleted_at'])) {
+                                $lastRow = $cand;
+                                break;
+                            }
+                        }
+                        if ($lastRow === null) {
+                            $lastRow = $entries[0];
+                        }
+                        if (\Systems\Lib\RmeFormRevision::isRegisteredTable($f['nama_tabel']) && is_array($lastRow)) {
+                            $lastRow = \Systems\Lib\RmeFormRevision::enrichSingleRow($this->core, $f['nama_tabel'], $lastRow);
+                        }
                         $totalFilled++;
                     }
                 } catch (\Throwable $e) {
@@ -4883,7 +5298,13 @@ public function getPatientContext($no_rawat)
             $f['is_filled'] = ($fillCount > 0);
             $f['fill_count'] = $fillCount;
             $f['last_entry'] = $lastRow;
-            $f['url_form'] = url([ADMIN, 'form_rme', $f['route_form']]) . '&no_rawat=' . urlencode($patient['no_rawat']);
+            $f['has_revisions'] = !empty($lastRow['has_revisions']);
+            $f['revision_count'] = (int)($lastRow['revision_count'] ?? 0);
+            $f['is_voided'] = !empty($lastRow['is_voided']);
+            $f['is_tte_outdated'] = !empty($lastRow['is_tte_outdated']);
+            $f['rev_table'] = $lastRow['table_name'] ?? ($f['nama_tabel'] ?? '');
+            $f['rev_key'] = $lastRow['record_key'] ?? ($lastRow['id'] ?? '');
+            $f['url_form'] = url([ADMIN, 'form_rme', $f['route_form']]) . (!empty($lastRow['id']) ? '&id=' . (int)$lastRow['id'] : '') . '&no_rawat=' . urlencode($patient['no_rawat']);
             $f['url_manage'] = !empty($f['route_manage']) ? url([ADMIN, 'form_rme', $f['route_manage']]) . '&no_rawat=' . urlencode($patient['no_rawat']) : '';
             $routeCetak = !empty($f['route_cetak']) ? $f['route_cetak'] : str_replace('form', 'cetak', $f['route_form']);
             $rowId = $lastRow['id'] ?? '';
@@ -4918,24 +5339,30 @@ public function getPatientContext($no_rawat)
         }
         unset($pf);
 
-        // Kelompokkan form berdasarkan kategori
+        // Kelompokkan form berdasarkan kategori (mendukung multi-kategori koma)
         $categories = [];
-        foreach ($processedForms as $pf) {
-            $cat = !empty($pf['kategori']) ? $pf['kategori'] : 'Umum';
-            if (!isset($categories[$cat])) {
-                $categories[$cat] = [
-                    'nama' => $cat,
-                    'total' => 0,
-                    'filled' => 0,
-                    'forms' => []
-                ];
-            }
-            $categories[$cat]['forms'][] = $pf;
-            $categories[$cat]['total']++;
-            if ($pf['is_filled']) {
-                $categories[$cat]['filled']++;
+        foreach ($processedForms as &$pf) {
+            $pfCats = $this->parseRmeCategories($pf['kategori'] ?? '', true);
+            $pf['kategori'] = implode(',', $pfCats);
+            $pf['kategori_list'] = $pfCats;
+            $pf['kategori_badges'] = $this->buildKategoriBadgesMeta($pfCats);
+            foreach ($pfCats as $cat) {
+                if (!isset($categories[$cat])) {
+                    $categories[$cat] = [
+                        'nama' => $cat,
+                        'total' => 0,
+                        'filled' => 0,
+                        'forms' => []
+                    ];
+                }
+                $categories[$cat]['forms'][] = $pf;
+                $categories[$cat]['total']++;
+                if ($pf['is_filled']) {
+                    $categories[$cat]['filled']++;
+                }
             }
         }
+        unset($pf);
 
         // Ambil data perjalanan klinis lengkap dari datang sampai pulang
         $timeline = $this->getTimelineData($patient['no_rawat']);
@@ -9260,6 +9687,7 @@ return [];
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = rm_edukasi_pasien_terintegrasi.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
             ->select('rm_edukasi_pasien_terintegrasi.*, COALESCE(rm_edukasi_pasien_terintegrasi.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis')
+            ->desc('rm_edukasi_pasien_terintegrasi.id')
             ->toArray();
 
         return $this->draw('edukasipasienter/manage.html', ['edukasi' => $edukasi]);
@@ -9408,18 +9836,6 @@ return [];
                 }
             }
 
-            if ($id) {
-                $this->db('rm_edukasi_pasien_terintegrasi')->where('id', $id)->save($header);
-                $this->db('edukasi_pasien_terintegrasi_detail')->where('id_edukasi', $id)->delete();
-            } else {
-                $this->db('rm_edukasi_pasien_terintegrasi')->save($header);
-                $id = $this->resolveInsertedRecordId('rm_edukasi_pasien_terintegrasi', $header['no_rawat'] ?? '', 'id');
-                if (!$id) {
-                    $id = null;
-                }
-            }
-
-            // Simpan detail
             $tglJam     = $post['detail_tanggal_jam'] ?? [];
             $isi        = $post['detail_isi_kebutuhan'] ?? [];
             $pra        = $post['detail_kemampuan_pra'] ?? [];
@@ -9431,10 +9847,10 @@ return [];
             $ttePemberi = $post['detail_tte_pemberi'] ?? [];
             $ttdImg     = $post['detail_ttd_penerima_img'] ?? [];
 
+            $newDetailRows = [];
             foreach ($tglJam as $k => $v) {
                 if (empty($v) && empty($isi[$k])) continue;
-                $detailRow = [
-                    'id_edukasi'            => $id,
+                $newDetailRows[] = [
                     'tanggal_jam'           => !empty($v) ? date('Y-m-d H:i:s', strtotime($v)) : null,
                     'isi_kebutuhan_edukasi' => $isi[$k] ?? '',
                     'kemampuan_pra_edukasi' => $pra[$k] ?? '',
@@ -9446,11 +9862,45 @@ return [];
                     'nama_ttd_penerima'     => $penerima[$k] ?? '',
                     'ttd_penerima_img'      => $this->sanitizeSignatureValue($ttdImg[$k] ?? '', false),
                 ];
+            }
+
+            $existingId = (int)$id;
+            $prep = null;
+            if ($existingId > 0) {
+                $oldDetails = $this->db('edukasi_pasien_terintegrasi_detail')
+                    ->where('id_edukasi', $existingId)
+                    ->select('tanggal_jam, isi_kebutuhan_edukasi, kemampuan_pra_edukasi, sasaran_edukasi, metode_edukasi, evaluasi, nama_ttd_pemberi, tte_pemberi, nama_ttd_penerima, ttd_penerima_img')
+                    ->asc('id')
+                    ->toArray();
+                $prep = $this->guardRajalUpdateOrRespond(
+                    'rm_edukasi_pasien_terintegrasi',
+                    $existingId,
+                    $header,
+                    url([ADMIN, 'form_rme', 'edukasiform']) . '&id=' . $existingId,
+                    ['old_detail_rows' => $oldDetails, 'new_detail_rows' => $newDetailRows]
+                );
+                $this->db('rm_edukasi_pasien_terintegrasi')->where('id', $existingId)->save($header);
+                $this->db('edukasi_pasien_terintegrasi_detail')->where('id_edukasi', $existingId)->delete();
+                $id = $existingId;
+            } else {
+                $this->db('rm_edukasi_pasien_terintegrasi')->save($header);
+                $id = $this->resolveInsertedRecordId('rm_edukasi_pasien_terintegrasi', $header['no_rawat'] ?? '', 'id');
+                if (!$id) {
+                    $id = null;
+                }
+            }
+
+            foreach ($newDetailRows as $detailRow) {
+                $detailRow['id_edukasi'] = $id;
                 $this->db('edukasi_pasien_terintegrasi_detail')->save($detailRow);
             }
 
+            $revHeader = $header;
+            $revHeader['detail_rows'] = $newDetailRows;
+            $revRes = $this->finalizeRajalSave('rm_edukasi_pasien_terintegrasi', $existingId, $id, $prep, $revHeader);
+
             $this->notify('success', 'Data Edukasi Pasien berhasil disimpan');
-            $this->respondAjaxOrRedirect(url([ADMIN, 'form_rme', 'edukasimanage']), $id, 'Data Edukasi Pasien berhasil disimpan.');
+            $this->respondAjaxOrRedirect(url([ADMIN, 'form_rme', 'edukasimanage']), $id, 'Data Edukasi Pasien berhasil disimpan.', ['revision' => $revRes]);
         } catch (\Exception $e) {
             file_put_contents(BASE_DIR . '/tmp/edukasi_error.log', $e->getMessage() . "\n" . $e->getTraceAsString());
             if (!empty($_POST['ajax_save'])) {
@@ -9467,13 +9917,13 @@ return [];
 
     public function getEdukasidelete()
     {
-        $id = $_GET['id'] ?? '';
-        if (!empty($id)) {
-            $this->db('rm_edukasi_pasien_terintegrasi')->where('id', $id)->delete();
-            $this->db('edukasi_pasien_terintegrasi_detail')->where('id_edukasi', $id)->delete();
-            $this->notify('success', 'Data berhasil dihapus');
-        }
-        redirect(url([ADMIN, 'form_rme', 'edukasimanage']));
+        $id = $_POST['id'] ?? ($_GET['id'] ?? '');
+        $this->handleRajalVoidRedirect('rm_edukasi_pasien_terintegrasi', $id, url([ADMIN, 'form_rme', 'edukasimanage']));
+    }
+
+    public function postEdukasidelete()
+    {
+        return $this->getEdukasidelete();
     }
 
     public function anyEdukasicetak()
@@ -9922,6 +10372,7 @@ if (ob_get_length()) {
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = rm_ans1_tindakan_pembiusan.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
             ->select('rm_ans1_tindakan_pembiusan.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien')
+            ->desc('rm_ans1_tindakan_pembiusan.id')
             ->toArray();
 
         return $this->draw('ans1/manage.html', ['data' => $data]);
@@ -10812,6 +11263,7 @@ if (ob_get_length()) {
             ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = ans4_rencana_anestesi.no_rawat')
             ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
             ->select('ans4_rencana_anestesi.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien')
+            ->desc('ans4_rencana_anestesi.id')
             ->toArray();
 
         return $this->draw('ans4/manage.html', ['data' => $data]);
@@ -14429,20 +14881,28 @@ if (ob_get_length()) {
             'form_data' => $fdRaw
         ];
 
-        if ($id) {
-            $this->db('rm_rj02a_hak_kewajiban')->where('id', $id)->save($save);
+        $existingId = (int)$id;
+        $prep = null;
+        if ($existingId > 0) {
+            $prep = $this->guardRajalUpdateOrRespond('rm_rj02a_hak_kewajiban', $existingId, $save, url([ADMIN, 'form_rme', 'rj02aform']) . '?id=' . $existingId);
+            $this->db('rm_rj02a_hak_kewajiban')->where('id', $existingId)->save($save);
+            $id = $existingId;
             $this->notify('success', 'Data diupdate');
         } else {
             $this->db('rm_rj02a_hak_kewajiban')->save($save);
             $id = $this->resolveInsertedRecordId('rm_rj02a_hak_kewajiban', $save['no_rawat'] ?? ($_POST['no_rawat'] ?? ''), 'id');
             $this->notify('success', 'Data disimpan');
         }
-        $this->respondAjaxOrRedirect(url([ADMIN, 'form_rme', 'rj02amanage']), $id, 'Data RM.RJ 02A berhasil disimpan.');
+        $revRes = $this->finalizeRajalSave('rm_rj02a_hak_kewajiban', $existingId, $id, $prep, $save);
+        $this->respondAjaxOrRedirect(url([ADMIN, 'form_rme', 'rj02amanage']), $id, 'Data RM.RJ 02A berhasil disimpan.', ['revision' => $revRes]);
     }
 
     public function getRj02ahapus() {
-        if ($id = $_GET['id'] ?? '') { $this->db('rm_rj02a_hak_kewajiban')->where('id', $id)->delete(); $this->notify('success', 'Data dihapus'); }
-        redirect(url([ADMIN, 'form_rme', 'rj02amanage']));
+        $this->handleRajalVoidRedirect('rm_rj02a_hak_kewajiban', $_POST['id'] ?? ($_GET['id'] ?? 0), url([ADMIN, 'form_rme', 'rj02amanage']));
+    }
+
+    public function postRj02ahapus() {
+        return $this->getRj02ahapus();
     }
 
     public function getRj02acetak() {
@@ -14685,20 +15145,28 @@ if (ob_get_length()) {
             'form_data' => $fdRaw
         ];
 
-        if ($id) {
-            $this->db('rm_rj07_asesmen_ulang_nyeri')->where('id', $id)->save($save);
+        $existingId = (int)$id;
+        $prep = null;
+        if ($existingId > 0) {
+            $prep = $this->guardRajalUpdateOrRespond('rm_rj07_asesmen_ulang_nyeri', $existingId, $save, url([ADMIN, 'form_rme', 'rj07form']) . '?id=' . $existingId);
+            $this->db('rm_rj07_asesmen_ulang_nyeri')->where('id', $existingId)->save($save);
+            $id = $existingId;
             $this->notify('success', 'Data diupdate');
         } else {
             $this->db('rm_rj07_asesmen_ulang_nyeri')->save($save);
             $id = $this->resolveInsertedRecordId('rm_rj07_asesmen_ulang_nyeri', $save['no_rawat'] ?? ($_POST['no_rawat'] ?? ''), 'id');
             $this->notify('success', 'Data disimpan');
         }
-        $this->respondAjaxOrRedirect(url([ADMIN, 'form_rme', 'rj07manage']), $id, 'Data Asesmen Ulang Nyeri berhasil disimpan.');
+        $revRes = $this->finalizeRajalSave('rm_rj07_asesmen_ulang_nyeri', $existingId, $id, $prep, $save);
+        $this->respondAjaxOrRedirect(url([ADMIN, 'form_rme', 'rj07manage']), $id, 'Data Asesmen Ulang Nyeri berhasil disimpan.', ['revision' => $revRes]);
     }
 
     public function getRj07hapus() {
-        if ($id = $_GET['id'] ?? '') { $this->db('rm_rj07_asesmen_ulang_nyeri')->where('id', $id)->delete(); $this->notify('success', 'Data dihapus'); }
-        redirect(url([ADMIN, 'form_rme', 'rj07manage']));
+        $this->handleRajalVoidRedirect('rm_rj07_asesmen_ulang_nyeri', $_POST['id'] ?? ($_GET['id'] ?? 0), url([ADMIN, 'form_rme', 'rj07manage']));
+    }
+
+    public function postRj07hapus() {
+        return $this->getRj07hapus();
     }
 
     public function getRj07cetak() {
@@ -14894,20 +15362,28 @@ if (ob_get_length()) {
             'form_data' => $fdRaw
         ];
 
-        if ($id) {
-            $this->db('rm_rj10_edukasi_terintegrasi')->where('id', $id)->save($save);
+        $existingId = (int)$id;
+        $prep = null;
+        if ($existingId > 0) {
+            $prep = $this->guardRajalUpdateOrRespond('rm_rj10_edukasi_terintegrasi', $existingId, $save, url([ADMIN, 'form_rme', 'rj10form']) . '?id=' . $existingId);
+            $this->db('rm_rj10_edukasi_terintegrasi')->where('id', $existingId)->save($save);
+            $id = $existingId;
             $this->notify('success', 'Data diupdate');
         } else {
             $this->db('rm_rj10_edukasi_terintegrasi')->save($save);
             $id = $this->resolveInsertedRecordId('rm_rj10_edukasi_terintegrasi', $save['no_rawat'] ?? ($_POST['no_rawat'] ?? ''), 'id');
             $this->notify('success', 'Data disimpan');
         }
-        $this->respondAjaxOrRedirect(url([ADMIN, 'form_rme', 'rj10manage']), $id, 'Data Lembar Edukasi Terintegrasi berhasil disimpan.');
+        $revRes = $this->finalizeRajalSave('rm_rj10_edukasi_terintegrasi', $existingId, $id, $prep, $save);
+        $this->respondAjaxOrRedirect(url([ADMIN, 'form_rme', 'rj10manage']), $id, 'Data Lembar Edukasi Terintegrasi berhasil disimpan.', ['revision' => $revRes]);
     }
 
     public function getRj10hapus() {
-        if ($id = $_GET['id'] ?? '') { $this->db('rm_rj10_edukasi_terintegrasi')->where('id', $id)->delete(); $this->notify('success', 'Data dihapus'); }
-        redirect(url([ADMIN, 'form_rme', 'rj10manage']));
+        $this->handleRajalVoidRedirect('rm_rj10_edukasi_terintegrasi', $_POST['id'] ?? ($_GET['id'] ?? 0), url([ADMIN, 'form_rme', 'rj10manage']));
+    }
+
+    public function postRj10hapus() {
+        return $this->getRj10hapus();
     }
 
     public function getRj10cetak() {
@@ -15129,20 +15605,28 @@ if (ob_get_length()) {
             'form_data' => $fdRaw
         ];
 
-        if ($id) {
-            $this->db('rm_rj11_pemberian_informasi')->where('id', $id)->save($save);
+        $existingId = (int)$id;
+        $prep = null;
+        if ($existingId > 0) {
+            $prep = $this->guardRajalUpdateOrRespond('rm_rj11_pemberian_informasi', $existingId, $save, url([ADMIN, 'form_rme', 'rj11form']) . '?id=' . $existingId);
+            $this->db('rm_rj11_pemberian_informasi')->where('id', $existingId)->save($save);
+            $id = $existingId;
             $this->notify('success', 'Data diupdate');
         } else {
             $this->db('rm_rj11_pemberian_informasi')->save($save);
             $id = $this->resolveInsertedRecordId('rm_rj11_pemberian_informasi', $save['no_rawat'] ?? ($_POST['no_rawat'] ?? ''), 'id');
             $this->notify('success', 'Data disimpan');
         }
-        $this->respondAjaxOrRedirect(url([ADMIN, 'form_rme', 'rj11manage']), $id, 'Data Informed Consent (RM.RJ 11) berhasil disimpan.');
+        $revRes = $this->finalizeRajalSave('rm_rj11_pemberian_informasi', $existingId, $id, $prep, $save);
+        $this->respondAjaxOrRedirect(url([ADMIN, 'form_rme', 'rj11manage']), $id, 'Data Informed Consent (RM.RJ 11) berhasil disimpan.', ['revision' => $revRes]);
     }
 
     public function getRj11hapus() {
-        if ($id = $_GET['id'] ?? '') { $this->db('rm_rj11_pemberian_informasi')->where('id', $id)->delete(); $this->notify('success', 'Data dihapus'); }
-        redirect(url([ADMIN, 'form_rme', 'rj11manage']));
+        $this->handleRajalVoidRedirect('rm_rj11_pemberian_informasi', $_POST['id'] ?? ($_GET['id'] ?? 0), url([ADMIN, 'form_rme', 'rj11manage']));
+    }
+
+    public function postRj11hapus() {
+        return $this->getRj11hapus();
     }
 
     public function getRj11cetak() {
@@ -15510,17 +15994,23 @@ if (ob_get_length()) {
                 'nama_saksi_2'                   => trim($post['nama_saksi_2'] ?? '')
             ];
 
-            if ($id) {
+            $existingId = (int)$id;
+            $prep = null;
+            if ($existingId > 0) {
+                $prep = $this->guardRajalUpdateOrRespond('rm_lampiran_persetujuan_tindakan_radiologi', $existingId, $saveData, url([ADMIN, 'form_rme', 'persetujuanradiologiform', $existingId]));
                 $saveData['updated_at'] = date('Y-m-d H:i:s');
-                $this->db('rm_lampiran_persetujuan_tindakan_radiologi')->where('id', $id)->save($saveData);
+                $this->db('rm_lampiran_persetujuan_tindakan_radiologi')->where('id', $existingId)->save($saveData);
+                $savedId = $existingId;
                 $this->notify('success', 'Data persetujuan tindakan radiologi berhasil diperbarui');
             } else {
                 $saveData['created_at'] = date('Y-m-d H:i:s');
                 $saveData['updated_at'] = date('Y-m-d H:i:s');
                 $this->db('rm_lampiran_persetujuan_tindakan_radiologi')->save($saveData);
+                $savedId = (int)$this->resolveInsertedRecordId('rm_lampiran_persetujuan_tindakan_radiologi', $saveData['no_rawat'] ?? '', 'id');
                 $this->notify('success', 'Data persetujuan tindakan radiologi berhasil disimpan');
             }
-            redirect(url([ADMIN, 'form_rme', 'persetujuanradiologimanage']));
+            $revRes = $this->finalizeRajalSave('rm_lampiran_persetujuan_tindakan_radiologi', $existingId, $savedId, $prep, $saveData);
+            $this->respondAjaxOrRedirect(url([ADMIN, 'form_rme', 'persetujuanradiologimanage']), $savedId, 'Data persetujuan tindakan radiologi berhasil disimpan.', ['revision' => $revRes]);
         }
 
         $defaultData = [
@@ -15621,12 +16111,13 @@ if (ob_get_length()) {
 
     public function getPersetujuanradiologihapus($id = null)
     {
-        $id = $id ?? ($_GET['id'] ?? null);
-        if ($id) {
-            $this->db('rm_lampiran_persetujuan_tindakan_radiologi')->where('id', $id)->delete();
-            $this->notify('success', 'Data persetujuan tindakan radiologi berhasil dihapus');
-        }
-        redirect(url([ADMIN, 'form_rme', 'persetujuanradiologimanage']));
+        $id = $id ?? ($_POST['id'] ?? ($_GET['id'] ?? null));
+        $this->handleRajalVoidRedirect('rm_lampiran_persetujuan_tindakan_radiologi', $id, url([ADMIN, 'form_rme', 'persetujuanradiologimanage']));
+    }
+
+    public function postPersetujuanradiologihapus($id = null)
+    {
+        return $this->getPersetujuanradiologihapus($id);
     }
 
     public function getPersetujuanradiologicetak($id = null)
@@ -18450,25 +18941,30 @@ if (ob_get_length()) {
             'nip_dokter' => trim($_POST['nip_dokter'] ?? '')
         ];
 
-        if (!empty($id)) {
-            $this->db('rm_lampiran_profil_ringkas_medis_rajal')->where('id', $id)->update($payload);
+        $existingId = (int)$id;
+        $prep = null;
+        if ($existingId > 0) {
+            $prep = $this->guardRajalUpdateOrRespond('rm_lampiran_profil_ringkas_medis_rajal', $existingId, $payload, url([ADMIN, 'form_rme', 'prmrjform']) . '&id=' . $existingId);
+            $this->db('rm_lampiran_profil_ringkas_medis_rajal')->where('id', $existingId)->update($payload);
+            $savedId = $existingId;
             $this->notify('success', 'Formulir PRMRJ berhasil diperbarui.');
         } else {
             $this->db('rm_lampiran_profil_ringkas_medis_rajal')->save($payload);
+            $savedId = (int)$this->resolveInsertedRecordId('rm_lampiran_profil_ringkas_medis_rajal', $no_rawat, 'id');
             $this->notify('success', 'Formulir PRMRJ baru berhasil disimpan.');
         }
-
-        redirect(url([ADMIN, 'form_rme', 'prmrjmanage']));
+        $revRes = $this->finalizeRajalSave('rm_lampiran_profil_ringkas_medis_rajal', $existingId, $savedId, $prep, $payload);
+        $this->respondAjaxOrRedirect(url([ADMIN, 'form_rme', 'prmrjmanage']), $savedId, 'Formulir PRMRJ berhasil disimpan.', ['revision' => $revRes]);
     }
 
     public function getPrmrjhapus()
     {
-        $id = $_GET['id'] ?? '';
-        if (!empty($id)) {
-            $this->db('rm_lampiran_profil_ringkas_medis_rajal')->where('id', $id)->delete();
-            $this->notify('success', 'Data Formulir PRMRJ berhasil dihapus.');
-        }
-        redirect(url([ADMIN, 'form_rme', 'prmrjmanage']));
+        $this->handleRajalVoidRedirect('rm_lampiran_profil_ringkas_medis_rajal', $_POST['id'] ?? ($_GET['id'] ?? 0), url([ADMIN, 'form_rme', 'prmrjmanage']));
+    }
+
+    public function postPrmrjhapus()
+    {
+        return $this->getPrmrjhapus();
     }
 
     public function getPrmrjcetak()
@@ -19576,8 +20072,113 @@ if (ob_get_length()) {
     // MANAJEMEN FORM RME (HAK AKSES PER UNIT)
     // ==========================================
 
+    private function ensureRmeKategoriSchema()
+    {
+        static $checked = false;
+        if ($checked) {
+            return;
+        }
+        $checked = true;
+        try {
+            $pdo = $this->db()->pdo();
+            $stmt = $pdo->query("SHOW COLUMNS FROM `mlite_rme_form` LIKE 'kategori'");
+            $col = $stmt ? $stmt->fetch(\PDO::FETCH_ASSOC) : null;
+            if ($col && isset($col['Type']) && preg_match('/varchar\((\d+)\)/i', $col['Type'], $m)) {
+                if ((int)$m[1] < 255) {
+                    $pdo->exec("ALTER TABLE `mlite_rme_form` MODIFY COLUMN `kategori` VARCHAR(255) NOT NULL DEFAULT 'Bedah'");
+                }
+            }
+        } catch (\Throwable $e) {
+        }
+    }
+
+    private function parseRmeCategories($raw, $fallbackDefault = false)
+    {
+        $items = is_array($raw) ? $raw : explode(',', (string)$raw);
+        $clean = [];
+        $seenLower = [];
+        foreach ($items as $item) {
+            $val = strip_tags((string)$item);
+            $val = preg_replace('/[\x00-\x1F\x7F]/u', '', $val);
+            $val = preg_replace('/[^\p{L}\p{N}\s\-\/&_().+]/u', '', $val);
+            $val = trim(preg_replace('/\s+/u', ' ', (string)$val));
+            if ($val === '') {
+                continue;
+            }
+            $val = function_exists('mb_substr') ? mb_substr($val, 0, 40, 'UTF-8') : substr($val, 0, 40);
+            $val = trim($val);
+            $lower = strtolower($val);
+            if ($val !== '' && !in_array($lower, $seenLower, true)) {
+                $seenLower[] = $lower;
+                $clean[] = $val;
+            }
+        }
+        if (empty($clean) && $fallbackDefault) {
+            $clean = ['Umum'];
+        }
+        return $clean;
+    }
+
+    private function getRmeKategoriBadgeClass($kategori)
+    {
+        $key = strtolower(trim((string)$kategori));
+        if ($key === 'bedah') {
+            return 'rsgm-badge-rose';
+        }
+        if ($key === 'ranap') {
+            return 'rsgm-badge-emerald';
+        }
+        if ($key === 'rajal') {
+            return 'rsgm-badge-sky';
+        }
+        if ($key === 'ugd' || $key === 'igd') {
+            return 'rsgm-badge-amber';
+        }
+        return 'rsgm-badge-purple';
+    }
+
+    private function buildKategoriBadgesMeta(array $categories)
+    {
+        $meta = [];
+        foreach ($categories as $cat) {
+            $meta[] = [
+                'nama' => $cat,
+                'badge_class' => $this->getRmeKategoriBadgeClass($cat)
+            ];
+        }
+        return $meta;
+    }
+
+    private function collectPostedKategoriString(array $post, $default = 'Bedah')
+    {
+        $combined = [];
+        if (!empty($post['kategori_items']) && is_array($post['kategori_items'])) {
+            $combined = array_merge($combined, $post['kategori_items']);
+        }
+        if (!empty($post['kategori_custom'])) {
+            $combined = array_merge($combined, explode(',', (string)$post['kategori_custom']));
+        }
+        if (empty($combined) && isset($post['kategori'])) {
+            $combined = is_array($post['kategori']) ? $post['kategori'] : explode(',', (string)$post['kategori']);
+        }
+        $clean = $this->parseRmeCategories($combined, false);
+        if (empty($clean)) {
+            $clean = $this->parseRmeCategories($default, true);
+        }
+        $out = '';
+        foreach ($clean as $cat) {
+            $candidate = $out === '' ? $cat : ($out . ',' . $cat);
+            if (strlen($candidate) > 255) {
+                break;
+            }
+            $out = $candidate;
+        }
+        return $out !== '' ? $out : (string)$default;
+    }
+
     public function anyManajemenrme()
     {
+        $this->ensureRmeKategoriSchema();
         $this->core->addCSS(url('assets/css/dataTables.bootstrap.min.css'));
         $this->core->addJS(url('assets/jscripts/jquery.dataTables.min.js'));
         $this->core->addJS(url('assets/jscripts/dataTables.bootstrap.min.js'));
@@ -19601,7 +20202,8 @@ if (ob_get_length()) {
         foreach (array_keys($roles_meta) as $rk) {
             $role_counts[$rk] = 0;
         }
-        $kategori_list = [];
+        $kategori_list = ['UGD', 'Rajal', 'Ranap', 'Bedah', 'Penunjang'];
+        $seenKategoriLower = array_map('strtolower', $kategori_list);
 
         $no = 1;
         foreach ($all_forms as &$f) {
@@ -19616,7 +20218,20 @@ if (ob_get_length()) {
             $f['catatan'] = (string)($f['catatan'] ?? '');
             $f['deskripsi'] = (string)($f['deskripsi'] ?? '');
             $f['nama_tabel'] = (string)($f['nama_tabel'] ?? '');
-            $f['search_text'] = strtolower(($f['kode_form'] ?? '') . ' ' . ($f['nama_form'] ?? '') . ' ' . ($f['kategori'] ?? '') . ' ' . $f['target_aktor'] . ' ' . $f['nama_tabel'] . ' ' . $f['catatan'] . ' ' . $f['deskripsi']);
+
+            $fCats = $this->parseRmeCategories($f['kategori'] ?? '', true);
+            $f['kategori'] = implode(',', $fCats);
+            $f['kategori_items'] = $fCats;
+            $f['kategori_badges'] = $this->buildKategoriBadgesMeta($fCats);
+            foreach ($fCats as $kat) {
+                $katLower = strtolower($kat);
+                if (!in_array($katLower, $seenKategoriLower, true)) {
+                    $seenKategoriLower[] = $katLower;
+                    $kategori_list[] = $kat;
+                }
+            }
+
+            $f['search_text'] = strtolower(($f['kode_form'] ?? '') . ' ' . ($f['nama_form'] ?? '') . ' ' . $f['kategori'] . ' ' . $f['target_aktor'] . ' ' . $f['nama_tabel'] . ' ' . $f['catatan'] . ' ' . $f['deskripsi']);
 
             if ($f['status'] === '1') {
                 $count_active++;
@@ -19641,27 +20256,32 @@ if (ob_get_length()) {
             }
             $f['assigned_roles_meta'] = $assigned;
             $f['roles_with_check'] = $rolesWithCheck;
-
-            $kat = !empty($f['kategori']) ? $f['kategori'] : 'Umum';
-            if (!in_array($kat, $kategori_list, true)) {
-                $kategori_list[] = $kat;
-            }
         }
         unset($f);
 
-        if (!in_array('UGD', $kategori_list, true)) {
-            $kategori_list[] = 'UGD';
-        }
-
-        $preferredOrder = ['UGD', 'Rajal', 'Ranap', 'Bedah'];
+        $preferredOrder = ['UGD', 'Rajal', 'Ranap', 'Bedah', 'Penunjang'];
         usort($kategori_list, function($a, $b) use ($preferredOrder) {
             $posA = array_search($a, $preferredOrder);
             $posB = array_search($b, $preferredOrder);
             if ($posA !== false && $posB !== false) return $posA - $posB;
             if ($posA !== false) return -1;
             if ($posB !== false) return 1;
-            return strcmp($a, $b);
+            return strcasecmp($a, $b);
         });
+
+        foreach ($all_forms as &$f) {
+            $assignedLower = array_map('strtolower', $f['kategori_items']);
+            $katWithCheck = [];
+            foreach ($kategori_list as $katOpt) {
+                $katWithCheck[] = [
+                    'nama' => $katOpt,
+                    'badge_class' => $this->getRmeKategoriBadgeClass($katOpt),
+                    'checked' => in_array(strtolower($katOpt), $assignedLower, true)
+                ];
+            }
+            $f['kategori_with_check'] = $katWithCheck;
+        }
+        unset($f);
 
         // Ambil semua unit langsung dari master data poliklinik SIMRS
         $units = $this->db('poliklinik')
@@ -19865,11 +20485,79 @@ if (ob_get_length()) {
         exit();
     }
 
+    public function postUpdatekategoriform()
+    {
+        header('Content-Type: application/json');
+        if (!$this->core->getUserInfo('id')) {
+            echo json_encode(['status' => 'error', 'message' => 'Akses ditolak.']);
+            exit();
+        }
+        $this->ensureRmeKategoriSchema();
+
+        $id = (int)($_POST['id'] ?? 0);
+        if ($id <= 0) {
+            echo json_encode(['status' => 'error', 'message' => 'ID formulir tidak valid.']);
+            exit();
+        }
+
+        $form = $this->db('mlite_rme_form')->where('id', $id)->oneArray();
+        if (!$form) {
+            echo json_encode(['status' => 'error', 'message' => 'Formulir tidak ditemukan.']);
+            exit();
+        }
+
+        $rawCombined = [];
+        if (!empty($_POST['categories']) && is_array($_POST['categories'])) {
+            $rawCombined = array_merge($rawCombined, $_POST['categories']);
+        }
+        if (!empty($_POST['kategori_items']) && is_array($_POST['kategori_items'])) {
+            $rawCombined = array_merge($rawCombined, $_POST['kategori_items']);
+        }
+        if (!empty($_POST['kategori_custom'])) {
+            $rawCombined = array_merge($rawCombined, explode(',', (string)$_POST['kategori_custom']));
+        }
+        if (!empty($_POST['kategori'])) {
+            $rawCombined = array_merge($rawCombined, explode(',', (string)$_POST['kategori']));
+        }
+
+        $cleanCategories = $this->parseRmeCategories($rawCombined, false);
+        if (empty($cleanCategories)) {
+            echo json_encode(['status' => 'error', 'message' => 'Minimal harus memilih atau mengisi 1 kategori!']);
+            exit();
+        }
+
+        $kategoriStr = '';
+        $savedCategories = [];
+        foreach ($cleanCategories as $cat) {
+            $candidate = $kategoriStr === '' ? $cat : ($kategoriStr . ',' . $cat);
+            if (strlen($candidate) > 255) {
+                break;
+            }
+            $kategoriStr = $candidate;
+            $savedCategories[] = $cat;
+        }
+
+        $this->db('mlite_rme_form')->where('id', $id)->save(['kategori' => $kategoriStr]);
+
+        $badgesMeta = $this->buildKategoriBadgesMeta($savedCategories);
+        echo json_encode([
+            'status' => 'success',
+            'ok' => true,
+            'message' => 'Kategori ' . $form['kode_form'] . ' berhasil diperbarui menjadi: ' . implode(', ', $savedCategories) . '!',
+            'id' => $id,
+            'kategori' => $kategoriStr,
+            'categories' => $savedCategories,
+            'badges' => $badgesMeta
+        ]);
+        exit();
+    }
+
     public function postEditformrme()
     {
+        $this->ensureRmeKategoriSchema();
         $id          = (int)($_POST['id'] ?? 0);
         $nama        = trim($_POST['nama_form'] ?? '');
-        $kategori    = trim($_POST['kategori'] ?? 'Bedah');
+        $kategori    = $this->collectPostedKategoriString($_POST, 'Bedah');
         $rawTarget   = $_POST['target_aktor'] ?? [];
         $targetAktor = is_array($rawTarget) ? implode(',', $rawTarget) : trim($rawTarget);
         if (empty($targetAktor)) {
@@ -19947,9 +20635,10 @@ if (ob_get_length()) {
 
     public function postTambahformrme()
     {
+        $this->ensureRmeKategoriSchema();
         $kode        = strtoupper(trim($_POST['kode_form'] ?? ''));
         $nama        = trim($_POST['nama_form'] ?? '');
-        $kategori    = trim($_POST['kategori'] ?? 'Bedah');
+        $kategori    = $this->collectPostedKategoriString($_POST, 'Bedah');
         $rawTarget   = $_POST['target_aktor'] ?? [];
         $targetAktor = is_array($rawTarget) ? implode(',', $rawTarget) : trim($rawTarget);
         if (empty($targetAktor)) {
@@ -20253,21 +20942,88 @@ if (ob_get_length()) {
     /**
      * Keluarkan JSON status sukses saat dipanggil AJAX auto-save, atau redirect normal saat submit form.
      */
-    private function respondAjaxOrRedirect($redirectUrl, $recordId = null, $message = 'Data berhasil disimpan.')
+    private function respondAjaxOrRedirect($redirectUrl, $recordId = null, $message = 'Data berhasil disimpan.', array $extra = [])
     {
         if (!empty($_POST['ajax_save']) || (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower((string)$_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')) {
             while (ob_get_level()) {
                 ob_end_clean();
             }
             header('Content-Type: application/json');
-            echo json_encode([
+            echo json_encode(array_merge([
                 'status' => 'success',
                 'id' => $recordId,
                 'last_id' => $recordId,
                 'message' => $message
-            ]);
+            ], $extra));
             exit();
         }
+        redirect($redirectUrl);
+    }
+
+    /**
+     * Guard pembaruan formulir RME Rajal sesuai MRMIK 8 sebelum query UPDATE dijalankan.
+     * Otomatis membalas JSON `needs_reason`/`error` bila AJAX, atau redirect + flash notify bila POST biasa.
+     */
+    private function guardRajalUpdateOrRespond($table, $id, array $payload, $redirectUrl, array $opts = [])
+    {
+        $id = (int)$id;
+        if ($id <= 0) {
+            return null;
+        }
+        $prep = \Systems\Lib\RmeFormRevision::prepareBeforeUpdate($this->core, $table, $id, $payload, $opts);
+        if (is_array($prep) && in_array($prep['status'] ?? '', ['needs_reason', 'error'], true)) {
+            $isAjax = !empty($_POST['ajax_save']) || (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower((string)$_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest');
+            if ($isAjax) {
+                while (ob_get_level()) {
+                    ob_end_clean();
+                }
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode($prep, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                exit();
+            }
+            $this->notify('failure', $prep['message'] ?? 'Diperlukan alasan koreksi (MRMIK 8).');
+            redirect($redirectUrl);
+            exit();
+        }
+        return $prep;
+    }
+
+    /**
+     * Catat entri awal atau revisi AMEND ke `mlite_rme_revisions` setelah INSERT/UPDATE berhasil.
+     */
+    private function finalizeRajalSave($table, $existingId, $savedId, $prep, array $payload = [])
+    {
+        $existingId = (int)$existingId;
+        $savedId = (int)$savedId;
+        if ($existingId <= 0 && $savedId > 0) {
+            \Systems\Lib\RmeFormRevision::markCreated($this->core, $table, $savedId);
+            return ['status' => 'success', 'mode' => 'create', 'id' => $savedId];
+        }
+        if ($existingId > 0 && is_array($prep) && ($prep['status'] ?? '') === 'allow') {
+            return \Systems\Lib\RmeFormRevision::commitRevision($this->core, $table, $existingId, $prep, $payload);
+        }
+        return null;
+    }
+
+    /**
+     * Soft-delete (VOID) formulir RME Rajal alih-alih DELETE permanen.
+     */
+    private function handleRajalVoidRedirect($table, $id, $redirectUrl)
+    {
+        $id = (int)($id ?: ($_POST['id'] ?? ($_GET['id'] ?? 0)));
+        $reason = trim((string)($_POST['void_reason'] ?? ($_GET['void_reason'] ?? '')));
+        $res = \Systems\Lib\RmeFormRevision::voidRecord($this->core, $table, $id, $reason);
+
+        $isAjax = !empty($_POST['ajax_void']) || (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower((string)$_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest');
+        if ($isAjax) {
+            while (ob_get_level()) {
+                ob_end_clean();
+            }
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode($res, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            exit();
+        }
+        $this->notify(($res['status'] ?? '') === 'success' ? 'success' : 'failure', $res['message'] ?? 'Proses VOID selesai.');
         redirect($redirectUrl);
     }
 
@@ -22953,6 +23709,106 @@ if (ob_get_length()) {
         return $this->getRmgd3cetak($id);
     }
 
+    private function _decodeTriaseChecklistValue($raw)
+    {
+        if (is_array($raw)) {
+            return array_values($raw);
+        }
+        if (is_string($raw) && trim($raw) !== '') {
+            $dec = json_decode($raw, true);
+            if (is_array($dec)) {
+                return array_values($dec);
+            }
+        }
+        return [];
+    }
+
+    private function _buildRmgd3CetakVars(array $data, $is_pdf = false)
+    {
+        if (empty($data['nama_petugas']) && !empty($data['petugas_id'])) {
+            $pet = $this->db('petugas')->where('nip', $data['petugas_id'])->oneArray();
+            if ($pet && !empty($pet['nama'])) {
+                $data['nama_petugas'] = $pet['nama'];
+            } else {
+                $dok = $this->db('dokter')->where('kd_dokter', $data['petugas_id'])->oneArray();
+                if ($dok && !empty($dok['nm_dokter'])) {
+                    $data['nama_petugas'] = $dok['nm_dokter'];
+                }
+            }
+        }
+        if (empty($data['nama_petugas'])) {
+            $data['nama_petugas'] = $data['petugas_id'] ?? '-';
+        }
+
+        $jk = $data['jk'] ?? ($data['jenis_kelamin'] ?? '');
+        $data['jk_label'] = ($jk === 'L') ? 'L' : (($jk === 'P') ? 'P' : '-');
+        $data['tgl_lahir_fmt'] = (!empty($data['tgl_lahir']) && $data['tgl_lahir'] != '0000-00-00')
+            ? date('d / m / Y', strtotime((string)$data['tgl_lahir']))
+            : '-';
+
+        if (!empty($data['tgl_triase'])) {
+            $ts = strtotime(str_replace('T', ' ', (string)$data['tgl_triase']));
+            if ($ts) {
+                $data['tgl_kunjungan_fmt'] = date('d / m / Y', $ts);
+                $data['jam_mulai_fmt'] = date('H:i', $ts);
+                $data['tgl_selesai_fmt'] = date('d / m / Y', $ts);
+            }
+        }
+        if (empty($data['tgl_kunjungan_fmt'])) {
+            $data['tgl_kunjungan_fmt'] = '.... / .... / 20....';
+            $data['jam_mulai_fmt'] = '........';
+            $data['tgl_selesai_fmt'] = '.... / .... / 20....';
+        }
+        $data['jam_selesai_fmt'] = !empty($data['jam_selesai_triase'])
+            ? $data['jam_selesai_triase']
+            : ($data['jam_mulai_fmt'] ?? '........');
+
+        $clean_rm = preg_replace('/[^0-9]/', '', (string)($data['no_rkm_medis'] ?? ''));
+        $padded_rm = str_pad($clean_rm, 6, '0', STR_PAD_LEFT);
+        $rm_digits = str_split(substr($padded_rm, -6));
+
+        $ats_checked = !empty($data['ats_items_arr']) && is_array($data['ats_items_arr'])
+            ? $data['ats_items_arr']
+            : $this->_decodeTriaseChecklistValue($data['ats_items'] ?? []);
+        $sdcep_checked = !empty($data['sdcep_items_arr']) && is_array($data['sdcep_items_arr'])
+            ? $data['sdcep_items_arr']
+            : $this->_decodeTriaseChecklistValue($data['sdcep_items'] ?? []);
+        $doa_checked = !empty($data['doa_items_arr']) && is_array($data['doa_items_arr'])
+            ? $data['doa_items_arr']
+            : $this->_decodeTriaseChecklistValue($data['doa_items'] ?? []);
+
+        if (empty($data['ats_skala']) && !empty($data['skala_triase'])) {
+            $data['ats_skala'] = 'ATS ' . $data['skala_triase'];
+        }
+
+        $lists = $this->_getTriaseCriteriaLists($ats_checked, $sdcep_checked);
+        $doa_map = [
+            'tanda_kehidupan' => in_array('Tanda Kehidupan (-)', $doa_checked),
+            'pupil' => in_array('Pupil RCL/RCTL (-/-)', $doa_checked),
+            'denyut_nadi' => in_array('Denyut Nadi (-)', $doa_checked),
+            'ekg_flat' => in_array('EKG flat', $doa_checked),
+        ];
+
+        $kop_file = BASE_DIR . '/assets/img/KOP-SURAT.png';
+        $kop_img = is_file($kop_file) ? ($is_pdf ? $kop_file : url('assets/img/KOP-SURAT.png')) : '';
+
+        $ttePetugas = $this->resolveEsignature(
+            'rmgd3_triase',
+            [!empty($data['id_triase']) ? $data['id_triase'] : '', $data['no_rawat'] ?? ''],
+            'Petugas Triase'
+        );
+
+        return array_merge([
+            'data' => $data,
+            'kop_img' => $kop_img,
+            'rm_digits' => $rm_digits,
+            'doa_map' => $doa_map,
+            'qr_petugas' => $ttePetugas['qr_data_uri'] ?? '',
+            'tte_petugas' => $ttePetugas,
+            'is_mpdf' => $is_pdf,
+        ], $lists);
+    }
+
     public function getRmgd3cetak($id = null)
     {
         $id = $id ?? ($_GET['id'] ?? null);
@@ -22979,56 +23835,8 @@ if (ob_get_length()) {
             return $this->renderLiveCetakPreview('rmgd3cetak');
         }
 
-        if (empty($data['nama_petugas'])) {
-            $data['nama_petugas'] = $data['petugas_id'] ?? '-';
-        }
-        $data['jk_label'] = ($data['jk'] ?? '') == 'L' ? 'L' : (($data['jk'] ?? '') == 'P' ? 'P' : '-');
-        $data['tgl_lahir_fmt'] = (!empty($data['tgl_lahir']) && $data['tgl_lahir'] != '0000-00-00') ? date('d / m / Y', strtotime($data['tgl_lahir'])) : '-';
-
-        if (!empty($data['tgl_triase'])) {
-            $ts = strtotime($data['tgl_triase']);
-            $data['tgl_kunjungan_fmt'] = date('d / m / Y', $ts);
-            $data['jam_mulai_fmt'] = date('H:i', $ts);
-            $data['tgl_selesai_fmt'] = date('d / m / Y', $ts);
-        } else {
-            $data['tgl_kunjungan_fmt'] = '.... / .... / 20....';
-            $data['jam_mulai_fmt'] = '........';
-            $data['tgl_selesai_fmt'] = '.... / .... / 20....';
-        }
-
-        $data['jam_selesai_fmt'] = !empty($data['jam_selesai_triase']) ? $data['jam_selesai_triase'] : $data['jam_mulai_fmt'];
-
-        $clean_rm = preg_replace('/[^0-9]/', '', $data['no_rkm_medis'] ?? '');
-        $padded_rm = str_pad($clean_rm, 6, '0', STR_PAD_LEFT);
-        $rm_digits = str_split(substr($padded_rm, -6));
-
-        $ats_checked = !empty($data['ats_items']) ? (json_decode($data['ats_items'], true) ?: []) : [];
-        $sdcep_checked = !empty($data['sdcep_items']) ? (json_decode($data['sdcep_items'], true) ?: []) : [];
-        $doa_checked = !empty($data['doa_items']) ? (json_decode($data['doa_items'], true) ?: []) : [];
-
-        $lists = $this->_getTriaseCriteriaLists($ats_checked, $sdcep_checked);
-        $doa_map = [
-            'tanda_kehidupan' => in_array('Tanda Kehidupan (-)', $doa_checked),
-            'pupil' => in_array('Pupil RCL/RCTL (-/-)', $doa_checked),
-            'denyut_nadi' => in_array('Denyut Nadi (-)', $doa_checked),
-            'ekg_flat' => in_array('EKG flat', $doa_checked),
-        ];
-
         $is_pdf = isset($_GET['pdf']) && $_GET['pdf'] == 1;
-        $kop_file = BASE_DIR . '/assets/img/KOP-SURAT.png';
-        $kop_img = is_file($kop_file) ? ($is_pdf ? $kop_file : url('assets/img/KOP-SURAT.png')) : '';
-
-        $ttePetugas = $this->resolveEsignature('rmgd3_triase', [!empty($data['id_triase']) ? $data['id_triase'] : '', $data['no_rawat'] ?? ''], 'Petugas Triase');
-
-        $viewParams = array_merge([
-            'data' => $data,
-            'kop_img' => $kop_img,
-            'rm_digits' => $rm_digits,
-            'doa_map' => $doa_map,
-            'qr_petugas' => $ttePetugas['qr_data_uri'] ?? '',
-            'tte_petugas' => $ttePetugas,
-            'is_mpdf' => $is_pdf
-        ], $lists);
+        $viewParams = $this->_buildRmgd3CetakVars($data, $is_pdf);
 
         if ($is_pdf) {
             $oldErr = error_reporting(0);
@@ -24547,7 +25355,22 @@ if (ob_get_length()) {
 
     public function anySoaphistory()
     {
+        $table = trim((string)($_REQUEST['table_name'] ?? ''));
+        if ($table !== '' && \Systems\Lib\RmeFormRevision::isRegisteredTable($table)) {
+            \Systems\Lib\RmeFormRevision::outputHistoryJson($this->core);
+            return;
+        }
         \Systems\Lib\SoapRevision::outputHistoryJson($this->core);
+    }
+
+    public function anyRmehistory()
+    {
+        \Systems\Lib\RmeFormRevision::outputHistoryJson($this->core);
+    }
+
+    public function anyRmedetail()
+    {
+        \Systems\Lib\RmeFormRevision::outputDetailSummaryJson($this->core);
     }
 
     public function anyCpptcetak()
@@ -26747,25 +27570,25 @@ if (ob_get_length()) {
             "petugas_nama" => $_POST["petugas_nama"] ?? ""
         ];
 
-        if (!empty($id)) {
-            $this->db("rj_asesmen_jatuh_nyeri_anak")->where("id", $id)->save($save);
+        $existingId = (int)$id;
+        $prep = null;
+        if ($existingId > 0) {
+            $prep = $this->guardRajalUpdateOrRespond('rj_asesmen_jatuh_nyeri_anak', $existingId, $save, url([ADMIN, 'form_rme', 'jatuhanakform']) . '&id=' . $existingId);
+            $this->db("rj_asesmen_jatuh_nyeri_anak")->where("id", $existingId)->save($save);
+            $savedId = $existingId;
             $this->notify("success", "Asesmen Anak berhasil diperbarui.");
         } else {
             $this->db("rj_asesmen_jatuh_nyeri_anak")->save($save);
+            $savedId = (int)$this->resolveInsertedRecordId("rj_asesmen_jatuh_nyeri_anak", $save["no_rawat"] ?? "", "id");
             $this->notify("success", "Asesmen Anak berhasil disimpan.");
         }
-
-        redirect(url([ADMIN, 'form_rme', "jatuhanakmanage"]));
+        $revRes = $this->finalizeRajalSave("rj_asesmen_jatuh_nyeri_anak", $existingId, $savedId, $prep, $save);
+        $this->respondAjaxOrRedirect(url([ADMIN, 'form_rme', "jatuhanakmanage"]), $savedId, "Asesmen Anak berhasil disimpan.", ['revision' => $revRes]);
     }
 
     public function anyJatuhanakhapus()
     {
-        $id = $_GET["id"] ?? "";
-        if (!empty($id)) {
-            $this->db("rj_asesmen_jatuh_nyeri_anak")->where("id", $id)->delete();
-            $this->notify("success", "Data berhasil dihapus.");
-        }
-        redirect(url([ADMIN, 'form_rme', "jatuhanakmanage"]));
+        $this->handleRajalVoidRedirect("rj_asesmen_jatuh_nyeri_anak", $_POST["id"] ?? ($_GET["id"] ?? 0), url([ADMIN, 'form_rme', "jatuhanakmanage"]));
     }
 
     public function getJatuhanakhapus() { return $this->anyJatuhanakhapus(); }
@@ -27623,25 +28446,30 @@ if (ob_get_length()) {
             "catatan_fktp" => $_POST["catatan_fktp"] ?? ""
         ];
 
-        if (!empty($id)) {
-            $this->db("ringkasan_riwayat_klinik")->where("id", $id)->save($save);
+        $existingId = (int)$id;
+        $prep = null;
+        if ($existingId > 0) {
+            $prep = $this->guardRajalUpdateOrRespond('ringkasan_riwayat_klinik', $existingId, $save, url([ADMIN, 'form_rme', 'ringkasanriwayatklinikform']) . '&id=' . $existingId);
+            $this->db("ringkasan_riwayat_klinik")->where("id", $existingId)->save($save);
+            $savedId = $existingId;
             $this->notify("success", "Ringkasan Riwayat Klinik berhasil diperbarui");
         } else {
             $this->db("ringkasan_riwayat_klinik")->save($save);
+            $savedId = (int)$this->resolveInsertedRecordId("ringkasan_riwayat_klinik", $no_rawat, "id");
             $this->notify("success", "Ringkasan Riwayat Klinik berhasil disimpan");
         }
-
-        redirect(url([ADMIN, 'form_rme', "ringkasanriwayatklinikmanage"]));
+        $revRes = $this->finalizeRajalSave("ringkasan_riwayat_klinik", $existingId, $savedId, $prep, $save);
+        $this->respondAjaxOrRedirect(url([ADMIN, 'form_rme', "ringkasanriwayatklinikmanage"]), $savedId, "Ringkasan Riwayat Klinik berhasil disimpan.", ['revision' => $revRes]);
     }
 
     public function getRingkasanriwayatklinikhapus()
     {
-        $id = $_GET["id"] ?? "";
-        if (!empty($id)) {
-            $this->db("ringkasan_riwayat_klinik")->where("id", $id)->delete();
-            $this->notify("success", "Data berhasil dihapus");
-        }
-        redirect(url([ADMIN, 'form_rme', "ringkasanriwayatklinikmanage"]));
+        $this->handleRajalVoidRedirect("ringkasan_riwayat_klinik", $_POST["id"] ?? ($_GET["id"] ?? 0), url([ADMIN, 'form_rme', "ringkasanriwayatklinikmanage"]));
+    }
+
+    public function postRingkasanriwayatklinikhapus()
+    {
+        return $this->getRingkasanriwayatklinikhapus();
     }
 
     private function enrichRingkasanRiwayatRows(array $rows, array $data = [], $recordId = '', $noRawat = '')
@@ -28322,19 +29150,24 @@ if (ob_get_length()) {
             'ttd_petugas' => $ttdPetugas !== '' ? $ttdPetugas : null,
         ];
 
-        $savedId = $id;
-        if (!empty($id)) {
-            $this->db('rm_persetujuan_umum')->where('id', $id)->save($data);
+        $existingId = (int)$id;
+        $prep = null;
+        $savedId = $existingId;
+        if ($existingId > 0) {
+            $prep = $this->guardRajalUpdateOrRespond('rm_persetujuan_umum', $existingId, $data, url([ADMIN, 'form_rme', 'persetujuanumumform']) . '?id=' . $existingId);
+            $this->db('rm_persetujuan_umum')->where('id', $existingId)->save($data);
         } else {
             $this->db('rm_persetujuan_umum')->save($data);
             $savedId = $this->resolveInsertedRecordId('rm_persetujuan_umum', $noRawatInput, 'id');
         }
+        $revRes = $this->finalizeRajalSave('rm_persetujuan_umum', $existingId, $savedId, $prep, $data);
 
         if (!empty($_POST['ajax_save'])) {
             header('Content-Type: application/json');
             echo json_encode([
                 'status' => 'success',
                 'last_id' => $savedId,
+                'revision' => $revRes,
                 'redirect' => url([ADMIN, 'form_rme', 'persetujuanumummanage'])
             ]);
             exit();
@@ -28351,12 +29184,7 @@ if (ob_get_length()) {
 
     public function anyPersetujuanumumhapus()
     {
-        $id = trim($_GET['id'] ?? '');
-        if (!empty($id)) {
-            $this->db('rm_persetujuan_umum')->where('id', $id)->delete();
-            $this->notify('success', 'Data Formulir Persetujuan Umum berhasil dihapus.');
-        }
-        redirect(url([ADMIN, 'form_rme', 'persetujuanumummanage']));
+        $this->handleRajalVoidRedirect('rm_persetujuan_umum', $_POST['id'] ?? ($_GET['id'] ?? 0), url([ADMIN, 'form_rme', 'persetujuanumummanage']));
     }
 
     public function getPersetujuanumumhapus()
@@ -28746,24 +29574,12 @@ if (ob_get_length()) {
     private function handleRajalDelete($type, $redirectRoute)
     {
         $table = $this->rajalTableName($type);
-        if ($table === '' || $_SERVER['REQUEST_METHOD'] !== 'POST') {
+        if ($table === '' || ($_SERVER['REQUEST_METHOD'] !== 'POST' && empty($_GET['id']))) {
             $this->notify('failure', 'Metode penghapusan tidak valid.');
             redirect(url([ADMIN, 'form_rme', $redirectRoute]));
             return;
         }
-        $id = (int)($_POST['id'] ?? 0);
-        if ($id <= 0) {
-            $this->notify('failure', 'ID data tidak valid.');
-            redirect(url([ADMIN, 'form_rme', $redirectRoute]));
-            return;
-        }
-        $deleted = $this->db($table)->where('id', $id)->delete();
-        if ($deleted) {
-            $this->notify('success', 'Data formulir berhasil dihapus.');
-        } else {
-            $this->notify('failure', 'Data gagal dihapus atau tidak ditemukan.');
-        }
-        redirect(url([ADMIN, 'form_rme', $redirectRoute]));
+        $this->handleRajalVoidRedirect($table, $_POST['id'] ?? ($_GET['id'] ?? 0), url([ADMIN, 'form_rme', $redirectRoute]));
     }
 
     private function handleRajalForm($type)
@@ -28874,6 +29690,9 @@ if (ob_get_length()) {
                 $payload[$df] = $this->sanitizeRajalDate($payload[$df]);
             }
         }
+        if (array_key_exists('tanggal_kunjungan', $payload) && $payload['tanggal_kunjungan'] === '') {
+            $payload['tanggal_kunjungan'] = null;
+        }
         foreach (['pukul_kunjungan', 'pukul_ttd'] as $tf) {
             if (isset($payload[$tf])) {
                 $payload[$tf] = $this->sanitizeRajalTime($payload[$tf]);
@@ -28937,9 +29756,12 @@ if (ob_get_length()) {
         }
 
         $cleanPayload = $this->filterTableColumns($table, $payload);
-        if ($id > 0) {
-            $ok = $this->db($table)->where('id', $id)->save($cleanPayload);
-            $savedId = $ok ? $id : 0;
+        $existingId = (int)$id;
+        $prep = null;
+        if ($existingId > 0) {
+            $prep = $this->guardRajalUpdateOrRespond($table, $existingId, $cleanPayload, url([ADMIN, 'form_rme', $type . 'form']) . '&id=' . $existingId);
+            $ok = $this->db($table)->where('id', $existingId)->save($cleanPayload);
+            $savedId = $ok ? $existingId : 0;
         } else {
             $ok = $this->db($table)->save($cleanPayload);
             $savedId = $ok ? (int)$this->resolveInsertedRecordId($table, $noRawat, 'id') : 0;
@@ -28948,7 +29770,8 @@ if (ob_get_length()) {
         if (!$savedId) {
             return $this->respondAjaxOrRedirect(url([ADMIN, 'form_rme', $manageRoute]), null, 'Gagal menyimpan data formulir.');
         }
-        return $this->respondAjaxOrRedirect(url([ADMIN, 'form_rme', $manageRoute]), $savedId, 'Data berhasil disimpan.');
+        $revRes = $this->finalizeRajalSave($table, $existingId, $savedId, $prep, $cleanPayload);
+        return $this->respondAjaxOrRedirect(url([ADMIN, 'form_rme', $manageRoute]), $savedId, 'Data berhasil disimpan.', ['revision' => $revRes]);
     }
 
     private function buildRj04EkstraoralCanvasSrc($noRawat, $isPdf = false, $allowPostOverride = false)

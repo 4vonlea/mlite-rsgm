@@ -319,13 +319,31 @@
                         <div class="rsgm-dossier-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-left: 3.5px solid #0284c7; border-radius: 8px; padding: 12px 14px; box-shadow: 0 1px 3px rgba(15,23,42,0.04); display: flex; flex-direction: column; justify-content: space-between; height: 100%; min-height: 118px; transition: all 0.15s ease;">
                           
                           <!-- Card Top Row: Chip Kode & Badge Status -->
-                          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 4px; margin-bottom: 6px;">
                             <span style="font-family: monospace; font-size: 11px; font-weight: 800; padding: 2px 7px; border-radius: 4px; background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;">
                               {$ff.kode_form}
                             </span>
-                            <span class="rsgm-badge rsgm-badge-emerald" style="font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 4px;">
-                              <i class="fa fa-check"></i> Terisi {if: $ff.fill_count > 1}({$ff.fill_count}x){/if}
-                            </span>
+                            <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;">
+                              {if: !empty($ff.is_voided)}
+                              <button type="button" class="rsgm-soap-rev-badge js-soap-rev-open" style="background:#dc2626; color:#fff; border-color:#b91c1c; font-size:9.5px; padding:1px 6px;" data-module="form_rme" data-table="{$ff.rev_table}" data-key="{$ff.rev_key}" title="Klik untuk melihat alasan pembatalan (VOID)">
+                                <i class="fa fa-ban"></i> VOID
+                              </button>
+                              {else}
+                              <span class="rsgm-badge rsgm-badge-emerald" style="font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 4px;">
+                                <i class="fa fa-check"></i> Terisi {if: $ff.fill_count > 1}({$ff.fill_count}x){/if}
+                              </span>
+                              {/if}
+                              {if: !empty($ff.has_revisions)}
+                              <button type="button" class="rsgm-soap-rev-badge js-soap-rev-open" style="font-size:9.5px; padding:1px 6px;" data-module="form_rme" data-table="{$ff.rev_table}" data-key="{$ff.rev_key}" title="Lihat penandaan koreksi (MRMIK 8)">
+                                <i class="fa fa-history"></i> Koreksi {$ff.revision_count}x
+                              </button>
+                              {/if}
+                              {if: !empty($ff.is_tte_outdated)}
+                              <span class="rsgm-soap-tte-warn-badge" style="font-size:9.5px; padding:1px 6px;" title="Formulir dikoreksi setelah TTE dibubuhkan">
+                                <i class="fa fa-exclamation-triangle"></i> TTE Ulang
+                              </span>
+                              {/if}
+                            </div>
                           </div>
 
                           <!-- Card Title: Nama Formulir Bersih Tanpa Redundansi Kode -->
@@ -721,9 +739,13 @@
                     </td>
 
                     <td style="text-align: center;">
-                      <span class="badge" style="background: #e2e8f0; color: #334155; font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 4px;">
-                        {$f.kategori}
-                      </span>
+                      <div style="display: flex; flex-wrap: wrap; gap: 3px; justify-content: center;">
+                        {loop: $f.kategori_badges as $kb}
+                        <span class="rsgm-badge {$kb.badge_class}" style="font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 4px;">
+                          {$kb.nama}
+                        </span>
+                        {/loop}
+                      </div>
                     </td>
 
                     <td style="text-align: center;">
@@ -825,9 +847,13 @@
 
                     <!-- Card Body -->
                     <div style="padding: 10px 12px; flex-grow: 1;">
-                      <span class="badge" style="background: #e2e8f0; color: #475569; font-size: 9.5px; font-weight: 600; padding: 1px 5px; margin-bottom: 4px;">
-                        {$f.kategori}
-                      </span>
+                      <div style="display: flex; flex-wrap: wrap; gap: 3px; margin-bottom: 4px;">
+                        {loop: $f.kategori_badges as $kb}
+                        <span class="rsgm-badge {$kb.badge_class}" style="font-size: 9.5px; font-weight: 600; padding: 1px 5px;">
+                          {$kb.nama}
+                        </span>
+                        {/loop}
+                      </div>
                       <h4 style="margin: 2px 0 6px; font-size: 12.5px; font-weight: 800; color: #0f172a; line-height: 1.35; min-height: 34px;">
                         {$f.nama_form}
                       </h4>
