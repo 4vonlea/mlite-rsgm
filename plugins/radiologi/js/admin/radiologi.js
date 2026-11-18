@@ -134,7 +134,7 @@ $("#rincian").off("click", ".cetak_expertise").on("click", ".cetak_expertise", f
   var tgl_periksa = $(this).attr("data-tgl_periksa") || '';
   var jam = $(this).attr("data-jam_periksa") || '';
   var status = $(this).attr("data-status") || $('input:text[name=status]').val() || 'Ralan';
-  window.open(baseURL + '/radiologi/cetakhasil?no_rawat=' + encodeURIComponent(no_rawat) + '&tgl_periksa=' + encodeURIComponent(tgl_periksa) + '&jam=' + encodeURIComponent(jam) + '&status=' + encodeURIComponent(status) + '&action=pdf&stream=1&t=' + mlite.token);
+  window.open(baseURL + '/radiologi/cetakexpertise?no_rawat=' + encodeURIComponent(no_rawat) + '&tgl_periksa=' + encodeURIComponent(tgl_periksa) + '&jam=' + encodeURIComponent(jam) + '&status=' + encodeURIComponent(status) + '&t=' + mlite.token);
 });
 
 $("#rincian").on("click",".cetak_permintaan", function(event){

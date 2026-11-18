@@ -820,6 +820,15 @@ $("#form_rincian").on("click", "#simpan_rincian", function(event){
   var diagnosa_klinis = $('input:text[name=diagnosa_klinis]').val();
   var informasi_tambahan = $('textarea[name=informasi_tambahan]').val();
 
+  if ((kat === 'radiologi' || kat === 'laboratorium') && $.trim(diagnosa_klinis || '') === '') {
+    $('#err_diagnosa_klinis').show();
+    $('#form_rincian input[name=diagnosa_klinis]').css('border-color', '#dc2626').focus();
+    bootbox.alert('Indikasi / Diagnosa Klinis wajib diisi untuk permintaan ' + (kat === 'radiologi' ? 'radiologi' : 'laboratorium') + '.');
+    return;
+  }
+  $('#err_diagnosa_klinis').hide();
+  $('#form_rincian input[name=diagnosa_klinis]').css('border-color', '');
+
   var url = baseURL + '/dokter_ralan/savedetail?t=' + mlite.token;
   $.post(url, {no_rawat : no_rawat,
   kd_jenis_prw   : kd_jenis_prw,
@@ -1911,8 +1920,32 @@ $(document).ready(function() {
         });
     });
 
+    $('#modalPermintaanLab').on('input', '#modal_diagnosa_klinis', function() {
+        if ($.trim($(this).val() || '') !== '') {
+            $('#err_modal_diagnosa_klinis').hide();
+            $(this).css('border-color', '');
+        }
+    });
+
+    $('#form_rincian').on('input', 'input[name=diagnosa_klinis]', function() {
+        if ($.trim($(this).val() || '') !== '') {
+            $('#err_diagnosa_klinis').hide();
+            $(this).css('border-color', '');
+        }
+    });
+
     $('#btnSimpanPermintaanLab').click(function(e) {
         e.preventDefault();
+        var diagnosa_klinis = $.trim($('#modal_diagnosa_klinis').val() || '');
+        if (diagnosa_klinis === '') {
+            $('#err_modal_diagnosa_klinis').show();
+            $('#modal_diagnosa_klinis').css('border-color', '#dc2626').focus();
+            $('#modalPermintaanLab').animate({ scrollTop: 0 }, 200);
+            return;
+        }
+        $('#err_modal_diagnosa_klinis').hide();
+        $('#modal_diagnosa_klinis').css('border-color', '');
+
         var checked = [];
         $('.chk-lab:not(:disabled):checked').each(function() {
             checked.push({
@@ -1939,10 +1972,6 @@ $(document).ready(function() {
         var informasi_tambahan = $('#modal_info_tambahan').val();
         if(!informasi_tambahan) informasi_tambahan = $('#informasi_tambahan').val();
         if(typeof informasi_tambahan === 'undefined') informasi_tambahan = '';
-        
-        var diagnosa_klinis = $('#modal_diagnosa_klinis').val();
-        if(!diagnosa_klinis) diagnosa_klinis = $('input:text[name=diagnosa_klinis]').val();
-        if(typeof diagnosa_klinis === 'undefined') diagnosa_klinis = '';
         
         var baseURL = mlite.url + '/' + mlite.admin;
 

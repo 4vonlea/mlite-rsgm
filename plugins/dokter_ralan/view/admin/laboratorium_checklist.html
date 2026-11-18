@@ -4,8 +4,9 @@
       <div class="row">
         <div class="col-md-6">
           <div class="form-group" style="margin-bottom: 0;">
-            <label for="modal_diagnosa_klinis" class="rsgm-compact-label"><i class="fa fa-stethoscope text-primary"></i> Diagnosa Klinis / Indikasi</label>
-            <input type="text" id="modal_diagnosa_klinis" class="form-control" placeholder="Isi diagnosa klinis pasien..." value="{?=isset_or($diagnosa_klinis)?}">
+            <label for="modal_diagnosa_klinis" class="rsgm-compact-label"><i class="fa fa-stethoscope text-primary"></i> Diagnosa Klinis / Indikasi <span class="text-danger">*</span></label>
+            <input type="text" id="modal_diagnosa_klinis" class="form-control" placeholder="Isi diagnosa klinis pasien (wajib diisi)..." value="{?=isset_or($diagnosa_klinis)?}" required>
+            <small id="err_modal_diagnosa_klinis" class="text-danger" style="display:none; font-weight:600; margin-top:4px;"><i class="fa fa-exclamation-circle"></i> Diagnosa Klinis / Indikasi wajib diisi.</small>
           </div>
         </div>
         <div class="col-md-6">

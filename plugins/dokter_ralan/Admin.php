@@ -522,6 +522,16 @@ class Admin extends AdminModule
 
       }
 
+      $kat_req = $_POST['kat'] ?? '';
+      if (in_array($kat_req, ['laboratorium', 'radiologi'], true) && trim((string) ($_POST['diagnosa_klinis'] ?? '')) === '') {
+        header('Content-Type: application/json');
+        echo json_encode([
+          'status' => 'error',
+          'message' => 'Indikasi / Diagnosa Klinis wajib diisi untuk permintaan ' . $kat_req . '.'
+        ]);
+        exit();
+      }
+
       if($_POST['kat'] == 'laboratorium') {
         $maxRetries = 5;
         $retryCount = 0;

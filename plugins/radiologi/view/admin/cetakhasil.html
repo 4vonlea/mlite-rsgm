@@ -1,131 +1,56 @@
 <!doctype html>
 <html lang="id">
-<head>
-  <title>Hasil Pemeriksaan Radiologi - {$pasien.nm_pasien}</title>
-  <meta charset="UTF-8">
-  {if: !$is_pdf}
-  <link href="{?=url()?}/assets/css/bootstrap.min.css" rel="stylesheet" type="text/css">
-  <script src="{?=url()?}/assets/jscripts/jquery.min.js"></script>
-  <script src="{?=url()?}/assets/jscripts/bootstrap.min.js"></script>
-  {/if}
-  <style>
-    body, table, td, th, div, p {
-      font-family: Arial, Helvetica, sans-serif;
-    }
-    body {
-      margin: 0;
-      padding: 20px;
-      background: #f1f5f9;
-      color: #111827;
-      font-size: 13.5px;
-      line-height: 1.55;
-    }
-    .sheet {
-      width: 740px;
-      max-width: 100%;
-      margin: 0 auto;
-      background: #ffffff;
-      padding: 28px 36px 36px 36px;
-      box-shadow: 0 2px 10px rgba(15, 23, 42, 0.08);
-    }
-    .kop-img {
-      width: 100%;
-      height: auto;
-      display: block;
-    }
-    .meta-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 12px;
-      margin-bottom: 10px;
-    }
-    .meta-table td {
-      border: none;
-      padding: 2px 4px;
-      vertical-align: top;
-      font-size: 14px;
-    }
-    .meta-label {
-      width: 165px;
-    }
-    .meta-sep {
-      width: 16px;
-      text-align: center;
-    }
-    .divider {
-      border: 0;
-      border-top: 1.5px solid #222222;
-      margin: 10px 0 18px 0;
-    }
-    .expertise-body {
-      min-height: 220px;
-      font-size: 14px;
-      color: #111827;
-    }
-    .expertise-item {
-      margin-bottom: 14px;
-    }
-    .expertise-empty {
-      color: #6b7280;
-      font-style: italic;
-      padding: 16px 0;
-    }
-    .signature-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 34px;
-    }
-    .signature-table td {
-      border: none;
-      vertical-align: top;
-      font-size: 14px;
-    }
-    .signature-box {
-      width: 240px;
-      text-align: center;
-    }
-    .signature-space {
-      height: 68px;
-    }
-    .no-print {
-      width: 740px;
-      max-width: 100%;
-      margin: 18px auto 0 auto;
-      text-align: center;
-      font-family: Arial, sans-serif;
-    }
-    .no-print .btn {
-      margin: 3px 4px;
-    }
-    @media print {
-      .no-print, .modal, #emailModal, #waModal {
-        display: none !important;
-      }
-      body {
-        margin: 0;
-        padding: 0;
-        background: #ffffff;
-      }
-      .sheet {
-        width: 100%;
-        padding: 0;
-        box-shadow: none;
-      }
-    }
-  </style>
-  {if: !$is_pdf}
-  <script>
-  function printContent() {
+	<head>
+		<title>Cetak Hasil</title>
+		<meta charset="UTF-8">
+		<link href="{?=url()?}/assets/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+		<script src="{?=url()?}/assets/jscripts/jquery.min.js"></script>
+		<script src="{?=url()?}/assets/jscripts/bootstrap.min.js"></script>
+	<style>
+	body{
+		margin: 20px;
+		width: 800px;
+	}
+	table {
+	  border-collapse: collapse;
+	}
+	tr{
+	  border-bottom: 1px solid #8c8b8b;
+	}
+	th,td {padding:3px 0px 3px 10px;}
+	.float{
+		position:fixed;
+		width:120px;
+		height:40px;
+		bottom:40px;
+		right:40px;
+		background-color:#4C9A2A;
+		color:#FFF;
+		text-align:center;
+		box-shadow: 2px 2px 3px #999;
+	}
+	@media print {
+		.no-print, del, .btn, .modal, #emailModal, #waModal {
+			display: none !important;
+		}
+		body {
+			margin: 0;
+			width: 100% !important;
+			background: #fff;
+		}
+		#faktur {
+			box-shadow: none !important;
+			padding: 0 !important;
+		}
+	}
+	</style>
+
+	<script>
+function printContent(el) {
     window.print();
-  }
+}
 
-  function BukaPDF() {
-    var pdfUrl = window.location.href;
-    pdfUrl += (pdfUrl.indexOf('?') > -1) ? '&action=pdf&stream=1' : '?action=pdf&stream=1';
-    window.open(pdfUrl, '_blank');
-  }
-
-  function KirimEmail() {
+function KirimEmail() {
     var email = document.getElementById("email").value;
     var receiver = document.getElementById("receiver").value;
     var file = "{?=url()?}/uploads/radiologi/{$filename}.pdf";
@@ -137,24 +62,24 @@
     btn.html('<i class="fa fa-spinner fa-spin"></i> Memproses...').prop('disabled', true);
 
     $.get(pdfUrl, function() {
-      var xhttp = new XMLHttpRequest();
-      xhttp.onreadystatechange = function() {
-        if (this.readyState == 4 && this.status == 200) {
-          var data = xhttp.responseText;
-          alert(data);
-          btn.html(oldText).prop('disabled', false);
-        }
-      };
-      xhttp.open("POST", "{?=url([ADMIN,'radiologi','kirimemail'])?}", true);
-      xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-      xhttp.send("email=" + encodeURIComponent(email) + "&receiver=" + encodeURIComponent(receiver) + "&file=" + encodeURIComponent(file));
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                var data = xhttp.responseText;
+                alert(data);
+                btn.html(oldText).prop('disabled', false);
+            }
+        };
+        xhttp.open("POST", "{?=url([ADMIN,'radiologi','kirimemail'])?}", true);
+        xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+        xhttp.send("email=" + email + "&receiver=" + receiver + "&file=" + file);
     }).fail(function() {
-      alert("Gagal membuat dokumen PDF.");
-      btn.html(oldText).prop('disabled', false);
+        alert("Gagal membuat dokumen PDF.");
+        btn.html(oldText).prop('disabled', false);
     });
-  }
+}
 
-  function KirimWA() {
+function KirimWA() {
     var api_key = '{$wagateway.token}';
     var sender = '{$wagateway.phonenumber}';
     var number = document.getElementById("number").value;
@@ -169,183 +94,230 @@
     btn.html('<i class="fa fa-spinner fa-spin"></i> Memproses...').prop('disabled', true);
 
     $.get(pdfUrl, function() {
-      var xhttp = new XMLHttpRequest();
-      xhttp.onreadystatechange = function() {
-        if (this.readyState == 4 && this.status == 200) {
-          var data = xhttp.responseText;
-          if (data.indexOf('504 Gateway Time-out') != -1) {
-            alert('Timeout!!! Gagal mengirim pesan.');
-          } else {
-            var jsonResponse = JSON.parse(data);
-            if (jsonResponse["status"] == true) {
-              alert('Sukses mengirim pesan.');
-            } else {
-              alert('Gagal mengirim pesan.\n' + jsonResponse["msg"]);
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                var data = xhttp.responseText;
+                if(data.indexOf('504 Gateway Time-out') != -1) {
+                    alert('Timeout!!! Gagal mengirim pesan.');
+                } else {
+                    var jsonResponse = JSON.parse(data);
+                    if(jsonResponse["status"] == true) {
+                        alert('Sukses mengirim pesan.');
+                    } else {
+                        alert('Gagal mengirim pesan.\n' + jsonResponse["msg"]);
+                    }
+                }
+                btn.html(oldText).prop('disabled', false);
             }
-          }
-          btn.html(oldText).prop('disabled', false);
-        }
-      };
-      xhttp.open("POST", "{?=url([ADMIN,'api','kirimwadocument'])?}", true);
-      xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-      xhttp.send("api_key=" + encodeURIComponent(api_key) + "&sender=" + encodeURIComponent(sender) + "&number=" + encodeURIComponent(number) + "&message=" + encodeURIComponent(message) + "&tipe=" + tipe + "&file=" + encodeURIComponent(file));
+        };
+        xhttp.open("POST", "{?=url([ADMIN,'api','kirimwadocument'])?}", true);
+        xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+        xhttp.send("api_key=" + api_key + "&sender=" + sender + "&number=" + number + "&message=" + message + "&tipe=" + tipe + "&file=" + file);
     }).fail(function() {
-      alert("Gagal membuat dokumen PDF.");
-      btn.html(oldText).prop('disabled', false);
+        alert("Gagal membuat dokumen PDF.");
+        btn.html(oldText).prop('disabled', false);
     });
-  }
-  </script>
-  {/if}
-</head>
-<body>
-  <div id="faktur" class="sheet">
-    <img class="kop-img" src="{$kopSrc}" alt="Kop Surat RSGM" />
+}
+</script>
+	</head>
 
-    <table class="meta-table">
-      <tr>
-        <td class="meta-label">Nama</td>
-        <td class="meta-sep">:</td>
-        <td>{$pasien.nm_pasien}</td>
-      </tr>
-      <tr>
-        <td class="meta-label">Umur</td>
-        <td class="meta-sep">:</td>
-        <td>{$pasien.umur}</td>
-      </tr>
-      <tr>
-        <td class="meta-label">Pemeriksaan</td>
-        <td class="meta-sep">:</td>
-        <td>{$nama_pemeriksaan}</td>
-      </tr>
-      <tr>
-        <td class="meta-label">Tanggal</td>
-        <td class="meta-sep">:</td>
-        <td>{$tanggal_pemeriksaan_indo}</td>
-      </tr>
-      <tr>
-        <td class="meta-label">Nomor Rekam Medis</td>
-        <td class="meta-sep">:</td>
-        <td>{$pasien.no_rkm_medis}</td>
-      </tr>
-    </table>
+	<body>
+		<div id="faktur" style="margin: auto 0;">
+		<center>
+			<table width="740px">
+				<tr style="border:none;">
+					<td>
+						<img width="740px" src='{?=url()?}/assets/img/KOP-SURAT.png' />
+					</td>
+				</tr>
+			</table>
+			<br>
+			<table width="740px">
+				<tr style="border:none;">
+					<td width="150px">Nama Pasien/RM</td>
+					<td>:</td>
+					<td width="600px">
+						{$pasien.nm_pasien} / {$pasien.no_rkm_medis}
+					</td>
+				</tr>
+				<tr style="border:none;">
+					<td width="150px">Umur</td>
+					<td>:</td>
+					<td width="600px">
+						{$pasien.umur}
+					</td>
+				</tr>
+				<tr style="border:none;">
+					<td width="150px">Poli</td>
+					<td>:</td>
+					<td width="600px">
+						{$pasien.nm_poli}
+					</td>
+				</tr>
+				<tr style="border:none;">
+					<td width="150px">Dokter PJ</td>
+					<td>:</td>
+					<td width="600px">
+						{$pj_radiologi}
+					</td>
+				</tr>
+				<tr style="border:none;">
+					<td width="150px">Dokter Pengirim</td>
+					<td>:</td>
+					<td width="600px">
+						{$dokter_perujuk}
+					</td>
+				</tr>
+				<tr style="border:none;">
+					<td width="150px">Tanggal</td>
+					<td>:</td>
+					<td width="600px">
+						{$pasien.tgl_registrasi}
+					</td>
+				</tr>
+			</table>
+			<br>
+			<h4>Pemeriksaan Radiologi</h4>
+		  <table width="740px">
+		    <thead>
+		      <tr style="border-top: 1px solid #8c8b8b">
+		        <th>Pemeriksaan</th>
+		        <th width="150">Nominal (Rp)</th>
+		      </tr>
+		    </thead>
+		    <tbody>
+		      {loop: $periksa_radiologi}
+						<tr>
+							<td>{$value.nm_perawatan}</td>
+							<td>{?=number_format($value.biaya, 0, ',', '.')?}</td>
+						</tr>
+		      {/loop}
+					<tr>
+						<th>Total Biaya</th>
+						<th>{?=number_format($jumlah_total_radiologi, 0, ',', '.')?}</th>
+					</tr>
+					{if: $hasil_radiologi}
+					<tr style="border-top: 1px solid #8c8b8b">
+		        <th>Hasil</th>
+		        <th></th>
+		      </tr>
+					{/if}
+					{loop: $hasil_radiologi}
+					<tr>
+						<td colspan="2">
+							{if: !empty($value.nm_perawatan) && count($hasil_radiologi) > 1}
+							<strong>{$value.nm_perawatan}:</strong><br>
+							{/if}
+							{?=nl2br($value.hasil)?}
+						</td>
+					</tr>
+					{/loop}
+					{if: $gambar_radiologi}
+					<tr style="border-top: 1px solid #8c8b8b">
+		        <th>Gambar</th>
+		        <th></th>
+		      </tr>
+					{/if}
+					{loop: $gambar_radiologi}
+					<tr>
+						<td colspan="2" style="text-align: center;">
+							{if: !empty($value.nm_perawatan) && count($gambar_radiologi) > 1}
+							<div style="text-align: left; font-weight: bold; margin-bottom: 5px;">{$value.nm_perawatan}</div>
+							{/if}
+							<img src="{?=WEBAPPS_URL.'/radiologi/'.$value.lokasi_gambar?}" style="max-height: 400px; max-width: 720px;">
+						</td>
+					</tr>
+					{/loop}
+		    </tbody>
+		  </table>
+			<br>
+			<table width="740px">
+				<tr style="border:none;text-align:center;">
+					<td width="500px"></td>
+					<td>
+							Penanggung Jawab
+							<br>
+							<br>
+							{if: $signature}
+							<center>
+							<a href="{?=url()?}/esignature/verify/{?=isset_or($signature.signature_hash)?}" target="_blank" style="cursor:default; text-decoration:none; color:inherit;">
+								<img src="{$qrCode}" width="100px"/>
+							</a>
+							</center>
+							<br>
+							<div style="font-size: 10px; color: #4CAF50; margin-bottom: 5px;">
+								<i>Ditandatangani secara elektronik oleh:</i>
+							</div>
+							{$signature.signer_name}
+							{else}
+							<br><br><br>
+							{$pj_radiologi}
+							{/if}
+					</td>
+				</tr>
+			</table>
+		</center>
+		</div>
+		<br><br><br>
+		<div class="no-print">
+			<center>
+				<button type="button" class="btn btn-warning" data-toggle="modal" href="#emailModal"><span class="glyphicon glyphicon-send"></span> Kirim Email</button>
+				<button type="button" class="btn btn-info" data-toggle="modal" href="#waModal"><span class="glyphicon glyphicon-send"></span> Kirim WA</button>
+				<button onclick="printContent('faktur')" type="button" class="btn btn-danger"><span class="glyphicon glyphicon-print"></span> Cetak</button>
+			</center>	
+		</div>
+		<!-- Modal -->
+	  <div class="modal fade" id="waModal" tabindex="-1" role="dialog" aria-labelledby="waModalLabel" aria-hidden="true">
+	    <div class="modal-dialog">
+	      <div class="modal-content">
+	        <div class="modal-header">
+	          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+	          <h4 class="modal-title">Kirim WhatsApp</h4>
+	        </div>
+	        <div class="modal-body">
+		        <div class="form-floating number">
+							<label for="floatingPassword">Nomor</label>
+		          <input type="text" name="number" class="form-control" id="number" placeholder="Nomor WhatsApp Tujuan" value="{$pasien.no_tlp}">
+		        </div>
+		        <div class="form-floating message">
+							<label for="floatingPassword">Pesan</label>
+		          <input type="text" name="message" class="form-control" id="message" placeholder="Tulis pesan anda.." value="Hasil Pemeriksaan Laboratorium">
+		        </div>
+	        </div>
+	        <div class="modal-footer">
+	          <button type="button" class="btn btn-default" data-dismiss="modal">Batal</button>
+	          <button type="button" class="btn btn-primary" onclick="KirimWA()" data-dismiss="modal">Kirim</button>
+	        </div>
+	      </div><!-- /.modal-content -->
+	    </div><!-- /.modal-dialog -->
+	  </div><!-- /.modal -->
 
-    <hr class="divider" />
+		<!-- Modal -->
+	  <div class="modal fade" id="emailModal" tabindex="-1" role="dialog" aria-labelledby="emailModalLabel" aria-hidden="true">
+	    <div class="modal-dialog">
+	      <div class="modal-content">
+	        <div class="modal-header">
+	          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+	          <h4 class="modal-title">Kirim Email</h4>
+	        </div>
+	        <div class="modal-body">
+		        <div class="form-floating number">
+							<label for="floatingPassword">Email</label>
+		          <input type="text" name="email" class="form-control" id="email" placeholder="Email Tujuan" value="{$pasien.email}">
+		        </div>
+		        <div class="form-floating message">
+							<label for="floatingPassword">Nama Pasien</label>
+		          <input type="text" name="receiver" class="form-control" id="receiver" placeholder="Nama Pasien" value="{$pasien.nm_pasien}">
+		        </div>
+	        </div>
+	        <div class="modal-footer">
+	          <button type="button" class="btn btn-default" data-dismiss="modal">Batal</button>
+	          <button type="button" class="btn btn-primary" onclick="KirimEmail()" data-dismiss="modal">Kirim</button>
+	        </div>
+	      </div><!-- /.modal-content -->
+	    </div><!-- /.modal-dialog -->
+	  </div><!-- /.modal -->
 
-    <div class="expertise-body">
-      {if: $hasil_radiologi}
-        {loop: $hasil_radiologi}
-        <div class="expertise-item">
-          {if: !empty($value.nm_perawatan) && count($hasil_radiologi) > 1}
-          <div style="font-weight: bold; text-decoration: underline; margin-bottom: 6px;">{$value.nm_perawatan}</div>
-          {/if}
-          {?=$value.formatted_html?}
-        </div>
-        {/loop}
-      {else}
-        <div class="expertise-empty">(Belum ada hasil bacaan / expertise radiologi yang diinputkan.)</div>
-      {/if}
-    </div>
-
-    {if: $gambar_radiologi}
-    <div style="margin-top: 20px; border-top: 1px dashed #cbd5e1; padding-top: 12px;">
-      {loop: $gambar_radiologi}
-      <div style="text-align: center; margin-bottom: 12px;">
-        {if: !empty($value.nm_perawatan) && count($gambar_radiologi) > 1}
-        <div style="text-align: left; font-weight: bold; margin-bottom: 5px;">{$value.nm_perawatan}</div>
-        {/if}
-        <img src="{?=WEBAPPS_URL.'/radiologi/'.$value.lokasi_gambar?}" style="max-height: 360px; max-width: 100%;">
-      </div>
-      {/loop}
-    </div>
-    {/if}
-
-    <table class="signature-table">
-      <tr>
-        <td>&nbsp;</td>
-        <td class="signature-box">
-          <div>Salam Sejawat,</div>
-          {if: $signature}
-            <div style="margin: 8px 0;">
-              {if: !$is_pdf}
-              <a href="{?=url()?}/esignature/verify/{?=isset_or($signature.signature_hash)?}" target="_blank" style="text-decoration:none; color:inherit;">
-                <img src="{$qrCode}" width="88px" />
-              </a>
-              {else}
-              <img src="{$qrCode}" width="88px" />
-              {/if}
-            </div>
-            <div style="font-size: 10px; color: #2e7d32; margin-bottom: 4px; font-family: Arial, sans-serif;">
-              <i>Ditandatangani secara elektronik oleh:</i>
-            </div>
-            <div>{$signature.signer_name}</div>
-          {else}
-            <br><br><br><br>
-            <div>{$nama_dokter_ttd}</div>
-          {/if}
-        </td>
-      </tr>
-    </table>
-  </div>
-
-  {if: !$is_pdf}
-  <div class="no-print">
-    <button onclick="BukaPDF()" type="button" class="btn btn-primary"><span class="glyphicon glyphicon-file"></span> Buka PDF</button>
-    <button onclick="printContent()" type="button" class="btn btn-danger"><span class="glyphicon glyphicon-print"></span> Cetak</button>
-    <button type="button" class="btn btn-info" data-toggle="modal" href="#waModal"><span class="glyphicon glyphicon-send"></span> Kirim WA</button>
-    <button type="button" class="btn btn-warning" data-toggle="modal" href="#emailModal"><span class="glyphicon glyphicon-envelope"></span> Kirim Email</button>
-  </div>
-
-  <!-- Modal WA -->
-  <div class="modal fade" id="waModal" tabindex="-1" role="dialog" aria-labelledby="waModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-          <h4 class="modal-title">Kirim WhatsApp</h4>
-        </div>
-        <div class="modal-body">
-          <div class="form-group">
-            <label>Nomor</label>
-            <input type="text" name="number" class="form-control" id="number" placeholder="Nomor WhatsApp Tujuan" value="{$pasien.no_tlp}">
-          </div>
-          <div class="form-group">
-            <label>Pesan</label>
-            <input type="text" name="message" class="form-control" id="message" placeholder="Tulis pesan anda.." value="Hasil Pemeriksaan Radiologi">
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-default" data-dismiss="modal">Batal</button>
-          <button type="button" class="btn btn-primary" onclick="KirimWA()" data-dismiss="modal">Kirim</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal Email -->
-  <div class="modal fade" id="emailModal" tabindex="-1" role="dialog" aria-labelledby="emailModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-          <h4 class="modal-title">Kirim Email</h4>
-        </div>
-        <div class="modal-body">
-          <div class="form-group">
-            <label>Email</label>
-            <input type="text" name="email" class="form-control" id="email" placeholder="Email Tujuan" value="{$pasien.email}">
-          </div>
-          <div class="form-group">
-            <label>Nama Pasien</label>
-            <input type="text" name="receiver" class="form-control" id="receiver" placeholder="Nama Pasien" value="{$pasien.nm_pasien}">
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-default" data-dismiss="modal">Batal</button>
-          <button type="button" class="btn btn-primary" onclick="KirimEmail()" data-dismiss="modal">Kirim</button>
-        </div>
-      </div>
-    </div>
-  </div>
-  {/if}
 </body>
 </html>
