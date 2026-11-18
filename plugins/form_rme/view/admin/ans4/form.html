@@ -161,19 +161,19 @@
                 <div class="col-md-4 form-group" style="margin-bottom: 10px;">
                   <label for="t" class="rsgm-compact-label">Rencana Teknik Anestesi / Sedasi</label>
                   <select name="t" id="t" class="form-control" style="font-weight: 600;">
-                    <option value="General Anesthesia" {if: isset($data['t']) && $data['t'] == 'General Anesthesia'}selected{/if}>General Anesthesia (GA)</option>
-                    <option value="Regional Anesthesia" {if: isset($data['t']) && $data['t'] == 'Regional Anesthesia'}selected{/if}>Regional Anesthesia (SAB / Epidural)</option>
-                    <option value="Sedasi Sedang / Dalam" {if: isset($data['t']) && $data['t'] == 'Sedasi Sedang / Dalam'}selected{/if}>Sedasi Sedang / Dalam (MAC)</option>
-                    <option value="Sedasi Ringan" {if: isset($data['t']) && $data['t'] == 'Sedasi Ringan'}selected{/if}>Sedasi Ringan</option>
-                    <option value="Local Anesthesia" {if: isset($data['t']) && $data['t'] == 'Local Anesthesia'}selected{/if}>Local Anesthesia (Lokal)</option>
+                    <option value="General Anesthesia" {if: (isset($data['t']) && $data['t'] == 'General Anesthesia') || (!isset($data['t']) && isset($data['jenis_anestesi_lain']) && $data['jenis_anestesi_lain'] == 'General Anesthesia')}selected{/if}>General Anesthesia (GA)</option>
+                    <option value="Regional Anesthesia" {if: (isset($data['t']) && $data['t'] == 'Regional Anesthesia') || (!isset($data['t']) && isset($data['jenis_anestesi_lain']) && $data['jenis_anestesi_lain'] == 'Regional Anesthesia')}selected{/if}>Regional Anesthesia (SAB / Epidural)</option>
+                    <option value="Sedasi Sedang / Dalam" {if: (isset($data['t']) && $data['t'] == 'Sedasi Sedang / Dalam') || (!isset($data['t']) && isset($data['jenis_anestesi_lain']) && $data['jenis_anestesi_lain'] == 'Sedasi Sedang / Dalam')}selected{/if}>Sedasi Sedang / Dalam (MAC)</option>
+                    <option value="Sedasi Ringan" {if: (isset($data['t']) && $data['t'] == 'Sedasi Ringan') || (!isset($data['t']) && isset($data['jenis_anestesi_lain']) && $data['jenis_anestesi_lain'] == 'Sedasi Ringan')}selected{/if}>Sedasi Ringan</option>
+                    <option value="Local Anesthesia" {if: (isset($data['t']) && $data['t'] == 'Local Anesthesia') || (!isset($data['t']) && isset($data['jenis_anestesi_lain']) && $data['jenis_anestesi_lain'] == 'Local Anesthesia')}selected{/if}>Local Anesthesia (Lokal)</option>
                   </select>
                 </div>
 
                 <div class="col-md-4 form-group" style="margin-bottom: 10px;">
                   <label for="alergi" class="rsgm-compact-label">Riwayat Alergi Obat / Makanan</label>
                   <select name="alergi" id="alergi" class="form-control">
-                    <option value="Tidak Ada" {if: isset($data['alergi']) && $data['alergi'] == 'Tidak Ada'}selected{/if}>Tidak Ada Alergi</option>
-                    <option value="Ada" {if: isset($data['alergi']) && $data['alergi'] == 'Ada'}selected{/if}>Ada Alergi</option>
+                    <option value="Tidak" {if: isset($data['alergi']) && ($data['alergi'] == 'Tidak' || $data['alergi'] == 'Tidak Ada')}selected{/if}>Tidak Ada Alergi</option>
+                    <option value="Ya" {if: isset($data['alergi']) && ($data['alergi'] == 'Ya' || $data['alergi'] == 'Ada')}selected{/if}>Ada Alergi</option>
                   </select>
                 </div>
 
@@ -187,13 +187,13 @@
                 <div class="col-md-3 form-group" style="margin-bottom: 10px;">
                   <label for="persediaan_darah" class="rsgm-compact-label">Persiapan Darah</label>
                   <select name="persediaan_darah" id="persediaan_darah" class="form-control">
-                    <option value="Tidak" {if: isset($data['persediaan_darah']) && $data['persediaan_darah'] == 'Tidak'}selected{/if}>Tidak Diperlukan</option>
-                    <option value="Ya" {if: isset($data['persediaan_darah']) && $data['persediaan_darah'] == 'Ya'}selected{/if}>Ya, Disiapkan</option>
+                    <option value="Tidak Ada" {if: isset($data['persiapan_darah']) && ($data['persiapan_darah'] == 'Tidak Ada' || $data['persiapan_darah'] == 'Tidak')}selected{/if}>Tidak Diperlukan</option>
+                    <option value="Ada" {if: isset($data['persiapan_darah']) && ($data['persiapan_darah'] == 'Ada' || $data['persiapan_darah'] == 'Ya')}selected{/if}>Ya, Disiapkan</option>
                   </select>
                 </div>
                 <div class="col-md-3 form-group" style="margin-bottom: 10px;">
                   <label for="persediaan_darah_ket" class="rsgm-compact-label">Jumlah &amp; Golongan Darah</label>
-                  <input type="text" name="persediaan_darah_ket" id="persediaan_darah_ket" class="form-control" value="{?=isset_or($data['persediaan_darah_ket'])?}" placeholder="Contoh: 2 Kolf PRC Gol. O">
+                  <input type="text" name="persediaan_darah_ket" id="persediaan_darah_ket" class="form-control" value="{?=isset_or($data['persiapan_darah_ket'])?}" placeholder="Contoh: 2 Kolf PRC Gol. O">
                 </div>
                 <div class="col-md-3 form-group" style="margin-bottom: 10px;">
                   <label for="makan_terakhir" class="rsgm-compact-label">Makan Terakhir (Jam Puasa)</label>
@@ -357,40 +357,80 @@
                   <label class="rsgm-compact-label">Checklist Kesiapan Pre-Induksi (Safety Checklist)</label>
                   <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px 14px;">
                     <div class="row">
-                      <div class="col-md-3 col-sm-6">
+                      <div class="col-md-4 col-sm-6">
                         <label style="font-size: 12px; font-weight: 500; cursor: pointer; display: block; margin-bottom: 6px;">
-                          <input type="checkbox" name="tilik_identifikasi" value="Y" {if: isset($data['tilik_identifikasi']) && $data['tilik_identifikasi'] == 'Y'}checked{/if}> Identitas Pasien Terkonfirmasi
+                          <input type="checkbox" name="tilik_identifikasi" value="Y" {if: isset($data['tilik_identifikasi']) && $data['tilik_identifikasi'] == 'Y'}checked{/if}> Identifikasi pasien
                         </label>
                         <label style="font-size: 12px; font-weight: 500; cursor: pointer; display: block; margin-bottom: 6px;">
-                          <input type="checkbox" name="tilik_persetujuan" value="Y" {if: isset($data['tilik_persetujuan']) && $data['tilik_persetujuan'] == 'Y'}checked{/if}> Informed Consent Anestesi Sah
-                        </label>
-                      </div>
-                      <div class="col-md-3 col-sm-6">
-                        <label style="font-size: 12px; font-weight: 500; cursor: pointer; display: block; margin-bottom: 6px;">
-                          <input type="checkbox" name="tilik_puasa" value="Y" {if: isset($data['tilik_puasa']) && $data['tilik_puasa'] == 'Y'}checked{/if}> Waktu Puasa Cukup Sesuai SPO
+                          <input type="checkbox" name="tilik_persetujuan" value="Y" {if: isset($data['tilik_persetujuan']) && $data['tilik_persetujuan'] == 'Y'}checked{/if}> Surat persetujuan pembedahan
                         </label>
                         <label style="font-size: 12px; font-weight: 500; cursor: pointer; display: block; margin-bottom: 6px;">
-                          <input type="checkbox" name="tilik_mesin" value="Y" {if: isset($data['tilik_mesin']) && $data['tilik_mesin'] == 'Y'}checked{/if}> Mesin Anestesi Siap &amp; Cek Sirkuit
-                        </label>
-                      </div>
-                      <div class="col-md-3 col-sm-6">
-                        <label style="font-size: 12px; font-weight: 500; cursor: pointer; display: block; margin-bottom: 6px;">
-                          <input type="checkbox" name="tilik_suction" value="Y" {if: isset($data['tilik_suction']) && $data['tilik_suction'] == 'Y'}checked{/if}> Suction &amp; Kateter Berfungsi Baik
+                          <input type="checkbox" name="tilik_puasa" value="Y" {if: isset($data['tilik_puasa']) && $data['tilik_puasa'] == 'Y'}checked{/if}> Puasa dijalankan dengan baik
                         </label>
                         <label style="font-size: 12px; font-weight: 500; cursor: pointer; display: block; margin-bottom: 6px;">
-                          <input type="checkbox" name="tilik_obat" value="Y" {if: isset($data['tilik_obat']) && $data['tilik_obat'] == 'Y'}checked{/if}> Obat Emergency &amp; Induksi Siap
+                          <input type="checkbox" name="tilik_mesin" value="Y" {if: isset($data['tilik_mesin']) && $data['tilik_mesin'] == 'Y'}checked{/if}> Mesin Anestesi siap
+                        </label>
+                        <label style="font-size: 12px; font-weight: 500; cursor: pointer; display: block; margin-bottom: 6px;">
+                          <input type="checkbox" name="tilik_suction" value="Y" {if: isset($data['tilik_suction']) && $data['tilik_suction'] == 'Y'}checked{/if}> Suction berfungsi baik
+                        </label>
+                        <label style="font-size: 12px; font-weight: 500; cursor: pointer; display: block; margin-bottom: 6px;">
+                          <input type="checkbox" name="tilik_obat" value="Y" {if: isset($data['tilik_obat']) && $data['tilik_obat'] == 'Y'}checked{/if}> Obat-obatan siap
                         </label>
                       </div>
-                      <div class="col-md-3 col-sm-6">
+                      <div class="col-md-4 col-sm-6">
                         <label style="font-size: 12px; font-weight: 500; cursor: pointer; display: block; margin-bottom: 6px;">
-                          <input type="checkbox" name="tilik_pulse_oxy" value="Y" {if: isset($data['tilik_pulse_oxy']) && $data['tilik_pulse_oxy'] == 'Y'}checked{/if}> Pulse Oximeter Terpasang &amp; Berfungsi
+                          <input type="checkbox" name="tilik_antibiotik" value="Y" {if: isset($data['tilik_antibiotik']) && $data['tilik_antibiotik'] == 'Y'}checked{/if}> Antibiotik profilaksis
                         </label>
                         <label style="font-size: 12px; font-weight: 500; cursor: pointer; display: block; margin-bottom: 6px;">
-                          <input type="checkbox" name="tilik_ngt" value="Y" {if: isset($data['tilik_ngt']) && $data['tilik_ngt'] == 'Y'}checked{/if}> Akses Intravena Paten
+                          <input type="checkbox" name="tilik_pulse_oxy" value="Y" {if: isset($data['tilik_pulse_oxy']) && $data['tilik_pulse_oxy'] == 'Y'}checked{/if}> Pulse oxymeter terpasang
+                        </label>
+                        <label style="font-size: 12px; font-weight: 500; cursor: pointer; display: block; margin-bottom: 6px;">
+                          <input type="checkbox" name="tilik_ekg" value="Y" {if: isset($data['tilik_ekg']) && $data['tilik_ekg'] == 'Y'}checked{/if}> EKG terpasang
+                        </label>
+                        <label style="font-size: 12px; font-weight: 500; cursor: pointer; display: block; margin-bottom: 6px;">
+                          <input type="checkbox" name="tilik_nibp" value="Y" {if: isset($data['tilik_nibp']) && $data['tilik_nibp'] == 'Y'}checked{/if}> NIBP terpasang
+                        </label>
+                        <label style="font-size: 12px; font-weight: 500; cursor: pointer; display: block; margin-bottom: 6px;">
+                          <input type="checkbox" name="tilik_termometer" value="Y" {if: isset($data['tilik_termometer']) && $data['tilik_termometer'] == 'Y'}checked{/if}> Termometer
+                        </label>
+                        <label style="font-size: 12px; font-weight: 500; cursor: pointer; display: block; margin-bottom: 6px;">
+                          <input type="checkbox" name="tilik_stetoskop" value="Y" {if: isset($data['tilik_stetoskop']) && $data['tilik_stetoskop'] == 'Y'}checked{/if}> Stetoskop precordial
+                        </label>
+                      </div>
+                      <div class="col-md-4 col-sm-6">
+                        <label style="font-size: 12px; font-weight: 500; cursor: pointer; display: block; margin-bottom: 6px;">
+                          <input type="checkbox" name="tilik_urine" value="Y" {if: isset($data['tilik_urine']) && $data['tilik_urine'] == 'Y'}checked{/if}> Urine kateter
+                        </label>
+                        <label style="font-size: 12px; font-weight: 500; cursor: pointer; display: block; margin-bottom: 6px;">
+                          <input type="checkbox" name="tilik_ngt" value="Y" {if: isset($data['tilik_ngt']) && $data['tilik_ngt'] == 'Y'}checked{/if}> NGT / Akses IV paten
+                        </label>
+                        <label style="font-size: 12px; font-weight: 500; cursor: pointer; display: block; margin-bottom: 6px;">
+                          <input type="checkbox" name="tilik_selimut" value="Y" {if: isset($data['tilik_selimut']) && $data['tilik_selimut'] == 'Y'}checked{/if}> Selimut penghangat
+                        </label>
+                        <label style="font-size: 12px; font-weight: 500; cursor: pointer; display: block; margin-bottom: 6px;">
+                          <input type="checkbox" name="tilik_sabuk" value="Y" {if: isset($data['tilik_sabuk']) && $data['tilik_sabuk'] == 'Y'}checked{/if}> Sabuk pengaman
+                        </label>
+                        <label style="font-size: 12px; font-weight: 500; cursor: pointer; display: block; margin-bottom: 6px;">
+                          <input type="checkbox" name="tilik_pasca_induksi" value="Y" {if: isset($data['tilik_pasca_induksi']) && $data['tilik_pasca_induksi'] == 'Y'}checked{/if}> Pasca induksi
                         </label>
                       </div>
                     </div>
                   </div>
+                </div>
+              </div>
+
+              <div class="row" style="margin-bottom: 10px;">
+                <div class="col-md-4 form-group" style="margin-bottom: 6px;">
+                  <label for="kateter_perifer1" class="rsgm-compact-label">Kateter Intravena Perifer #1</label>
+                  <input type="text" name="kateter_perifer1" id="kateter_perifer1" class="form-control input-sm" value="{?=isset_or($data['kateter_perifer1'])?}" placeholder="cth: No. 18G Tangan Kanan">
+                </div>
+                <div class="col-md-4 form-group" style="margin-bottom: 6px;">
+                  <label for="kateter_perifer2" class="rsgm-compact-label">Kateter Intravena Perifer #2</label>
+                  <input type="text" name="kateter_perifer2" id="kateter_perifer2" class="form-control input-sm" value="{?=isset_or($data['kateter_perifer2'])?}" placeholder="cth: No. 20G Tangan Kiri">
+                </div>
+                <div class="col-md-4 form-group" style="margin-bottom: 6px;">
+                  <label for="kateter_cvc" class="rsgm-compact-label">CVC (Central Venous Catheter)</label>
+                  <input type="text" name="kateter_cvc" id="kateter_cvc" class="form-control input-sm" value="{?=isset_or($data['kateter_cvc'])?}" placeholder="cth: - / Vena Jugularis">
                 </div>
               </div>
 
@@ -587,9 +627,9 @@ $(document).ready(function() {
     $('#diagnosis_prabedah').val('Ameloblastoma Mandibula Dextra regio 46-48');
     $('#tindakan').val('Reseksi Mandibula Parsial dengan Rekonstruksi Rekon-Plate');
     $('#t').val('General Anesthesia');
-    $('#alergi').val('Tidak Ada');
+    $('#alergi').val('Tidak');
     $('#alergi_ket').val('Tidak ada riwayat alergi obat/makanan');
-    $('#persediaan_darah').val('Ya');
+    $('#persediaan_darah').val('Ada');
     $('#persediaan_darah_ket').val('2 Kolf PRC Golongan B+');
     $('#makan_terakhir').val('00:00 (8 Jam)');
     $('#minum_terakhir').val('06:00 (2 Jam)');

@@ -547,9 +547,9 @@
 
         <!-- STATUS PINDAH RUANGAN -->
         <div style="border: 1px solid #000; border-top: none; padding: 2px 5px; font-size: 7.5pt; margin-bottom: 2px;">
-            Pasien dipindahke ruangan : &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-            <span class="box-check {if: $data.pindah_ke == 'Ruang Rawat'}checked{/if}">{if: $data.pindah_ke == 'Ruang Rawat'}✓{/if}</span> Ruang Rawat <u>&nbsp;&nbsp;{if: !empty($data.pindah_ke_ruang)}{$data.pindah_ke_ruang}{else}................................................{/if}&nbsp;&nbsp;</u> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-            <span class="box-check {if: $data.pindah_ke == 'ICU'}checked{/if}">{if: $data.pindah_ke == 'ICU'}✓{/if}</span> ICU
+            Pasien dipindahkan ke ruangan : &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <span class="box-check {if: isset($data.pindah_ke) && stripos($data.pindah_ke, 'Ruang Rawat') !== false}checked{/if}">{if: isset($data.pindah_ke) && stripos($data.pindah_ke, 'Ruang Rawat') !== false}✓{/if}</span> Ruang Rawat <u>&nbsp;&nbsp;{if: !empty($data.pindah_ke_ruang)}{$data.pindah_ke_ruang}{else}................................................{/if}&nbsp;&nbsp;</u> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <span class="box-check {if: isset($data.pindah_ke) && stripos($data.pindah_ke, 'ICU') !== false}checked{/if}">{if: isset($data.pindah_ke) && stripos($data.pindah_ke, 'ICU') !== false}✓{/if}</span> ICU{if: isset($data.pindah_ke) && stripos($data.pindah_ke, 'Rawat Jalan') !== false} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="box-check checked">✓</span> Rawat Jalan / Pulang{/if}
         </div>
 
         <!-- INSTRUKSI PASCA ANESTESI & TANDA TANGAN -->

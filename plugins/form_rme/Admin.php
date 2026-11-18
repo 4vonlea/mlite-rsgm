@@ -11367,14 +11367,33 @@ if (ob_get_length()) {
         return $this->getAns4form($id);
     }
 
+    private function filterTableDataColumns($table, array $data)
+    {
+        static $cache = [];
+        if (!preg_match('/^[a-zA-Z0-9_]+$/', (string)$table)) {
+            return $data;
+        }
+        if (!isset($cache[$table])) {
+            try {
+                $stmt = $this->db()->pdo()->query("SHOW COLUMNS FROM `{$table}`");
+                $cache[$table] = $stmt ? $stmt->fetchAll(\PDO::FETCH_COLUMN) : [];
+            } catch (\Throwable $e) {
+                $cache[$table] = [];
+            }
+        }
+        if (empty($cache[$table])) {
+            return $data;
+        }
+        return array_intersect_key($data, array_flip($cache[$table]));
+    }
+
     public function postAns4save()
     {
         try {
             $post = $_POST;
             $id = $post['id'] ?? '';
             $data = $post;
-            unset($data['id']);
-            unset($data['nm_pasien']);
+            unset($data['id'], $data['nm_pasien']);
 
             if (!empty($data['no_rawat']) && empty($data['no_rkm_medis'])) {
                 $reg = $this->db('reg_periksa')->where('no_rawat', $data['no_rawat'])->oneArray();
@@ -11383,7 +11402,7 @@ if (ob_get_length()) {
                 }
             }
 
-            // Sync aliases
+            // Sync aliases & enum normalization
             if (!empty($data['dr_anestesi']) && empty($data['dokter_nama'])) {
                 $data['dokter_nama'] = $data['dr_anestesi'];
             } elseif (!empty($data['dokter_nama']) && empty($data['dr_anestesi'])) {
@@ -11392,6 +11411,19 @@ if (ob_get_length()) {
 
             if (!empty($data['penata_anestesi']) && empty($data['tanda_tangan_penata'])) {
                 $data['tanda_tangan_penata'] = $data['penata_anestesi'];
+            }
+
+            if (!empty($data['t']) && empty($data['jenis_anestesi_lain'])) {
+                $data['jenis_anestesi_lain'] = $data['t'];
+            }
+            unset($data['t']);
+
+            if (isset($data['alergi'])) {
+                if ($data['alergi'] === 'Ada') {
+                    $data['alergi'] = 'Ya';
+                } elseif ($data['alergi'] === 'Tidak Ada') {
+                    $data['alergi'] = 'Tidak';
+                }
             }
 
             if (!empty($data['td'])) {
@@ -11410,11 +11442,13 @@ if (ob_get_length()) {
                 $data['eval_spo2'] = $data['spo2'];
             }
             if (!empty($data['persediaan_darah'])) {
-                $data['persiapan_darah'] = $data['persediaan_darah'];
+                $pd = $data['persediaan_darah'];
+                $data['persiapan_darah'] = ($pd === 'Ya' || $pd === 'Ada') ? 'Ada' : 'Tidak Ada';
             }
             if (!empty($data['persediaan_darah_ket'])) {
                 $data['persiapan_darah_ket'] = $data['persediaan_darah_ket'];
             }
+            unset($data['persediaan_darah'], $data['persediaan_darah_ket']);
 
             // Default checkboxes if unchecked
             $checkboxes = [
@@ -11431,6 +11465,7 @@ if (ob_get_length()) {
                 }
             }
 
+            $data = $this->filterTableDataColumns('ans4_rencana_anestesi', $data);
             foreach ($data as $key => $val) {
                 if ($val === '') {
                     $data[$key] = null;
@@ -11686,21 +11721,40 @@ if (ob_get_length()) {
         if (empty($data['perawat_pacu']) && !empty($data['penata_anestesi'])) {
             $data['perawat_pacu'] = $data['penata_anestesi'];
         }
-        
-        unset($data['id']);
-        unset($data['nm_pasien']);
-        unset($data['detail_tanggal']);
-        unset($data['detail_obat']);
-        unset($data['detail_ttd']);
-        unset($data['grid_nadi']);
-        unset($data['grid_sistolik']);
-        unset($data['grid_diastolik']);
-        unset($data['grid_suhu']);
-        unset($data['grid_saturasi']);
+        if (empty($data['tanda_tangan_penata']) && !empty($data['penata_anestesi'])) {
+            $data['tanda_tangan_penata'] = $data['penata_anestesi'];
+        } elseif (!empty($data['tanda_tangan_penata']) && empty($data['penata_anestesi'])) {
+            $data['penata_anestesi'] = $data['tanda_tangan_penata'];
+        }
+        if (empty($data['tanda_tangan_dokter']) && !empty($data['dr_anestesi'])) {
+            $data['tanda_tangan_dokter'] = $data['dr_anestesi'];
+        } elseif (!empty($data['tanda_tangan_dokter']) && empty($data['dr_anestesi'])) {
+            $data['dr_anestesi'] = $data['tanda_tangan_dokter'];
+        }
+
+        unset($data['id'], $data['nm_pasien'], $data['t'], $data['jam'], $data['no_rkm_medis']);
+        unset($data['detail_tanggal'], $data['detail_obat'], $data['detail_ttd']);
+        unset($data['grid_nadi'], $data['grid_sistolik'], $data['grid_diastolik'], $data['grid_suhu'], $data['grid_saturasi']);
         unset($data['skor_item']);
-        
+
+        $ans6Checkboxes = [
+            'instruksi_obs_td', 'instruksi_obs_respirasi', 'instruksi_obs_nadi',
+            'instruksi_obs_kesadaran', 'instruksi_obs_urin',
+            'instruksi_posisi_supine', 'instruksi_posisi_setengah_duduk'
+        ];
+        foreach ($ans6Checkboxes as $cb) {
+            $data[$cb] = (!empty($data[$cb]) && $data[$cb] === 'Y') ? 'Y' : 'N';
+        }
+
         if (empty($data['tanggal'])) {
             $data['tanggal'] = date('Y-m-d');
+        }
+
+        $data = $this->filterTableDataColumns('ans6_status_post_anestesi', $data);
+        foreach ($data as $k => $v) {
+            if ($v === '') {
+                $data[$k] = null;
+            }
         }
 
         if ($id) {
@@ -21382,7 +21436,7 @@ if (ob_get_length()) {
             'jn_lma_cuff' => trim($_POST['jn_lma_cuff'] ?? ''),
             'jn_ett_kink' => (!empty($_POST['jn_ett_kink']) && $_POST['jn_ett_kink'] == 'Y') ? 'Y' : 'N',
             'jn_ett_nonkink' => (!empty($_POST['jn_ett_nonkink']) && $_POST['jn_ett_nonkink'] == 'Y') ? 'Y' : 'N',
-            'jn_ett_oral_nasal' => trim($_POST['jn_ett_oral_nasal'] ?? 'Oral'),
+            'jn_ett_oral_nasal' => in_array(trim($_POST['jn_ett_oral_nasal'] ?? 'Oral'), ['Oral', 'Nasal'], true) ? trim($_POST['jn_ett_oral_nasal']) : 'Oral',
             'jn_ett_no' => trim($_POST['jn_ett_no'] ?? ''),
             'jn_ett_cuff' => trim($_POST['jn_ett_cuff'] ?? ''),
             'jn_ett_batas' => trim($_POST['jn_ett_batas'] ?? ''),

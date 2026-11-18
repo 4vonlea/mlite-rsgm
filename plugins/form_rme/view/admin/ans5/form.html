@@ -247,7 +247,6 @@
                   <select name="jn_ett_oral_nasal" id="jn_ett_oral_nasal" class="form-control">
                     <option value="Oral" {if: isset($data['jn_ett_oral_nasal']) && $data['jn_ett_oral_nasal'] == 'Oral'}selected{/if}>Orotracheal (Oral)</option>
                     <option value="Nasal" {if: isset($data['jn_ett_oral_nasal']) && $data['jn_ett_oral_nasal'] == 'Nasal'}selected{/if}>Nasotracheal (Nasal)</option>
-                    <option value="Trakeostomi" {if: isset($data['jn_ett_oral_nasal']) && $data['jn_ett_oral_nasal'] == 'Trakeostomi'}selected{/if}>Trakeostomi</option>
                   </select>
                 </div>
                 <div class="col-md-2 form-group" style="margin-bottom: 8px;">
@@ -302,6 +301,10 @@
                   <label for="jn_lma_no" class="rsgm-compact-label">No. LMA (Bila Ada)</label>
                   <input type="text" name="jn_lma_no" id="jn_lma_no" class="form-control" value="{?=isset_or($data['jn_lma_no'])?}" placeholder="No. LMA">
                 </div>
+                <div class="col-md-2 form-group" style="margin-bottom: 8px;">
+                  <label for="jn_lma_cuff" class="rsgm-compact-label">Cuff LMA (cmH2O)</label>
+                  <input type="text" name="jn_lma_cuff" id="jn_lma_cuff" class="form-control" value="{?=isset_or($data['jn_lma_cuff'])?}" placeholder="Cuff">
+                </div>
                 <div class="col-md-3 form-group" style="margin-bottom: 8px;">
                   <label class="rsgm-compact-label">Alternatif Jalan Napas</label>
                   <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px 10px; display: flex; gap: 12px;">
@@ -311,6 +314,65 @@
                     <label style="font-size: 11.5px; font-weight: 500; margin: 0; cursor: pointer;">
                       <input type="checkbox" name="jn_nasal_kanul" value="Y" {if: isset($data['jn_nasal_kanul']) && $data['jn_nasal_kanul'] == 'Y'}checked{/if}> Nasal Kanul
                     </label>
+                  </div>
+                </div>
+              </div>
+
+              <!-- SUBSECTION: TEKNIK REGIONAL -->
+              <div style="border-top: 1px dashed #cbd5e1; margin-top: 8px; padding-top: 10px;">
+                <label class="rsgm-compact-label" style="margin-bottom: 6px;"><i class="fa fa-sitemap text-info"></i> Teknik Anestesi Regional (Bila Dilakukan)</label>
+                <div class="row">
+                  <div class="col-md-6 form-group" style="margin-bottom: 8px;">
+                    <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px 12px; display: flex; flex-wrap: wrap; gap: 14px;">
+                      <label style="font-size: 11.5px; font-weight: 500; margin: 0; cursor: pointer;">
+                        <input type="checkbox" name="reg_epidural" value="Y" {if: isset($data['reg_epidural']) && $data['reg_epidural'] == 'Y'}checked{/if}> Epidural
+                      </label>
+                      <label style="font-size: 11.5px; font-weight: 500; margin: 0; cursor: pointer;">
+                        <input type="checkbox" name="reg_sab" value="Y" {if: isset($data['reg_sab']) && $data['reg_sab'] == 'Y'}checked{/if}> SAB (Spinal)
+                      </label>
+                      <label style="font-size: 11.5px; font-weight: 500; margin: 0; cursor: pointer;">
+                        <input type="checkbox" name="reg_caudal" value="Y" {if: isset($data['reg_caudal']) && $data['reg_caudal'] == 'Y'}checked{/if}> Caudal
+                      </label>
+                    </div>
+                  </div>
+                  <div class="col-md-6 form-group" style="margin-bottom: 8px;">
+                    <input type="text" name="reg_lainnya" id="reg_lainnya" class="form-control input-sm" value="{?=isset_or($data['reg_lainnya'])?}" placeholder="Teknik regional lainnya (bila ada)...">
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-3 form-group" style="margin-bottom: 8px;">
+                    <label for="reg_jenis_jarum" class="rsgm-compact-label">Jenis Jarum</label>
+                    <input type="text" name="reg_jenis_jarum" id="reg_jenis_jarum" class="form-control input-sm" value="{?=isset_or($data['reg_jenis_jarum'])?}" placeholder="cth: Spinocan">
+                  </div>
+                  <div class="col-md-2 form-group" style="margin-bottom: 8px;">
+                    <label for="reg_jenis_jarum_no" class="rsgm-compact-label">No. Jarum (#)</label>
+                    <input type="text" name="reg_jenis_jarum_no" id="reg_jenis_jarum_no" class="form-control input-sm" value="{?=isset_or($data['reg_jenis_jarum_no'])?}" placeholder="cth: 27G">
+                  </div>
+                  <div class="col-md-3 form-group" style="margin-bottom: 8px;">
+                    <label for="reg_blok_vth" class="rsgm-compact-label">Blok Vertebra / Level</label>
+                    <input type="text" name="reg_blok_vth" id="reg_blok_vth" class="form-control input-sm" value="{?=isset_or($data['reg_blok_vth'])?}" placeholder="cth: L3-L4 / Th10">
+                  </div>
+                  <div class="col-md-4 form-group" style="margin-bottom: 8px;">
+                    <label for="reg_jenis_pnb" class="rsgm-compact-label">Jenis PNB (Peripheral Nerve Block)</label>
+                    <input type="text" name="reg_jenis_pnb" id="reg_jenis_pnb" class="form-control input-sm" value="{?=isset_or($data['reg_jenis_pnb'])?}" placeholder="Jenis PNB...">
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-3 form-group" style="margin-bottom: 4px;">
+                    <label for="reg_obat" class="rsgm-compact-label">Obat Regional (%)</label>
+                    <input type="text" name="reg_obat" id="reg_obat" class="form-control input-sm" value="{?=isset_or($data['reg_obat'])?}" placeholder="cth: Bupivacaine 0.5">
+                  </div>
+                  <div class="col-md-2 form-group" style="margin-bottom: 4px;">
+                    <label for="reg_dosis" class="rsgm-compact-label">Dosis (mg)</label>
+                    <input type="text" name="reg_dosis" id="reg_dosis" class="form-control input-sm" value="{?=isset_or($data['reg_dosis'])?}" placeholder="cth: 15">
+                  </div>
+                  <div class="col-md-2 form-group" style="margin-bottom: 4px;">
+                    <label for="reg_vol" class="rsgm-compact-label">Volume (cc)</label>
+                    <input type="text" name="reg_vol" id="reg_vol" class="form-control input-sm" value="{?=isset_or($data['reg_vol'])?}" placeholder="cth: 3">
+                  </div>
+                  <div class="col-md-5 form-group" style="margin-bottom: 4px;">
+                    <label for="reg_epidural_ket" class="rsgm-compact-label">Keterangan Epidural</label>
+                    <input type="text" name="reg_epidural_ket" id="reg_epidural_ket" class="form-control input-sm" value="{?=isset_or($data['reg_epidural_ket'])?}" placeholder="Catatan kateter / test dose epidural...">
                   </div>
                 </div>
               </div>

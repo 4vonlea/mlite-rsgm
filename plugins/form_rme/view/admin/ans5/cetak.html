@@ -276,7 +276,7 @@
                     <div class="left-box">
                         <div class="left-box-title">JALAN NAPAS:</div>
                         <div>
-                            <span class="box-check {if: !empty($data.jn_lma) && $data.jn_lma == 'Y' || !empty($data.jalan_napas_lma) && $data.jalan_napas_lma == 'Y'}checked{/if}">{if: !empty($data.jn_lma) && $data.jn_lma == 'Y' || !empty($data.jalan_napas_lma) && $data.jalan_napas_lma == 'Y'}✓{/if}</span>
+                            <span class="box-check {if: (!empty($data.jn_lma) && $data.jn_lma == 'Y') || (!empty($data.ga_lma) && $data.ga_lma == 'Y') || (!empty($data.jalan_napas_lma) && $data.jalan_napas_lma == 'Y') || !empty($data.jn_lma_no)}checked{/if}">{if: (!empty($data.jn_lma) && $data.jn_lma == 'Y') || (!empty($data.ga_lma) && $data.ga_lma == 'Y') || (!empty($data.jalan_napas_lma) && $data.jalan_napas_lma == 'Y') || !empty($data.jn_lma_no)}✓{/if}</span>
                             LMA NO : {if: !empty($data.jn_lma_no)}<strong>{$data.jn_lma_no}</strong>{else}.....{/if} &nbsp; Cuff: {if: !empty($data.jn_lma_cuff)}<strong>{$data.jn_lma_cuff}</strong>{else}.....{/if} cmH2O
                         </div>
                         <div>

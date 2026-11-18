@@ -285,12 +285,12 @@
                 <td style="width: 32%; vertical-align: top; padding: 3px 6px;">
                     <div style="font-weight: bold; margin-bottom: 4px;">Status Fisik ASA :</div>
                     <div style="font-size: 10.5pt; font-weight: bold; letter-spacing: 6px; padding-top: 2px;">
-                        <span style="{if: isset($data['status_asa']) && $data['status_asa'] == '1'}background:#000; color:#fff; padding:1px 3px; border-radius:2px;{/if}">1</span>
-                        <span style="{if: isset($data['status_asa']) && $data['status_asa'] == '2'}background:#000; color:#fff; padding:1px 3px; border-radius:2px;{/if}">2</span>
-                        <span style="{if: isset($data['status_asa']) && $data['status_asa'] == '3'}background:#000; color:#fff; padding:1px 3px; border-radius:2px;{/if}">3</span>
-                        <span style="{if: isset($data['status_asa']) && $data['status_asa'] == '4'}background:#000; color:#fff; padding:1px 3px; border-radius:2px;{/if}">4</span>
-                        <span style="{if: isset($data['status_asa']) && $data['status_asa'] == '5'}background:#000; color:#fff; padding:1px 3px; border-radius:2px;{/if}">5</span>
-                        <span style="{if: isset($data['status_asa']) && $data['status_asa'] == 'E'}background:#000; color:#fff; padding:1px 3px; border-radius:2px;{/if}">E</span>
+                        <span style="{if: isset($data['status_asa']) && in_array($data['status_asa'], ['1', 'ASA 1', 'ASA 1E'])}background:#000; color:#fff; padding:1px 3px; border-radius:2px;{/if}">1</span>
+                        <span style="{if: isset($data['status_asa']) && in_array($data['status_asa'], ['2', 'ASA 2', 'ASA 2E'])}background:#000; color:#fff; padding:1px 3px; border-radius:2px;{/if}">2</span>
+                        <span style="{if: isset($data['status_asa']) && in_array($data['status_asa'], ['3', 'ASA 3', 'ASA 3E'])}background:#000; color:#fff; padding:1px 3px; border-radius:2px;{/if}">3</span>
+                        <span style="{if: isset($data['status_asa']) && in_array($data['status_asa'], ['4', 'ASA 4', 'ASA 4E'])}background:#000; color:#fff; padding:1px 3px; border-radius:2px;{/if}">4</span>
+                        <span style="{if: isset($data['status_asa']) && in_array($data['status_asa'], ['5', 'ASA 5', 'ASA 5E'])}background:#000; color:#fff; padding:1px 3px; border-radius:2px;{/if}">5</span>
+                        <span style="{if: isset($data['status_asa']) && ($data['status_asa'] == 'E' || substr($data['status_asa'], -1) == 'E')}background:#000; color:#fff; padding:1px 3px; border-radius:2px;{/if}">E</span>
                     </div>
                 </td>
             </tr>
