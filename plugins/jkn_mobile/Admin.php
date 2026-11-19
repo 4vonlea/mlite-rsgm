@@ -331,43 +331,240 @@ class Admin extends AdminModule
 
     public function getJadwalDokter()
     {
+        $this->_addHeaderFiles();
         $this->getCssCard();
-        $poli = $this->db('maping_poli_bpjs')->toArray();
-        return $this->draw('jadwaldokter.html',['poli'=>$poli]);
+        $poli = $this->db('maping_poli_bpjs')
+            ->select(['kd_poli_bpjs', 'nm_poli_bpjs'])
+            ->group('kd_poli_bpjs')
+            ->asc('nm_poli_bpjs')
+            ->toArray();
+        return $this->draw('jadwaldokter.html', [
+            'poli' => htmlspecialchars_array($poli),
+            'tgl_default' => date('Y-m-d')
+        ]);
     }
 
     public function postHfis() {
-        $kodepoli = $_POST['poli'];
-        // $_POST['tanggal'] = date('Y-m-d');
-        $tanggal = $_POST['tgl'];
+        header('Content-Type: application/json');
+        $kodepoli = $_POST['poli'] ?? '';
+        $tanggal = $_POST['tgl'] ?? date('Y-m-d');
+
+        if (empty($kodepoli)) {
+            echo json_encode(['status' => 'error', 'code' => 400, 'message' => 'Poliklinik BPJS belum dipilih.']);
+            exit();
+        }
+
+        if (empty($this->consid) || empty($this->secretkey) || empty($this->bpjsurl)) {
+            echo json_encode(['status' => 'error', 'code' => 500, 'message' => 'Kredensial BPJS Antrean (ConsID / SecretKey / URL) belum diatur di Pengaturan JKN Mobile.']);
+            exit();
+        }
+
         date_default_timezone_set('UTC');
         $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
         $key = $this->consid . $this->secretkey . $tStamp;
-        date_default_timezone_set($this->settings->get('settings.timezone'));
+        date_default_timezone_set($this->settings->get('settings.timezone') ?: 'Asia/Jakarta');
 
-        $url = $this->bpjsurl . 'jadwaldokter/kodepoli/'.$kodepoli.'/tanggal/'.$tanggal;
+        $url = $this->bpjsurl . 'jadwaldokter/kodepoli/' . $kodepoli . '/tanggal/' . $tanggal;
         $output = BpjsService::get($url, NULL, $this->consid, $this->secretkey, $this->user_key, $tStamp);
         $json = json_decode($output, true);
-        
-        if (isset($json['metadata']['code'])) {
-             $code = $json['metadata']['code'];
-             $message = $json['metadata']['message'];
-             
-             if ($code == '200' && isset($json['response'])) {
-                 $stringDecrypt = stringDecrypt($key, $json['response']);
-                 $decompress = '';
-                 if (!empty($stringDecrypt)) {
-                     $decompress = \LZCompressor\LZString::decompressFromEncodedURIComponent(($stringDecrypt));
-                 }
-                 $response = json_decode($decompress, true);
-             } else {
-                 $response = []; // Empty array if not found or error
-             }
-        } else {
-             $response = []; // Empty array if invalid response
+
+        $code = $json['metadata']['code'] ?? 500;
+        $message = $json['metadata']['message'] ?? ($output ?: 'Tidak ada balasan dari server BPJS');
+        $data = [];
+
+        if ($code == '200' && !empty($json['response'])) {
+            $stringDecrypt = stringDecrypt($key, $json['response']);
+            if (!empty($stringDecrypt)) {
+                $decompress = \LZCompressor\LZString::decompressFromEncodedURIComponent($stringDecrypt);
+                $data = json_decode($decompress, true);
+                if (!is_array($data)) {
+                    $data = [];
+                }
+            }
+
+            // Hitung kuota dan ambil daftar pasien yang sudah terdaftar di SIMRS
+            if (is_array($data) && count($data) > 0) {
+                try {
+                    $mapPoli = $this->db('maping_poli_bpjs')->where('kd_poli_bpjs', $kodepoli)->toArray();
+                    $list_kd_poli_rs = array_values(array_filter(array_column($mapPoli, 'kd_poli_rs')));
+
+                    $day_num = date('w', strtotime($tanggal));
+                    $day_names = ['0' => 'AKHAD', '1' => 'SENIN', '2' => 'SELASA', '3' => 'RABU', '4' => 'KAMIS', '5' => 'JUMAT', '6' => 'SABTU'];
+                    $hari_nama = $day_names[(string)$day_num] ?? 'SENIN';
+
+                    foreach ($data as &$item) {
+                        $kd_dokter_bpjs = $item['kodedokter'] ?? '';
+                        $mapDokter = $this->db('maping_dokter_dpjpvclaim')->where('kd_dokter_bpjs', $kd_dokter_bpjs)->oneArray();
+                        $kd_dokter_rs = $mapDokter ? $mapDokter['kd_dokter'] : null;
+
+                        $item['kd_dokter_rs'] = $kd_dokter_rs;
+                        $item['kd_poli_rs'] = !empty($list_kd_poli_rs) ? $list_kd_poli_rs[0] : '';
+                        $item['nm_dokter_rs'] = $mapDokter ? $mapDokter['nm_dokter_bpjs'] : ($item['namadokter'] ?? '');
+                        $item['is_mapped'] = !empty($kd_dokter_rs);
+
+                        // Cek apakah jadwal ada di tabel jadwal lokal SIMRS
+                        $item['jadwal_simrs'] = null;
+                        $item['is_sync_simrs'] = false;
+                        if ($kd_dokter_rs && !empty($list_kd_poli_rs)) {
+                            $js = $this->db('jadwal')
+                                ->where('kd_dokter', $kd_dokter_rs)
+                                ->where('hari_kerja', $hari_nama)
+                                ->in('kd_poli', $list_kd_poli_rs)
+                                ->oneArray();
+                            if ($js) {
+                                $item['jadwal_simrs'] = $js;
+                                $item['is_sync_simrs'] = true;
+                            }
+                        }
+
+                        $pasien_final = [];
+                        if ($kd_dokter_rs && !empty($list_kd_poli_rs)) {
+                            // 1. Ambil dari reg_periksa (pasien yang sudah datang registrasi di hari H)
+                            $pasien_reg = $this->db('reg_periksa')
+                                ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                                ->join('penjab', 'penjab.kd_pj = reg_periksa.kd_pj')
+                                ->select([
+                                    'no_reg' => 'reg_periksa.no_reg',
+                                    'no_rawat' => 'reg_periksa.no_rawat',
+                                    'no_rkm_medis' => 'reg_periksa.no_rkm_medis',
+                                    'nm_pasien' => 'pasien.nm_pasien',
+                                    'png_jawab' => 'penjab.png_jawab',
+                                    'jam' => 'reg_periksa.jam_reg',
+                                    'status' => 'reg_periksa.stts'
+                                ])
+                                ->where('reg_periksa.tgl_registrasi', $tanggal)
+                                ->where('reg_periksa.kd_dokter', $kd_dokter_rs)
+                                ->where('reg_periksa.stts', '!=', 'Batal')
+                                ->in('reg_periksa.kd_poli', $list_kd_poli_rs)
+                                ->asc('reg_periksa.no_reg')
+                                ->toArray();
+
+                            foreach ($pasien_reg as $pr) {
+                                $pr['tipe'] = 'Registrasi Hari H';
+                                $pasien_final[] = $pr;
+                            }
+
+                            // 2. Ambil dari booking_registrasi (pasien yang booking via antrol / online)
+                            $registered_rms = array_column($pasien_reg, 'no_rkm_medis');
+                            $pasien_booking = $this->db('booking_registrasi')
+                                ->join('pasien', 'pasien.no_rkm_medis = booking_registrasi.no_rkm_medis')
+                                ->join('penjab', 'penjab.kd_pj = booking_registrasi.kd_pj')
+                                ->select([
+                                    'no_reg' => 'booking_registrasi.no_reg',
+                                    'no_rawat' => "'-'",
+                                    'no_rkm_medis' => 'booking_registrasi.no_rkm_medis',
+                                    'nm_pasien' => 'pasien.nm_pasien',
+                                    'png_jawab' => 'penjab.png_jawab',
+                                    'jam' => 'booking_registrasi.jam_booking',
+                                    'status' => 'booking_registrasi.status'
+                                ])
+                                ->where('booking_registrasi.tanggal_periksa', $tanggal)
+                                ->where('booking_registrasi.kd_dokter', $kd_dokter_rs)
+                                ->where('booking_registrasi.status', '!=', 'Batal')
+                                ->in('booking_registrasi.kd_poli', $list_kd_poli_rs)
+                                ->asc('booking_registrasi.no_reg')
+                                ->toArray();
+
+                            foreach ($pasien_booking as $pb) {
+                                if (!in_array($pb['no_rkm_medis'], $registered_rms)) {
+                                    $pb['tipe'] = 'Booking Online';
+                                    $pasien_final[] = $pb;
+                                }
+                            }
+                        }
+
+                        $kapasitas = intval($item['kapasitaspasien'] ?? 0);
+                        $terdaftar = count($pasien_final);
+                        $sisa = max(0, $kapasitas - $terdaftar);
+
+                        $item['terdaftar'] = $terdaftar;
+                        $item['sisa_kuota'] = $sisa;
+                        $item['pasien_list'] = $pasien_final;
+                    }
+                } catch (\Throwable $e) {
+                    error_log("postHfis Error: " . $e->getMessage());
+                }
+            }
         }
-        
-        echo json_encode(htmlspecialchars_array($response));
+
+        $total_dokter = is_array($data) ? count($data) : 0;
+        $total_kapasitas = 0;
+        $total_terdaftar = 0;
+        $total_sisa = 0;
+
+        if (is_array($data)) {
+            foreach ($data as $d) {
+                $total_kapasitas += intval($d['kapasitaspasien'] ?? 0);
+                $total_terdaftar += intval($d['terdaftar'] ?? 0);
+                $total_sisa += intval($d['sisa_kuota'] ?? 0);
+            }
+        }
+
+        echo json_encode([
+            'status' => ($code == 200) ? 'success' : 'error',
+            'code' => $code,
+            'message' => $message,
+            'data' => $data,
+            'summary' => [
+                'total_dokter' => $total_dokter,
+                'total_kapasitas' => $total_kapasitas,
+                'total_terdaftar' => $total_terdaftar,
+                'total_sisa' => $total_sisa
+            ]
+        ]);
+        exit();
+    }
+
+    public function postSyncJadwalHfis()
+    {
+        header('Content-Type: application/json');
+        $kd_dokter = $_POST['kd_dokter'] ?? '';
+        $kd_poli = $_POST['kd_poli'] ?? '';
+        $hari = strtoupper(trim($_POST['hari'] ?? ''));
+        $jam_raw = trim($_POST['jam'] ?? '');
+        $kuota = intval($_POST['kuota'] ?? 0);
+
+        if (empty($kd_dokter) || empty($kd_poli) || empty($hari) || empty($jam_raw)) {
+            echo json_encode(['status' => 'error', 'message' => 'Data dokter, poli, hari, atau jam tidak lengkap.']);
+            exit();
+        }
+
+        $parts = explode('-', $jam_raw);
+        $jam_mulai = trim($parts[0] ?? '08:00:00');
+        $jam_selesai = trim($parts[1] ?? '14:00:00');
+        if (strlen($jam_mulai) === 5) $jam_mulai .= ':00';
+        if (strlen($jam_selesai) === 5) $jam_selesai .= ':00';
+
+        $check = $this->db('jadwal')
+            ->where('kd_dokter', $kd_dokter)
+            ->where('hari_kerja', $hari)
+            ->where('kd_poli', $kd_poli)
+            ->oneArray();
+
+        if ($check) {
+            $this->db('jadwal')
+                ->where('kd_dokter', $kd_dokter)
+                ->where('hari_kerja', $hari)
+                ->where('kd_poli', $kd_poli)
+                ->update([
+                    'jam_mulai' => $jam_mulai,
+                    'jam_selesai' => $jam_selesai,
+                    'kuota' => $kuota
+                ]);
+            $msg = "Jadwal dokter berhasil diperbarui di SIMRS.";
+        } else {
+            $this->db('jadwal')->save([
+                'kd_dokter' => $kd_dokter,
+                'hari_kerja' => $hari,
+                'jam_mulai' => $jam_mulai,
+                'jam_selesai' => $jam_selesai,
+                'kd_poli' => $kd_poli,
+                'kuota' => $kuota
+            ]);
+            $msg = "Jadwal dokter berhasil disalin ke jadwal SIMRS.";
+        }
+
+        echo json_encode(['status' => 'success', 'message' => $msg]);
         exit();
     }
 
