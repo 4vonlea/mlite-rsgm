@@ -674,6 +674,15 @@ class Admin extends AdminModule
         if($status_antrol && !empty($status_antrol['status_kirim'])) {
           $status_kirim_antrol = $status_antrol['status_kirim'];
         }
+
+        $isAjax = (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') || isset($_GET['modal']);
+        if (!$isAjax) {
+          $this->_addHeaderFiles();
+          $this->getCssCard();
+          return '<div class="row" style="margin-top:15px;"><div class="col-md-10 col-md-offset-1"><div class="panel panel-default" style="border-radius:6px; box-shadow:0 2px 8px rgba(0,0,0,0.08);"><div class="panel-body">' . 
+                 $this->draw('taskid.input.html', ['pasien' => $pasien, 'taskid' => $taskid, 'nomor_referensi' => $nomor_referensi, 'kode_booking' => $kode_booking, 'status_kirim_antrol' => $status_kirim_antrol]) . 
+                 '</div></div></div></div>';
+        }
         echo $this->draw('taskid.input.html', ['pasien' => $pasien, 'taskid' => $taskid, 'nomor_referensi' => $nomor_referensi, 'kode_booking' => $kode_booking, 'status_kirim_antrol' => $status_kirim_antrol]);
         exit();
       } catch (\Throwable $e) {
@@ -1761,8 +1770,688 @@ class Admin extends AdminModule
 
     public function getBookingAntrol()
     {
+        return $this->anyBookingAntrol();
+    }
+
+    public function anyBookingAntrol()
+    {
         $this->_addHeaderFiles();
-        return $this->draw('bookingantrol.html', ['row' => $this->db('mlite_antrian_referensi')->toArray()]);
+
+        $tgl_awal = $_REQUEST['tgl_awal'] ?? date('Y-m-01');
+        $tgl_akhir = $_REQUEST['tgl_akhir'] ?? date('Y-m-d');
+        $status_filter = $_REQUEST['status'] ?? 'Semua';
+        $kd_poli_filter = $_REQUEST['kd_poli'] ?? 'Semua';
+        $keyword = trim($_REQUEST['keyword'] ?? '');
+        $periode_preset = $_REQUEST['preset'] ?? '';
+
+        if ($periode_preset === 'hari_ini') {
+            $tgl_awal = date('Y-m-d');
+            $tgl_akhir = date('Y-m-d');
+        } elseif ($periode_preset === 'besok') {
+            $tgl_awal = date('Y-m-d', strtotime('+1 day'));
+            $tgl_akhir = date('Y-m-d', strtotime('+1 day'));
+        } elseif ($periode_preset === 'minggu_ini') {
+            $tgl_awal = date('Y-m-d', strtotime('-7 days'));
+            $tgl_akhir = date('Y-m-d');
+        } elseif ($periode_preset === 'bulan_ini') {
+            $tgl_awal = date('Y-m-01');
+            $tgl_akhir = date('Y-m-t');
+        } elseif ($periode_preset === 'semua') {
+            $tgl_awal = '';
+            $tgl_akhir = '';
+        }
+
+        $poliklinik = $this->db('poliklinik')->where('status', '1')->asc('nm_poli')->toArray();
+
+        $where_ar = [];
+        $params_ar = [];
+
+        if (!empty($tgl_awal) && !empty($tgl_akhir)) {
+            $where_ar[] = "tanggal_periksa BETWEEN ? AND ?";
+            $params_ar[] = $tgl_awal;
+            $params_ar[] = $tgl_akhir;
+        } elseif (!empty($tgl_awal)) {
+            $where_ar[] = "tanggal_periksa >= ?";
+            $params_ar[] = $tgl_awal;
+        } elseif (!empty($tgl_akhir)) {
+            $where_ar[] = "tanggal_periksa <= ?";
+            $params_ar[] = $tgl_akhir;
+        }
+
+        $where_ar_sql = !empty($where_ar) ? "WHERE " . implode(" AND ", $where_ar) : "";
+
+        $sql = "SELECT 
+            ar.tanggal_periksa,
+            ar.kodebooking,
+            ar.nomor_kartu,
+            ar.nomor_referensi,
+            ar.jenis_kunjungan,
+            ar.status_kirim,
+            ar.keterangan as ar_keterangan,
+            ar.no_rkm_medis as ar_no_rkm_medis,
+            p.no_rkm_medis,
+            p.nm_pasien,
+            p.jk,
+            p.no_ktp,
+            p.no_tlp,
+            p.alamat,
+            br.no_reg,
+            br.jam_booking,
+            br.waktu_kunjungan,
+            br.status as booking_status,
+            COALESCE(br.kd_dokter, rp.kd_dokter) as kd_dokter,
+            d.nm_dokter,
+            COALESCE(br.kd_poli, rp.kd_poli) as kd_poli,
+            pl.nm_poli,
+            pj.png_jawab,
+            rp.no_rawat,
+            rp.stts as reg_status,
+            rp.jam_reg,
+            batal.tanggal_batal,
+            batal.keterangan as batal_keterangan
+        FROM (
+            SELECT 
+                kodebooking,
+                MAX(tanggal_periksa) as tanggal_periksa,
+                MAX(no_rkm_medis) as no_rkm_medis,
+                MAX(nomor_kartu) as nomor_kartu,
+                MAX(nomor_referensi) as nomor_referensi,
+                MAX(jenis_kunjungan) as jenis_kunjungan,
+                MAX(status_kirim) as status_kirim,
+                MAX(keterangan) as keterangan
+            FROM mlite_antrian_referensi
+            $where_ar_sql
+            GROUP BY kodebooking
+        ) ar
+        LEFT JOIN pasien p ON p.no_rkm_medis = ar.no_rkm_medis
+        LEFT JOIN booking_registrasi br ON br.no_rkm_medis = ar.no_rkm_medis AND br.tanggal_periksa = ar.tanggal_periksa
+        LEFT JOIN reg_periksa rp ON rp.no_rkm_medis = ar.no_rkm_medis AND rp.tgl_registrasi = ar.tanggal_periksa
+        LEFT JOIN dokter d ON d.kd_dokter = COALESCE(br.kd_dokter, rp.kd_dokter)
+        LEFT JOIN poliklinik pl ON pl.kd_poli = COALESCE(br.kd_poli, rp.kd_poli)
+        LEFT JOIN penjab pj ON pj.kd_pj = COALESCE(br.kd_pj, rp.kd_pj)
+        LEFT JOIN (
+            SELECT kodebooking, MAX(tanggal_batal) as tanggal_batal, MAX(keterangan) as keterangan 
+            FROM mlite_antrian_referensi_batal 
+            GROUP BY kodebooking
+        ) batal ON batal.kodebooking = ar.kodebooking
+        ORDER BY ar.tanggal_periksa DESC, br.no_reg ASC";
+
+        $stmt = $this->db()->pdo()->prepare($sql);
+        $stmt->execute($params_ar);
+        $raw_rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $all_refs = [];
+        $all_no_rawat = [];
+        $all_no_rm = [];
+        foreach ($raw_rows as $rr) {
+            if (!empty($rr['kodebooking'])) $all_refs[] = $rr['kodebooking'];
+            if (!empty($rr['nomor_referensi'])) $all_refs[] = $rr['nomor_referensi'];
+            if (!empty($rr['no_rawat'])) $all_no_rawat[] = $rr['no_rawat'];
+            $rm = $rr['no_rkm_medis'] ?: ($rr['ar_no_rkm_medis'] ?? '');
+            if (!empty($rm)) $all_no_rm[] = $rm;
+        }
+        $all_refs = array_values(array_unique(array_filter($all_refs)));
+        $all_no_rawat = array_values(array_unique(array_filter($all_no_rawat)));
+        $all_no_rm = array_values(array_unique(array_filter($all_no_rm)));
+
+        $task_map = [];
+        if (!empty($all_refs)) {
+            $chunks = array_chunk($all_refs, 500);
+            foreach ($chunks as $chunk) {
+                $in_placeholders = implode(',', array_fill(0, count($chunk), '?'));
+                $task_stmt = $this->db()->pdo()->prepare("SELECT nomor_referensi, taskid, waktu, status, keterangan FROM mlite_antrian_referensi_taskid WHERE nomor_referensi IN ($in_placeholders)");
+                $task_stmt->execute($chunk);
+                $task_results = $task_stmt->fetchAll(\PDO::FETCH_ASSOC);
+                foreach ($task_results as $tr) {
+                    $ref = $tr['nomor_referensi'];
+                    $tid = (string)$tr['taskid'];
+                    $task_map[$ref][$tid] = $tr;
+                }
+            }
+        }
+
+        // Cache batch data operasional SIMRS untuk mempercepat penghitungan task 1-7 tanpa N+1 query
+        $op_cache = [
+            'mutasi_berkas' => [],
+            'pemeriksaan_ralan' => [],
+            'resep_obat' => [],
+            'loket' => []
+        ];
+
+        if (!empty($all_no_rawat)) {
+            $chunks_nr = array_chunk($all_no_rawat, 500);
+            foreach ($chunks_nr as $cnr) {
+                $ph = implode(',', array_fill(0, count($cnr), '?'));
+                try {
+                    $mb_stmt = $this->db()->pdo()->prepare("SELECT no_rawat, dikirim, diterima FROM mutasi_berkas WHERE no_rawat IN ($ph)");
+                    $mb_stmt->execute($cnr);
+                    foreach ($mb_stmt->fetchAll(\PDO::FETCH_ASSOC) as $mb) {
+                        $op_cache['mutasi_berkas'][$mb['no_rawat']] = $mb;
+                    }
+                } catch (\Throwable $e) {}
+
+                try {
+                    $pr_stmt = $this->db()->pdo()->prepare("SELECT no_rawat, concat(tgl_perawatan,' ',jam_rawat) as datajam FROM pemeriksaan_ralan WHERE no_rawat IN ($ph)");
+                    $pr_stmt->execute($cnr);
+                    foreach ($pr_stmt->fetchAll(\PDO::FETCH_ASSOC) as $pr) {
+                        $op_cache['pemeriksaan_ralan'][$pr['no_rawat']] = $pr;
+                    }
+                } catch (\Throwable $e) {}
+
+                try {
+                    $ro_stmt = $this->db()->pdo()->prepare("SELECT no_rawat, concat(tgl_peresepan,' ',jam_peresepan) as datajam, concat(tgl_perawatan,' ',jam) as datajam2 FROM resep_obat WHERE no_rawat IN ($ph)");
+                    $ro_stmt->execute($cnr);
+                    foreach ($ro_stmt->fetchAll(\PDO::FETCH_ASSOC) as $ro) {
+                        $op_cache['resep_obat'][$ro['no_rawat']] = $ro;
+                    }
+                } catch (\Throwable $e) {}
+            }
+        }
+
+        if (!empty($all_no_rm)) {
+            $chunks_rm = array_chunk($all_no_rm, 500);
+            foreach ($chunks_rm as $crm) {
+                $ph = implode(',', array_fill(0, count($crm), '?'));
+                try {
+                    $lk_stmt = $this->db()->pdo()->prepare("SELECT no_rkm_medis, postdate, start_time, end_time FROM mlite_antrian_loket WHERE no_rkm_medis IN ($ph)");
+                    $lk_stmt->execute($crm);
+                    foreach ($lk_stmt->fetchAll(\PDO::FETCH_ASSOC) as $lk) {
+                        $key = $lk['no_rkm_medis'] . '_' . $lk['postdate'];
+                        $op_cache['loket'][$key] = $lk;
+                    }
+                } catch (\Throwable $e) {}
+            }
+        }
+
+        $rows = [];
+        $total_all = 0;
+        $total_belum = 0;
+        $total_terdaftar = 0;
+        $total_batal = 0;
+
+        foreach ($raw_rows as $row) {
+            $is_batal = ($row['status_kirim'] === 'Batal' || 
+                         $row['booking_status'] === 'Batal' || 
+                         $row['reg_status'] === 'Batal' || 
+                         !empty($row['tanggal_batal']));
+
+            $is_terdaftar = (!$is_batal && (!empty($row['no_rawat']) || $row['booking_status'] === 'Terdaftar'));
+
+            if ($is_batal) {
+                $status_label = 'Batal';
+                $status_class = 'danger';
+            } elseif ($is_terdaftar) {
+                $status_label = 'Terdaftar';
+                $status_class = 'success';
+            } else {
+                $status_label = 'Belum';
+                $status_class = 'warning';
+            }
+
+            $total_all++;
+            if ($status_label === 'Batal') $total_batal++;
+            elseif ($status_label === 'Terdaftar') $total_terdaftar++;
+            else $total_belum++;
+
+            if ($status_filter !== 'Semua' && $status_filter !== $status_label) {
+                continue;
+            }
+
+            if ($kd_poli_filter !== 'Semua' && $row['kd_poli'] !== $kd_poli_filter) {
+                continue;
+            }
+
+            if (!empty($keyword)) {
+                $haystack = strtolower(
+                    ($row['nm_pasien'] ?? '') . ' ' .
+                    ($row['no_rkm_medis'] ?? '') . ' ' .
+                    ($row['ar_no_rkm_medis'] ?? '') . ' ' .
+                    ($row['kodebooking'] ?? '') . ' ' .
+                    ($row['nomor_referensi'] ?? '') . ' ' .
+                    ($row['nomor_kartu'] ?? '') . ' ' .
+                    ($row['no_ktp'] ?? '') . ' ' .
+                    ($row['nm_dokter'] ?? '') . ' ' .
+                    ($row['nm_poli'] ?? '')
+                );
+                if (strpos($haystack, strtolower($keyword)) === false) {
+                    continue;
+                }
+            }
+
+            $kb = $row['kodebooking'];
+            $row['status_label'] = $status_label;
+            $row['status_class'] = $status_class;
+
+            // Hitung & selaraskan Task ID 1-7 (menggabungkan BPJS dan data operasional SIMRS seperti /admin/jkn_mobile/taskid)
+            $row_tasks = $this->_resolveTaskTimes(
+                $row['no_rawat'] ?? '',
+                $row['no_rkm_medis'] ?: $row['ar_no_rkm_medis'],
+                $row['tanggal_periksa'],
+                $kb,
+                $row['nomor_referensi'] ?? '',
+                $task_map,
+                $op_cache
+            );
+            $row['task_resolved'] = $row_tasks;
+
+            // Buat HTML Pill Task ID 1-7
+            $rawatParam = !empty($row['no_rawat']) ? convertNoRawat($row['no_rawat']) : '';
+            $pills_html = '<div class="task-strip">';
+            for ($i = 1; $i <= 7; $i++) {
+                $si = (string)$i;
+                $t = $row_tasks[$si];
+                $has_waktu = !empty($t['waktu']);
+                $jam = $has_waktu ? date('H:i:s', strtotime($t['waktu'])) : '';
+
+                if ($t['status'] === 'Sudah') {
+                    $cls = 'task-done';
+                    $title_t = "Task {$i}: Terkirim ke BPJS ({$jam})";
+                } elseif ($has_waktu) {
+                    $cls = 'task-simrs';
+                    $title_t = "Task {$i}: Selesai di SIMRS ({$jam}) - " . ($t['source'] ?: 'Tercatat');
+                } elseif ($t['status'] === 'Gagal') {
+                    $cls = 'task-fail';
+                    $title_t = "Task {$i}: Gagal Kirim";
+                } else {
+                    $cls = 'task-wait';
+                    $title_t = "Task {$i}: Belum Dilayani";
+                }
+
+                $onclickAttr = !empty($rawatParam) ? 'onclick="bukaModalTaskID(\'' . $rawatParam . '\')"' : 'onclick="bukaDetailAntrol(\'' . $kb . '\')"';
+                $pills_html .= '<span class="task-pill ' . $cls . '" data-toggle="tooltip" data-placement="top" title="' . htmlspecialchars($title_t, ENT_QUOTES, 'UTF-8') . '" ' . $onclickAttr . '>' . $i . '</span>';
+            }
+            $pills_html .= '</div>';
+            $row['task_pills_html'] = $pills_html;
+
+            $jk_map = [
+                '1' => 'Rujukan FKTP',
+                '2' => 'Rujukan Internal',
+                '3' => 'Kontrol (SKDP)',
+                '4' => 'Rujukan Antar RS'
+            ];
+            $row['jenis_kunjungan_label'] = $jk_map[$row['jenis_kunjungan']] ?? 'Rujukan';
+
+            $rows[] = $row;
+        }
+
+        if (isset($_GET['export']) && $_GET['export'] === 'csv') {
+            $this->_exportBookingAntrolCsv($rows, $tgl_awal, $tgl_akhir);
+            exit();
+        }
+
+        return $this->draw('bookingantrol.html', [
+            'rows' => $rows,
+            'poliklinik' => $poliklinik,
+            'tgl_awal' => $tgl_awal,
+            'tgl_akhir' => $tgl_akhir,
+            'status_filter' => $status_filter,
+            'kd_poli_filter' => $kd_poli_filter,
+            'keyword' => $keyword,
+            'preset' => $periode_preset,
+            'total_all' => $total_all,
+            'total_belum' => $total_belum,
+            'total_terdaftar' => $total_terdaftar,
+            'total_batal' => $total_batal,
+        ]);
+    }
+
+    public function getDetailBookingAntrol($kodebooking = '')
+    {
+        header('Content-Type: application/json');
+        $kodebooking = trim($kodebooking ?: ($_GET['kodebooking'] ?? $_POST['kodebooking'] ?? ''));
+
+        if (empty($kodebooking)) {
+            echo json_encode(['status' => 'error', 'message' => 'Kode booking tidak boleh kosong.']);
+            exit();
+        }
+
+        $sql = "SELECT 
+            ar.tanggal_periksa,
+            ar.kodebooking,
+            ar.nomor_kartu,
+            ar.nomor_referensi,
+            ar.jenis_kunjungan,
+            ar.status_kirim,
+            ar.keterangan as ar_keterangan,
+            ar.no_rkm_medis as ar_no_rkm_medis,
+            p.no_rkm_medis,
+            p.nm_pasien,
+            p.jk,
+            p.no_ktp,
+            p.no_tlp,
+            p.alamat,
+            p.tgl_lahir,
+            br.no_reg,
+            br.tanggal_booking,
+            br.jam_booking,
+            br.waktu_kunjungan,
+            br.status as booking_status,
+            COALESCE(br.kd_dokter, rp.kd_dokter) as kd_dokter,
+            d.nm_dokter,
+            COALESCE(br.kd_poli, rp.kd_poli) as kd_poli,
+            pl.nm_poli,
+            pj.png_jawab,
+            rp.no_rawat,
+            rp.stts as reg_status,
+            rp.jam_reg,
+            batal.tanggal_batal,
+            batal.keterangan as batal_keterangan
+        FROM (
+            SELECT 
+                kodebooking,
+                MAX(tanggal_periksa) as tanggal_periksa,
+                MAX(no_rkm_medis) as no_rkm_medis,
+                MAX(nomor_kartu) as nomor_kartu,
+                MAX(nomor_referensi) as nomor_referensi,
+                MAX(jenis_kunjungan) as jenis_kunjungan,
+                MAX(status_kirim) as status_kirim,
+                MAX(keterangan) as keterangan
+            FROM mlite_antrian_referensi
+            WHERE kodebooking = ?
+            GROUP BY kodebooking
+        ) ar
+        LEFT JOIN pasien p ON p.no_rkm_medis = ar.no_rkm_medis
+        LEFT JOIN booking_registrasi br ON br.no_rkm_medis = ar.no_rkm_medis AND br.tanggal_periksa = ar.tanggal_periksa
+        LEFT JOIN reg_periksa rp ON rp.no_rkm_medis = ar.no_rkm_medis AND rp.tgl_registrasi = ar.tanggal_periksa
+        LEFT JOIN dokter d ON d.kd_dokter = COALESCE(br.kd_dokter, rp.kd_dokter)
+        LEFT JOIN poliklinik pl ON pl.kd_poli = COALESCE(br.kd_poli, rp.kd_poli)
+        LEFT JOIN penjab pj ON pj.kd_pj = COALESCE(br.kd_pj, rp.kd_pj)
+        LEFT JOIN (
+            SELECT kodebooking, MAX(tanggal_batal) as tanggal_batal, MAX(keterangan) as keterangan 
+            FROM mlite_antrian_referensi_batal 
+            WHERE kodebooking = ?
+            GROUP BY kodebooking
+        ) batal ON batal.kodebooking = ar.kodebooking";
+
+        $stmt = $this->db()->pdo()->prepare($sql);
+        $stmt->execute([$kodebooking, $kodebooking]);
+        $detail = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        if (!$detail) {
+            echo json_encode(['status' => 'error', 'message' => 'Data booking tidak ditemukan di database.']);
+            exit();
+        }
+
+        $task_stmt = $this->db()->pdo()->prepare("SELECT taskid, waktu, status, keterangan FROM mlite_antrian_referensi_taskid WHERE nomor_referensi = ? OR nomor_referensi = ? ORDER BY taskid ASC");
+        $task_stmt->execute([$kodebooking, $detail['nomor_referensi'] ?? '']);
+        $task_list = $task_stmt->fetchAll(\PDO::FETCH_ASSOC);
+        $tasks_bpjs = [];
+        foreach ($task_list as $t) {
+            $tasks_bpjs[(string)$t['taskid']] = $t;
+        }
+
+        $resolved = $this->_resolveTaskTimes(
+            $detail['no_rawat'] ?? '',
+            $detail['no_rkm_medis'] ?: $detail['ar_no_rkm_medis'],
+            $detail['tanggal_periksa'],
+            $kodebooking,
+            $detail['nomor_referensi'] ?? '',
+            [$kodebooking => $tasks_bpjs]
+        );
+
+        $task_definitions = [
+            '1' => 'Mulai Tunggu Admisi / Check-in',
+            '2' => 'Mulai Dilayani Admisi',
+            '3' => 'Selesai Admisi / Tunggu Poli',
+            '4' => 'Dipanggil Masuk Poli',
+            '5' => 'Selesai Pelayanan Poli / Dokter',
+            '6' => 'Tunggu Farmasi / Resep Diterima',
+            '7' => 'Obat Diserahkan ke Pasien',
+            '99' => 'Pembatalan Antrean'
+        ];
+
+        $formatted_tasks = [];
+        foreach ($task_definitions as $id => $nama_task) {
+            $t = $resolved[$id] ?? null;
+            $waktu_raw = $t['waktu'] ?? '';
+            $status_t = $t['status'] ?? 'Belum';
+            $source_t = $t['source'] ?? '';
+            $ket_t = $t['keterangan'] ?? '';
+
+            $formatted_tasks[] = [
+                'taskid' => $id,
+                'nama_task' => $nama_task,
+                'waktu' => !empty($waktu_raw) ? $waktu_raw : '-',
+                'status' => $status_t,
+                'keterangan' => !empty($source_t) ? $source_t . (!empty($ket_t) ? ' (' . $ket_t . ')' : '') : ($ket_t ?: '-')
+            ];
+        }
+
+        $jk_map = [
+            '1' => 'Rujukan FKTP (Faskes 1)',
+            '2' => 'Rujukan Internal',
+            '3' => 'Kontrol (SKDP)',
+            '4' => 'Rujukan Antar RS (Faskes 2)'
+        ];
+        $detail['jenis_kunjungan_label'] = $jk_map[$detail['jenis_kunjungan']] ?? 'Rujukan';
+
+        $is_batal = ($detail['status_kirim'] === 'Batal' || 
+                     $detail['booking_status'] === 'Batal' || 
+                     $detail['reg_status'] === 'Batal' || 
+                     !empty($detail['tanggal_batal']));
+        $is_terdaftar = (!$is_batal && (!empty($detail['no_rawat']) || $detail['booking_status'] === 'Terdaftar'));
+
+        if ($is_batal) {
+            $detail['status_final'] = 'Batal';
+        } elseif ($is_terdaftar) {
+            $detail['status_final'] = 'Terdaftar';
+        } else {
+            $detail['status_final'] = 'Belum';
+        }
+
+        echo json_encode([
+            'status' => 'success',
+            'data' => $detail,
+            'tasks' => $formatted_tasks
+        ]);
+        exit();
+    }
+
+    private function _exportBookingAntrolCsv($rows, $tgl_awal, $tgl_akhir)
+    {
+        $filename = "booking_antrol_" . ($tgl_awal ?: 'all') . "_sd_" . ($tgl_akhir ?: 'all') . ".csv";
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+
+        $output = fopen('php://output', 'w');
+        fputs($output, "\xEF\xBB\xBF");
+
+        fputcsv($output, [
+            'No',
+            'Tanggal Periksa',
+            'Kode Booking',
+            'No. RM',
+            'Nama Pasien',
+            'No. Kartu BPJS',
+            'NIK / KTP',
+            'No. Telepon',
+            'No. Rujukan',
+            'Jenis Kunjungan',
+            'Poliklinik',
+            'Dokter DPJP',
+            'No. Antrean',
+            'Jam Kunjungan',
+            'No. Rawat',
+            'Status Booking'
+        ]);
+
+        $no = 1;
+        foreach ($rows as $r) {
+            fputcsv($output, [
+                $no++,
+                $r['tanggal_periksa'],
+                $r['kodebooking'],
+                $r['no_rkm_medis'] ?: $r['ar_no_rkm_medis'],
+                $r['nm_pasien'] ?: '-',
+                $r['nomor_kartu'] ?: '-',
+                $r['no_ktp'] ?: '-',
+                $r['no_tlp'] ?: '-',
+                $r['nomor_referensi'] ?: '-',
+                $r['jenis_kunjungan_label'],
+                $r['nm_poli'] ?: '-',
+                $r['nm_dokter'] ?: '-',
+                $r['no_reg'] ?: '-',
+                $r['waktu_kunjungan'] ?: $r['jam_booking'] ?: '-',
+                $r['no_rawat'] ?: '-',
+                $r['status_label']
+            ]);
+        }
+        fclose($output);
+        exit();
+    }
+
+    /**
+     * Hitung dan selaraskan waktu Task ID 1-7 serta 99
+     * Menggabungkan data dari BPJS (mlite_antrian_referensi_taskid) dan rekaman operasional SIMRS
+     * (mlite_antrian_loket, mutasi_berkas, pemeriksaan_ralan, resep_obat, dll.)
+     */
+    private function _resolveTaskTimes($no_rawat, $no_rkm_medis, $tanggal_periksa, $kodebooking, $nomor_referensi, $task_map, $op_cache = null)
+    {
+        $tasks = [
+            '1' => ['waktu' => '', 'status' => 'Belum', 'source' => '', 'keterangan' => ''],
+            '2' => ['waktu' => '', 'status' => 'Belum', 'source' => '', 'keterangan' => ''],
+            '3' => ['waktu' => '', 'status' => 'Belum', 'source' => '', 'keterangan' => ''],
+            '4' => ['waktu' => '', 'status' => 'Belum', 'source' => '', 'keterangan' => ''],
+            '5' => ['waktu' => '', 'status' => 'Belum', 'source' => '', 'keterangan' => ''],
+            '6' => ['waktu' => '', 'status' => 'Belum', 'source' => '', 'keterangan' => ''],
+            '7' => ['waktu' => '', 'status' => 'Belum', 'source' => '', 'keterangan' => ''],
+            '99' => ['waktu' => '', 'status' => 'Belum', 'source' => '', 'keterangan' => '']
+        ];
+
+        // 1. Ambil dari database task BPJS jika sudah tercatat
+        $bpjs_records = $task_map[$kodebooking] ?? ($task_map[$nomor_referensi] ?? []);
+        foreach ($bpjs_records as $tid => $data) {
+            $tid_str = (string)$tid;
+            if (isset($tasks[$tid_str])) {
+                $waktu_str = '';
+                if (!empty($data['waktu'])) {
+                    if (is_numeric($data['waktu'])) {
+                        $waktu_str = date('Y-m-d H:i:s', (int)($data['waktu'] / 1000));
+                    } else {
+                        $waktu_str = $data['waktu'];
+                    }
+                }
+                $tasks[$tid_str]['waktu'] = $waktu_str;
+                $tasks[$tid_str]['status'] = $data['status'] ?? 'Belum';
+                $tasks[$tid_str]['source'] = 'Tersimpan / BPJS';
+                $tasks[$tid_str]['keterangan'] = $data['keterangan'] ?? '';
+            }
+        }
+
+        // 2. Ambil dari rekaman operasional SIMRS (seperti di /admin/jkn_mobile/taskid dan getTaskIDInput)
+        if (!empty($no_rawat)) {
+            // Berkas RM (mutasi_berkas) -> Task 3 & 4
+            $berkas = null;
+            if ($op_cache !== null && isset($op_cache['mutasi_berkas'][$no_rawat])) {
+                $berkas = $op_cache['mutasi_berkas'][$no_rawat];
+            } else {
+                $berkas = $this->db('mutasi_berkas')->select(['dikirim', 'diterima'])->where('no_rawat', $no_rawat)->oneArray();
+            }
+            $berkas_dikirim = (!empty($berkas['dikirim']) && $berkas['dikirim'] > '1970-01-01 00:00:00') ? $berkas['dikirim'] : '';
+            $berkas_diterima = (!empty($berkas['diterima']) && $berkas['diterima'] > '1970-01-01 00:00:00') ? $berkas['diterima'] : '';
+
+            // Pemeriksaan Ralan (pemeriksaan_ralan) -> Task 5
+            $pemeriksaan = null;
+            if ($op_cache !== null && isset($op_cache['pemeriksaan_ralan'][$no_rawat])) {
+                $pemeriksaan = $op_cache['pemeriksaan_ralan'][$no_rawat];
+            } else {
+                $pemeriksaan = $this->db('pemeriksaan_ralan')->select(['datajam' => 'concat(tgl_perawatan," ",jam_rawat)'])->where('no_rawat', $no_rawat)->oneArray();
+            }
+            $jam_periksa = !empty($pemeriksaan['datajam']) ? $pemeriksaan['datajam'] : '';
+
+            // Resep Obat (resep_obat) -> Task 6 & 7
+            $resep = null;
+            if ($op_cache !== null && isset($op_cache['resep_obat'][$no_rawat])) {
+                $resep = $op_cache['resep_obat'][$no_rawat];
+            } else {
+                $resep = $this->db('resep_obat')->select(['datajam' => 'concat(tgl_peresepan," ",jam_peresepan)', 'datajam2' => 'concat(tgl_perawatan," ",jam)'])->where('no_rawat', $no_rawat)->oneArray();
+            }
+            $jam_resep = !empty($resep['datajam']) ? $resep['datajam'] : '';
+            $jam_obat_selesai = (!empty($resep['datajam2']) && $resep['datajam2'] > '1970-01-01 00:00:00') ? $resep['datajam2'] : '';
+
+            // Antrean Loket -> Task 1 & 2
+            $loket = null;
+            if (!empty($no_rkm_medis) && !empty($tanggal_periksa)) {
+                $loket_key = $no_rkm_medis . '_' . $tanggal_periksa;
+                if ($op_cache !== null && isset($op_cache['loket'][$loket_key])) {
+                    $loket = $op_cache['loket'][$loket_key];
+                } else {
+                    $loket = $this->db('mlite_antrian_loket')->where('no_rkm_medis', $no_rkm_medis)->where('postdate', $tanggal_periksa)->oneArray();
+                }
+            }
+
+            // Task 5: Selesai Pelayanan Poli
+            if (empty($tasks['5']['waktu']) && !empty($jam_periksa)) {
+                $tasks['5']['waktu'] = $jam_periksa;
+                $tasks['5']['source'] = 'Pemeriksaan Poli';
+            }
+
+            // Task 4: Dipanggil Masuk Poli
+            if (empty($tasks['4']['waktu'])) {
+                if (!empty($berkas_diterima)) {
+                    $tasks['4']['waktu'] = $berkas_diterima;
+                    $tasks['4']['source'] = 'Berkas Diterima Poli';
+                } elseif (!empty($tasks['5']['waktu'])) {
+                    $tasks['4']['waktu'] = date('Y-m-d H:i:s', strtotime($tasks['5']['waktu']) - 300);
+                    $tasks['4']['source'] = 'Estimasi Masuk Poli';
+                }
+            }
+
+            // Task 3: Selesai Admisi / Tunggu Poli
+            if (empty($tasks['3']['waktu'])) {
+                if (!empty($berkas_dikirim)) {
+                    $tasks['3']['waktu'] = $berkas_dikirim;
+                    $tasks['3']['source'] = 'Berkas Dikirim RM';
+                } elseif (!empty($tasks['4']['waktu'])) {
+                    $tasks['3']['waktu'] = date('Y-m-d H:i:s', strtotime($tasks['4']['waktu']) - 300);
+                    $tasks['3']['source'] = 'Estimasi Tunggu Poli';
+                } elseif (!empty($tasks['5']['waktu'])) {
+                    $tasks['3']['waktu'] = date('Y-m-d H:i:s', strtotime($tasks['5']['waktu']) - 600);
+                    $tasks['3']['source'] = 'Estimasi Tunggu Poli';
+                }
+            }
+
+            // Koreksi jika Task 3 >= Task 4
+            if (!empty($tasks['3']['waktu']) && !empty($tasks['4']['waktu']) && strtotime($tasks['3']['waktu']) >= strtotime($tasks['4']['waktu'])) {
+                $tasks['3']['waktu'] = date('Y-m-d H:i:s', strtotime($tasks['4']['waktu']) - 300);
+            }
+
+            // Task 1 & 2: Mulai & Selesai Admisi Loket
+            if (empty($tasks['1']['waktu']) || empty($tasks['2']['waktu'])) {
+                if (!empty($loket['start_time']) && !empty($loket['end_time'])) {
+                    if (empty($tasks['1']['waktu'])) {
+                        $tasks['1']['waktu'] = $loket['postdate'] . ' ' . $loket['start_time'];
+                        $tasks['1']['source'] = 'Loket Mulai';
+                    }
+                    if (empty($tasks['2']['waktu'])) {
+                        $tasks['2']['waktu'] = $loket['postdate'] . ' ' . $loket['end_time'];
+                        $tasks['2']['source'] = 'Loket Selesai';
+                    }
+                } elseif (!empty($tasks['3']['waktu'])) {
+                    $t3_time = strtotime($tasks['3']['waktu']);
+                    if (empty($tasks['2']['waktu'])) {
+                        $tasks['2']['waktu'] = date('Y-m-d H:i:s', $t3_time - 180);
+                        $tasks['2']['source'] = 'Estimasi Dilayani Admisi';
+                    }
+                    if (empty($tasks['1']['waktu'])) {
+                        $tasks['1']['waktu'] = date('Y-m-d H:i:s', $t3_time - 600);
+                        $tasks['1']['source'] = 'Estimasi Tunggu Admisi';
+                    }
+                }
+            }
+
+            // Task 6 & 7: Farmasi
+            if (empty($tasks['6']['waktu']) && !empty($jam_resep)) {
+                $tasks['6']['waktu'] = $jam_resep;
+                $tasks['6']['source'] = 'Resep Diterima Farmasi';
+            }
+            if (empty($tasks['7']['waktu']) && !empty($jam_obat_selesai)) {
+                $tasks['7']['waktu'] = $jam_obat_selesai;
+                $tasks['7']['source'] = 'Obat Diserahkan Farmasi';
+            }
+        }
+
+        return $tasks;
     }
 
     public function getModalAntrol($noref)
@@ -1855,7 +2544,17 @@ class Admin extends AdminModule
                 }
             }
         }
-        //exit();
+
+        if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+            header('Content-Type: application/json');
+            $is_success = (strpos($notif, 'Berhasil') !== false);
+            echo json_encode([
+                'status' => $is_success ? 'success' : 'error',
+                'message' => strip_tags($notif)
+            ]);
+            exit();
+        }
+
         return $this->draw('hapusantrol.html', ['row' => $this->db('mlite_antrian_referensi')->toArray(), 'notif' => $notif]);
     }
 
