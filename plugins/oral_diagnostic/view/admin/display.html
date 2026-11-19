@@ -106,19 +106,25 @@
                 data-nm_pasien="{?=isset_or($value.nm_pasien)?}"
                 data-no_rawat="{?=isset_or($value.no_rawat)?}"
                 data-no_peserta="{?=isset_or($value.no_peserta)?}"
-                data-kd_dokter="{?=!empty($value.kd_dokter_rujukan) ? $value.kd_dokter_rujukan : ''?}"
-                data-nm_dokter="{?=!empty($value.dokter_rujukan) ? $value.dokter_rujukan : ''?}"
-                data-kd_poli="{?=!empty($value.kd_poli_rujukan) ? $value.kd_poli_rujukan : ''?}"
-                data-nm_poli="{?=!empty($value.poli_rujukan) ? $value.poli_rujukan : ''?}"
+                data-kd_dokter="{?=!empty($value.kd_dokter_rujukan) ? $value.kd_dokter_rujukan : (!empty($value.kd_dokter) && $value.kd_dokter != '199403032202201' ? $value.kd_dokter : '')?}"
+                data-nm_dokter="{?=!empty($value.dokter_rujukan) ? $value.dokter_rujukan : (!empty($value.nm_dokter) && $value.kd_dokter != '199403032202201' ? $value.nm_dokter : '')?}"
+                data-kd_poli="{?=!empty($value.kd_poli_bpjs) ? $value.kd_poli_bpjs : (!empty($value.kd_poli_rujukan) ? $value.kd_poli_rujukan : (isset_or($value.kd_poli) ? $value.kd_poli : ''))?}"
+                data-nm_poli="{?=!empty($value.nm_poli_bpjs) ? $value.nm_poli_bpjs : (!empty($value.poli_rujukan) ? $value.poli_rujukan : (isset_or($value.nm_poli) ? $value.nm_poli : ''))?}"
                 data-tgl_registrasi="{?=isset_or($value.tgl_registrasi)?}"
                 {if: $this->core->getUserInfo('role') == 'medis' || $this->core->getUserInfo('role') == 'paramedis'}
                 disabled
                 {/if}
               ><span class="fa fa-send"></span> BPJS</button>
-              {if: $value.no_sep !=''}
-              <a href="{?=url([ADMIN, 'oral_diagnostic', 'sepdetail', $value.no_sep])?}" class="btn btn-xs btn-danger" data-toggle="modal" data-target="#sepModal"><span class="fa fa-eye"></span></a>
+              {if: !empty($value.no_sep)}
+              <a href="{?=url([ADMIN, 'oral_diagnostic', 'sepdetail', $value.no_sep])?}" class="btn btn-xs btn-danger" data-toggle="modal" data-target="#sepModal" title="Lihat Detail SEP"><span class="fa fa-eye"></span></a>
+              <a href="{?=url([ADMIN, 'vclaim', 'cetaksep', $value.no_sep])?}" target="_blank" class="btn btn-xs btn-info" title="Cetak SEP"><span class="fa fa-print"></span></a>
               {/if}
               </div>
+              {if: !empty($value.no_sep)}
+              <div style="margin-top:2px;">
+                <span class="label label-success" style="font-size:10px;font-weight:normal;" title="Nomor SEP"><i class="fa fa-check-circle"></i> {$value.no_sep}</span>
+              </div>
+              {/if}
             {/if}
           {else}
             <span class="rsgm-badge rsgm-badge-slate">{?=isset_or($value.png_jawab)?}</span>
@@ -780,6 +786,12 @@
 <script>
   $('body').on('hidden.bs.modal', '.modal', function () {
       $(this).removeData('bs.modal');
+  });
+  $('#sepModal').on('hidden.bs.modal', function () {
+      $(this).removeData('bs.modal').find('.modal-content').html('<div class="modal-body text-center" style="padding:40px;"><i class="fa fa-spinner fa-spin fa-2x"></i><p style="margin-top:10px;">Memuat Detail SEP...</p></div>');
+  });
+  $('#asuransiModal').on('hidden.bs.modal', function () {
+      $(this).removeData('bs.modal').find('.modal-content').html('<div class="modal-body text-center" style="padding:40px;"><i class="fa fa-spinner fa-spin fa-2x"></i><p style="margin-top:10px;">Memuat Data BPJS...</p></div>');
   });
 </script>
 

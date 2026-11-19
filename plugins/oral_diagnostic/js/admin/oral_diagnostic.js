@@ -348,6 +348,13 @@ $(document).on("click", ".sep", function(event){
     $('#sep_dpjp_yang_melayani_kode').val('');
     $('#sep_dpjp_pelayanan_kode').val('');
   }
+  if (kd_poli && kd_poli.trim() !== '' && kd_poli !== 'OD') {
+    $('#sep_spesialis_kode').val(kd_poli);
+    $('#sep_spesialis_nama').val(nm_poli);
+  } else {
+    $('#sep_spesialis_kode').val('');
+    $('#sep_spesialis_nama').val('');
+  }
 
   // 5. Tampilkan form SEP
   $("#display").hide();
