@@ -340,6 +340,10 @@
                         onclick="bukaModalTaskID('{?=convertNoRawat($value.no_rawat)?}')">
                   <i class="fa fa-tasks text-success"></i>
                 </button>
+                {else}
+                <button type="button" class="btn btn-default" disabled title="Pasien belum check-in / belum memiliki No. Rawat SIMRS">
+                  <i class="fa fa-tasks text-muted"></i>
+                </button>
                 {/if}
 
                 <!-- Batal Button (jika belum batal) -->
@@ -644,7 +648,7 @@ function bukaModalTaskID(noRawat) {
   );
   $('#modalTaskIDDialog').modal('show');
 
-  var url = "{?=url([ADMIN, 'jkn_mobile', 'taskidinput'])?}/" + noRawat + "?modal=1";
+  var url = "{?=url([ADMIN, 'jkn_mobile', 'taskidinput'])?}&no_rawat=" + encodeURIComponent(noRawat) + "&modal=1";
   $.get(url, function(html) {
     $('#modalTaskIDContent').html(html);
   }).fail(function() {

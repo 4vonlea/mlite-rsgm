@@ -743,9 +743,28 @@ class Admin extends AdminModule
       }
     }
 
-    public function getTaskIDInput($no_rawat)
+    public function getTaskIDInput($no_rawat = '')
     {
       try {
+        if (empty($no_rawat) && !empty($_GET['no_rawat'])) {
+          $no_rawat = $_GET['no_rawat'];
+        }
+
+        $isAjax = (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') || isset($_GET['modal']);
+
+        $no_rawat = trim((string)$no_rawat);
+        if (empty($no_rawat)) {
+          if ($isAjax) {
+            echo '<div class="modal-header"><button type="button" class="close" data-dismiss="modal">&times;</button><h4 class="modal-title text-warning"><i class="fa fa-info-circle"></i> Informasi Task ID</h4></div>' .
+                 '<div class="modal-body"><div class="alert alert-warning"><i class="fa fa-info-circle"></i> Nomor Rawat belum ditentukan atau pasien belum memiliki Nomor Rawat di SIMRS.</div></div>' .
+                 '<div class="modal-footer"><button type="button" class="btn btn-default" data-dismiss="modal">Tutup</button></div>';
+            exit();
+          } else {
+            $this->_addHeaderFiles();
+            return '<div class="row" style="margin-top:20px;"><div class="col-md-8 col-md-offset-2"><div class="panel panel-default"><div class="panel-heading"><h3 class="panel-title"><i class="fa fa-info-circle text-info"></i> Input Task ID</h3></div><div class="panel-body"><div class="alert alert-warning"><i class="fa fa-info-circle"></i> Nomor Rawat tidak valid atau belum ditentukan. Silakan pilih pasien dari tabel Booking Antrol atau Antrean SIMRS.</div><a href="' . url([ADMIN, 'jkn_mobile', 'bookingantrol']) . '" class="btn btn-primary"><i class="fa fa-arrow-left"></i> Kembali ke Booking Antrol</a> <a href="' . url([ADMIN, 'jkn_mobile', 'taskid']) . '" class="btn btn-default"><i class="fa fa-list"></i> Lihat Data Task ID</a></div></div></div></div>';
+          }
+        }
+
         $no_rawat = revertNorawat($no_rawat);
         $pasien = $this->db('reg_periksa')
           ->select([
@@ -761,8 +780,15 @@ class Admin extends AdminModule
           ->oneArray();
 
         if (!$pasien) {
-          echo '<div class="alert alert-danger">Data pasien tidak ditemukan.</div>';
-          exit();
+          if ($isAjax) {
+            echo '<div class="modal-header"><button type="button" class="close" data-dismiss="modal">&times;</button><h4 class="modal-title text-warning"><i class="fa fa-exclamation-triangle"></i> Pasien Tidak Ditemukan</h4></div>' .
+                 '<div class="modal-body"><div class="alert alert-warning"><i class="fa fa-exclamation-triangle"></i> Data pendaftaran SIMRS untuk No. Rawat <b>' . htmlspecialchars($no_rawat) . '</b> tidak ditemukan. Pastikan pasien sudah teregistrasi di SIMRS.</div></div>' .
+                 '<div class="modal-footer"><button type="button" class="btn btn-default" data-dismiss="modal">Tutup</button></div>';
+            exit();
+          } else {
+            $this->_addHeaderFiles();
+            return '<div class="row" style="margin-top:20px;"><div class="col-md-8 col-md-offset-2"><div class="panel panel-default"><div class="panel-heading"><h3 class="panel-title"><i class="fa fa-exclamation-triangle text-danger"></i> Pasien Tidak Ditemukan</h3></div><div class="panel-body"><div class="alert alert-warning"><i class="fa fa-exclamation-triangle"></i> Data pendaftaran SIMRS untuk No. Rawat <b>' . htmlspecialchars($no_rawat) . '</b> tidak ditemukan.</div><a href="' . url([ADMIN, 'jkn_mobile', 'bookingantrol']) . '" class="btn btn-primary"><i class="fa fa-arrow-left"></i> Kembali ke Booking Antrol</a> <a href="' . url([ADMIN, 'jkn_mobile', 'taskid']) . '" class="btn btn-default"><i class="fa fa-list"></i> Lihat Data Task ID</a></div></div></div></div>';
+          }
         }
 
         $mlite_antrian_referensi = null;
@@ -891,7 +917,10 @@ class Admin extends AdminModule
 
     public function postSaveTaskIDInput()
     {
-      $this->db('mlite_antrian_referensi_taskid')->where('nomor_referensi', $_POST['nomor_referensi'])->where('status','!=','Sudah')->delete();
+      $nomor_referensi = trim($_POST['nomor_referensi'] ?? '');
+      if (!empty($nomor_referensi)) {
+        $this->db('mlite_antrian_referensi_taskid')->where('nomor_referensi', $nomor_referensi)->where('status','!=','Sudah')->delete();
+      }
 
       if (!empty($_POST['taskid99'])) {
         $this->db('mlite_antrian_referensi_taskid')
@@ -1004,11 +1033,22 @@ class Admin extends AdminModule
       }
 
 
-      redirect(url([ADMIN, 'jkn_mobile', 'taskid']));
+      $this->notify('success', 'Data Task ID berhasil disimpan');
+      $redirectUrl = !empty($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : url([ADMIN, 'jkn_mobile', 'taskid']);
+      redirect($redirectUrl);
     }
 
-    public function getKirimAntrian($no_rawat)
+    public function getKirimAntrian($no_rawat = '')
     {
+      if (empty($no_rawat) && !empty($_GET['no_rawat'])) {
+        $no_rawat = $_GET['no_rawat'];
+      }
+      $no_rawat = trim((string)$no_rawat);
+      if (empty($no_rawat)) {
+        header('Content-Type: application/json');
+        echo json_encode(['status' => 'error', 'message' => 'No. Rawat tidak valid atau kosong.']);
+        exit();
+      }
 
       $no_rawat = revertNorawat($no_rawat);
       $reg_periksa = $this->db('reg_periksa')->where('no_rawat', $no_rawat)
@@ -2651,7 +2691,7 @@ class Admin extends AdminModule
         return $tasks;
     }
 
-    public function getModalAntrol($noref)
+    public function getModalAntrol($noref = '')
     {
         $this->tpl->set('noref',$noref);
         echo $this->tpl->draw(MODULES . '/jkn_mobile/view/admin/batalantrol.html', true);
