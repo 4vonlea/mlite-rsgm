@@ -64,11 +64,8 @@ class Admin extends AdminModule
         $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
         date_default_timezone_set($this->settings->get('settings.timezone') ?: 'Asia/Jakarta');
 
-        $firstPoli = $this->db('maping_poli_bpjs')->oneArray();
-        $kdPoli = $firstPoli ? $firstPoli['kd_poli_bpjs'] : 'GIG';
-        $tanggal = date('Y-m-d');
-
-        $url = $this->bpjsurl . 'jadwaldokter/kodepoli/' . $kdPoli . '/tanggal/' . $tanggal;
+        // Gunakan endpoint referensi poliklinik resmi BPJS untuk health-check / ping
+        $url = $this->bpjsurl . 'ref/poli';
         $output = BpjsService::get($url, NULL, $this->consid, $this->secretkey, $this->user_key, $tStamp);
         $json = json_decode($output, true);
 
@@ -290,13 +287,181 @@ class Admin extends AdminModule
                     $data = [];
                 }
             }
+
+            // Hitung kuota dan ambil daftar pasien yang sudah terdaftar di SIMRS
+            if (is_array($data) && count($data) > 0) {
+                try {
+                    $mapPoli = $this->db('maping_poli_bpjs')->where('kd_poli_bpjs', $kodepoli)->toArray();
+                    $list_kd_poli_rs = array_values(array_filter(array_column($mapPoli, 'kd_poli_rs')));
+
+                    foreach ($data as &$item) {
+                        $kd_dokter_bpjs = $item['kodedokter'] ?? '';
+                        $mapDokter = $this->db('maping_dokter_dpjpvclaim')->where('kd_dokter_bpjs', $kd_dokter_bpjs)->oneArray();
+                        $kd_dokter_rs = $mapDokter ? $mapDokter['kd_dokter'] : null;
+
+                        $item['kd_dokter_rs'] = $kd_dokter_rs;
+                        $item['kd_poli_rs'] = !empty($list_kd_poli_rs) ? $list_kd_poli_rs[0] : '';
+                        $item['nm_dokter_rs'] = $mapDokter ? $mapDokter['nm_dokter_bpjs'] : ($item['namadokter'] ?? '');
+
+                        $pasien_final = [];
+                        if ($kd_dokter_rs && !empty($list_kd_poli_rs)) {
+                            // 1. Ambil dari reg_periksa (pasien yang sudah datang registrasi pada hari H)
+                            $pasien_reg = $this->db('reg_periksa')
+                                ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                                ->join('penjab', 'penjab.kd_pj = reg_periksa.kd_pj')
+                                ->select([
+                                    'no_reg' => 'reg_periksa.no_reg',
+                                    'no_rawat' => 'reg_periksa.no_rawat',
+                                    'no_rkm_medis' => 'reg_periksa.no_rkm_medis',
+                                    'nm_pasien' => 'pasien.nm_pasien',
+                                    'png_jawab' => 'penjab.png_jawab',
+                                    'jam' => 'reg_periksa.jam_reg',
+                                    'status' => 'reg_periksa.stts'
+                                ])
+                                ->where('reg_periksa.tgl_registrasi', $tanggal)
+                                ->where('reg_periksa.kd_dokter', $kd_dokter_rs)
+                                ->where('reg_periksa.stts', '!=', 'Batal')
+                                ->in('reg_periksa.kd_poli', $list_kd_poli_rs)
+                                ->asc('reg_periksa.no_reg')
+                                ->toArray();
+
+                            foreach ($pasien_reg as $pr) {
+                                $pr['tipe'] = 'Registrasi Hari H';
+                                $pasien_final[] = $pr;
+                            }
+
+                            // 2. Ambil dari booking_registrasi (pasien yang booking sebelum hari H dan belum batal)
+                            $registered_rms = array_column($pasien_reg, 'no_rkm_medis');
+                            $pasien_booking = $this->db('booking_registrasi')
+                                ->join('pasien', 'pasien.no_rkm_medis = booking_registrasi.no_rkm_medis')
+                                ->join('penjab', 'penjab.kd_pj = booking_registrasi.kd_pj')
+                                ->select([
+                                    'no_reg' => 'booking_registrasi.no_reg',
+                                    'no_rawat' => "'-'",
+                                    'no_rkm_medis' => 'booking_registrasi.no_rkm_medis',
+                                    'nm_pasien' => 'pasien.nm_pasien',
+                                    'png_jawab' => 'penjab.png_jawab',
+                                    'jam' => 'booking_registrasi.jam_booking',
+                                    'status' => 'booking_registrasi.status'
+                                ])
+                                ->where('booking_registrasi.tanggal_periksa', $tanggal)
+                                ->where('booking_registrasi.kd_dokter', $kd_dokter_rs)
+                                ->where('booking_registrasi.status', '!=', 'Batal')
+                                ->in('booking_registrasi.kd_poli', $list_kd_poli_rs)
+                                ->asc('booking_registrasi.no_reg')
+                                ->toArray();
+
+                            foreach ($pasien_booking as $pb) {
+                                if (!in_array($pb['no_rkm_medis'], $registered_rms)) {
+                                    $pb['tipe'] = 'Booking Online';
+                                    $pasien_final[] = $pb;
+                                }
+                            }
+
+                            // Cek sumber Mobile JKN di tabel mlite_antrian_referensi
+                            foreach ($pasien_final as &$pf) {
+                                $cekJkn = $this->db('mlite_antrian_referensi')
+                                    ->where('no_rkm_medis', $pf['no_rkm_medis'])
+                                    ->where('tanggal_periksa', $tanggal)
+                                    ->oneArray();
+                                $pf['sumber'] = $cekJkn ? 'Mobile JKN (BPJS)' : 'Loket / Mandiri RS';
+                            }
+                        }
+
+                        $kuota_bpjs = intval($item['kapasitaspasien'] ?? 0);
+                        $terdaftar = count($pasien_final);
+                        $sisa_kuota = max(0, $kuota_bpjs - $terdaftar);
+
+                        $item['kuota_bpjs'] = $kuota_bpjs;
+                        $item['terdaftar'] = $terdaftar;
+                        $item['sisa_kuota'] = $sisa_kuota;
+                        $item['pasien_list'] = $pasien_final;
+                    }
+                } catch (\Throwable $e) {
+                    // Fallback jika query lokal gagal, tetap tampilkan jadwal BPJS
+                    foreach ($data as &$item) {
+                        $kuota_bpjs = intval($item['kapasitaspasien'] ?? 0);
+                        $item['kuota_bpjs'] = $kuota_bpjs;
+                        $item['terdaftar'] = 0;
+                        $item['sisa_kuota'] = $kuota_bpjs;
+                        $item['pasien_list'] = [];
+                    }
+                }
+            }
         }
 
         echo json_encode([
             'status' => ($code == '200') ? 'success' : 'error',
             'code' => $code,
             'message' => $message,
-            'data' => $data
+            'data' => $data,
+            'tanggal' => $tanggal,
+            'kodepoli' => $kodepoli
+        ]);
+        exit();
+    }
+
+    public function postSalinJadwalHfis()
+    {
+        header('Content-Type: application/json');
+        $kd_dokter_bpjs = $_POST['kodedokter'] ?? '';
+        $kd_poli_bpjs = $_POST['kodepoli'] ?? '';
+        $hari_bpjs = strtoupper(trim($_POST['hari'] ?? ''));
+        $jadwal_jam = $_POST['jadwal'] ?? '';
+        $kuota = intval($_POST['kuota'] ?? 0);
+
+        $mapDokter = $this->db('maping_dokter_dpjpvclaim')->where('kd_dokter_bpjs', $kd_dokter_bpjs)->oneArray();
+        $mapPoli = $this->db('maping_poli_bpjs')->where('kd_poli_bpjs', $kd_poli_bpjs)->oneArray();
+
+        if (!$mapDokter || !$mapPoli) {
+            echo json_encode(['status' => 'error', 'message' => 'Mapping Dokter atau Poli tidak ditemukan di basis data SIMRS.']);
+            exit();
+        }
+
+        $kd_dokter = $mapDokter['kd_dokter'];
+        $kd_poli = $mapPoli['kd_poli_rs'];
+
+        // Parse format e.g. "10:00-12:00"
+        $jam_mulai = '08:00:00';
+        $jam_selesai = '14:00:00';
+        if (strpos($jadwal_jam, '-') !== false) {
+            $parts = explode('-', $jadwal_jam, 2);
+            $jm = trim($parts[0]);
+            $js = trim($parts[1]);
+            $jam_mulai = $jm . (strlen($jm) == 5 ? ':00' : '');
+            $jam_selesai = $js . (strlen($js) == 5 ? ':00' : '');
+        }
+
+        $check = $this->db('jadwal')
+            ->where('kd_dokter', $kd_dokter)
+            ->where('hari_kerja', $hari_bpjs)
+            ->where('kd_poli', $kd_poli)
+            ->oneArray();
+
+        if ($check) {
+            $this->db('jadwal')
+                ->where('kd_dokter', $kd_dokter)
+                ->where('hari_kerja', $hari_bpjs)
+                ->where('kd_poli', $kd_poli)
+                ->update([
+                    'jam_mulai' => $jam_mulai,
+                    'jam_selesai' => $jam_selesai,
+                    'kuota' => $kuota
+                ]);
+        } else {
+            $this->db('jadwal')->save([
+                'kd_dokter' => $kd_dokter,
+                'hari_kerja' => $hari_bpjs,
+                'kd_poli' => $kd_poli,
+                'jam_mulai' => $jam_mulai,
+                'jam_selesai' => $jam_selesai,
+                'kuota' => $kuota
+            ]);
+        }
+
+        echo json_encode([
+            'status' => 'success',
+            'message' => "Jadwal dokter {$mapDokter['nm_dokter_bpjs']} hari {$hari_bpjs} ({$jam_mulai} - {$jam_selesai}, Kuota: {$kuota}) berhasil disalin ke basis data SIMRS lokal!"
         ]);
         exit();
     }
