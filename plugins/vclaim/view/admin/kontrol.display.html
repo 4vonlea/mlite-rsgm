@@ -5,8 +5,8 @@
         <th style="width: 140px; text-align:center;">Aksi</th>
         <th>No Surat Kontrol</th>
         <th>No SEP Asal</th>
-        <th>Tgl. Surat</th>
-        <th>Tgl. Rencana</th>
+        <th>Tgl. Surat <small class="text-primary" title="Diurutkan dari terbaru ke lama"><i class="fa fa-sort-amount-desc"></i></small></th>
+        <th>Tgl. Rencana <small class="text-primary" title="Diurutkan dari terbaru ke lama"><i class="fa fa-sort-amount-desc"></i></small></th>
         <th>Dokter DPJP</th>
         <th>Poli / Unit</th>
       </tr>
@@ -14,7 +14,7 @@
     <tbody>
       {if: !empty($kontrol)}
       {loop: $kontrol}
-      <tr>
+      <tr {if: $key == 0}style="background-color: #f0fdf4;"{/if}>
         <td style="text-align:center;">
           <button type="button" class="btn btn-xs btn-success pilih_nosurat" data-no_surat="{?=isset_or($value.no_surat)?}" title="Gunakan Surat Kontrol ini untuk formulir SEP">
             <i class="fa fa-check"></i> Gunakan
@@ -23,10 +23,15 @@
             <i class="fa fa-pencil"></i> Edit
           </button>
         </td>
-        <td><strong class="text-primary">{?=isset_or($value.no_surat)?}</strong></td>
+        <td>
+          <strong class="text-primary">{?=isset_or($value.no_surat)?}</strong>
+          {if: $key == 0}
+            <span class="label label-success" style="font-size:9px; margin-left:4px; vertical-align:middle;">Terbaru</span>
+          {/if}
+        </td>
         <td>{?=isset_or($value.no_sep)?}</td>
         <td>{?=isset_or($value.tgl_surat)?}</td>
-        <td>{?=isset_or($value.tgl_rencana)?}</td>
+        <td><span style="font-weight:600; color:#0f172a;">{?=isset_or($value.tgl_rencana)?}</span></td>
         <td>{?=isset_or($value.nm_dokter_bpjs)?}</td>
         <td>{?=isset_or($value.nm_poli_bpjs)?}</td>
       </tr>

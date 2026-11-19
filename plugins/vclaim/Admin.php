@@ -3958,9 +3958,16 @@ class Admin extends AdminModule
     if (!empty($sep_nums)) {
       $bridging_surat_kontrol_bpjs = $this->db('bridging_surat_kontrol_bpjs')
         ->where('no_sep', 'IN', $sep_nums)
+        ->desc('tgl_rencana')
+        ->desc('tgl_surat')
+        ->desc('no_surat')
         ->toArray();
     } else {
-      $bridging_surat_kontrol_bpjs = $this->db('bridging_surat_kontrol_bpjs')->toArray();
+      $bridging_surat_kontrol_bpjs = $this->db('bridging_surat_kontrol_bpjs')
+        ->desc('tgl_rencana')
+        ->desc('tgl_surat')
+        ->desc('no_surat')
+        ->toArray();
     }
 
     $this->tpl->set('no_sep', htmlspecialchars($no_sep, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'));
@@ -3981,9 +3988,16 @@ class Admin extends AdminModule
     if (!empty($sep_nums)) {
       $bridging_surat_kontrol_bpjs = $this->db('bridging_surat_kontrol_bpjs')
         ->where('no_sep', 'IN', $sep_nums)
+        ->desc('tgl_rencana')
+        ->desc('tgl_surat')
+        ->desc('no_surat')
         ->toArray();
     } else {
-      $bridging_surat_kontrol_bpjs = $this->db('bridging_surat_kontrol_bpjs')->toArray();
+      $bridging_surat_kontrol_bpjs = $this->db('bridging_surat_kontrol_bpjs')
+        ->desc('tgl_rencana')
+        ->desc('tgl_surat')
+        ->desc('no_surat')
+        ->toArray();
     }
 
     $this->tpl->set('kontrol', $this->tpl->noParse_array(htmlspecialchars_array($bridging_surat_kontrol_bpjs)));
