@@ -289,9 +289,14 @@ function bukaModalPasien(idx) {
                 ? '<span class="label label-primary">' + (p.status || 'Hadir') + '</span>'
                 : '<span class="label label-warning">' + (p.status || 'Booking') + '</span>';
 
+            var bookingInfo = '';
+            if (p.kodebooking) {
+                bookingInfo = '<div style="font-size:10px; color:#0284c7; font-family:monospace; margin-top:2px;" title="Kode Booking"><i class="fa fa-ticket"></i> ' + p.kodebooking + '</div>';
+            }
+
             contentHtml += '<tr>' +
                 '<td style="text-align:center;">' + (i + 1) + '</td>' +
-                '<td style="text-align:center;"><b>' + (p.no_reg || '-') + '</b></td>' +
+                '<td style="text-align:center;"><b>' + (p.no_reg || '-') + '</b>' + bookingInfo + '</td>' +
                 '<td><code>' + (p.no_rkm_medis || '-') + '</code></td>' +
                 '<td><b>' + (p.nm_pasien || '-') + '</b></td>' +
                 '<td>' + (p.png_jawab || '-') + '</td>' +

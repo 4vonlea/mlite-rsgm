@@ -288,27 +288,234 @@ class Admin extends AdminModule
                 }
             }
 
-            // Hitung kuota dan ambil daftar pasien yang sudah terdaftar di SIMRS
+            // Hitung kuota dan ambil daftar pasien yang sudah terdaftar di BPJS & SIMRS
             if (is_array($data) && count($data) > 0) {
                 try {
                     $mapPoli = $this->db('maping_poli_bpjs')->where('kd_poli_bpjs', $kodepoli)->toArray();
                     $list_kd_poli_rs = array_values(array_filter(array_column($mapPoli, 'kd_poli_rs')));
 
+                    // 1. Tarik antrean resmi yang sudah terdaftar di Server BPJS untuk tanggal tersebut
+                    $bpjs_antrean_by_dokter = [];
+                    try {
+                        $urlAntrean = $this->bpjsurl . 'antrean/pendaftaran/tanggal/' . $tanggal;
+                        $outAntrean = BpjsService::get($urlAntrean, NULL, $this->consid, $this->secretkey, $this->user_key, $tStamp);
+                        $jsonAntrean = json_decode($outAntrean, true);
+                        if (!empty($jsonAntrean['response'])) {
+                            $decAntrean = stringDecrypt($key, $jsonAntrean['response']);
+                            if (!empty($decAntrean)) {
+                                $decompAntrean = \LZCompressor\LZString::decompressFromEncodedURIComponent($decAntrean);
+                                $listAntrean = json_decode($decompAntrean, true);
+                                if (is_array($listAntrean)) {
+                                    foreach ($listAntrean as $ba) {
+                                        $st = strtolower($ba['status'] ?? '');
+                                        if ($st === 'batal' || $st === 'batal antrean' || $st === 'batal_antrean') {
+                                            continue;
+                                        }
+                                        $kd_dok = (string)($ba['kodedokter'] ?? '');
+                                        if ($kd_dok !== '') {
+                                            $bpjs_antrean_by_dokter[$kd_dok][] = $ba;
+                                            $kd_dok_trim = ltrim($kd_dok, '0');
+                                            if ($kd_dok_trim !== '' && $kd_dok_trim !== $kd_dok) {
+                                                $bpjs_antrean_by_dokter[$kd_dok_trim][] = $ba;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } catch (\Throwable $eAntrean) {
+                        error_log("bridging_hfis anyHfis fetch antrean BPJS error: " . $eAntrean->getMessage());
+                    }
+
                     foreach ($data as &$item) {
-                        $kd_dokter_bpjs = $item['kodedokter'] ?? '';
-                        $mapDokter = $this->db('maping_dokter_dpjpvclaim')->where('kd_dokter_bpjs', $kd_dokter_bpjs)->oneArray();
-                        $kd_dokter_rs = $mapDokter ? $mapDokter['kd_dokter'] : null;
+                        $kd_dokter_bpjs = (string)($item['kodedokter'] ?? '');
+                        $nm_dokter_hfis = $item['namadokter'] ?? '';
+
+                        // Pencarian mapping dokter dengan beberapa skema fallback
+                        $mapDokter = null;
+                        $kd_dokter_rs = null;
+
+                        // Skema 1: Kode BPJS persis
+                        if ($kd_dokter_bpjs !== '') {
+                            $mapDokter = $this->db('maping_dokter_dpjpvclaim')->where('kd_dokter_bpjs', $kd_dokter_bpjs)->oneArray();
+                        }
+                        // Skema 2: Kode BPJS tanpa leading zero
+                        if (!$mapDokter && $kd_dokter_bpjs !== '') {
+                            $kd_dok_trim = ltrim($kd_dokter_bpjs, '0');
+                            if ($kd_dok_trim !== '' && $kd_dok_trim !== $kd_dokter_bpjs) {
+                                $mapDokter = $this->db('maping_dokter_dpjpvclaim')->where('kd_dokter_bpjs', $kd_dok_trim)->oneArray();
+                            }
+                        }
+                        // Skema 3: Kode BPJS cocok dengan kd_dokter RS
+                        if (!$mapDokter && $kd_dokter_bpjs !== '') {
+                            $mapDokter = $this->db('maping_dokter_dpjpvclaim')->where('kd_dokter', $kd_dokter_bpjs)->oneArray();
+                        }
+                        // Skema 4: Pencocokan nama dokter jika kode belum terpetakan
+                        if (!$mapDokter && !empty($nm_dokter_hfis)) {
+                            $clean = preg_replace('/^(drg\.|dr\.|prof\.|drg\s+|dr\s+)/i', '', $nm_dokter_hfis);
+                            $clean = preg_replace('/,.*$/', '', $clean);
+                            $words = array_values(array_filter(preg_split('/[\s,\.]+/', $clean), function($w) {
+                                return strlen($w) >= 3 && !in_array(strtoupper($w), ['SP', 'KG', 'BM', 'PROS', 'PERIO', 'KGA', 'ORT', 'RAD', 'KES', 'MARS', 'DRG', 'DR']);
+                            }));
+                            if (!empty($words)) {
+                                $q = $this->db('maping_dokter_dpjpvclaim');
+                                foreach ($words as $w) {
+                                    $q->like('nm_dokter_bpjs', '%' . $w . '%');
+                                }
+                                $mapDokter = $q->oneArray();
+
+                                if (!$mapDokter) {
+                                    $q2 = $this->db('dokter');
+                                    foreach ($words as $w) {
+                                        $q2->like('nm_dokter', '%' . $w . '%');
+                                    }
+                                    $dRow = $q2->oneArray();
+                                    if ($dRow) {
+                                        $kd_dokter_rs = $dRow['kd_dokter'];
+                                    }
+                                }
+                            }
+                        }
+
+                        if ($mapDokter) {
+                            $kd_dokter_rs = $mapDokter['kd_dokter'];
+                        }
 
                         $item['kd_dokter_rs'] = $kd_dokter_rs;
                         $item['kd_poli_rs'] = !empty($list_kd_poli_rs) ? $list_kd_poli_rs[0] : '';
-                        $item['nm_dokter_rs'] = $mapDokter ? $mapDokter['nm_dokter_bpjs'] : ($item['namadokter'] ?? '');
+                        $item['nm_dokter_rs'] = $mapDokter ? $mapDokter['nm_dokter_bpjs'] : ($nm_dokter_hfis ?: '');
 
                         $pasien_final = [];
-                        if ($kd_dokter_rs && !empty($list_kd_poli_rs)) {
-                            // 1. Ambil dari reg_periksa (pasien yang sudah datang registrasi pada hari H)
-                            $pasien_reg = $this->db('reg_periksa')
-                                ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
-                                ->join('penjab', 'penjab.kd_pj = reg_periksa.kd_pj')
+                        $tracked_rms = [];
+                        $tracked_bookings = [];
+
+                        // 1. Ambil dari server BPJS Antrean jika ada antrean terdaftar untuk dokter ini
+                        $candidates_bpjs = [];
+                        if (isset($bpjs_antrean_by_dokter[$kd_dokter_bpjs])) {
+                            $candidates_bpjs = array_merge($candidates_bpjs, $bpjs_antrean_by_dokter[$kd_dokter_bpjs]);
+                        }
+                        $kd_dok_trim = ltrim($kd_dokter_bpjs, '0');
+                        if ($kd_dok_trim !== '' && isset($bpjs_antrean_by_dokter[$kd_dok_trim])) {
+                            $candidates_bpjs = array_merge($candidates_bpjs, $bpjs_antrean_by_dokter[$kd_dok_trim]);
+                        }
+
+                        $unique_bpjs = [];
+                        foreach ($candidates_bpjs as $cb) {
+                            $kb = $cb['kodebooking'] ?? '';
+                            if ($kb !== '' && !isset($unique_bpjs[$kb])) {
+                                $unique_bpjs[$kb] = $cb;
+                            }
+                        }
+
+                        foreach ($unique_bpjs as $kb => $ba) {
+                            $norm = $ba['norekammedis'] ?? '';
+                            $noka = $ba['nokapst'] ?? '';
+                            $nik = $ba['nik'] ?? '';
+                            $pName = '';
+
+                            if (!empty($norm)) {
+                                $pRow = $this->db('pasien')->where('no_rkm_medis', $norm)->oneArray();
+                                if ($pRow) {
+                                    $pName = $pRow['nm_pasien'];
+                                }
+                            }
+                            if (empty($pName) && !empty($noka)) {
+                                $pRow = $this->db('pasien')->where('no_peserta', $noka)->oneArray();
+                                if ($pRow) {
+                                    $pName = $pRow['nm_pasien'];
+                                    if (empty($norm)) $norm = $pRow['no_rkm_medis'];
+                                }
+                            }
+                            if (empty($pName) && !empty($nik)) {
+                                $pRow = $this->db('pasien')->where('no_ktp', $nik)->oneArray();
+                                if ($pRow) {
+                                    $pName = $pRow['nm_pasien'];
+                                    if (empty($norm)) $norm = $pRow['no_rkm_medis'];
+                                }
+                            }
+                            if (empty($pName)) {
+                                $pName = !empty($ba['namapasien']) ? $ba['namapasien'] : ('Peserta BPJS (' . ($noka ?: ($norm ?: $kb)) . ')');
+                            }
+
+                            $no_reg = !empty($ba['noantrean']) ? $ba['noantrean'] : (!empty($ba['angkaantrean']) ? $ba['angkaantrean'] : $kb);
+                            $jam = !empty($ba['estimasidilayani']) ? $ba['estimasidilayani'] : (!empty($ba['jampraktek']) ? $ba['jampraktek'] : '-');
+
+                            $pasien_final[] = [
+                                'no_reg' => $no_reg,
+                                'no_rawat' => '-',
+                                'no_rkm_medis' => $norm ?: '-',
+                                'nm_pasien' => $pName,
+                                'png_jawab' => 'BPJS Kesehatan',
+                                'jam' => $jam,
+                                'status' => $ba['status'] ?? 'Terdaftar BPJS',
+                                'tipe' => 'Mobile JKN (BPJS)',
+                                'sumber' => !empty($ba['sumberdata']) ? $ba['sumberdata'] : 'Mobile JKN (BPJS)',
+                                'kodebooking' => $kb
+                            ];
+
+                            $tracked_bookings[$kb] = true;
+                            if (!empty($norm) && $norm !== '-') {
+                                $tracked_rms[$norm] = true;
+                            }
+                        }
+
+                        // 2. Ambil dari booking_registrasi SIMRS (booking online / antrol)
+                        if ($kd_dokter_rs) {
+                            $qBook = $this->db('booking_registrasi')
+                                ->leftJoin('pasien', 'pasien.no_rkm_medis = booking_registrasi.no_rkm_medis')
+                                ->leftJoin('penjab', 'penjab.kd_pj = booking_registrasi.kd_pj')
+                                ->select([
+                                    'no_reg' => 'booking_registrasi.no_reg',
+                                    'no_rawat' => "'-'",
+                                    'no_rkm_medis' => 'booking_registrasi.no_rkm_medis',
+                                    'nm_pasien' => 'pasien.nm_pasien',
+                                    'png_jawab' => 'penjab.png_jawab',
+                                    'jam' => 'booking_registrasi.jam_booking',
+                                    'status' => 'booking_registrasi.status',
+                                    'kd_poli' => 'booking_registrasi.kd_poli'
+                                ])
+                                ->where('booking_registrasi.tanggal_periksa', $tanggal)
+                                ->where('booking_registrasi.kd_dokter', $kd_dokter_rs)
+                                ->where('booking_registrasi.status', '!=', 'Batal');
+
+                            if (!empty($list_kd_poli_rs)) {
+                                $qBook->in('booking_registrasi.kd_poli', array_merge($list_kd_poli_rs, [$kodepoli]));
+                            }
+                            $pasien_booking = $qBook->asc('booking_registrasi.no_reg')->toArray();
+
+                            foreach ($pasien_booking as $pb) {
+                                $rm = $pb['no_rkm_medis'] ?? '';
+                                if (!empty($rm) && isset($tracked_rms[$rm])) {
+                                    continue;
+                                }
+
+                                $ref = $this->db('mlite_antrian_referensi')
+                                    ->where('no_rkm_medis', $rm)
+                                    ->where('tanggal_periksa', $tanggal)
+                                    ->oneArray();
+
+                                $kb = $ref['kodebooking'] ?? '';
+                                if (!empty($kb) && isset($tracked_bookings[$kb])) {
+                                    continue;
+                                }
+
+                                $pb['tipe'] = $ref ? 'Mobile JKN (BPJS)' : 'Booking Online';
+                                $pb['sumber'] = $ref ? 'Mobile JKN (BPJS)' : 'SIMRS Online';
+                                $pb['kodebooking'] = $kb;
+                                $pb['png_jawab'] = $pb['png_jawab'] ?: 'Umum / BPJS';
+                                $pb['nm_pasien'] = $pb['nm_pasien'] ?: ('Pasien RM ' . $rm);
+                                $pasien_final[] = $pb;
+
+                                if (!empty($rm)) $tracked_rms[$rm] = true;
+                                if (!empty($kb)) $tracked_bookings[$kb] = true;
+                            }
+                        }
+
+                        // 3. Ambil dari reg_periksa (pasien hari H / yang sudah datang registrasi)
+                        if ($kd_dokter_rs) {
+                            $qReg = $this->db('reg_periksa')
+                                ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                                ->leftJoin('penjab', 'penjab.kd_pj = reg_periksa.kd_pj')
                                 ->select([
                                     'no_reg' => 'reg_periksa.no_reg',
                                     'no_rawat' => 'reg_periksa.no_rawat',
@@ -320,51 +527,35 @@ class Admin extends AdminModule
                                 ])
                                 ->where('reg_periksa.tgl_registrasi', $tanggal)
                                 ->where('reg_periksa.kd_dokter', $kd_dokter_rs)
-                                ->where('reg_periksa.stts', '!=', 'Batal')
-                                ->in('reg_periksa.kd_poli', $list_kd_poli_rs)
-                                ->asc('reg_periksa.no_reg')
-                                ->toArray();
+                                ->where('reg_periksa.stts', '!=', 'Batal');
+
+                            if (!empty($list_kd_poli_rs)) {
+                                $qReg->in('reg_periksa.kd_poli', $list_kd_poli_rs);
+                            }
+                            $pasien_reg = $qReg->asc('reg_periksa.no_reg')->toArray();
 
                             foreach ($pasien_reg as $pr) {
-                                $pr['tipe'] = 'Registrasi Hari H';
-                                $pasien_final[] = $pr;
-                            }
-
-                            // 2. Ambil dari booking_registrasi (pasien yang booking sebelum hari H dan belum batal)
-                            $registered_rms = array_column($pasien_reg, 'no_rkm_medis');
-                            $pasien_booking = $this->db('booking_registrasi')
-                                ->join('pasien', 'pasien.no_rkm_medis = booking_registrasi.no_rkm_medis')
-                                ->join('penjab', 'penjab.kd_pj = booking_registrasi.kd_pj')
-                                ->select([
-                                    'no_reg' => 'booking_registrasi.no_reg',
-                                    'no_rawat' => "'-'",
-                                    'no_rkm_medis' => 'booking_registrasi.no_rkm_medis',
-                                    'nm_pasien' => 'pasien.nm_pasien',
-                                    'png_jawab' => 'penjab.png_jawab',
-                                    'jam' => 'booking_registrasi.jam_booking',
-                                    'status' => 'booking_registrasi.status'
-                                ])
-                                ->where('booking_registrasi.tanggal_periksa', $tanggal)
-                                ->where('booking_registrasi.kd_dokter', $kd_dokter_rs)
-                                ->where('booking_registrasi.status', '!=', 'Batal')
-                                ->in('booking_registrasi.kd_poli', $list_kd_poli_rs)
-                                ->asc('booking_registrasi.no_reg')
-                                ->toArray();
-
-                            foreach ($pasien_booking as $pb) {
-                                if (!in_array($pb['no_rkm_medis'], $registered_rms)) {
-                                    $pb['tipe'] = 'Booking Online';
-                                    $pasien_final[] = $pb;
+                                $rm = $pr['no_rkm_medis'] ?? '';
+                                if (!empty($rm) && isset($tracked_rms[$rm])) {
+                                    foreach ($pasien_final as &$pf) {
+                                        if (($pf['no_rkm_medis'] ?? '') === $rm) {
+                                            $pf['no_rawat'] = $pr['no_rawat'];
+                                            $pf['no_reg'] = $pr['no_reg'];
+                                            $pf['jam'] = $pr['jam'];
+                                            $pf['status'] = $pr['status'];
+                                            $pf['tipe'] = 'Registrasi Hari H (Hadir)';
+                                            break;
+                                        }
+                                    }
+                                } else {
+                                    $pr['tipe'] = 'Registrasi Hari H';
+                                    $pr['sumber'] = 'Loket / Mandiri RS';
+                                    $pr['kodebooking'] = '';
+                                    $pr['png_jawab'] = $pr['png_jawab'] ?: 'Umum / BPJS';
+                                    $pr['nm_pasien'] = $pr['nm_pasien'] ?: ('Pasien RM ' . $rm);
+                                    $pasien_final[] = $pr;
+                                    if (!empty($rm)) $tracked_rms[$rm] = true;
                                 }
-                            }
-
-                            // Cek sumber Mobile JKN di tabel mlite_antrian_referensi
-                            foreach ($pasien_final as &$pf) {
-                                $cekJkn = $this->db('mlite_antrian_referensi')
-                                    ->where('no_rkm_medis', $pf['no_rkm_medis'])
-                                    ->where('tanggal_periksa', $tanggal)
-                                    ->oneArray();
-                                $pf['sumber'] = $cekJkn ? 'Mobile JKN (BPJS)' : 'Loket / Mandiri RS';
                             }
                         }
 
