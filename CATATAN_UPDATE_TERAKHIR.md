@@ -72,6 +72,7 @@ Karena file-file di bawah ini **sudah berhasil di-commit (`git commit`) dan di-p
 ---
 
 ### 5. Perbaikan Menyeluruh & Diagnostik Modul Bridging HFIS BPJS (`/admin/bridging_hfis`)
+* **Commit Hash:** `debd810b`
 * **File yang Diubah:**
   - `plugins/bridging_hfis/Admin.php`
   - `plugins/bridging_hfis/js/admin/scripts.js`
