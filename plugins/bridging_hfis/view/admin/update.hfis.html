@@ -1,204 +1,315 @@
 <div class="row">
     <div class="col-md-12">
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <h3 class="panel-title">Bridging HFIS</h3>
+        <div class="panel panel-default" style="border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+            <div class="panel-heading" style="background:#f8fafc; font-weight:bold;">
+                <i class="fa fa-calendar-plus-o text-primary"></i> Bridging Update Jadwal Dokter ke BPJS HFIS
             </div>
             <div class="panel-body">
+                <div id="notif" style="margin-bottom:15px;"></div>
+
+                <div class="row" style="background:#f9fafb; padding:15px 5px; border-radius:6px; margin:0 0 20px 0; border:1px solid #eef2f6;">
+                    <div class="col-md-4">
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label for="kd_dokter"><strong>Pilih Dokter DPJP BPJS:</strong></label>
+                            <input type="hidden" name="t" id="t" value="{?=$_SESSION['token']?}">
+                            <select name="kd_dokter" id="kd_dokter" class="form-control" style="width:100%;">
+                                <option value="">-- Pilih Dokter DPJP --</option>
+                                {loop: $dokter}
+                                <option value="{?=isset_or($value.kd_dokter_bpjs)?}">
+                                    {?=isset_or($value.nm_dokter_bpjs)?} ({?=isset_or($value.kd_dokter_bpjs)?})
+                                </option>
+                                {/loop}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label for="kd_poli"><strong>Pilih Poliklinik BPJS:</strong></label>
+                            <select name="kd_poli" id="kd_poli" class="form-control" style="width:100%;">
+                                <option value="">-- Pilih Poliklinik BPJS --</option>
+                                {loop: $poli}
+                                <option value="{?=isset_or($value.kd_poli_bpjs)?}">
+                                    {?=isset_or($value.kd_poli_bpjs)?} - {?=isset_or($value.nm_poli_bpjs)?}
+                                </option>
+                                {/loop}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label>&nbsp;</label>
+                        <div>
+                            <button type="button" class="btn btn-primary btn-block" id="btnUbahHfis" onclick="ubahhfis()">
+                                <i class="fa fa-upload"></i> Kirim & Simpan Jadwal ke BPJS HFIS
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <h4 style="margin-top:10px; margin-bottom:15px; border-bottom:2px solid #337ab7; padding-bottom:8px; color:#333;">
+                    <i class="fa fa-sun-o text-warning"></i> Jadwal Praktek Reguler / Pagi
+                </h4>
+
                 <div class="row">
-                    <div id="notif"></div>
-                </div>
-                <div class="display">
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="col-md-3">
-                                <div class="input-group">
-                                    <label for="">Dokter</label>
-                                    <input type="hidden" name="t" id="t" value="{?=$_SESSION['token']?}">
-                                    <select name="kd_dokter" id="kd_dokter" class="form-control">
-                                        {loop: $dokter}
-                                        <option value="{?=isset_or($value.kd_dokter_bpjs)?}">{?=isset_or($value.nm_dokter_bpjs)?}</option>
-                                        {/loop}
-                                    </select>
-                                </div>
+                    <!-- Senin Pagi -->
+                    <div class="col-md-2 col-sm-4 col-xs-6">
+                        <div class="well well-sm" style="background:#fff; border:1px solid #ddd;">
+                            <label style="display:block; margin-bottom:5px;">
+                                <input id="senin" type="checkbox" value="1|pagi"> <b>Senin</b>
+                            </label>
+                            <div class="form-group form-group-sm" style="margin-bottom:5px;">
+                                <label style="font-size:11px;">Kuota Pasien:</label>
+                                <input type="number" class="form-control" placeholder="Contoh: 30" id="kuotasenin">
                             </div>
-                            <div class="col-md-3">
-                                <div class="input-group">
-                                    <label for="">Poli</label>
-                                    <select name="kd_poli" id="kd_poli" class="form-control">
-                                        {loop: $poli}
-                                        <option value="{?=isset_or($value.kd_poli_bpjs)?}">{?=isset_or($value.nm_poli_bpjs)?}</option>
-                                        {/loop}
-                                    </select>
-                                </div>
+                            <div class="form-group form-group-sm" style="margin-bottom:5px;">
+                                <label style="font-size:11px;">Buka:</label>
+                                <input type="time" name="dari1" class="form-control" id="dari1|pagi">
                             </div>
-                            <div class="col-md-4">
-                                <label for="">Ubah Jadwal HFIS</label>
-                                <div class="input-group">
-                                    <button class="btn btn-primary" onclick="ubahhfis()">Berubah</button>
-                                </div>
+                            <div class="form-group form-group-sm" style="margin-bottom:0;">
+                                <label style="font-size:11px;">Tutup:</label>
+                                <input type="time" name="sampai1" class="form-control" id="sampai1|pagi">
                             </div>
                         </div>
                     </div>
-                    <hr>
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="col-md-2">
-                                <div class="form-group">
-                                    <label for="">Senin</label>
-                                    <input id="senin" type="checkbox" value="1|pagi">
-                                    <input type="text" class="form-control" placeholder="Kuota" id="kuotasenin">
-                                    <br>
-                                    <label for="">Dari Jam</label>
-                                    <input type="time" name="dari1" class="form-control" id="dari1|pagi">
-                                    <label for="">Sampai Jam</label>
-                                    <input type="time" name="sampai1" class="form-control" id="sampai1|pagi">
-                                </div>
+
+                    <!-- Selasa Pagi -->
+                    <div class="col-md-2 col-sm-4 col-xs-6">
+                        <div class="well well-sm" style="background:#fff; border:1px solid #ddd;">
+                            <label style="display:block; margin-bottom:5px;">
+                                <input id="selasa" type="checkbox" value="2|pagi"> <b>Selasa</b>
+                            </label>
+                            <div class="form-group form-group-sm" style="margin-bottom:5px;">
+                                <label style="font-size:11px;">Kuota Pasien:</label>
+                                <input type="number" class="form-control" placeholder="Contoh: 30" id="kuotaselasa">
                             </div>
-                            <div class="col-md-2">
-                                <div class="form-group">
-                                    <label for="">Selasa</label>
-                                    <input id="selasa" type="checkbox" value="2|pagi">
-                                    <input type="text" class="form-control" placeholder="Kuota" id="kuotaselasa">
-                                    <br>
-                                    <label for="">Dari Jam</label>
-                                    <input type="time" name="dari2" class="form-control" id="dari2|pagi">
-                                    <label for="">Sampai Jam</label>
-                                    <input type="time" name="sampai2" class="form-control" id="sampai2|pagi">
-                                </div>
+                            <div class="form-group form-group-sm" style="margin-bottom:5px;">
+                                <label style="font-size:11px;">Buka:</label>
+                                <input type="time" name="dari2" class="form-control" id="dari2|pagi">
                             </div>
-                            <div class="col-md-2">
-                                <div class="form-group">
-                                    <label for="">Rabu</label>
-                                    <input id="rabu" type="checkbox" value="3|pagi">
-                                    <input type="text" class="form-control" placeholder="Kuota" id="kuotarabu">
-                                    <br>
-                                    <label for="">Dari Jam</label>
-                                    <input type="time" name="dari3" class="form-control" id="dari3|pagi">
-                                    <label for="">Sampai Jam</label>
-                                    <input type="time" name="sampai3" class="form-control" id="sampai3|pagi">
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="form-group">
-                                    <label for="">Kamis</label>
-                                    <input id="kamis" type="checkbox" value="4|pagi">
-                                    <input type="text" class="form-control" placeholder="Kuota" id="kuotakamis">
-                                    <br>
-                                    <label for="">Dari Jam</label>
-                                    <input type="time" name="dari4" class="form-control" id="dari4|pagi">
-                                    <label for="">Sampai Jam</label>
-                                    <input type="time" name="sampai4" class="form-control" id="sampai4|pagi">
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="form-group">
-                                    <label for="">Jumat</label>
-                                    <input id="jumat" type="checkbox" value="5|pagi">
-                                    <input type="text" class="form-control" placeholder="Kuota" id="kuotajumat">
-                                    <br>
-                                    <label for="">Dari Jam</label>
-                                    <input type="time" name="dari5" class="form-control" id="dari5|pagi">
-                                    <label for="">Sampai Jam</label>
-                                    <input type="time" name="sampai5" class="form-control" id="sampai5|pagi">
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="form-group">
-                                    <label for="">Sabtu</label>
-                                    <input id="sabtu" type="checkbox" value="6|pagi">
-                                    <input type="text" class="form-control" placeholder="Kuota" id="kuotasabtu">
-                                    <br>
-                                    <label for="">Dari Jam</label>
-                                    <input type="time" name="dari6" class="form-control" id="dari6|pagi">
-                                    <label for="">Sampai Jam</label>
-                                    <input type="time" name="sampai6" class="form-control" id="sampai6|pagi">
-                                </div>
+                            <div class="form-group form-group-sm" style="margin-bottom:0;">
+                                <label style="font-size:11px;">Tutup:</label>
+                                <input type="time" name="sampai2" class="form-control" id="sampai2|pagi">
                             </div>
                         </div>
                     </div>
-                    <hr>
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="col-md-2">
-                                <div class="form-group">
-                                    <label for="">Senin Sore</label>
-                                    <input id="seninsore" type="checkbox" value="1|sore">
-                                    <input type="text" class="form-control" placeholder="Kuota" id="kuotaseninsore">
-                                    <br>
-                                    <label for="">Dari Jam</label>
-                                    <input type="time" name="dari5" class="form-control" id="darisore1|sore">
-                                    <label for="">Sampai Jam</label>
-                                    <input type="time" name="sampai5" class="form-control" id="sampaisore1|sore">
-                                </div>
+
+                    <!-- Rabu Pagi -->
+                    <div class="col-md-2 col-sm-4 col-xs-6">
+                        <div class="well well-sm" style="background:#fff; border:1px solid #ddd;">
+                            <label style="display:block; margin-bottom:5px;">
+                                <input id="rabu" type="checkbox" value="3|pagi"> <b>Rabu</b>
+                            </label>
+                            <div class="form-group form-group-sm" style="margin-bottom:5px;">
+                                <label style="font-size:11px;">Kuota Pasien:</label>
+                                <input type="number" class="form-control" placeholder="Contoh: 30" id="kuotarabu">
                             </div>
-                            <div class="col-md-2">
-                                <div class="form-group">
-                                    <label for="">Selasa Sore</label>
-                                    <input id="selasasore" type="checkbox" value="2|sore">
-                                    <input type="text" class="form-control" placeholder="Kuota" id="kuotaselasasore">
-                                    <br>
-                                    <label for="">Dari Jam</label>
-                                    <input type="time" name="dari6" class="form-control" id="darisore2|sore">
-                                    <label for="">Sampai Jam</label>
-                                    <input type="time" name="sampai6" class="form-control" id="sampaisore2|sore">
-                                </div>
+                            <div class="form-group form-group-sm" style="margin-bottom:5px;">
+                                <label style="font-size:11px;">Buka:</label>
+                                <input type="time" name="dari3" class="form-control" id="dari3|pagi">
                             </div>
-                            <div class="col-md-2">
-                                <div class="form-group">
-                                    <label for="">Rabu Sore</label>
-                                    <input id="rabusore" type="checkbox" value="3|sore">
-                                    <input type="text" class="form-control" placeholder="Kuota" id="kuotarabusore">
-                                    <br>
-                                    <label for="">Dari Jam</label>
-                                    <input type="time" name="dari5" class="form-control" id="darisore3|sore">
-                                    <label for="">Sampai Jam</label>
-                                    <input type="time" name="sampai5" class="form-control" id="sampaisore3|sore">
-                                </div>
+                            <div class="form-group form-group-sm" style="margin-bottom:0;">
+                                <label style="font-size:11px;">Tutup:</label>
+                                <input type="time" name="sampai3" class="form-control" id="sampai3|pagi">
                             </div>
-                            <div class="col-md-2">
-                                <div class="form-group">
-                                    <label for="">Kamis Sore</label>
-                                    <input id="kamissore" type="checkbox" value="4|sore">
-                                    <input type="text" class="form-control" placeholder="Kuota" id="kuotakamissore">
-                                    <br>
-                                    <label for="">Dari Jam</label>
-                                    <input type="time" name="dari6" class="form-control" id="darisore4|sore">
-                                    <label for="">Sampai Jam</label>
-                                    <input type="time" name="sampai6" class="form-control" id="sampaisore4|sore">
-                                </div>
+                        </div>
+                    </div>
+
+                    <!-- Kamis Pagi -->
+                    <div class="col-md-2 col-sm-4 col-xs-6">
+                        <div class="well well-sm" style="background:#fff; border:1px solid #ddd;">
+                            <label style="display:block; margin-bottom:5px;">
+                                <input id="kamis" type="checkbox" value="4|pagi"> <b>Kamis</b>
+                            </label>
+                            <div class="form-group form-group-sm" style="margin-bottom:5px;">
+                                <label style="font-size:11px;">Kuota Pasien:</label>
+                                <input type="number" class="form-control" placeholder="Contoh: 30" id="kuotakamis">
                             </div>
-                            <div class="col-md-2">
-                                <div class="form-group">
-                                    <label for="">Jumat Sore</label>
-                                    <input id="jumatsore" type="checkbox" value="5|sore">
-                                    <input type="text" class="form-control" placeholder="Kuota" id="kuotajumatsore">
-                                    <br>
-                                    <label for="">Dari Jam</label>
-                                    <input type="time" name="dari5" class="form-control" id="darisore5|sore">
-                                    <label for="">Sampai Jam</label>
-                                    <input type="time" name="sampai5" class="form-control" id="sampaisore5|sore">
-                                </div>
+                            <div class="form-group form-group-sm" style="margin-bottom:5px;">
+                                <label style="font-size:11px;">Buka:</label>
+                                <input type="time" name="dari4" class="form-control" id="dari4|pagi">
                             </div>
-                            <div class="col-md-2">
-                                <div class="form-group">
-                                    <label for="">Sabtu Sore</label>
-                                    <input id="sabtusore" type="checkbox" value="6|sore">
-                                    <input type="text" class="form-control" placeholder="Kuota" id="kuotasabtusore">
-                                    <br>
-                                    <label for="">Dari Jam</label>
-                                    <input type="time" name="dari6" class="form-control" id="darisore6|sore">
-                                    <label for="">Sampai Jam</label>
-                                    <input type="time" name="sampai6" class="form-control" id="sampaisore6|sore">
-                                </div>
+                            <div class="form-group form-group-sm" style="margin-bottom:0;">
+                                <label style="font-size:11px;">Tutup:</label>
+                                <input type="time" name="sampai4" class="form-control" id="sampai4|pagi">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Jumat Pagi -->
+                    <div class="col-md-2 col-sm-4 col-xs-6">
+                        <div class="well well-sm" style="background:#fff; border:1px solid #ddd;">
+                            <label style="display:block; margin-bottom:5px;">
+                                <input id="jumat" type="checkbox" value="5|pagi"> <b>Jumat</b>
+                            </label>
+                            <div class="form-group form-group-sm" style="margin-bottom:5px;">
+                                <label style="font-size:11px;">Kuota Pasien:</label>
+                                <input type="number" class="form-control" placeholder="Contoh: 30" id="kuotajumat">
+                            </div>
+                            <div class="form-group form-group-sm" style="margin-bottom:5px;">
+                                <label style="font-size:11px;">Buka:</label>
+                                <input type="time" name="dari5" class="form-control" id="dari5|pagi">
+                            </div>
+                            <div class="form-group form-group-sm" style="margin-bottom:0;">
+                                <label style="font-size:11px;">Tutup:</label>
+                                <input type="time" name="sampai5" class="form-control" id="sampai5|pagi">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sabtu Pagi -->
+                    <div class="col-md-2 col-sm-4 col-xs-6">
+                        <div class="well well-sm" style="background:#fff; border:1px solid #ddd;">
+                            <label style="display:block; margin-bottom:5px;">
+                                <input id="sabtu" type="checkbox" value="6|pagi"> <b>Sabtu</b>
+                            </label>
+                            <div class="form-group form-group-sm" style="margin-bottom:5px;">
+                                <label style="font-size:11px;">Kuota Pasien:</label>
+                                <input type="number" class="form-control" placeholder="Contoh: 30" id="kuotasabtu">
+                            </div>
+                            <div class="form-group form-group-sm" style="margin-bottom:5px;">
+                                <label style="font-size:11px;">Buka:</label>
+                                <input type="time" name="dari6" class="form-control" id="dari6|pagi">
+                            </div>
+                            <div class="form-group form-group-sm" style="margin-bottom:0;">
+                                <label style="font-size:11px;">Tutup:</label>
+                                <input type="time" name="sampai6" class="form-control" id="sampai6|pagi">
                             </div>
                         </div>
                     </div>
                 </div>
+
+                <h4 style="margin-top:20px; margin-bottom:15px; border-bottom:2px solid #f0ad4e; padding-bottom:8px; color:#333;">
+                    <i class="fa fa-moon-o text-primary"></i> Jadwal Praktek Sore / Eksekutif
+                </h4>
+
+                <div class="row">
+                    <!-- Senin Sore -->
+                    <div class="col-md-2 col-sm-4 col-xs-6">
+                        <div class="well well-sm" style="background:#fff; border:1px solid #ddd;">
+                            <label style="display:block; margin-bottom:5px;">
+                                <input id="seninsore" type="checkbox" value="1|sore"> <b>Senin Sore</b>
+                            </label>
+                            <div class="form-group form-group-sm" style="margin-bottom:5px;">
+                                <label style="font-size:11px;">Kuota Pasien:</label>
+                                <input type="number" class="form-control" placeholder="Contoh: 30" id="kuotaseninsore">
+                            </div>
+                            <div class="form-group form-group-sm" style="margin-bottom:5px;">
+                                <label style="font-size:11px;">Buka:</label>
+                                <input type="time" name="dari1sore" class="form-control" id="darisore1|sore">
+                            </div>
+                            <div class="form-group form-group-sm" style="margin-bottom:0;">
+                                <label style="font-size:11px;">Tutup:</label>
+                                <input type="time" name="sampai1sore" class="form-control" id="sampaisore1|sore">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Selasa Sore -->
+                    <div class="col-md-2 col-sm-4 col-xs-6">
+                        <div class="well well-sm" style="background:#fff; border:1px solid #ddd;">
+                            <label style="display:block; margin-bottom:5px;">
+                                <input id="selasasore" type="checkbox" value="2|sore"> <b>Selasa Sore</b>
+                            </label>
+                            <div class="form-group form-group-sm" style="margin-bottom:5px;">
+                                <label style="font-size:11px;">Kuota Pasien:</label>
+                                <input type="number" class="form-control" placeholder="Contoh: 30" id="kuotaselasasore">
+                            </div>
+                            <div class="form-group form-group-sm" style="margin-bottom:5px;">
+                                <label style="font-size:11px;">Buka:</label>
+                                <input type="time" name="dari2sore" class="form-control" id="darisore2|sore">
+                            </div>
+                            <div class="form-group form-group-sm" style="margin-bottom:0;">
+                                <label style="font-size:11px;">Tutup:</label>
+                                <input type="time" name="sampai2sore" class="form-control" id="sampaisore2|sore">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Rabu Sore -->
+                    <div class="col-md-2 col-sm-4 col-xs-6">
+                        <div class="well well-sm" style="background:#fff; border:1px solid #ddd;">
+                            <label style="display:block; margin-bottom:5px;">
+                                <input id="rabusore" type="checkbox" value="3|sore"> <b>Rabu Sore</b>
+                            </label>
+                            <div class="form-group form-group-sm" style="margin-bottom:5px;">
+                                <label style="font-size:11px;">Kuota Pasien:</label>
+                                <input type="number" class="form-control" placeholder="Contoh: 30" id="kuotarabusore">
+                            </div>
+                            <div class="form-group form-group-sm" style="margin-bottom:5px;">
+                                <label style="font-size:11px;">Buka:</label>
+                                <input type="time" name="dari3sore" class="form-control" id="darisore3|sore">
+                            </div>
+                            <div class="form-group form-group-sm" style="margin-bottom:0;">
+                                <label style="font-size:11px;">Tutup:</label>
+                                <input type="time" name="sampai3sore" class="form-control" id="sampaisore3|sore">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Kamis Sore -->
+                    <div class="col-md-2 col-sm-4 col-xs-6">
+                        <div class="well well-sm" style="background:#fff; border:1px solid #ddd;">
+                            <label style="display:block; margin-bottom:5px;">
+                                <input id="kamissore" type="checkbox" value="4|sore"> <b>Kamis Sore</b>
+                            </label>
+                            <div class="form-group form-group-sm" style="margin-bottom:5px;">
+                                <label style="font-size:11px;">Kuota Pasien:</label>
+                                <input type="number" class="form-control" placeholder="Contoh: 30" id="kuotakamissore">
+                            </div>
+                            <div class="form-group form-group-sm" style="margin-bottom:5px;">
+                                <label style="font-size:11px;">Buka:</label>
+                                <input type="time" name="dari4sore" class="form-control" id="darisore4|sore">
+                            </div>
+                            <div class="form-group form-group-sm" style="margin-bottom:0;">
+                                <label style="font-size:11px;">Tutup:</label>
+                                <input type="time" name="sampai4sore" class="form-control" id="sampaisore4|sore">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Jumat Sore -->
+                    <div class="col-md-2 col-sm-4 col-xs-6">
+                        <div class="well well-sm" style="background:#fff; border:1px solid #ddd;">
+                            <label style="display:block; margin-bottom:5px;">
+                                <input id="jumatsore" type="checkbox" value="5|sore"> <b>Jumat Sore</b>
+                            </label>
+                            <div class="form-group form-group-sm" style="margin-bottom:5px;">
+                                <label style="font-size:11px;">Kuota Pasien:</label>
+                                <input type="number" class="form-control" placeholder="Contoh: 30" id="kuotajumatsore">
+                            </div>
+                            <div class="form-group form-group-sm" style="margin-bottom:5px;">
+                                <label style="font-size:11px;">Buka:</label>
+                                <input type="time" name="dari5sore" class="form-control" id="darisore5|sore">
+                            </div>
+                            <div class="form-group form-group-sm" style="margin-bottom:0;">
+                                <label style="font-size:11px;">Tutup:</label>
+                                <input type="time" name="sampai5sore" class="form-control" id="sampaisore5|sore">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sabtu Sore -->
+                    <div class="col-md-2 col-sm-4 col-xs-6">
+                        <div class="well well-sm" style="background:#fff; border:1px solid #ddd;">
+                            <label style="display:block; margin-bottom:5px;">
+                                <input id="sabtusore" type="checkbox" value="6|sore"> <b>Sabtu Sore</b>
+                            </label>
+                            <div class="form-group form-group-sm" style="margin-bottom:5px;">
+                                <label style="font-size:11px;">Kuota Pasien:</label>
+                                <input type="number" class="form-control" placeholder="Contoh: 30" id="kuotasabtusore">
+                            </div>
+                            <div class="form-group form-group-sm" style="margin-bottom:5px;">
+                                <label style="font-size:11px;">Buka:</label>
+                                <input type="time" name="dari6sore" class="form-control" id="darisore6|sore">
+                            </div>
+                            <div class="form-group form-group-sm" style="margin-bottom:0;">
+                                <label style="font-size:11px;">Tutup:</label>
+                                <input type="time" name="sampai6sore" class="form-control" id="sampaisore6|sore">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
 </div>
-<script>
-    $('select').selectator();
-</script>

@@ -1,23 +1,158 @@
 <div class="row">
     <div class="col-md-12">
-        <div class="row">
-            <ul class="modules" style="padding:0;margin:0;">
-                {loop: $sub_modules}
-                <li class="module">
-                    <div class="panel panel-default">
-                        <a href="{?=isset_or($value.url)?}" class="panel-body text-center">
-                            <div class="panel-thumb">
-                                <i class="fa fa-{?=isset_or($value.icon)?}"></i>
-                                <div class="desc">
-                                    {?=isset_or($value.desc)?}
-                                </div>
+        <ul class="modules" style="padding:0;margin:0 0 20px 0;">
+            {loop: $sub_modules}
+            <li class="module">
+                <div class="panel panel-default" style="box-shadow: 0 1px 3px rgba(0,0,0,0.08); border-radius: 6px;">
+                    <a href="{?=isset_or($value.url)?}" class="panel-body text-center" style="display:block; text-decoration:none; padding: 20px 15px;">
+                        <div class="panel-thumb" style="margin-bottom:12px;">
+                            <i class="fa fa-{?=isset_or($value.icon)?}" style="font-size:36px; color:#337ab7;"></i>
+                            <div class="desc" style="font-size:12px; color:#777; margin-top:8px; min-height:36px;">
+                                {?=isset_or($value.desc)?}
                             </div>
-                            <h4><b>{?=isset_or($value.name)?}</b></h4>
-                        </a>
-                    </div>
-                </li>
-                {/loop}
-            </ul>
+                        </div>
+                        <h4 style="margin:0; color:#333;"><b>{?=isset_or($value.name)?}</b></h4>
+                    </a>
+                </div>
+            </li>
+            {/loop}
+        </ul>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-7">
+        <div class="panel panel-default" style="border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+            <div class="panel-heading" style="background:#f8fafc; font-weight:bold;">
+                <i class="fa fa-dashboard text-primary"></i> Status & Diagnostik Bridging BPJS Antrean / HFIS
+            </div>
+            <div class="panel-body">
+                <table class="table table-bordered table-striped" style="margin-bottom:15px;">
+                    <tbody>
+                        <tr>
+                            <th style="width: 35%; background:#fcfcfc;">Server Antrean BPJS</th>
+                            <td><code>{?=$bpjsurl?}</code></td>
+                        </tr>
+                        <tr>
+                            <th style="background:#fcfcfc;">Cons ID</th>
+                            <td>
+                                {if: !empty($consid)}
+                                    <span class="label label-primary">{?=$consid?}</span>
+                                {else}
+                                    <span class="label label-danger">Belum Dikonfigurasi</span>
+                                {/if}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th style="background:#fcfcfc;">Secret Key & User Key</th>
+                            <td>
+                                {if: $has_secret && $has_userkey}
+                                    <span class="label label-success"><i class="fa fa-check"></i> Terisi di Database</span>
+                                {else}
+                                    <span class="label label-warning"><i class="fa fa-exclamation-triangle"></i> Belum Lengkap</span>
+                                {/if}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th style="background:#fcfcfc;">Pemetaan Poliklinik (HFIS)</th>
+                            <td>
+                                <span class="badge" style="background:#5cb85c;">{?=$total_poli?} Poli</span> Terpetakan
+                                <a href="{?=url(ADMIN.'/jkn_mobile/mappingpoli')?}" class="btn btn-xs btn-default pull-right"><i class="fa fa-pencil"></i> Kelola</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th style="background:#fcfcfc;">Pemetaan Dokter DPJP</th>
+                            <td>
+                                <span class="badge" style="background:#5cb85c;">{?=$total_dokter?} Dokter</span> Terpetakan
+                                <a href="{?=url(ADMIN.'/jkn_mobile/mappingdokter')?}" class="btn btn-xs btn-default pull-right"><i class="fa fa-pencil"></i> Kelola</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th style="background:#fcfcfc;">Jadwal Dokter SIMRS</th>
+                            <td>
+                                <span class="badge" style="background:#337ab7;">{?=$total_jadwal?} Jadwal</span> di Database SIMRS
+                                <a href="{?=url(ADMIN.'/bridging_hfis/jadwaldokter')?}" class="btn btn-xs btn-default pull-right"><i class="fa fa-eye"></i> Lihat</a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="text-right">
+                    <a href="{?=url(ADMIN.'/jkn_mobile/settings')?}" class="btn btn-default">
+                        <i class="fa fa-cog"></i> Pengaturan Kredensial JKN Mobile
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-5">
+        <div class="panel panel-default" style="border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+            <div class="panel-heading" style="background:#f8fafc; font-weight:bold;">
+                <i class="fa fa-wifi text-success"></i> Tes Koneksi Langsung (Live Ping)
+            </div>
+            <div class="panel-body text-center" style="padding: 25px 20px;">
+                <p class="text-muted" style="font-size:13px; margin-bottom:20px;">
+                    Uji apakah server mLITE dapat berkomunikasi dengan API BPJS Antrean & HFIS serta memeriksa apakah tanda tangan kredensial (ConsID/SecretKey) diterima oleh server BPJS.
+                </p>
+
+                <button type="button" class="btn btn-primary btn-lg btn-block" id="btnPing" onclick="testPingBPJS()">
+                    <i class="fa fa-refresh"></i> Uji Koneksi ke BPJS Sekarang
+                </button>
+
+                <div id="pingResult" style="margin-top:20px; text-align:left; display:none;"></div>
+            </div>
         </div>
     </div>
 </div>
+
+<script>
+function testPingBPJS() {
+    var btn = document.getElementById('btnPing');
+    var resultDiv = document.getElementById('pingResult');
+    
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Menghubungi Server BPJS...';
+    resultDiv.style.display = 'block';
+    resultDiv.innerHTML = '<div class="alert alert-info" style="margin-bottom:0;"><i class="fa fa-spinner fa-spin"></i> Sedang mengirim tanda tangan HMAC-SHA256 ke BPJS...</div>';
+
+    fetch('{?=url(ADMIN."/bridging_hfis/pinghfis")?}', {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa fa-refresh"></i> Uji Koneksi Ulang';
+
+        if (data.code == 200) {
+            resultDiv.innerHTML = '<div class="alert alert-success" style="margin-bottom:0;">' +
+                '<h4 style="margin-top:0;"><i class="fa fa-check-circle"></i> Koneksi Berhasil (Code 200 - OK)</h4>' +
+                '<p>SIMRS Anda <b>sudah ter-bridging aktif</b> dan terhubung lancar dengan server BPJS HFIS / Antrean.</p>' +
+                '</div>';
+        } else if (data.code == 401) {
+            resultDiv.innerHTML = '<div class="alert alert-danger" style="margin-bottom:0;">' +
+                '<h4 style="margin-top:0;"><i class="fa fa-times-circle"></i> Gagal Otentikasi (Code 401)</h4>' +
+                '<p><b>Respon BPJS:</b> ' + data.message + '</p>' +
+                '<hr style="margin:8px 0;">' +
+                '<small><b>Penyebab:</b> Server BPJS menerima koneksi internet Anda, namun menolak kombinasi <code>ConsID</code>, <code>SecretKey</code>, atau <code>UserKey</code>. Silakan sesuaikan di menu <b>Pengaturan JKN Mobile</b> sesuai data aktif dari BPJS.</small>' +
+                '</div>';
+        } else {
+            resultDiv.innerHTML = '<div class="alert alert-warning" style="margin-bottom:0;">' +
+                '<h4 style="margin-top:0;"><i class="fa fa-exclamation-triangle"></i> Respon BPJS: Kode ' + data.code + '</h4>' +
+                '<p>' + data.message + '</p>' +
+                '</div>';
+        }
+    })
+    .catch(function(err) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa fa-refresh"></i> Uji Koneksi Ulang';
+        resultDiv.innerHTML = '<div class="alert alert-danger" style="margin-bottom:0;">' +
+            '<h4 style="margin-top:0;"><i class="fa fa-plug"></i> Gagal Melakukan Koneksi</h4>' +
+            '<p>Tidak dapat mengirim permintaan ke server atau jaringan terputus: ' + err.message + '</p>' +
+            '</div>';
+    });
+}
+</script>

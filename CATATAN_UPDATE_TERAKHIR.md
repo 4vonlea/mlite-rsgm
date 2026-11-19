@@ -71,6 +71,22 @@ Karena file-file di bawah ini **sudah berhasil di-commit (`git commit`) dan di-p
 
 ---
 
+### 5. Perbaikan Menyeluruh & Diagnostik Modul Bridging HFIS BPJS (`/admin/bridging_hfis`)
+* **File yang Diubah:**
+  - `plugins/bridging_hfis/Admin.php`
+  - `plugins/bridging_hfis/js/admin/scripts.js`
+  - `plugins/bridging_hfis/view/admin/manage.html`
+  - `plugins/bridging_hfis/view/admin/jadwal.hfis.html`
+  - `plugins/bridging_hfis/view/admin/update.hfis.html`
+  - `plugins/bridging_hfis/view/admin/jadwal.dokter.html`
+* **Rangkuman Perbaikan:**
+  - **Halaman Manage (`/admin/bridging_hfis/manage`)**: Menambahkan panel diagnostik bridging real-time yang menampilkan URL endpoint BPJS, ConsID, status kelengkapan kunci, total pemetaan dokter & poli, serta tombol **Live Ping / Uji Koneksi BPJS** instan dengan diagnosa kode balasan BPJS (200 OK / 401 Unauthorized / dll).
+  - **Submenu Bridging Lihat HFIS (`/admin/bridging_hfis/lihathfis`)**: Memperbaiki dropdown Poliklinik yang sebelumnya kosong melompong (karena query hanya mengambil kode tanpa nama poli), mengaktifkan CSS & JS header, default tanggal hari ini, loading spinner, tabel data dokter yang rapi, dan alert informatif transparan jika BPJS merespon error otentikasi.
+  - **Submenu Bridging Update HFIS (`/admin/bridging_hfis/updatehfis`)**: Memperbaiki nama poliklinik dan dokter di dropdown, memperbaiki grid form input jadwal (Senin-Sabtu pagi & sore), menambahkan validasi hari, tombol berstatus loading, notifikasi alert respons BPJS langsung di halaman, serta perbaikan penyimpanan otomatis ke basis data tabel `jadwal` SIMRS dengan fallback mapping poliklinik.
+  - **Submenu Jadwal Dokter SIMRS (`/admin/bridging_hfis/jadwaldokter`)**: Memperbaiki bug fatal di mana sistem sebelumnya meng-query tabel fiktif `jadwal_dokter` (yang tidak ada di Khanza/mLITE) sehingga selalu gagal/kosong. Dialihkan ke tabel riil `jadwal` dengan filter Poli, Dokter, dan Hari Kerja serta tampilan tabel jadwal yang rapi.
+
+---
+
 ## 💻 Langkah Saat Jaringan Server Sudah Normal Kembali
 
 Jika gangguan koneksi pada server RSGM (`192.168.1.77`) sudah selesai, Anda hanya perlu menjalankan satu perintah berikut di terminal server:
