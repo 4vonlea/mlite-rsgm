@@ -1525,6 +1525,32 @@ class Admin extends AdminModule
         }
       }
 
+      // Pastikan task 1-7 yang ada di SIMRS otomatis tersimpan di database jika belum ada
+      $task_resolved = $this->_resolveTaskTimes(
+          $reg_periksa['no_rawat'] ?? '',
+          $reg_periksa['no_rkm_medis'] ?? '',
+          $mlite_antrian_referensi['tanggal_periksa'],
+          $kode_booking,
+          $nomor_referensi,
+          []
+      );
+      foreach ($task_resolved as $tid => $rData) {
+          if (!empty($rData['waktu'])) {
+              $waktu_millis = is_numeric($rData['waktu']) ? (int)$rData['waktu'] : strtotime($rData['waktu']) * 1000;
+              $exist = $this->db('mlite_antrian_referensi_taskid')->where('nomor_referensi', $kode_booking)->where('taskid', $tid)->oneArray();
+              if (!$exist) {
+                  $this->db('mlite_antrian_referensi_taskid')->save([
+                      'tanggal_periksa' => $mlite_antrian_referensi['tanggal_periksa'],
+                      'nomor_referensi' => $kode_booking,
+                      'taskid' => (int)$tid,
+                      'waktu' => $waktu_millis,
+                      'status' => 'Belum',
+                      'keterangan' => $rData['source'] ?? ''
+                  ]);
+              }
+          }
+      }
+
       $taskid1 = $this->db('mlite_antrian_referensi_taskid')->where('nomor_referensi', $kode_booking)->where('taskid', '1')->where('status','Belum')->oneArray();
       $taskid2 = $this->db('mlite_antrian_referensi_taskid')->where('nomor_referensi', $kode_booking)->where('taskid', '2')->where('status','Belum')->oneArray();
       $taskid3 = $this->db('mlite_antrian_referensi_taskid')->where('nomor_referensi', $kode_booking)->where('taskid', '3')->where('status','Belum')->oneArray();
@@ -2680,6 +2706,375 @@ class Admin extends AdminModule
             'status' => 'success',
             'data' => $detail,
             'tasks' => $formatted_tasks
+        ]);
+        exit();
+    }
+
+    public function syncSingleBooking($kodebooking, $versi = 'v3')
+    {
+        $kodebooking = trim($kodebooking);
+        $versi = strtolower(trim($versi));
+        if (empty($kodebooking)) {
+            return ['status' => 'error', 'message' => 'Kode booking tidak boleh kosong.'];
+        }
+
+        if (empty($this->consid) || empty($this->secretkey) || empty($this->bpjsurl)) {
+            return ['status' => 'error', 'message' => 'Kredensial BPJS Antrean (ConsID / SecretKey / URL) belum diatur di Pengaturan JKN Mobile.'];
+        }
+
+        $antrol = $this->db('mlite_antrian_referensi')->where('kodebooking', $kodebooking)->oneArray();
+        if (!$antrol) {
+            $antrol = $this->db('mlite_antrian_referensi')->where('nomor_referensi', $kodebooking)->oneArray();
+        }
+
+        $no_rawat = '';
+        $no_rkm_medis = $antrol['no_rkm_medis'] ?? '';
+        $tgl_periksa = $antrol['tanggal_periksa'] ?? date('Y-m-d');
+
+        if (!empty($no_rkm_medis)) {
+            $reg = $this->db('reg_periksa')->where('no_rkm_medis', $no_rkm_medis)->where('tgl_registrasi', $tgl_periksa)->oneArray();
+            if ($reg) {
+                $no_rawat = $reg['no_rawat'];
+            }
+        }
+
+        if (empty($no_rawat) && !empty($no_rkm_medis)) {
+            $br = $this->db('booking_registrasi')->where('tanggal_periksa', $tgl_periksa)->where('no_rkm_medis', $no_rkm_medis)->oneArray();
+            if ($br) {
+                $reg = $this->db('reg_periksa')->where('no_rkm_medis', $no_rkm_medis)->where('tgl_registrasi', $tgl_periksa)->oneArray();
+                if ($reg) $no_rawat = $reg['no_rawat'];
+            }
+        }
+
+        // Ambil task yang sudah tercatat di database lokal
+        $task_stmt = $this->db()->pdo()->prepare("SELECT nomor_referensi, taskid, waktu, status, keterangan FROM mlite_antrian_referensi_taskid WHERE nomor_referensi = ?");
+        $task_stmt->execute([$kodebooking]);
+        $existing_tasks = [];
+        while ($r = $task_stmt->fetch(\PDO::FETCH_ASSOC)) {
+            $existing_tasks[(string)$r['taskid']] = $r;
+        }
+
+        // Resolve semua waktu dari operasional SIMRS (loket, berkas RM, periksa dokter, resep apotek)
+        $resolved = $this->_resolveTaskTimes(
+            $no_rawat,
+            $no_rkm_medis,
+            $tgl_periksa,
+            $kodebooking,
+            $antrol['nomor_referensi'] ?? '',
+            [$kodebooking => $existing_tasks]
+        );
+
+        // Pastikan waktu yang ditemukan di SIMRS tersimpan di database lokal
+        foreach ($resolved as $tid => $rData) {
+            if (!empty($rData['waktu'])) {
+                $waktu_millis = is_numeric($rData['waktu']) ? (int)$rData['waktu'] : strtotime($rData['waktu']) * 1000;
+                if (!isset($existing_tasks[$tid])) {
+                    $this->db('mlite_antrian_referensi_taskid')->save([
+                        'tanggal_periksa' => $tgl_periksa,
+                        'nomor_referensi' => $kodebooking,
+                        'taskid' => (int)$tid,
+                        'waktu' => $waktu_millis,
+                        'status' => 'Belum',
+                        'keterangan' => $rData['source'] ?? ''
+                    ]);
+                    $existing_tasks[$tid] = [
+                        'nomor_referensi' => $kodebooking,
+                        'taskid' => (int)$tid,
+                        'waktu' => $waktu_millis,
+                        'status' => 'Belum',
+                        'keterangan' => $rData['source'] ?? ''
+                    ];
+                }
+            }
+        }
+
+        // Tentukan jenis resep jika ada
+        $jenisresep = 'Non racikan';
+        if (!empty($no_rawat)) {
+            $resep = $this->db('resep_obat')->where('no_rawat', $no_rawat)->oneArray();
+            if ($resep) {
+                $racikan = $this->db('resep_dokter_racikan')->where('no_resep', $resep['no_resep'])->oneArray();
+                if ($racikan) $jenisresep = 'Racikan';
+            }
+        }
+
+        // Task yang akan dikirim:
+        // v2: 1, 2, 3, 4, 5
+        // v3: 1, 2, 3, 4, 5, 6, 7
+        $tasks_to_send = ($versi === 'v3') ? [1, 2, 3, 4, 5, 6, 7] : [1, 2, 3, 4, 5];
+
+        // Pengaman Kronologis: Pastikan waktu Task N >= Task (N-1) + 60s
+        $last_valid_millis = null;
+        foreach ($tasks_to_send as $tid) {
+            $stid = (string)$tid;
+            if (isset($existing_tasks[$stid]) && !empty($existing_tasks[$stid]['waktu'])) {
+                $cur_millis = is_numeric($existing_tasks[$stid]['waktu']) ? (int)$existing_tasks[$stid]['waktu'] : strtotime($existing_tasks[$stid]['waktu']) * 1000;
+                if ($last_valid_millis !== null && $cur_millis <= $last_valid_millis) {
+                    $cur_millis = $last_valid_millis + 60000; // geser 1 menit ke depan
+                    $existing_tasks[$stid]['waktu'] = $cur_millis;
+                    $this->db('mlite_antrian_referensi_taskid')
+                        ->where('nomor_referensi', $kodebooking)
+                        ->where('taskid', (int)$tid)
+                        ->save(['waktu' => $cur_millis]);
+                }
+                $last_valid_millis = $cur_millis;
+            }
+        }
+
+        $results = [];
+        $success_count = 0;
+        $fail_count = 0;
+        $skip_count = 0;
+
+        $url = $this->bpjsurl . 'antrean/updatewaktu';
+
+        foreach ($tasks_to_send as $tid) {
+            $stid = (string)$tid;
+            $tData = $existing_tasks[$stid] ?? null;
+
+            if (!$tData || empty($tData['waktu'])) {
+                $results[] = [
+                    'taskid' => $tid,
+                    'status' => 'Dilewati',
+                    'message' => 'Waktu tahapan belum tercatat di SIMRS'
+                ];
+                $skip_count++;
+                // Berhenti mengirim task berikutnya jika tahapan saat ini belum ada
+                break;
+            }
+
+            // Jika status sudah 'Sudah', tidak perlu dikirim ulang kecuali gagal sebelumnya
+            if (($tData['status'] ?? '') === 'Sudah') {
+                $results[] = [
+                    'taskid' => $tid,
+                    'status' => 'Sudah',
+                    'message' => 'Sudah tersinkron ke BPJS (' . ($tData['keterangan'] ?? 'Sukses') . ')'
+                ];
+                $success_count++;
+                continue;
+            }
+
+            $waktu_millis = is_numeric($tData['waktu']) ? (int)$tData['waktu'] : strtotime($tData['waktu']) * 1000;
+
+            $payload = [
+                'kodebooking' => $kodebooking,
+                'taskid' => (int)$tid,
+                'waktu' => (int)$waktu_millis
+            ];
+
+            if ($tid == 5 && $versi === 'v3') {
+                $payload['jenisresep'] = $jenisresep;
+            }
+
+            $json_payload = json_encode($payload);
+            $output = BpjsService::post($url, $json_payload, $this->consid, $this->secretkey, $this->user_key, NULL);
+            $res = $this->_decodeBpjsResponse($output);
+
+            $code = $res['metadata']['code'] ?? 500;
+            $msg = $res['metadata']['message'] ?? 'Tidak ada balasan dari server BPJS';
+
+            // BPJS code 200 = Sukses, 208 = Sudah pernah di-update / waktu sudah ada
+            if ($code == 200 || $code == 208) {
+                $this->db('mlite_antrian_referensi_taskid')
+                    ->where('nomor_referensi', $kodebooking)
+                    ->where('taskid', $tid)
+                    ->save([
+                        'status' => 'Sudah',
+                        'keterangan' => $msg
+                    ]);
+                $results[] = [
+                    'taskid' => $tid,
+                    'status' => 'Sudah',
+                    'code' => $code,
+                    'message' => $msg
+                ];
+                $success_count++;
+            } else {
+                $this->db('mlite_antrian_referensi_taskid')
+                    ->where('nomor_referensi', $kodebooking)
+                    ->where('taskid', $tid)
+                    ->save([
+                        'status' => 'Gagal',
+                        'keterangan' => $code . ' : ' . $msg
+                    ]);
+                $results[] = [
+                    'taskid' => $tid,
+                    'status' => 'Gagal',
+                    'code' => $code,
+                    'message' => $msg
+                ];
+                $fail_count++;
+                // Berhenti mengirim task berikutnya jika task saat ini gagal
+                break;
+            }
+        }
+
+        return [
+            'status' => 'success',
+            'kodebooking' => $kodebooking,
+            'message' => "Task ID: {$success_count} Berhasil, {$fail_count} Gagal, {$skip_count} Belum Selesai.",
+            'summary' => [
+                'success' => $success_count,
+                'failed' => $fail_count,
+                'skipped' => $skip_count
+            ],
+            'results' => $results
+        ];
+    }
+
+    public function postKirimTaskIDAjax()
+    {
+        header('Content-Type: application/json');
+        $kodebooking = trim($_POST['kodebooking'] ?? '');
+        $versi = strtolower(trim($_POST['versi'] ?? 'v2')); // 'v2' (task 1-5) or 'v3' (task 1-7)
+        $res = $this->syncSingleBooking($kodebooking, $versi);
+        echo json_encode($res);
+        exit();
+    }
+
+    public function getSyncTaskQueueAjax()
+    {
+        header('Content-Type: application/json');
+        $tanggal = trim($_GET['tanggal'] ?? date('Y-m-d'));
+        if (empty($tanggal)) {
+            $tanggal = date('Y-m-d');
+        }
+
+        $bookings = $this->db('mlite_antrian_referensi')
+            ->where('tanggal_periksa', $tanggal)
+            ->toArray();
+
+        if (empty($bookings)) {
+            echo json_encode([
+                'status' => 'success',
+                'total' => 0,
+                'queue' => [],
+                'message' => "Tidak ada data antrean pada tanggal {$tanggal}."
+            ]);
+            exit();
+        }
+
+        $task_stmt = $this->db()->pdo()->prepare("SELECT nomor_referensi, taskid, status FROM mlite_antrian_referensi_taskid WHERE tanggal_periksa = ?");
+        $task_stmt->execute([$tanggal]);
+        $task_summary = [];
+        while ($row = $task_stmt->fetch(\PDO::FETCH_ASSOC)) {
+            $ref = $row['nomor_referensi'];
+            if (!isset($task_summary[$ref])) {
+                $task_summary[$ref] = ['total' => 0, 'sudah' => 0, 'belum' => 0];
+            }
+            $task_summary[$ref]['total']++;
+            if ($row['status'] === 'Sudah') {
+                $task_summary[$ref]['sudah']++;
+            } else {
+                $task_summary[$ref]['belum']++;
+            }
+        }
+
+        // Cache nama pasien
+        $rm_list = array_filter(array_unique(array_column($bookings, 'no_rkm_medis')));
+        $pasien_map = [];
+        if (!empty($rm_list)) {
+            $in_clause = implode(',', array_fill(0, count($rm_list), '?'));
+            $p_stmt = $this->db()->pdo()->prepare("SELECT no_rkm_medis, nm_pasien FROM pasien WHERE no_rkm_medis IN ($in_clause)");
+            $p_stmt->execute(array_values($rm_list));
+            while ($p = $p_stmt->fetch(\PDO::FETCH_ASSOC)) {
+                $pasien_map[$p['no_rkm_medis']] = $p['nm_pasien'];
+            }
+        }
+
+        $queue = [];
+        foreach ($bookings as $b) {
+            $kb = $b['kodebooking'] ?: $b['nomor_referensi'];
+            if (empty($kb)) continue;
+
+            $status_b = $b['status'] ?? '';
+            if (stripos($status_b, 'Batal') !== false) {
+                continue;
+            }
+
+            $ts = $task_summary[$kb] ?? ($task_summary[$b['nomor_referensi']] ?? ['total' => 0, 'sudah' => 0, 'belum' => 0]);
+
+            // Jika sudah ada minimal 5 task dan tidak ada yang berstatus belum/gagal, lewati
+            if ($ts['total'] >= 5 && $ts['belum'] == 0 && $ts['sudah'] >= 5) {
+                continue;
+            }
+
+            $nm_pasien = $pasien_map[$b['no_rkm_medis']] ?? ($b['nomor_kartu'] ?: '-');
+
+            $queue[] = [
+                'kodebooking' => $kb,
+                'no_rkm_medis' => $b['no_rkm_medis'],
+                'nm_pasien' => $nm_pasien,
+                'tanggal_periksa' => $b['tanggal_periksa'],
+                'task_sudah' => $ts['sudah'],
+                'task_belum' => $ts['belum']
+            ];
+        }
+
+        echo json_encode([
+            'status' => 'success',
+            'total' => count($queue),
+            'queue' => $queue,
+            'message' => "Ditemukan " . count($queue) . " antrean yang perlu disinkronkan."
+        ]);
+        exit();
+    }
+
+    public function anyAutoSyncTaskID()
+    {
+        header('Content-Type: application/json');
+        $tanggal = trim($_REQUEST['tanggal'] ?? ($_REQUEST['tgl'] ?? date('Y-m-d')));
+        $versi = trim($_REQUEST['versi'] ?? 'v3');
+        $limit = isset($_REQUEST['limit']) ? (int)$_REQUEST['limit'] : 50;
+
+        $bookings = $this->db('mlite_antrian_referensi')
+            ->where('tanggal_periksa', $tanggal)
+            ->toArray();
+
+        $processed = 0;
+        $total_success_tasks = 0;
+        $total_failed_tasks = 0;
+        $results = [];
+
+        foreach ($bookings as $b) {
+            $kb = $b['kodebooking'] ?: $b['nomor_referensi'];
+            if (empty($kb)) continue;
+            if (stripos($b['status'] ?? '', 'Batal') !== false) continue;
+
+            $pending = $this->db('mlite_antrian_referensi_taskid')
+                ->where('nomor_referensi', $kb)
+                ->where('status', 'Belum')
+                ->count();
+            $count_total = $this->db('mlite_antrian_referensi_taskid')
+                ->where('nomor_referensi', $kb)
+                ->count();
+
+            if ($count_total >= 5 && $pending == 0) {
+                continue;
+            }
+
+            $res = $this->syncSingleBooking($kb, $versi);
+            $processed++;
+            $total_success_tasks += $res['summary']['success'] ?? 0;
+            $total_failed_tasks += $res['summary']['failed'] ?? 0;
+            $results[] = [
+                'kodebooking' => $kb,
+                'no_rkm_medis' => $b['no_rkm_medis'],
+                'summary' => $res['summary'] ?? []
+            ];
+
+            if ($processed >= $limit) {
+                break;
+            }
+        }
+
+        echo json_encode([
+            'status' => 'success',
+            'tanggal' => $tanggal,
+            'processed_patients' => $processed,
+            'total_success_tasks' => $total_success_tasks,
+            'total_failed_tasks' => $total_failed_tasks,
+            'details' => $results
         ]);
         exit();
     }

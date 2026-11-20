@@ -72,7 +72,10 @@
           Monitoring pendaftaran antrean faskes dari aplikasi Mobile JKN, status kedatangan / check-in pasien di SIMRS, dan rekam Task ID 1-7 BPJS.
         </p>
       </div>
-      <div>
+      <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+        <button type="button" class="btn btn-warning btn-sm" onclick="bukaModalSyncMassal()" title="Sinkronkan seluruh Task ID antrean pasien hari ini ke server BPJS Antrean secara otomatis">
+          <i class="fa fa-refresh"></i> ⚡ Sinkronkan Semua Task ID Hari Ini
+        </button>
         <a href="{?=url([ADMIN, 'jkn_mobile', 'bookingantrol'])?}&export=csv{if: !empty($tgl_awal)}&tgl_awal={?=$tgl_awal?}{/if}{if: !empty($tgl_akhir)}&tgl_akhir={?=$tgl_akhir?}{/if}{if: $status_filter != 'Semua'}&status={?=$status_filter?}{/if}{if: $kd_poli_filter != 'Semua'}&kd_poli={?=$kd_poli_filter?}{/if}" 
            class="btn btn-success btn-sm" title="Unduh Data yang Sedang Difilter ke Format CSV/Excel">
           <i class="fa fa-file-excel-o"></i> Unduh Excel / CSV
@@ -441,6 +444,103 @@
   </div>
 </div>
 
+<!-- Modal Sinkronisasi Massal Task ID -->
+<div class="modal fade" id="modalSyncMassal" tabindex="-1" role="dialog" data-backdrop="static">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content" style="border-radius: 8px; overflow: hidden;">
+      <div class="modal-header" style="background: #1e293b; color: #fff; padding: 15px 20px;">
+        <button type="button" class="close" data-dismiss="modal" style="color: #fff; opacity: 0.8;" id="btnCloseSyncX">&times;</button>
+        <h4 class="modal-title" style="font-weight: 700; display:flex; align-items:center; gap:8px;">
+          <i class="fa fa-cloud-upload text-warning"></i> Sinkronisasi Massal Task ID BPJS Antrean
+        </h4>
+      </div>
+      <div class="modal-body" style="padding: 20px;">
+        <!-- Option Controls -->
+        <div class="well well-sm" style="background:#f8fafc; border:1px solid #e2e8f0; margin-bottom:15px;" id="syncOptionsPanel">
+          <div class="row">
+            <div class="col-sm-5">
+              <label style="font-size:12px;"><strong>Tanggal Antrean yang Disinkronkan:</strong></label>
+              <input type="date" id="syncTanggalInput" class="form-control input-sm" value="{?=$tgl_awal ?: date('Y-m-d')?}">
+            </div>
+            <div class="col-sm-4">
+              <label style="font-size:12px;"><strong>Versi Pengiriman:</strong></label>
+              <select id="syncVersiInput" class="form-control input-sm">
+                <option value="v3" selected>Task 1-7 (Lengkap Termasuk Farmasi)</option>
+                <option value="v2">Task 1-5 (Pelayanan Poli Rawat Jalan)</option>
+              </select>
+            </div>
+            <div class="col-sm-3" style="padding-top:22px;">
+              <button type="button" class="btn btn-primary btn-sm btn-block" id="btnStartBulkSync" onclick="mulaiProsesSyncMassal()">
+                <i class="fa fa-play"></i> Mulai Sinkronisasi
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Progress Area -->
+        <div id="syncProgressArea" style="display:none; margin-bottom:15px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+            <span style="font-size:12px; font-weight:600; color:#334155;" id="syncProgressStatusText">Menyiapkan antrean...</span>
+            <span style="font-size:12px; font-weight:700; color:#0284c7;" id="syncProgressPercent">0%</span>
+          </div>
+          <div class="progress" style="height:18px; margin-bottom:12px; border-radius:4px;">
+            <div id="syncProgressBar" class="progress-bar progress-bar-striped active" role="progressbar" style="width: 0%; font-size:11px; line-height:18px;">
+              0%
+            </div>
+          </div>
+
+          <!-- Counter Cards -->
+          <div class="row" style="margin-bottom:12px;">
+            <div class="col-xs-3 text-center">
+              <div style="background:#f1f5f9; padding:8px; border-radius:4px; border:1px solid #e2e8f0;">
+                <div style="font-size:10px; color:#64748b; font-weight:bold; text-transform:uppercase;">Total Antrean</div>
+                <div style="font-size:18px; font-weight:bold; color:#1e293b;" id="syncBadgeTotal">0</div>
+              </div>
+            </div>
+            <div class="col-xs-3 text-center">
+              <div style="background:#f0fdf4; padding:8px; border-radius:4px; border:1px solid #bbf7d0;">
+                <div style="font-size:10px; color:#166534; font-weight:bold; text-transform:uppercase;">Task Berhasil</div>
+                <div style="font-size:18px; font-weight:bold; color:#15803d;" id="syncBadgeSuccess">0</div>
+              </div>
+            </div>
+            <div class="col-xs-3 text-center">
+              <div style="background:#eff6ff; padding:8px; border-radius:4px; border:1px solid #bfdbfe;">
+                <div style="font-size:10px; color:#1e40af; font-weight:bold; text-transform:uppercase;">Dilewati</div>
+                <div style="font-size:18px; font-weight:bold; color:#2563eb;" id="syncBadgeSkipped">0</div>
+              </div>
+            </div>
+            <div class="col-xs-3 text-center">
+              <div style="background:#fef2f2; padding:8px; border-radius:4px; border:1px solid #fecaca;">
+                <div style="font-size:10px; color:#991b1b; font-weight:bold; text-transform:uppercase;">Gagal</div>
+                <div style="font-size:18px; font-weight:bold; color:#dc2626;" id="syncBadgeFailed">0</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Terminal Log Box -->
+        <label style="font-size:12px; color:#475569;"><strong>Log Aktivitas Sinkronisasi:</strong></label>
+        <div id="syncLogTerminal" style="background:#0f172a; color:#f8fafc; font-family:Consolas, Monaco, monospace; font-size:11px; padding:12px; border-radius:6px; height:200px; overflow-y:auto; line-height:1.6; border:1px solid #334155;">
+          <span style="color:#94a3b8;">Klik tombol "Mulai Sinkronisasi" untuk menjalankan proses sinkronisasi massal seluruh Task ID antrean...</span>
+        </div>
+      </div>
+      <div class="modal-footer" style="background:#f8fafc; display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <a href="{?=url(['jknmobile', 'antrian', 'updatewaktu'])?}" target="_blank" class="btn btn-info btn-xs" title="Buka Background Auto-Sync Engine di Tab Terpisah">
+            <i class="fa fa-external-link"></i> Buka Background Auto-Sync Tab
+          </a>
+        </div>
+        <div>
+          <button type="button" class="btn btn-default btn-sm" data-dismiss="modal" id="btnCloseSyncFooter">Tutup</button>
+          <button type="button" class="btn btn-success btn-sm" id="btnReloadAfterSync" style="display:none;" onclick="location.reload();">
+            <i class="fa fa-refresh"></i> Selesai &amp; Perbarui Tampilan
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 $(document).ready(function() {
   $('[data-toggle="tooltip"]').tooltip();
@@ -537,8 +637,20 @@ function bukaDetailAntrol(kodebooking) {
       '</div>';
 
       // Tabel Task ID
+      var btnKirimDisabled = (d.status_final === 'Batal') ? 'disabled' : '';
       html += '<div class="panel panel-default" style="border-radius:4px; margin-bottom:0;">' +
-        '<div class="panel-heading" style="background:#f8fafc; font-weight:600;"><i class="fa fa-clock-o text-success"></i> Riwayat & Status Task ID BPJS Antrean</div>' +
+        '<div class="panel-heading" style="background:#f8fafc; font-weight:600; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">' +
+          '<div><i class="fa fa-clock-o text-success"></i> Riwayat & Status Task ID BPJS Antrean</div>' +
+          '<div class="btn-group btn-group-xs" id="taskActionBtns">' +
+            '<button type="button" class="btn btn-success btn-xs" ' + btnKirimDisabled + ' onclick="kirimTaskIDModal(\'' + d.kodebooking + '\', \'v2\')" id="btnKirimV2" title="Kirim/Sinkronkan Task 1 s/d 5 (Admisi hingga Selesai Pelayanan Dokter Poli)">' +
+              '<i class="fa fa-paper-plane"></i> Kirim Task 1-5 (Poli) ke BPJS' +
+            '</button>' +
+            '<button type="button" class="btn btn-primary btn-xs" ' + btnKirimDisabled + ' onclick="kirimTaskIDModal(\'' + d.kodebooking + '\', \'v3\')" id="btnKirimV3" title="Kirim/Sinkronkan Task 1 s/d 7 (Lengkap Termasuk Farmasi/Obat)">' +
+              '<i class="fa fa-send"></i> Kirim Task 1-7 (Lengkap)' +
+            '</button>' +
+          '</div>' +
+        '</div>' +
+        '<div id="taskAlertArea" style="padding:0 15px; margin-top:10px;"></div>' +
         '<div class="panel-body" style="padding:0;">' +
           '<div class="table-responsive">' +
             '<table class="table table-bordered table-striped" style="margin-bottom:0; font-size:12px;">' +
@@ -657,6 +769,211 @@ function bukaModalTaskID(noRawat) {
       '<div class="modal-body"><div class="alert alert-danger">Gagal memuat form Task ID. Pastikan server aktif.</div></div>' +
       '<div class="modal-footer"><button type="button" class="btn btn-default" data-dismiss="modal">Tutup</button></div>'
     );
+  });
+}
+
+// Kirim/Sinkronkan Task ID langsung dari Modal Detail Booking via AJAX
+function kirimTaskIDModal(kodebooking, versi) {
+  var btnV2 = $('#btnKirimV2');
+  var btnV3 = $('#btnKirimV3');
+  var alertArea = $('#taskAlertArea');
+
+  btnV2.prop('disabled', true);
+  btnV3.prop('disabled', true);
+  var activeBtn = (versi === 'v3') ? btnV3 : btnV2;
+  var origHtml = activeBtn.html();
+  activeBtn.html('<i class="fa fa-spinner fa-spin"></i> Menghubungi BPJS...');
+
+  alertArea.html('<div class="alert alert-info" style="margin-bottom:10px; font-size:12px; padding:8px 12px;"><i class="fa fa-spinner fa-spin"></i> Sedang mengirim data waktu Task ID ke server BPJS Antrean...</div>');
+
+  var url = "{?=url([ADMIN, 'jkn_mobile', 'kirimtaskidajax'])?}";
+  $.ajax({
+    url: url,
+    method: 'POST',
+    data: {
+      kodebooking: kodebooking,
+      versi: versi
+    },
+    dataType: 'json',
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest'
+    },
+    success: function(res) {
+      btnV2.prop('disabled', false);
+      btnV3.prop('disabled', false);
+      activeBtn.html(origHtml);
+
+      if (res.status === 'success') {
+        var msg = res.message;
+        var alertCls = (res.summary && res.summary.failed > 0) ? 'alert-warning' : 'alert-success';
+        var detailsHtml = '<ul style="margin:5px 0 0 15px; padding:0; font-size:11px;">';
+        if (res.results) {
+          res.results.forEach(function(r) {
+            var icon = (r.status === 'Sudah') ? '<i class="fa fa-check text-success"></i>' : ((r.status === 'Gagal') ? '<i class="fa fa-times text-danger"></i>' : '<i class="fa fa-clock-o text-muted"></i>');
+            detailsHtml += '<li><b>Task ' + r.taskid + '</b>: ' + icon + ' ' + (r.message || r.status) + '</li>';
+          });
+        }
+        detailsHtml += '</ul>';
+
+        alertArea.html('<div class="alert ' + alertCls + '" style="margin-bottom:10px; font-size:12px; padding:8px 12px;">' +
+          '<strong><i class="fa fa-check-circle"></i> ' + msg + '</strong>' + detailsHtml +
+        '</div>');
+
+        // Refresh rincian modal setelah jeda 1.2 detik agar status langsung terbarui
+        setTimeout(function() {
+          bukaDetailAntrol(kodebooking);
+        }, 1200);
+      } else {
+        alertArea.html('<div class="alert alert-danger" style="margin-bottom:10px; font-size:12px; padding:8px 12px;"><i class="fa fa-exclamation-triangle"></i> ' + (res.message || 'Gagal mengirim Task ID ke BPJS.') + '</div>');
+      }
+    },
+    error: function(xhr) {
+      btnV2.prop('disabled', false);
+      btnV3.prop('disabled', false);
+      activeBtn.html(origHtml);
+      alertArea.html('<div class="alert alert-danger" style="margin-bottom:10px; font-size:12px; padding:8px 12px;"><i class="fa fa-plug"></i> Gagal menghubungi server SIMRS. Pastikan koneksi server aktif.</div>');
+    }
+  });
+}
+
+// Buka Modal Sinkronisasi Massal
+function bukaModalSyncMassal() {
+  var tglAwal = $('#filter_tgl_awal').val() || new Date().toISOString().split('T')[0];
+  $('#syncTanggalInput').val(tglAwal);
+  $('#syncProgressArea').hide();
+  $('#syncOptionsPanel').show();
+  $('#btnStartBulkSync').prop('disabled', false).html('<i class="fa fa-play"></i> Mulai Sinkronisasi');
+  $('#btnCloseSyncX').show();
+  $('#btnCloseSyncFooter').show();
+  $('#btnReloadAfterSync').hide();
+  $('#syncLogTerminal').html('<span style="color:#94a3b8;">Klik tombol "Mulai Sinkronisasi" untuk menjalankan proses sinkronisasi massal seluruh Task ID antrean...</span>');
+  $('#modalSyncMassal').modal('show');
+}
+
+// Menjalankan proses sinkronisasi secara batch chunked
+function mulaiProsesSyncMassal() {
+  var tanggal = $('#syncTanggalInput').val();
+  var versi = $('#syncVersiInput').val();
+
+  if (!tanggal) {
+    alert('Silakan pilih tanggal antrean terlebih dahulu.');
+    return;
+  }
+
+  var logBox = $('#syncLogTerminal');
+  function addLog(msg, color) {
+    var c = color || '#f8fafc';
+    var time = new Date().toTimeString().split(' ')[0];
+    logBox.append('<div style="color:' + c + ';">[' + time + '] ' + msg + '</div>');
+    logBox.scrollTop(logBox[0].scrollHeight);
+  }
+
+  $('#btnStartBulkSync').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Memuat Antrean...');
+  $('#syncProgressArea').show();
+  $('#syncProgressStatusText').text('Mengambil daftar antrean yang perlu disinkronkan...');
+  $('#syncProgressBar').css('width', '0%').text('0%');
+  $('#syncProgressPercent').text('0%');
+
+  $('#syncBadgeTotal').text('0');
+  $('#syncBadgeSuccess').text('0');
+  $('#syncBadgeSkipped').text('0');
+  $('#syncBadgeFailed').text('0');
+
+  logBox.html('');
+  addLog('Mengambil daftar antrean tanggal ' + tanggal + ' dari server...', '#38bdf8');
+
+  var urlQueue = "{?=url([ADMIN, 'jkn_mobile', 'synctaskqueueajax'])?}&tanggal=" + encodeURIComponent(tanggal);
+
+  $.getJSON(urlQueue, function(res) {
+    if (res.status !== 'success') {
+      addLog('Gagal memuat antrean: ' + (res.message || 'Error tidak diketahui'), '#ef4444');
+      $('#btnStartBulkSync').prop('disabled', false).html('<i class="fa fa-play"></i> Mulai Sinkronisasi');
+      return;
+    }
+
+    var queue = res.queue || [];
+    var total = queue.length;
+    $('#syncBadgeTotal').text(total);
+
+    if (total === 0) {
+      addLog('Semua antrean tanggal ' + tanggal + ' sudah tersinkronkan lengkap ke BPJS! (0 antrean tertunda)', '#4ade80');
+      $('#syncProgressBar').css('width', '100%').text('100% Selesai').removeClass('active');
+      $('#syncProgressPercent').text('100%');
+      $('#syncProgressStatusText').text('Selesai! Seluruh antrean sudah tersinkronkan.');
+      $('#btnStartBulkSync').prop('disabled', false).html('<i class="fa fa-check"></i> Sudah Lengkap');
+      return;
+    }
+
+    addLog('Ditemukan ' + total + ' antrean yang akan disinkronkan ke BPJS Antrean (' + (versi === 'v3' ? 'Task 1-7' : 'Task 1-5') + ').', '#facc15');
+
+    var currentIdx = 0;
+    var totalSuccessTasks = 0;
+    var totalSkippedTasks = 0;
+    var totalFailedTasks = 0;
+
+    function processNext() {
+      if (currentIdx >= total) {
+        // Selesai seluruhnya
+        $('#syncProgressBar').css('width', '100%').text('100% Selesai').removeClass('active').addClass('progress-bar-success');
+        $('#syncProgressPercent').text('100%');
+        $('#syncProgressStatusText').html('<b class="text-success"><i class="fa fa-check-circle"></i> Sinkronisasi Massal Selesai!</b>');
+        addLog('=== PROSES SINKRONISASI SELESAI ===', '#38bdf8');
+        addLog('Hasil Akhir: ' + totalSuccessTasks + ' Task Berhasil, ' + totalSkippedTasks + ' Dilewati, ' + totalFailedTasks + ' Gagal.', '#4ade80');
+        $('#btnStartBulkSync').html('<i class="fa fa-check"></i> Selesai');
+        $('#btnReloadAfterSync').show();
+        return;
+      }
+
+      var item = queue[currentIdx];
+      var patientNum = currentIdx + 1;
+      var pct = Math.round((currentIdx / total) * 100);
+      $('#syncProgressBar').css('width', pct + '%').text(pct + '%');
+      $('#syncProgressPercent').text(pct + '%');
+      $('#syncProgressStatusText').text('Memproses ' + patientNum + ' dari ' + total + ': ' + item.nm_pasien + ' (' + item.kodebooking + ')');
+
+      var sendUrl = "{?=url([ADMIN, 'jkn_mobile', 'kirimtaskidajax'])?}";
+      $.ajax({
+        url: sendUrl,
+        method: 'POST',
+        data: {
+          kodebooking: item.kodebooking,
+          versi: versi
+        },
+        dataType: 'json',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        success: function(resp) {
+          var s = resp.summary ? resp.summary.success : 0;
+          var f = resp.summary ? resp.summary.failed : 0;
+          var sk = resp.summary ? resp.summary.skipped : 0;
+
+          totalSuccessTasks += s;
+          totalFailedTasks += f;
+          totalSkippedTasks += sk;
+
+          $('#syncBadgeSuccess').text(totalSuccessTasks);
+          $('#syncBadgeSkipped').text(totalSkippedTasks);
+          $('#syncBadgeFailed').text(totalFailedTasks);
+
+          var logColor = (f > 0) ? '#f87171' : ((s > 0) ? '#4ade80' : '#94a3b8');
+          addLog('[' + patientNum + '/' + total + '] ' + item.kodebooking + ' - ' + item.nm_pasien + ': ' + (resp.message || 'Selesai'), logColor);
+
+          currentIdx++;
+          setTimeout(processNext, 250);
+        },
+        error: function() {
+          totalFailedTasks++;
+          $('#syncBadgeFailed').text(totalFailedTasks);
+          addLog('[' + patientNum + '/' + total + '] ' + item.kodebooking + ' - ' + item.nm_pasien + ': Gagal menghubungi SIMRS/BPJS', '#ef4444');
+          currentIdx++;
+          setTimeout(processNext, 250);
+        }
+      });
+    }
+
+    processNext();
+  }).fail(function() {
+    addLog('Gagal menghubungi endpoint antrean SIMRS.', '#ef4444');
+    $('#btnStartBulkSync').prop('disabled', false).html('<i class="fa fa-play"></i> Coba Lagi');
   });
 }
 </script>
