@@ -1624,7 +1624,8 @@ class Admin extends AdminModule
           ->where('nomor_referensi', $kode_booking)
           ->where('taskid', 1)
           ->save([
-            'keterangan' => $json1['metadata']['code'].' : '.$json1['metadata']['message']
+            'status' => 'Gagal',
+            'keterangan' => ($json1['metadata']['code'] ?? '500').' : '.($json1['metadata']['message'] ?? 'Gagal')
           ]);
         }
         echo '<br>-------------------------------------<br><br>';
@@ -1659,7 +1660,8 @@ class Admin extends AdminModule
           ->where('nomor_referensi', $kode_booking)
           ->where('taskid', 2)
           ->save([
-            'keterangan' => $json2['metadata']['code'].' : '.$json2['metadata']['message']
+            'status' => 'Gagal',
+            'keterangan' => ($json2['metadata']['code'] ?? '500').' : '.($json2['metadata']['message'] ?? 'Gagal')
           ]);
         }
         echo '<br>-------------------------------------<br><br>';
@@ -1694,7 +1696,8 @@ class Admin extends AdminModule
           ->where('nomor_referensi', $kode_booking)
           ->where('taskid', 3)
           ->save([
-            'keterangan' => $json3['metadata']['code'].' : '.$json3['metadata']['message']
+            'status' => 'Gagal',
+            'keterangan' => ($json3['metadata']['code'] ?? '500').' : '.($json3['metadata']['message'] ?? 'Gagal')
           ]);
         }
         echo '<br>-------------------------------------<br><br>';
@@ -1729,7 +1732,8 @@ class Admin extends AdminModule
           ->where('nomor_referensi', $kode_booking)
           ->where('taskid', 4)
           ->save([
-            'keterangan' => $json4['metadata']['code'].' : '.$json4['metadata']['message']
+            'status' => 'Gagal',
+            'keterangan' => ($json4['metadata']['code'] ?? '500').' : '.($json4['metadata']['message'] ?? 'Gagal')
           ]);
         }
         echo '<br>-------------------------------------<br><br>';
@@ -1774,7 +1778,8 @@ class Admin extends AdminModule
           ->where('nomor_referensi', $kode_booking)
           ->where('taskid', 5)
           ->save([
-            'keterangan' => $json5['metadata']['code'].' : '.$json5['metadata']['message']
+            'status' => 'Gagal',
+            'keterangan' => ($json5['metadata']['code'] ?? '500').' : '.($json5['metadata']['message'] ?? 'Gagal')
           ]);
         }
         echo '<br>-------------------------------------<br><br>';
@@ -1809,7 +1814,8 @@ class Admin extends AdminModule
           ->where('nomor_referensi', $kode_booking)
           ->where('taskid', 6)
           ->save([
-            'keterangan' => $json6['metadata']['code'].' : '.$json6['metadata']['message']
+            'status' => 'Gagal',
+            'keterangan' => ($json6['metadata']['code'] ?? '500').' : '.($json6['metadata']['message'] ?? 'Gagal')
           ]);
         }
         echo '<br>-------------------------------------<br><br>';
@@ -1844,7 +1850,8 @@ class Admin extends AdminModule
           ->where('nomor_referensi', $kode_booking)
           ->where('taskid', 7)
           ->save([
-            'keterangan' => $json7['metadata']['code'].' : '.$json7['metadata']['message']
+            'status' => 'Gagal',
+            'keterangan' => ($json7['metadata']['code'] ?? '500').' : '.($json7['metadata']['message'] ?? 'Gagal')
           ]);
         }
         echo '<br>-------------------------------------<br><br>';
@@ -2671,6 +2678,11 @@ class Admin extends AdminModule
             $source_t = $t['source'] ?? '';
             $ket_t = $t['keterangan'] ?? '';
 
+            // Jika status 'Sudah' tapi keterangannya berisi error penolakan BPJS, tampilkan sebagai 'Gagal'
+            if ($status_t === 'Sudah' && preg_match('/(tidak boleh|lebih besar|belum ada|gagal|error|201\s*:|400\s*:|500\s*:)/i', $ket_t)) {
+                $status_t = 'Gagal';
+            }
+
             $formatted_tasks[] = [
                 'taskid' => $id,
                 'nama_task' => $nama_task,
@@ -2828,6 +2840,42 @@ class Admin extends AdminModule
 
         $url = $this->bpjsurl . 'antrean/updatewaktu';
 
+        // Helper Cascade Forward Waktu: dorong task-task sesudahnya jika <= waktu task saat ini
+        $cascadeForward = function($from_tid, $current_millis) use (&$existing_tasks, $kodebooking) {
+            $prev_m = $current_millis;
+            for ($k = $from_tid + 1; $k <= 7; $k++) {
+                $sk = (string)$k;
+                if (isset($existing_tasks[$sk]) && !empty($existing_tasks[$sk]['waktu'])) {
+                    $cur_k_millis = is_numeric($existing_tasks[$sk]['waktu']) ? (int)$existing_tasks[$sk]['waktu'] : strtotime($existing_tasks[$sk]['waktu']) * 1000;
+                    if ($cur_k_millis <= $prev_m) {
+                        $gap = ($k == 5) ? 300000 : (($k == 7) ? 180000 : 120000);
+                        $cur_k_millis = $prev_m + $gap;
+                        $existing_tasks[$sk]['waktu'] = $cur_k_millis;
+                        $this->db('mlite_antrian_referensi_taskid')
+                            ->where('nomor_referensi', $kodebooking)
+                            ->where('taskid', $k)
+                            ->save(['waktu' => $cur_k_millis]);
+                    }
+                    $prev_m = $cur_k_millis;
+                }
+            }
+        };
+
+        // Helper Kirim Task ke BPJS
+        $sendTaskBpjs = function($t_id, $m_millis) use ($url, $kodebooking, $versi, $jenisresep) {
+            $p = [
+                'kodebooking' => $kodebooking,
+                'taskid' => (int)$t_id,
+                'waktu' => (int)$m_millis
+            ];
+            if ($t_id == 5 && $versi === 'v3') {
+                $p['jenisresep'] = $jenisresep;
+            }
+            $payload_json = json_encode($p);
+            $out = BpjsService::post($url, $payload_json, $this->consid, $this->secretkey, $this->user_key, NULL);
+            return $this->_decodeBpjsResponse($out);
+        };
+
         foreach ($tasks_to_send as $tid) {
             $stid = (string)$tid;
             $tData = $existing_tasks[$stid] ?? null;
@@ -2843,35 +2891,177 @@ class Admin extends AdminModule
                 break;
             }
 
-            // Jika status sudah 'Sudah', tidak perlu dikirim ulang kecuali gagal sebelumnya
-            if (($tData['status'] ?? '') === 'Sudah') {
+            $ket_local = trim($tData['keterangan'] ?? '');
+            $is_bogus_sudah = preg_match('/(tidak boleh|lebih besar|belum ada|gagal|error|201\s*:|400\s*:|500\s*:)/i', $ket_local);
+            $is_truly_sudah = (($tData['status'] ?? '') === 'Sudah') && !$is_bogus_sudah;
+
+            // Jika benar-benar sudah sukses terkirim ke BPJS sebelumnya, lewati
+            if ($is_truly_sudah) {
                 $results[] = [
                     'taskid' => $tid,
                     'status' => 'Sudah',
-                    'message' => 'Sudah tersinkron ke BPJS (' . ($tData['keterangan'] ?? 'Sukses') . ')'
+                    'message' => 'Sudah tersinkron ke BPJS (' . ($ket_local ?: 'Sukses') . ')'
                 ];
                 $success_count++;
                 continue;
             }
 
-            $waktu_millis = is_numeric($tData['waktu']) ? (int)$tData['waktu'] : strtotime($tData['waktu']) * 1000;
-
-            $payload = [
-                'kodebooking' => $kodebooking,
-                'taskid' => (int)$tid,
-                'waktu' => (int)$waktu_millis
-            ];
-
-            if ($tid == 5 && $versi === 'v3') {
-                $payload['jenisresep'] = $jenisresep;
+            // Jika sebelumnya tercatat 'Sudah' palsu padahal keterangannya error, reset status lokal
+            if ($is_bogus_sudah && ($tData['status'] ?? '') === 'Sudah') {
+                $this->db('mlite_antrian_referensi_taskid')
+                    ->where('nomor_referensi', $kodebooking)
+                    ->where('taskid', $tid)
+                    ->save(['status' => 'Belum']);
+                $existing_tasks[$stid]['status'] = 'Belum';
             }
 
-            $json_payload = json_encode($payload);
-            $output = BpjsService::post($url, $json_payload, $this->consid, $this->secretkey, $this->user_key, NULL);
-            $res = $this->_decodeBpjsResponse($output);
+            $waktu_millis = is_numeric($tData['waktu']) ? (int)$tData['waktu'] : strtotime($tData['waktu']) * 1000;
 
+            // Kirim request ke BPJS
+            $res = $sendTaskBpjs($tid, $waktu_millis);
             $code = $res['metadata']['code'] ?? 500;
             $msg = $res['metadata']['message'] ?? 'Tidak ada balasan dari server BPJS';
+
+            // =========================================================================
+            // AUTO-HEALING ENGINE (Menangani ketidakselarasan waktu & kronologi BPJS)
+            // =========================================================================
+
+            // KASUS 1: Waktu Task sebelumnya di server BPJS lebih besar dari Task saat ini
+            // Contoh: "201 : Waktu TaskId=1 (2026-11-19 10:30:55 WIB) lebih besar dari pada TaskId=2 (2026-11-19 10:10:54 WIB)"
+            if (($code == 201 || $code == 400) && preg_match('/TaskId=(\d+)\s*\(([^)]+)\)\s*lebih besar/i', $msg, $m)) {
+                $ref_tid = (int)$m[1];
+                $ref_time_str = trim($m[2]);
+                $clean_time = trim(preg_replace('/\b(WIB|WITA|WIT)\b/i', '', $ref_time_str));
+                $bpjs_timestamp = strtotime($clean_time . ' +0700');
+
+                if ($bpjs_timestamp !== false && $bpjs_timestamp > 0) {
+                    $bpjs_millis = $bpjs_timestamp * 1000;
+                    $new_waktu_millis = ($bpjs_timestamp + 60) * 1000; // Majukan 1 menit setelah waktu BPJS
+
+                    // Selaraskan Task acuan BPJS di database lokal
+                    $this->db('mlite_antrian_referensi_taskid')
+                        ->where('nomor_referensi', $kodebooking)
+                        ->where('taskid', $ref_tid)
+                        ->save([
+                            'waktu' => $bpjs_millis,
+                            'status' => 'Sudah',
+                            'keterangan' => 'Sesuai Waktu Server BPJS'
+                        ]);
+                    if (isset($existing_tasks[(string)$ref_tid])) {
+                        $existing_tasks[(string)$ref_tid]['waktu'] = $bpjs_millis;
+                        $existing_tasks[(string)$ref_tid]['status'] = 'Sudah';
+                    }
+
+                    // Update waktu Task saat ini di database lokal
+                    $this->db('mlite_antrian_referensi_taskid')
+                        ->where('nomor_referensi', $kodebooking)
+                        ->where('taskid', $tid)
+                        ->save([
+                            'waktu' => $new_waktu_millis,
+                            'keterangan' => 'Diselaraskan setelah Task ' . $ref_tid . ' BPJS'
+                        ]);
+                    $existing_tasks[$stid]['waktu'] = $new_waktu_millis;
+
+                    // Cascade forward seluruh task berikutnya agar tidak ada bentrok waktu
+                    $cascadeForward($tid, $new_waktu_millis);
+
+                    // Retry kirim ulang task saat ini
+                    $retry_res = $sendTaskBpjs($tid, $new_waktu_millis);
+                    $retry_code = $retry_res['metadata']['code'] ?? 500;
+                    $retry_msg = $retry_res['metadata']['message'] ?? '';
+                    if ($retry_code == 200 || $retry_code == 208) {
+                        $code = $retry_code;
+                        $msg = $retry_msg . ' (Otomatis diselaraskan kronologis setelah Task ' . $ref_tid . ')';
+                        $res = $retry_res;
+                    }
+                }
+            }
+
+            // KASUS 2: Waktu tidak boleh kurang atau sama dengan waktu sebelumnya
+            // Contoh: "Waktu (2026-11-20 07:40:46 WIB) tidak boleh kurang atau sama dengan waktu sebelumnya"
+            if (($code == 201 || $code == 400) && preg_match('/Waktu\s*\(([^)]+)\)\s*tidak boleh kurang/i', $msg, $m2)) {
+                $ref_time_str = trim($m2[1]);
+                $clean_time = trim(preg_replace('/\b(WIB|WITA|WIT)\b/i', '', $ref_time_str));
+                $bpjs_timestamp = strtotime($clean_time . ' +0700');
+
+                if ($bpjs_timestamp !== false && $bpjs_timestamp > 0) {
+                    $new_waktu_millis = ($bpjs_timestamp + 120) * 1000; // Majukan 2 menit
+
+                    $this->db('mlite_antrian_referensi_taskid')
+                        ->where('nomor_referensi', $kodebooking)
+                        ->where('taskid', $tid)
+                        ->save([
+                            'waktu' => $new_waktu_millis,
+                            'keterangan' => 'Dimajukan otomatis (+2m) menghindari waktu kurang'
+                        ]);
+                    $existing_tasks[$stid]['waktu'] = $new_waktu_millis;
+
+                    // Cascade forward task sesudahnya
+                    $cascadeForward($tid, $new_waktu_millis);
+
+                    // Retry kirim
+                    $retry_res = $sendTaskBpjs($tid, $new_waktu_millis);
+                    $retry_code = $retry_res['metadata']['code'] ?? 500;
+                    $retry_msg = $retry_res['metadata']['message'] ?? '';
+                    if ($retry_code == 200 || $retry_code == 208) {
+                        $code = $retry_code;
+                        $msg = $retry_msg . ' (Otomatis diselaraskan kronologis)';
+                        $res = $retry_res;
+                    }
+                }
+            }
+
+            // KASUS 3: Task sebelumnya belum ada di server BPJS
+            // Contoh: "201 : Task=1 ada. TaskId=2 belum ada" atau "201 : TaskId=4 belum ada"
+            if (($code == 201 || $code == 400) && preg_match('/TaskId=(\d+)\s*belum ada/i', $msg, $m3)) {
+                $missing_tid = (int)$m3[1];
+                if ($missing_tid < $tid && isset($existing_tasks[(string)$missing_tid])) {
+                    $missing_st = (string)$missing_tid;
+                    $m_time = $existing_tasks[$missing_st]['waktu'] ?? 0;
+                    $m_time_millis = is_numeric($m_time) ? (int)$m_time : strtotime($m_time) * 1000;
+
+                    if ($m_time_millis <= 0 && $tid > 1) {
+                        $m_time_millis = $waktu_millis - 120000;
+                    }
+
+                    // Kirim missing task terlebih dahulu
+                    $m_res = $sendTaskBpjs($missing_tid, $m_time_millis);
+                    $m_code = $m_res['metadata']['code'] ?? 500;
+                    $m_msg = $m_res['metadata']['message'] ?? '';
+
+                    if ($m_code == 200 || $m_code == 208) {
+                        $this->db('mlite_antrian_referensi_taskid')
+                            ->where('nomor_referensi', $kodebooking)
+                            ->where('taskid', $missing_tid)
+                            ->save([
+                                'status' => 'Sudah',
+                                'keterangan' => $m_msg . ' (Tersinkron perbaikan otomatis)'
+                            ]);
+                        $existing_tasks[$missing_st]['status'] = 'Sudah';
+
+                        // Pastikan task saat ini waktunya lebih besar dari missing task
+                        if ($waktu_millis <= $m_time_millis) {
+                            $waktu_millis = $m_time_millis + 120000;
+                            $this->db('mlite_antrian_referensi_taskid')
+                                ->where('nomor_referensi', $kodebooking)
+                                ->where('taskid', $tid)
+                                ->save(['waktu' => $waktu_millis]);
+                            $existing_tasks[$stid]['waktu'] = $waktu_millis;
+                            $cascadeForward($tid, $waktu_millis);
+                        }
+
+                        // Retry kirim task saat ini
+                        $retry_res = $sendTaskBpjs($tid, $waktu_millis);
+                        $retry_code = $retry_res['metadata']['code'] ?? 500;
+                        $retry_msg = $retry_res['metadata']['message'] ?? '';
+                        if ($retry_code == 200 || $retry_code == 208) {
+                            $code = $retry_code;
+                            $msg = $retry_msg . ' (Terkirim setelah melengkapi Task ' . $missing_tid . ')';
+                            $res = $retry_res;
+                        }
+                    }
+                }
+            }
 
             // BPJS code 200 = Sukses, 208 = Sudah pernah di-update / waktu sudah ada
             if ($code == 200 || $code == 208) {
@@ -2954,7 +3144,7 @@ class Admin extends AdminModule
             exit();
         }
 
-        $task_stmt = $this->db()->pdo()->prepare("SELECT nomor_referensi, taskid, status FROM mlite_antrian_referensi_taskid WHERE tanggal_periksa = ?");
+        $task_stmt = $this->db()->pdo()->prepare("SELECT nomor_referensi, taskid, status, keterangan FROM mlite_antrian_referensi_taskid WHERE tanggal_periksa = ?");
         $task_stmt->execute([$tanggal]);
         $task_summary = [];
         while ($row = $task_stmt->fetch(\PDO::FETCH_ASSOC)) {
@@ -2963,7 +3153,8 @@ class Admin extends AdminModule
                 $task_summary[$ref] = ['total' => 0, 'sudah' => 0, 'belum' => 0];
             }
             $task_summary[$ref]['total']++;
-            if ($row['status'] === 'Sudah') {
+            $is_err = preg_match('/(tidak boleh|lebih besar|belum ada|gagal|error|201\s*:|400\s*:|500\s*:)/i', $row['keterangan'] ?? '');
+            if ($row['status'] === 'Sudah' && !$is_err) {
                 $task_summary[$ref]['sudah']++;
             } else {
                 $task_summary[$ref]['belum']++;

@@ -81,16 +81,21 @@ try {
         if (stripos($b['status'] ?? '', 'Batal') !== false) continue;
 
         // Cek status task yang sudah ada
-        $pending = $core->db('mlite_antrian_referensi_taskid')
+        $existing_task_rows = $core->db('mlite_antrian_referensi_taskid')
             ->where('nomor_referensi', $kb)
-            ->where('status', 'Belum')
-            ->count();
-        $total_tasks = $core->db('mlite_antrian_referensi_taskid')
-            ->where('nomor_referensi', $kb)
-            ->count();
+            ->toArray();
 
-        // Jika sudah ada minimal 5 task dan tidak ada yang 'Belum', lewati
-        if ($total_tasks >= 5 && $pending == 0) {
+        $total_tasks = count($existing_task_rows);
+        $pending_or_error = 0;
+        foreach ($existing_task_rows as $etr) {
+            $is_err = preg_match('/(tidak boleh|lebih besar|belum ada|gagal|error|201\s*:|400\s*:|500\s*:)/i', $etr['keterangan'] ?? '');
+            if ($etr['status'] !== 'Sudah' || $is_err) {
+                $pending_or_error++;
+            }
+        }
+
+        // Jika sudah ada minimal 5 task dan semua valid sukses tanpa error, lewati
+        if ($total_tasks >= 5 && $pending_or_error == 0) {
             continue;
         }
 
