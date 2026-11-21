@@ -256,11 +256,108 @@ class Admin extends AdminModule
     }
 
     $manual = $_POST['manual'] ?? '0';
+    $confirmDuplicate = !empty($_POST['confirm_duplicate']) && $_POST['confirm_duplicate'] == '1';
     unset($_POST['manual']);
+    unset($_POST['confirm_duplicate']);
+
+    // Normalisasi & validasi format No. RM manual (wajib tepat 6 digit angka; 1-5 digit otomatis di-pad nol depan)
+    if ($manual == '1' && !empty($_POST['no_rkm_medis'])) {
+      $cleanRm = trim((string)$_POST['no_rkm_medis']);
+      if (preg_match('/^[0-9]{1,5}$/', $cleanRm)) {
+        $cleanRm = str_pad($cleanRm, 6, '0', STR_PAD_LEFT);
+      }
+      $_POST['no_rkm_medis'] = $cleanRm;
+      $pasien = $this->db('pasien')->where('no_rkm_medis', $_POST['no_rkm_medis'])->oneArray();
+      if (!$pasien && !preg_match('/^[0-9]{6}$/', $cleanRm)) {
+        header('Content-Type: application/json; charset=utf-8');
+        $msg = 'Nomor Rekam Medis manual wajib tepat 6 digit angka (contoh: 061420).';
+        echo json_encode(['status' => 'error', 'msg' => $msg, 'message' => $msg], JSON_UNESCAPED_UNICODE);
+        exit();
+      }
+    }
+
+    // Validasi ketat format data identitas pasien (server-side)
+    $_POST['nm_pasien'] = trim((string)($_POST['nm_pasien'] ?? ''));
+    $_POST['no_ktp'] = trim((string)($_POST['no_ktp'] ?? ''));
+    $_POST['no_peserta'] = trim((string)($_POST['no_peserta'] ?? ''));
+    $_POST['no_tlp'] = trim((string)($_POST['no_tlp'] ?? ''));
+    $_POST['email'] = trim((string)($_POST['email'] ?? ''));
+
+    $valError = '';
+    if ($_POST['nm_pasien'] === '') {
+      $valError = 'Nama pasien wajib diisi.';
+    } elseif (empty($_POST['tgl_lahir']) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', (string)$_POST['tgl_lahir'])) {
+      $valError = 'Format tanggal lahir tidak valid.';
+    } elseif ((string)$_POST['tgl_lahir'] < '1900-01-01' || (string)$_POST['tgl_lahir'] > date('Y-m-d')) {
+      $valError = 'Tanggal lahir tidak valid (harus antara 01-01-1900 sampai hari ini).';
+    } elseif (!in_array((string)($_POST['jk'] ?? ''), ['L', 'P'], true)) {
+      $valError = 'Jenis kelamin wajib dipilih (L/P).';
+    } elseif ($_POST['no_ktp'] !== '' && $_POST['no_ktp'] !== '-' && (!preg_match('/^[0-9]{16}$/', $_POST['no_ktp']) || preg_match('/^0+$/', $_POST['no_ktp']))) {
+      $valError = 'Nomor KTP / NIK harus tepat 16 digit angka yang valid (atau kosongkan jika belum ada).';
+    } elseif ($_POST['no_peserta'] !== '' && $_POST['no_peserta'] !== '-') {
+      $kdPjUpper = strtoupper(trim((string)($_POST['kd_pj'] ?? '')));
+      if ($kdPjUpper === 'BPJ') {
+        if (!preg_match('/^[0-9]{13}$/', $_POST['no_peserta']) || preg_match('/^0+$/', $_POST['no_peserta'])) {
+          $valError = 'Nomor Kartu BPJS harus tepat 13 digit angka yang valid.';
+        }
+      } elseif (strlen($_POST['no_peserta']) > 25) {
+        $valError = 'Nomor Kartu Asuransi maksimal 25 karakter.';
+      }
+    }
+    if ($valError === '' && $_POST['no_tlp'] !== '' && $_POST['no_tlp'] !== '-' && !preg_match('/^\+?[0-9]{9,15}$/', $_POST['no_tlp'])) {
+      $valError = 'Nomor Telepon harus berupa 9 sampai 15 digit angka (boleh diawali tanda +).';
+    }
+    if ($valError === '' && $_POST['email'] !== '' && $_POST['email'] !== '-' && !filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) {
+      $valError = 'Format alamat email tidak valid.';
+    }
+    if ($valError !== '') {
+      header('Content-Type: application/json; charset=utf-8');
+      echo json_encode(['status' => 'error', 'msg' => $valError, 'message' => $valError], JSON_UNESCAPED_UNICODE);
+      exit();
+    }
+
+    // Tolak perubahan / pendaftaran ulang menggunakan No. RM yang sudah digabung (soft-archived)
+    if (!empty($_POST['no_rkm_medis'])) {
+      $mergedInfo = \Systems\Lib\PasienMergeService::getMergeRecord($this->db()->pdo(), (string)$_POST['no_rkm_medis']);
+      if ($mergedInfo) {
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+          'status' => 'error',
+          'msg' => 'No. RM ' . $_POST['no_rkm_medis'] . ' sudah digabung (arsip) ke No. RM ' . ($mergedInfo['target_no_rkm_medis'] ?? '') . '. Gunakan No. RM Utama tersebut.',
+          'message' => 'No. RM ' . $_POST['no_rkm_medis'] . ' sudah digabung (arsip) ke No. RM ' . ($mergedInfo['target_no_rkm_medis'] ?? '') . '. Gunakan No. RM Utama tersebut.',
+        ], JSON_UNESCAPED_UNICODE);
+        exit();
+      }
+    }
 
     if (!$pasien) {
       if ($mlite_crud_permissions['can_create'] == 'false') {
         echo json_encode(['status' => 'error', 'msg' => 'Anda tidak memiliki hak akses untuk menambah data!', 'message' => 'Anda tidak memiliki hak akses untuk menambah data!']);
+        exit();
+      }
+
+      // Cek pencegahan duplikat NIK / No. BPJS / Nama+Tgl Lahir pada pasien aktif
+      $dupCheck = \Systems\Lib\PasienMergeService::checkRegistrationDuplicates($this->db()->pdo(), $_POST);
+      if ($dupCheck['action'] === 'block') {
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+          'status' => 'duplicate_block',
+          'duplicate_type' => $dupCheck['type'],
+          'msg' => $dupCheck['message'],
+          'message' => $dupCheck['message'],
+          'matches' => $dupCheck['matches'],
+        ], JSON_UNESCAPED_UNICODE);
+        exit();
+      }
+      if ($dupCheck['action'] === 'warn' && !$confirmDuplicate) {
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+          'status' => 'duplicate_warn',
+          'duplicate_type' => $dupCheck['type'],
+          'msg' => $dupCheck['message'],
+          'message' => $dupCheck['message'],
+          'matches' => $dupCheck['matches'],
+        ], JSON_UNESCAPED_UNICODE);
         exit();
       }
 
@@ -530,6 +627,10 @@ class Admin extends AdminModule
   public function getFolder($no_rkm_medis, $no_rawat = '')
   {
     $this->_addHeaderFiles();
+    $resolved = \Systems\Lib\PasienMergeService::resolveActiveRm($this->db()->pdo(), (string)$no_rkm_medis);
+    if (!empty($resolved['was_merged'])) {
+      $no_rkm_medis = $resolved['resolved_rm'];
+    }
     $pasien = $this->db('pasien')->where('no_rkm_medis', $no_rkm_medis)->oneArray();
     $reg_periksa = $this->db('reg_periksa')
       ->join('poliklinik', 'poliklinik.kd_poli=reg_periksa.kd_poli')
@@ -692,8 +793,21 @@ class Admin extends AdminModule
 
   public function getRiwayatPerawatan($no_rkm_medis)
   {
-    $riwayat = $this->_getRiwayatData($no_rkm_medis);
+    $resolved = \Systems\Lib\PasienMergeService::resolveActiveRm($this->db()->pdo(), (string)$no_rkm_medis);
+    $activeRm = $resolved['resolved_rm'] ?: (string)$no_rkm_medis;
+    $riwayat = $this->_getRiwayatData($activeRm);
     $riwayat['focus_rawat'] = trim((string)($_GET['focus_rawat'] ?? ''));
+    $riwayat['merged_notice'] = null;
+    if (!empty($resolved['was_merged']) && !empty($resolved['merge_info'])) {
+      $mi = $resolved['merge_info'];
+      $riwayat['merged_notice'] = [
+        'source_rm' => (string)$resolved['original_rm'],
+        'target_rm' => (string)$activeRm,
+        'merged_at' => (string)($mi['merged_at'] ?? ''),
+        'merged_by' => (string)($mi['merged_by_name'] ?? $mi['merged_by_username'] ?? ''),
+        'reason'    => (string)($mi['reason'] ?? ''),
+      ];
+    }
     $this->tpl->set('riwayat', $this->tpl->noParse_array(htmlspecialchars_array($riwayat)));
     echo $this->draw('riwayat.perawatan.html');
     exit();
@@ -701,6 +815,10 @@ class Admin extends AdminModule
 
   public function getPdfRiwayatPerawatan($no_rkm_medis, $no_rawat = null)
   {
+    $resolved = \Systems\Lib\PasienMergeService::resolveActiveRm($this->db()->pdo(), (string)$no_rkm_medis);
+    if (!empty($resolved['was_merged'])) {
+      $no_rkm_medis = $resolved['resolved_rm'];
+    }
     $username = $this->core->checkAuth('GET');
     if (!$this->core->checkPermission($username, 'can_read', 'pasien')) {
       http_response_code(403);
@@ -803,9 +921,9 @@ class Admin extends AdminModule
       if (!empty($r['diagnosa_pasien'])) {
         foreach ($r['diagnosa_pasien'] as $d) {
           $html .= '<tr>
-                        <td>' . $d['kd_penyakit'] . '</td>
-                        <td>' . $d['nm_penyakit'] . '</td>
-                        <td>' . $d['keterangan'] . '</td>
+                        <td>' . htmlspecialchars((string)($d['kd_penyakit'] ?? '-'), ENT_QUOTES, 'UTF-8') . '</td>
+                        <td>' . htmlspecialchars((string)($d['nm_penyakit'] ?? '-'), ENT_QUOTES, 'UTF-8') . '</td>
+                        <td>' . htmlspecialchars((string)($d['keterangan'] ?? ($d['status_penyakit'] ?? '-')), ENT_QUOTES, 'UTF-8') . '</td>
                     </tr>';
         }
       } else
@@ -818,9 +936,9 @@ class Admin extends AdminModule
       if (!empty($r['prosedur_pasien'])) {
         foreach ($r['prosedur_pasien'] as $p) {
           $html .= '<tr>
-                        <td>' . $p['kode'] . '</td>
-                        <td>' . $p['deskripsi_panjang'] . '</td>
-                        <td>' . $p['status'] . '</td>
+                        <td>' . htmlspecialchars((string)($p['kode'] ?? '-'), ENT_QUOTES, 'UTF-8') . '</td>
+                        <td>' . htmlspecialchars((string)($p['deskripsi_panjang'] ?? '-'), ENT_QUOTES, 'UTF-8') . '</td>
+                        <td>' . htmlspecialchars((string)($p['status'] ?? '-'), ENT_QUOTES, 'UTF-8') . '</td>
                     </tr>';
         }
       } else
@@ -833,12 +951,12 @@ class Admin extends AdminModule
       if (!empty($r['pemeriksaan_ralan'])) {
         foreach ($r['pemeriksaan_ralan'] as $p) {
           $html .= '<tr>
-                        <td>' . $p['tgl_perawatan'] . ' ' . $p['jam_rawat'] . '</td>
-                        <td>' . $p['tensi'] . '</td>
-                        <td>' . $p['nadi'] . '</td>
-                        <td>' . $p['respirasi'] . '</td>
-                        <td>' . $p['gcs'] . '</td>
-                        <td>' . $p['keluhan'] . '</td>
+                        <td>' . htmlspecialchars(trim((string)($p['tgl_perawatan'] ?? '') . ' ' . (string)($p['jam_rawat'] ?? '')), ENT_QUOTES, 'UTF-8') . '</td>
+                        <td>' . htmlspecialchars((string)($p['tensi'] ?? '-'), ENT_QUOTES, 'UTF-8') . '</td>
+                        <td>' . htmlspecialchars((string)($p['nadi'] ?? '-'), ENT_QUOTES, 'UTF-8') . '</td>
+                        <td>' . htmlspecialchars((string)($p['respirasi'] ?? '-'), ENT_QUOTES, 'UTF-8') . '</td>
+                        <td>' . htmlspecialchars((string)($p['gcs'] ?? '-'), ENT_QUOTES, 'UTF-8') . '</td>
+                        <td>' . htmlspecialchars((string)($p['keluhan'] ?? '-'), ENT_QUOTES, 'UTF-8') . '</td>
                     </tr>';
         }
       } else
@@ -850,11 +968,11 @@ class Admin extends AdminModule
             <tr><th>Pemeriksaan</th><th>Nilai</th><th>Rujukan</th></tr>';
       if (!empty($r['periksa_lab'])) {
         foreach ($r['periksa_lab'] as $lab) {
-          foreach ($lab['detail_periksa_lab'] as $d) {
+          foreach (($lab['detail_periksa_lab'] ?? []) as $d) {
             $html .= '<tr>
-                            <td>' . $d['Pemeriksaan'] . '</td>
-                            <td>' . $d['nilai'] . ' ' . $d['satuan'] . '</td>
-                            <td>' . $d['nilai_rujukan'] . '</td>
+                            <td>' . htmlspecialchars((string)($d['Pemeriksaan'] ?? '-'), ENT_QUOTES, 'UTF-8') . '</td>
+                            <td>' . htmlspecialchars(trim((string)($d['nilai'] ?? '') . ' ' . (string)($d['satuan'] ?? '')), ENT_QUOTES, 'UTF-8') . '</td>
+                            <td>' . htmlspecialchars((string)($d['nilai_rujukan'] ?? '-'), ENT_QUOTES, 'UTF-8') . '</td>
                         </tr>';
           }
         }
@@ -867,11 +985,11 @@ class Admin extends AdminModule
             <tr><th>Jenis</th><th>Hasil</th><th>Keterangan</th></tr>';
       if (!empty($r['periksa_radiologi'])) {
         foreach ($r['periksa_radiologi'] as $rad) {
-          foreach ($rad['hasil_radiologi'] as $h) {
+          foreach (($rad['hasil_radiologi'] ?? []) as $h) {
             $html .= '<tr>
                             <td>Radiologi</td>
-                            <td>' . $h['hasil'] . '</td>
-                            <td>' . $h['tgl_periksa'] . ' ' . $h['jam'] . '</td>
+                            <td>' . htmlspecialchars((string)($h['hasil'] ?? '-'), ENT_QUOTES, 'UTF-8') . '</td>
+                            <td>' . htmlspecialchars(trim((string)($h['tgl_periksa'] ?? '') . ' ' . (string)($h['jam'] ?? '')), ENT_QUOTES, 'UTF-8') . '</td>
                         </tr>';
           }
         }
@@ -884,11 +1002,11 @@ class Admin extends AdminModule
             <tr><th>Nama</th><th>Jumlah</th><th>Total</th></tr>';
       if (!empty($r['pemberian_obat'])) {
         foreach ($r['pemberian_obat'] as $o) {
-          foreach ($o['data_pemberian_obat'] as $ob) {
+          foreach (($o['data_pemberian_obat'] ?? []) as $ob) {
             $html .= '<tr>
-                            <td>' . $ob['nama_brng'] . '</td>
-                            <td>' . $ob['jml'] . '</td>
-                            <td>' . number_format($ob['total'], 0, ',', '.') . '</td>
+                            <td>' . htmlspecialchars((string)($ob['nama_brng'] ?? '-'), ENT_QUOTES, 'UTF-8') . '</td>
+                            <td>' . htmlspecialchars((string)($ob['jml'] ?? '0'), ENT_QUOTES, 'UTF-8') . '</td>
+                            <td>' . number_format((float)($ob['total'] ?? 0), 0, ',', '.') . '</td>
                         </tr>';
           }
         }
@@ -899,12 +1017,18 @@ class Admin extends AdminModule
       /* ===== CATATAN ===== */
       $html .= '<b>Catatan Perawatan</b><table>
             <tr><th>Tanggal</th><th>Catatan</th><th>Petugas</th></tr>';
-      if (!empty($r['catatan_perawatan'])) {
-        foreach ($r['catatan_perawatan'] as $c) {
+      if (!empty($r['catatan_perawatan']) && is_array($r['catatan_perawatan'])) {
+        $catatanList = isset($r['catatan_perawatan']['catatan']) || isset($r['catatan_perawatan']['tanggal'])
+          ? [$r['catatan_perawatan']]
+          : $r['catatan_perawatan'];
+        foreach ($catatanList as $c) {
+          if (!is_array($c)) continue;
+          $tglCatatan = trim((string)($c['tanggal'] ?? '') . ' ' . (string)($c['jam'] ?? ''));
+          $petugasCatatan = (string)($c['petugas'] ?? ($c['kd_dokter'] ?? '-'));
           $html .= '<tr>
-                        <td>' . $c['tanggal'] . '</td>
-                        <td>' . $c['catatan'] . '</td>
-                        <td>' . $c['petugas'] . '</td>
+                        <td>' . htmlspecialchars($tglCatatan !== '' ? $tglCatatan : '-', ENT_QUOTES, 'UTF-8') . '</td>
+                        <td>' . nl2br(htmlspecialchars((string)($c['catatan'] ?? '-'), ENT_QUOTES, 'UTF-8')) . '</td>
+                        <td>' . htmlspecialchars($petugasCatatan !== '' ? $petugasCatatan : '-', ENT_QUOTES, 'UTF-8') . '</td>
                     </tr>';
         }
       } else
@@ -915,10 +1039,10 @@ class Admin extends AdminModule
       if (!empty($r['resume_pasien'])) {
         foreach ($r['resume_pasien'] as $res) {
           $html .= '<b>Resume Medis</b><table>
-                    <tr><td>Diagnosa Utama</td><td>' . $res['diagnosa_utama'] . '</td></tr>
-                    <tr><td>Prosedur Utama</td><td>' . $res['prosedur_utama'] . '</td></tr>
-                    <tr><td>Kondisi Pulang</td><td>' . $res['kondisi_pulang'] . '</td></tr>
-                    <tr><td>Dokter</td><td>' . $res['nm_dokter'] . '</td></tr>
+                    <tr><td>Diagnosa Utama</td><td>' . htmlspecialchars((string)($res['diagnosa_utama'] ?? '-'), ENT_QUOTES, 'UTF-8') . '</td></tr>
+                    <tr><td>Prosedur Utama</td><td>' . htmlspecialchars((string)($res['prosedur_utama'] ?? '-'), ENT_QUOTES, 'UTF-8') . '</td></tr>
+                    <tr><td>Kondisi Pulang</td><td>' . htmlspecialchars((string)($res['kondisi_pulang'] ?? '-'), ENT_QUOTES, 'UTF-8') . '</td></tr>
+                    <tr><td>Dokter</td><td>' . htmlspecialchars((string)($res['nm_dokter'] ?? ($res['kd_dokter'] ?? '-')), ENT_QUOTES, 'UTF-8') . '</td></tr>
                     </table>';
         }
       }
@@ -1865,29 +1989,34 @@ class Admin extends AdminModule
     $tgl_awal = $_GET['tgl_awal'] ?? '';
     $tgl_akhir = $_GET['tgl_akhir'] ?? '';
 
-    $query = $this->db('pasien')->desc('no_rkm_medis');
+    $pdo = $this->db()->pdo();
+    \Systems\Lib\PasienMergeService::ensureSchema($pdo);
+
+    $whereParts = ['m.id IS NULL'];
+    $params = [];
 
     // filter tanggal (AMAN & konsisten)
     if ($tgl_awal !== '' && $tgl_akhir !== '') {
-      $query
-        ->where('tgl_daftar', '>=', $tgl_awal)
-        ->where('tgl_daftar', '<=', $tgl_akhir);
+      $whereParts[] = 'p.tgl_daftar >= ? AND p.tgl_daftar <= ?';
+      $params[] = $tgl_awal;
+      $params[] = $tgl_akhir;
     }
 
     // filter pencarian (DIGROUP)
     if ($phrase !== '') {
-      $query->where(function ($st) use ($phrase) {
-        $st->like('no_rkm_medis', "%$phrase%")
-          ->orLike('nm_pasien', "%$phrase%")
-          ->orLike('alamat', "%$phrase%")
-          ->orLike('no_ktp', "%$phrase%")
-          ->orLike('no_peserta', "%$phrase%")
-          ->orLike('no_tlp', "%$phrase%");
-      });
+      $whereParts[] = '(p.no_rkm_medis LIKE ? OR p.nm_pasien LIKE ? OR p.alamat LIKE ? OR p.no_ktp LIKE ? OR p.no_peserta LIKE ? OR p.no_tlp LIKE ?)';
+      $like = '%' . $phrase . '%';
+      array_push($params, $like, $like, $like, $like, $like, $like);
     }
 
-    $total = $query->count();
-    $rows = $query->offset($offset)->limit($perpage)->toArray();
+    $whereSql = implode(' AND ', $whereParts);
+    $stTotal = $pdo->prepare("SELECT COUNT(*) FROM `pasien` p LEFT JOIN `mlite_pasien_merge_log` m ON m.source_no_rkm_medis = p.no_rkm_medis WHERE {$whereSql}");
+    $stTotal->execute($params);
+    $total = (int)$stTotal->fetchColumn();
+
+    $stRows = $pdo->prepare("SELECT p.* FROM `pasien` p LEFT JOIN `mlite_pasien_merge_log` m ON m.source_no_rkm_medis = p.no_rkm_medis WHERE {$whereSql} ORDER BY p.no_rkm_medis DESC LIMIT {$perpage} OFFSET {$offset}");
+    $stRows->execute($params);
+    $rows = $stRows->fetchAll(\PDO::FETCH_ASSOC);
 
 
     // Add extra data for display
@@ -2584,6 +2713,579 @@ class Admin extends AdminModule
     }
 
     return $stats;
+  }
+
+  /**
+   * Halaman Deteksi & Gabung Rekam Medis Duplikat (khusus admin & role rekammedis).
+   */
+  public function getDuplikat()
+  {
+    if (!\Systems\Lib\PasienMergeService::canManageMerge($this->core)) {
+      $this->notify('failure', 'Anda tidak memiliki hak akses untuk mengelola penggabungan rekam medis.');
+      redirect(url([ADMIN, 'dashboard', 'main']));
+      exit();
+    }
+
+    $this->_addHeaderFiles();
+    \Systems\Lib\PasienMergeService::ensureSchema($this->db()->pdo());
+
+    return $this->draw('duplikat.html', [
+      'token' => htmlspecialchars((string)($_SESSION['token'] ?? ''), ENT_QUOTES, 'UTF-8'),
+    ]);
+  }
+
+  /**
+   * Endpoint JSON daftar grup duplikat & ringkasan jumlah per kategori.
+   */
+  public function anyDuplikatdata()
+  {
+    header('Content-Type: application/json; charset=utf-8');
+    if (!\Systems\Lib\PasienMergeService::canManageMerge($this->core)) {
+      http_response_code(403);
+      echo json_encode(['status' => 'error', 'message' => 'Akses ditolak. Khusus Admin & Rekam Medis.'], JSON_UNESCAPED_UNICODE);
+      exit();
+    }
+
+    try {
+      $pdo = $this->db()->pdo();
+      $allowedTabs = ['nik', 'bpjs', 'nama_tgl', 'anomali', 'riwayat'];
+      $tab = strtolower(trim((string)($_GET['tab'] ?? 'nik')));
+      if (!in_array($tab, $allowedTabs, true)) {
+        $tab = 'nik';
+      }
+      $search = trim((string)($_GET['q'] ?? ''));
+      $page = max(1, (int)($_GET['page'] ?? 1));
+      $perPage = max(5, min(30, (int)($_GET['per_page'] ?? 12)));
+
+      $counts = \Systems\Lib\PasienMergeService::getCounts($pdo);
+      $listing = \Systems\Lib\PasienMergeService::listGroups($pdo, $tab, $search, $page, $perPage);
+
+      echo json_encode([
+        'status' => 'success',
+        'counts' => $counts,
+        'tab'    => $listing['tab'],
+        'items'  => $listing['items'],
+        'meta'   => $listing['meta'],
+      ], JSON_UNESCAPED_UNICODE);
+    } catch (\Throwable $e) {
+      error_log('[pasien/duplikatdata] ' . $e->getMessage());
+      http_response_code(500);
+      echo json_encode(['status' => 'error', 'message' => 'Gagal memuat daftar kandidat duplikat RM.'], JSON_UNESCAPED_UNICODE);
+    }
+    exit();
+  }
+
+  /**
+   * Endpoint JSON pencarian pasien aktif untuk mode Gabung Manual 2 No. RM.
+   */
+  public function anyDuplikatsearch()
+  {
+    header('Content-Type: application/json; charset=utf-8');
+    if (!\Systems\Lib\PasienMergeService::canManageMerge($this->core)) {
+      http_response_code(403);
+      echo json_encode(['status' => 'error', 'message' => 'Akses ditolak.'], JSON_UNESCAPED_UNICODE);
+      exit();
+    }
+
+    try {
+      $q = trim((string)($_GET['q'] ?? ''));
+      $items = \Systems\Lib\PasienMergeService::searchActivePatients($this->db()->pdo(), $q, 15);
+      echo json_encode(['status' => 'success', 'items' => $items], JSON_UNESCAPED_UNICODE);
+    } catch (\Throwable $e) {
+      error_log('[pasien/duplikatsearch] ' . $e->getMessage());
+      http_response_code(500);
+      echo json_encode(['status' => 'error', 'message' => 'Gagal mencari data pasien.'], JSON_UNESCAPED_UNICODE);
+    }
+    exit();
+  }
+
+  /**
+   * Endpoint JSON perbandingan side-by-side 2 No. RM sebelum penggabungan.
+   */
+  public function anyDuplikatcompare()
+  {
+    header('Content-Type: application/json; charset=utf-8');
+    if (!\Systems\Lib\PasienMergeService::canManageMerge($this->core)) {
+      http_response_code(403);
+      echo json_encode(['status' => 'error', 'message' => 'Akses ditolak.'], JSON_UNESCAPED_UNICODE);
+      exit();
+    }
+
+    try {
+      $sourceRm = trim((string)($_GET['source_rm'] ?? ''));
+      $targetRm = trim((string)($_GET['target_rm'] ?? ''));
+      $res = \Systems\Lib\PasienMergeService::compareTwo($this->db()->pdo(), $sourceRm, $targetRm);
+      if (($res['status'] ?? '') !== 'success') {
+        http_response_code(422);
+      }
+      echo json_encode($res, JSON_UNESCAPED_UNICODE);
+    } catch (\Throwable $e) {
+      error_log('[pasien/duplikatcompare] ' . $e->getMessage());
+      http_response_code(500);
+      echo json_encode(['status' => 'error', 'message' => 'Gagal membandingkan data rekam medis.'], JSON_UNESCAPED_UNICODE);
+    }
+    exit();
+  }
+
+  /**
+   * Endpoint POST eksekusi penggabungan RM secara atomik (Soft Archive / Opsi A).
+   */
+  public function postDuplikatmerge()
+  {
+    header('Content-Type: application/json; charset=utf-8');
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+      http_response_code(405);
+      echo json_encode(['status' => 'error', 'message' => 'Metode tidak diizinkan.'], JSON_UNESCAPED_UNICODE);
+      exit();
+    }
+    if (!\Systems\Lib\PasienMergeService::canManageMerge($this->core)) {
+      http_response_code(403);
+      echo json_encode(['status' => 'error', 'message' => 'Akses ditolak. Khusus Admin & Rekam Medis.'], JSON_UNESCAPED_UNICODE);
+      exit();
+    }
+
+    $sessionToken = (string)($_SESSION['token'] ?? '');
+    $reqToken = (string)($_POST['t'] ?? $_GET['t'] ?? '');
+    if ($sessionToken === '' || !hash_equals($sessionToken, $reqToken)) {
+      http_response_code(403);
+      echo json_encode(['status' => 'error', 'message' => 'Token keamanan tidak valid. Muat ulang halaman lalu coba kembali.'], JSON_UNESCAPED_UNICODE);
+      exit();
+    }
+
+    $sourceRm = trim((string)($_POST['source_rm'] ?? ''));
+    $targetRm = trim((string)($_POST['target_rm'] ?? ''));
+    $reason = trim((string)($_POST['reason'] ?? ''));
+    $fillEmpty = !isset($_POST['fill_empty_biodata']) || $_POST['fill_empty_biodata'] == '1';
+
+    $res = \Systems\Lib\PasienMergeService::executeMerge($this->core, $sourceRm, $targetRm, $reason, $fillEmpty);
+    if (($res['status'] ?? '') !== 'success') {
+      http_response_code(422);
+    }
+    echo json_encode($res, JSON_UNESCAPED_UNICODE);
+    exit();
+  }
+
+  /* =========================================================================
+   * MRMIK 11 — AUDIT LOG AKSES BACA & CETAK e-RM
+   * ========================================================================= */
+
+  public function getAkseslog()
+  {
+    if (!\Systems\Lib\MrmikService::canManageMrmik($this->core)) {
+      $this->notify('failure', 'Akses ditolak. Khusus Admin & Rekam Medis.');
+      redirect(url([ADMIN, 'dashboard', 'main']));
+      exit();
+    }
+    $this->_addHeaderFiles();
+    \Systems\Lib\MrmikService::ensureSchema($this->db()->pdo());
+
+    return $this->draw('akseslog.html', [
+      'token'         => htmlspecialchars((string)($_SESSION['token'] ?? ''), ENT_QUOTES, 'UTF-8'),
+      'tgl_awal'      => date('Y-m-d', strtotime('-7 days')),
+      'tgl_akhir'     => date('Y-m-d'),
+      'action_labels' => \Systems\Lib\MrmikService::actionLabels(),
+    ]);
+  }
+
+  public function anyAkseslogdata()
+  {
+    header('Content-Type: application/json; charset=utf-8');
+    if (!\Systems\Lib\MrmikService::canManageMrmik($this->core)) {
+      http_response_code(403);
+      echo json_encode(['status' => 'error', 'message' => 'Akses ditolak.'], JSON_UNESCAPED_UNICODE);
+      exit();
+    }
+
+    try {
+      $filters = [
+        'tgl_awal'    => trim((string)($_REQUEST['tgl_awal'] ?? date('Y-m-d', strtotime('-7 days')))),
+        'tgl_akhir'   => trim((string)($_REQUEST['tgl_akhir'] ?? date('Y-m-d'))),
+        'action_type' => trim((string)($_REQUEST['action_type'] ?? 'all')),
+        'user_role'   => trim((string)($_REQUEST['user_role'] ?? 'all')),
+        'search'      => trim((string)($_REQUEST['q'] ?? '')),
+      ];
+      $page = max(1, (int)($_REQUEST['page'] ?? 1));
+      $perPage = max(10, min(100, (int)($_REQUEST['per_page'] ?? 25)));
+      $data = \Systems\Lib\MrmikService::listAccessLogs($this->db()->pdo(), $filters, $page, $perPage);
+      echo json_encode(array_merge(['status' => 'success'], $data), JSON_UNESCAPED_UNICODE);
+    } catch (\Throwable $e) {
+      error_log('[pasien/akseslogdata] ' . $e->getMessage());
+      http_response_code(500);
+      echo json_encode(['status' => 'error', 'message' => 'Gagal memuat log akses e-RM.'], JSON_UNESCAPED_UNICODE);
+    }
+    exit();
+  }
+
+  public function getAkseslogcsv()
+  {
+    if (!\Systems\Lib\MrmikService::canManageMrmik($this->core)) {
+      http_response_code(403);
+      exit('Akses ditolak.');
+    }
+    $filters = [
+      'tgl_awal'    => trim((string)($_GET['tgl_awal'] ?? date('Y-m-d', strtotime('-7 days')))),
+      'tgl_akhir'   => trim((string)($_GET['tgl_akhir'] ?? date('Y-m-d'))),
+      'action_type' => trim((string)($_GET['action_type'] ?? 'all')),
+      'user_role'   => trim((string)($_GET['user_role'] ?? 'all')),
+      'search'      => trim((string)($_GET['q'] ?? '')),
+    ];
+    \Systems\Lib\MrmikService::logAccess($this->core, 'EXPORT_DATA', 'pasien', 'pasien/akseslogcsv', '', '', 'Ekspor CSV Log Akses e-RM (' . $filters['tgl_awal'] . ' s.d. ' . $filters['tgl_akhir'] . ')');
+    $data = \Systems\Lib\MrmikService::listAccessLogs($this->db()->pdo(), $filters, 1, 200);
+
+    while (ob_get_level()) {
+      ob_end_clean();
+    }
+    header('Content-Type: text/csv; charset=utf-8');
+    header('Content-Disposition: attachment; filename="log_akses_erm_' . date('Ymd_His') . '.csv"');
+    $out = fopen('php://output', 'w');
+    fprintf($out, chr(0xEF) . chr(0xBB) . chr(0xBF));
+    fputcsv($out, ['Waktu', 'Username', 'Nama Pengguna', 'Role', 'Jenis Aksi', 'No. RM', 'Nama Pasien', 'No. Rawat', 'Keterangan', 'IP Address']);
+    foreach ($data['rows'] as $r) {
+      fputcsv($out, [
+        $r['created_at'], $r['username'], $r['fullname'], $r['user_role'],
+        $r['action_label'], $r['no_rkm_medis'], $r['nm_pasien'], $r['no_rawat'],
+        $r['detail'], $r['ip_address']
+      ]);
+    }
+    fclose($out);
+    exit();
+  }
+
+  /* =========================================================================
+   * MRMIK 12 — DASHBOARD REVIEW KELENGKAPAN REKAM MEDIS (KLPCM)
+   * ========================================================================= */
+
+  public function getKlpcm()
+  {
+    if (!\Systems\Lib\MrmikService::canManageMrmik($this->core)) {
+      $this->notify('failure', 'Akses ditolak. Khusus Admin & Tim Rekam Medis.');
+      redirect(url([ADMIN, 'dashboard', 'main']));
+      exit();
+    }
+    $this->_addHeaderFiles();
+    $pdo = $this->db()->pdo();
+    \Systems\Lib\MrmikService::ensureSchema($pdo);
+    $opts = \Systems\Lib\MrmikService::getKlpcmFilterOptions($pdo);
+
+    return $this->draw('klpcm.html', [
+      'token'      => htmlspecialchars((string)($_SESSION['token'] ?? ''), ENT_QUOTES, 'UTF-8'),
+      'tgl_awal'   => date('Y-m-01'),
+      'tgl_akhir'  => date('Y-m-d'),
+      'poliklinik' => $opts['poliklinik'],
+    ]);
+  }
+
+  public function anyKlpcmdata()
+  {
+    header('Content-Type: application/json; charset=utf-8');
+    if (!\Systems\Lib\MrmikService::canManageMrmik($this->core)) {
+      http_response_code(403);
+      echo json_encode(['status' => 'error', 'message' => 'Akses ditolak.'], JSON_UNESCAPED_UNICODE);
+      exit();
+    }
+
+    try {
+      $filters = [
+        'tgl_awal'      => trim((string)($_REQUEST['tgl_awal'] ?? date('Y-m-01'))),
+        'tgl_akhir'     => trim((string)($_REQUEST['tgl_akhir'] ?? date('Y-m-d'))),
+        'status_lanjut' => trim((string)($_REQUEST['status_lanjut'] ?? 'all')),
+        'kd_poli'       => trim((string)($_REQUEST['kd_poli'] ?? 'all')),
+        'status_klpcm'  => trim((string)($_REQUEST['status_klpcm'] ?? 'all')),
+        'search'        => trim((string)($_REQUEST['q'] ?? '')),
+      ];
+      $page = max(1, (int)($_REQUEST['page'] ?? 1));
+      $perPage = max(10, min(100, (int)($_REQUEST['per_page'] ?? 20)));
+      $rmeFormMap = (isset($this->core->module->form_rme) && method_exists($this->core->module->form_rme, 'getRmeFormMap'))
+        ? $this->core->module->form_rme->getRmeFormMap()
+        : [];
+      $data = \Systems\Lib\MrmikService::evaluateKlpcm($this->db()->pdo(), $filters, $page, $perPage, $rmeFormMap);
+      echo json_encode(array_merge(['status' => 'success'], $data), JSON_UNESCAPED_UNICODE);
+    } catch (\Throwable $e) {
+      error_log('[pasien/klpcmdata] ' . $e->getMessage());
+      http_response_code(500);
+      echo json_encode(['status' => 'error', 'message' => 'Gagal mengevaluasi kelengkapan KLPCM.'], JSON_UNESCAPED_UNICODE);
+    }
+    exit();
+  }
+
+  public function postKlpcmsave()
+  {
+    header('Content-Type: application/json; charset=utf-8');
+    if (!\Systems\Lib\MrmikService::canManageMrmik($this->core)) {
+      http_response_code(403);
+      echo json_encode(['status' => 'error', 'message' => 'Akses ditolak.'], JSON_UNESCAPED_UNICODE);
+      exit();
+    }
+    $sessionToken = (string)($_SESSION['token'] ?? '');
+    $reqToken = (string)($_POST['t'] ?? $_GET['t'] ?? '');
+    if ($sessionToken === '' || !hash_equals($sessionToken, $reqToken)) {
+      http_response_code(403);
+      echo json_encode(['status' => 'error', 'message' => 'Token keamanan tidak valid.'], JSON_UNESCAPED_UNICODE);
+      exit();
+    }
+
+    $res = \Systems\Lib\MrmikService::saveKlpcmReview($this->core, $_POST);
+    if (($res['status'] ?? '') !== 'success') {
+      http_response_code(422);
+    }
+    echo json_encode($res, JSON_UNESCAPED_UNICODE);
+    exit();
+  }
+
+  public function getKlpcmcsv()
+  {
+    if (!\Systems\Lib\MrmikService::canManageMrmik($this->core)) {
+      http_response_code(403);
+      exit('Akses ditolak.');
+    }
+    $filters = [
+      'tgl_awal'      => trim((string)($_GET['tgl_awal'] ?? date('Y-m-01'))),
+      'tgl_akhir'     => trim((string)($_GET['tgl_akhir'] ?? date('Y-m-d'))),
+      'status_lanjut' => trim((string)($_GET['status_lanjut'] ?? 'all')),
+      'kd_poli'       => trim((string)($_GET['kd_poli'] ?? 'all')),
+      'status_klpcm'  => trim((string)($_GET['status_klpcm'] ?? 'all')),
+      'search'        => trim((string)($_GET['q'] ?? '')),
+      '_for_export'   => true,
+    ];
+    \Systems\Lib\MrmikService::logAccess($this->core, 'EXPORT_DATA', 'pasien', 'pasien/klpcmcsv', '', '', 'Ekspor CSV Laporan KLPCM (' . $filters['tgl_awal'] . ' s.d. ' . $filters['tgl_akhir'] . ')');
+    $rmeFormMap = (isset($this->core->module->form_rme) && method_exists($this->core->module->form_rme, 'getRmeFormMap'))
+      ? $this->core->module->form_rme->getRmeFormMap()
+      : [];
+    $data = \Systems\Lib\MrmikService::evaluateKlpcm($this->db()->pdo(), $filters, 1, 20, $rmeFormMap);
+
+    while (ob_get_level()) {
+      ob_end_clean();
+    }
+    header('Content-Type: text/csv; charset=utf-8');
+    header('Content-Disposition: attachment; filename="laporan_klpcm_' . date('Ymd_His') . '.csv"');
+    $out = fopen('php://output', 'w');
+    fprintf($out, chr(0xEF) . chr(0xBB) . chr(0xBF));
+    fputcsv($out, ['Tanggal', 'No. Rawat', 'No. RM', 'Nama Pasien', 'Poli/Unit', 'DPJP', 'Identitas', 'SOAP/Asesmen', 'ICD-10', 'TTE', 'Kelengkapan Form RME', 'Detail Form RME Terisi', 'Field RME Belum Diisi', 'Tepat Waktu <=24j', 'Skor (%)', 'Status Review Komite RM', 'Catatan Review', 'Reviewer']);
+    foreach ($data['all_rows_for_export'] as $r) {
+      $c = $r['checks'];
+      $rmeParts = [];
+      $missingParts = [];
+      foreach (($r['rme_forms'] ?? []) as $rf) {
+        $rmeParts[] = $rf['kode'] . ' (' . $rf['pct'] . '%: ' . $rf['filled'] . '/' . $rf['total'] . ')';
+        if (!empty($rf['missing_fields'])) {
+          $missingParts[] = $rf['kode'] . ': ' . implode(', ', array_slice($rf['missing_fields'], 0, 5));
+        }
+      }
+      fputcsv($out, [
+        $r['tgl_registrasi'] . ' ' . $r['jam_reg'],
+        $r['no_rawat'], $r['no_rkm_medis'], $r['nm_pasien'], $r['nm_poli'], $r['nm_dokter'],
+        $c['identitas'] ? 'Ya' : 'Tidak',
+        $c['asesmen_soap'] ? 'Ya' : 'Tidak',
+        $c['diagnosa_icd'] ? 'Ya' : 'Tidak',
+        $c['autentikasi_tte'] ? 'Ya' : 'Tidak',
+        $c['resume_rme'] ? 'Ya' : 'Tidak',
+        !empty($rmeParts) ? implode('; ', $rmeParts) : '-',
+        !empty($missingParts) ? implode(' | ', $missingParts) : '-',
+        $c['tepat_waktu'] ? 'Ya' : 'Tidak',
+        $r['pct'] . '%',
+        $r['status_review'] ?: ($r['is_lengkap'] ? 'Lengkap (Otomatis)' : 'Belum Lengkap'),
+        $r['review_catatan'],
+        $r['reviewer_name'],
+      ]);
+    }
+    fclose($out);
+    exit();
+  }
+
+  /* =========================================================================
+   * MRMIK 2.1 — KAMUS SINGKATAN & SIMBOL TERSTANDAR (ALLOWED & DO NOT USE)
+   * ========================================================================= */
+
+  public function getSingkatan()
+  {
+    $this->_addHeaderFiles();
+    \Systems\Lib\MrmikService::ensureSchema($this->db()->pdo());
+
+    return $this->draw('singkatan.html', [
+      'token'      => htmlspecialchars((string)($_SESSION['token'] ?? ''), ENT_QUOTES, 'UTF-8'),
+      'can_manage' => \Systems\Lib\MrmikService::canManageMrmik($this->core),
+    ]);
+  }
+
+  public function anySingkatandata()
+  {
+    header('Content-Type: application/json; charset=utf-8');
+    if (empty($_SESSION['mlite_user'])) {
+      http_response_code(401);
+      echo json_encode(['status' => 'error', 'message' => 'Sesi login diperlukan.'], JSON_UNESCAPED_UNICODE);
+      exit();
+    }
+
+    try {
+      $filters = [
+        'jenis'    => trim((string)($_REQUEST['jenis'] ?? 'all')),
+        'kategori' => trim((string)($_REQUEST['kategori'] ?? 'all')),
+        'search'   => trim((string)($_REQUEST['q'] ?? '')),
+      ];
+      $data = \Systems\Lib\MrmikService::listSingkatan($this->db()->pdo(), $filters);
+      echo json_encode(array_merge(['status' => 'success'], $data), JSON_UNESCAPED_UNICODE);
+    } catch (\Throwable $e) {
+      error_log('[pasien/singkatandata] ' . $e->getMessage());
+      http_response_code(500);
+      echo json_encode(['status' => 'error', 'message' => 'Gagal memuat kamus singkatan.'], JSON_UNESCAPED_UNICODE);
+    }
+    exit();
+  }
+
+  public function postSingkatansave()
+  {
+    header('Content-Type: application/json; charset=utf-8');
+    if (!\Systems\Lib\MrmikService::canManageMrmik($this->core)) {
+      http_response_code(403);
+      echo json_encode(['status' => 'error', 'message' => 'Akses ditolak.'], JSON_UNESCAPED_UNICODE);
+      exit();
+    }
+    $sessionToken = (string)($_SESSION['token'] ?? '');
+    $reqToken = (string)($_POST['t'] ?? $_GET['t'] ?? '');
+    if ($sessionToken === '' || !hash_equals($sessionToken, $reqToken)) {
+      http_response_code(403);
+      echo json_encode(['status' => 'error', 'message' => 'Token keamanan tidak valid.'], JSON_UNESCAPED_UNICODE);
+      exit();
+    }
+    $res = \Systems\Lib\MrmikService::saveSingkatan($this->core, $_POST);
+    if (($res['status'] ?? '') !== 'success') {
+      http_response_code(422);
+    }
+    echo json_encode($res, JSON_UNESCAPED_UNICODE);
+    exit();
+  }
+
+  public function postSingkatanhapus()
+  {
+    header('Content-Type: application/json; charset=utf-8');
+    if (!\Systems\Lib\MrmikService::canManageMrmik($this->core)) {
+      http_response_code(403);
+      echo json_encode(['status' => 'error', 'message' => 'Akses ditolak.'], JSON_UNESCAPED_UNICODE);
+      exit();
+    }
+    $sessionToken = (string)($_SESSION['token'] ?? '');
+    $reqToken = (string)($_POST['t'] ?? $_GET['t'] ?? '');
+    if ($sessionToken === '' || !hash_equals($sessionToken, $reqToken)) {
+      http_response_code(403);
+      echo json_encode(['status' => 'error', 'message' => 'Token keamanan tidak valid.'], JSON_UNESCAPED_UNICODE);
+      exit();
+    }
+    $id = (int)($_POST['id'] ?? 0);
+    $res = \Systems\Lib\MrmikService::deleteSingkatan($this->core, $id);
+    echo json_encode($res, JSON_UNESCAPED_UNICODE);
+    exit();
+  }
+
+  /* =========================================================================
+   * KLPCM CLOSED-LOOP NOTIFIKASI NAVBAR & RIWAYAT FORM RME PPA
+   * ========================================================================= */
+
+  public function anyKlpcmppas()
+  {
+    header('Content-Type: application/json; charset=utf-8');
+    if (!\Systems\Lib\MrmikService::canManageMrmik($this->core)) {
+      http_response_code(403);
+      echo json_encode(['status' => 'error', 'message' => 'Akses ditolak.'], JSON_UNESCAPED_UNICODE);
+      exit();
+    }
+    try {
+      $noRawat = trim((string)($_GET['no_rawat'] ?? ''));
+      $rmeFormMap = (isset($this->core->module->form_rme) && method_exists($this->core->module->form_rme, 'getRmeFormMap'))
+        ? $this->core->module->form_rme->getRmeFormMap()
+        : [];
+      $items = \Systems\Lib\MrmikService::getVisitPpaCandidates($this->db()->pdo(), $noRawat, $rmeFormMap);
+      echo json_encode(['status' => 'success', 'items' => $items], JSON_UNESCAPED_UNICODE);
+    } catch (\Throwable $e) {
+      http_response_code(500);
+      echo json_encode(['status' => 'error', 'message' => 'Gagal memuat daftar PPA kunjungan.'], JSON_UNESCAPED_UNICODE);
+    }
+    exit();
+  }
+
+  public function anyKlpcmnotif()
+  {
+    header('Content-Type: application/json; charset=utf-8');
+    if (empty($_SESSION['mlite_user'])) {
+      echo json_encode(['status' => 'success', 'count' => 0, 'items' => []], JSON_UNESCAPED_UNICODE);
+      exit();
+    }
+    try {
+      $data = \Systems\Lib\MrmikService::listNavbarNotifications($this->core);
+      echo json_encode(array_merge(['status' => 'success'], $data), JSON_UNESCAPED_UNICODE);
+    } catch (\Throwable $e) {
+      echo json_encode(['status' => 'success', 'count' => 0, 'items' => []], JSON_UNESCAPED_UNICODE);
+    }
+    exit();
+  }
+
+  public function postKlpcmresubmit()
+  {
+    header('Content-Type: application/json; charset=utf-8');
+    if (empty($_SESSION['mlite_user'])) {
+      http_response_code(401);
+      echo json_encode(['status' => 'error', 'message' => 'Sesi login diperlukan.'], JSON_UNESCAPED_UNICODE);
+      exit();
+    }
+    $sessionToken = (string)($_SESSION['token'] ?? '');
+    $reqToken = (string)($_POST['t'] ?? $_GET['t'] ?? '');
+    if ($sessionToken === '' || !hash_equals($sessionToken, $reqToken)) {
+      http_response_code(403);
+      echo json_encode(['status' => 'error', 'message' => 'Token keamanan tidak valid.'], JSON_UNESCAPED_UNICODE);
+      exit();
+    }
+    $noRawat = trim((string)($_POST['no_rawat'] ?? ''));
+    $note = trim((string)($_POST['note'] ?? ''));
+    $res = \Systems\Lib\MrmikService::resubmitKlpcmByPpa($this->core, $noRawat, $note);
+    if (($res['status'] ?? '') !== 'success') {
+      http_response_code(422);
+    }
+    echo json_encode($res, JSON_UNESCAPED_UNICODE);
+    exit();
+  }
+
+  public function getRiwayatrme()
+  {
+    $this->_addHeaderFiles();
+    \Systems\Lib\MrmikService::ensureSchema($this->db()->pdo());
+
+    return $this->draw('riwayat_rme.html', [
+      'token'      => htmlspecialchars((string)($_SESSION['token'] ?? ''), ENT_QUOTES, 'UTF-8'),
+      'tgl_awal'   => date('Y-m-d', strtotime('-30 days')),
+      'tgl_akhir'  => date('Y-m-d'),
+      'is_rm'      => \Systems\Lib\MrmikService::canManageMrmik($this->core),
+    ]);
+  }
+
+  public function anyRiwayatrmedata()
+  {
+    header('Content-Type: application/json; charset=utf-8');
+    if (empty($_SESSION['mlite_user'])) {
+      http_response_code(401);
+      echo json_encode(['status' => 'error', 'message' => 'Sesi login diperlukan.'], JSON_UNESCAPED_UNICODE);
+      exit();
+    }
+    try {
+      $filters = [
+        'tgl_awal'           => trim((string)($_REQUEST['tgl_awal'] ?? date('Y-m-d', strtotime('-30 days')))),
+        'tgl_akhir'          => trim((string)($_REQUEST['tgl_akhir'] ?? date('Y-m-d'))),
+        'scope'              => trim((string)($_REQUEST['scope'] ?? 'mine')),
+        'kode_form'          => trim((string)($_REQUEST['kode_form'] ?? 'all')),
+        'status_kelengkapan' => trim((string)($_REQUEST['status_kelengkapan'] ?? 'all')),
+        'search'             => trim((string)($_REQUEST['q'] ?? '')),
+      ];
+      $page = max(1, (int)($_REQUEST['page'] ?? 1));
+      $perPage = max(10, min(100, (int)($_REQUEST['per_page'] ?? 20)));
+      $rmeFormMap = (isset($this->core->module->form_rme) && method_exists($this->core->module->form_rme, 'getRmeFormMap'))
+        ? $this->core->module->form_rme->getRmeFormMap()
+        : [];
+      $data = \Systems\Lib\MrmikService::listPpaRmeHistory($this->core, $filters, $page, $perPage, $rmeFormMap);
+      echo json_encode(array_merge(['status' => 'success'], $data), JSON_UNESCAPED_UNICODE);
+    } catch (\Throwable $e) {
+      error_log('[pasien/riwayatrmedata] ' . $e->getMessage());
+      http_response_code(500);
+      echo json_encode(['status' => 'error', 'message' => 'Gagal memuat riwayat form RME.'], JSON_UNESCAPED_UNICODE);
+    }
+    exit();
   }
 
 }

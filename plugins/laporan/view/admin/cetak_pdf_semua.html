@@ -25,7 +25,7 @@
             <tbody>
                 {loop: $laporan}
                 <tr>
-                    <td>{$key+1}</td>
+                    <td>{?=$key + 1?}</td>
                     <td>{?=isset_or($value.no_rawat)?}</td>
                     <td>{?=isset_or($value.no_rkm_medis)?}</td>
                     <td>{?=isset_or($value.nm_pasien)?}</td>

@@ -40,7 +40,7 @@
                             {if: !empty($data)}
                             {loop: $data}
                             <tr>
-                                <td class="text-center">{$key + 1}</td>
+                                <td class="text-center">{?=$key + 1?}</td>
                                 <td><strong>{$value.no_rawat}</strong></td>
                                 <td>{$value.no_rkm_medis}</td>
                                 <td>{$value.nama_pasien} ({$value.jk})</td>

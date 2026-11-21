@@ -147,7 +147,7 @@
                                 {if: !empty($data.diagnosa_dpjp_list)}
                                 {loop: $data.diagnosa_dpjp_list}
                                 <tr>
-                                    <td class="text-center row-num">{$key+1}</td>
+                                    <td class="text-center row-num">{?=$key + 1?}</td>
                                     <td><input type="text" name="diag_diagnosa[]" class="form-control input-sm" value="{$value.diagnosa}" placeholder="Diagnosa"></td>
                                     <td><input type="text" name="diag_dpjp_nama[]" class="form-control input-sm" value="{$value.dpjp_nama}" placeholder="DPJP"></td>
                                     <td><input type="date" name="diag_dpjp_tgl_mulai[]" class="form-control input-sm" value="{$value.dpjp_tgl_mulai}"></td>
@@ -193,7 +193,7 @@
                                 {if: !empty($data.riwayat_alergi_list)}
                                 {loop: $data.riwayat_alergi_list}
                                 <tr>
-                                    <td class="text-center row-num">{$key+1}</td>
+                                    <td class="text-center row-num">{?=$key + 1?}</td>
                                     <td><input type="date" name="alergi_tanggal[]" class="form-control input-sm" value="{$value.tanggal}"></td>
                                     <td><input type="text" name="alergi_nama[]" class="form-control input-sm" value="{$value.alergi}" placeholder="Nama alergi (contoh: Amoksisilin, Udang, dsb)"></td>
                                     <td class="text-center"><button type="button" class="btn btn-danger btn-xs btn-remove-row"><i class="fa fa-times"></i></button></td>
@@ -232,7 +232,7 @@
                                         {if: !empty($data.diagnosa_ranap_list)}
                                         {loop: $data.diagnosa_ranap_list}
                                         <tr>
-                                            <td class="text-center row-num">{$key+1}</td>
+                                            <td class="text-center row-num">{?=$key + 1?}</td>
                                             <td><input type="date" name="ranap_tanggal[]" class="form-control input-sm" value="{$value.tanggal}"></td>
                                             <td><input type="text" name="ranap_diagnosa[]" class="form-control input-sm" value="{$value.diagnosa}" placeholder="Diagnosa saat rawat inap"></td>
                                             <td class="text-center"><button type="button" class="btn btn-danger btn-xs btn-remove-row"><i class="fa fa-times"></i></button></td>
@@ -270,7 +270,7 @@
                                         {if: !empty($data.operasi_tindakan_list)}
                                         {loop: $data.operasi_tindakan_list}
                                         <tr>
-                                            <td class="text-center row-num">{$key+1}</td>
+                                            <td class="text-center row-num">{?=$key + 1?}</td>
                                             <td><input type="date" name="operasi_tanggal[]" class="form-control input-sm" value="{$value.tanggal}"></td>
                                             <td><input type="text" name="operasi_tindakan[]" class="form-control input-sm" value="{$value.operasi_tindakan}" placeholder="Nama tindakan/operasi bedah"></td>
                                             <td class="text-center"><button type="button" class="btn btn-danger btn-xs btn-remove-row"><i class="fa fa-times"></i></button></td>
@@ -313,7 +313,7 @@
                                 {if: !empty($data.obat_obatan_list)}
                                 {loop: $data.obat_obatan_list}
                                 <tr>
-                                    <td class="text-center row-num">{$key+1}</td>
+                                    <td class="text-center row-num">{?=$key + 1?}</td>
                                     <td><input type="date" name="obat_tgl_mulai[]" class="form-control input-sm" value="{$value.tanggal_mulai}"></td>
                                     <td><input type="text" name="obat_nama[]" class="form-control input-sm" value="{$value.nama_obat}" placeholder="Nama obat"></td>
                                     <td><input type="text" name="obat_dosis[]" class="form-control input-sm" value="{$value.dosis}" placeholder="Dosis (misal: 500mg)"></td>

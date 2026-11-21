@@ -327,10 +327,10 @@
                          <label>Aktifkan OTP Login (WhatsApp)</label>
                          <div class="radio">
                              <label class="radio-inline">
-                                <input type="radio" name="login_otp" value="ya" {if: $settings.login_otp == 'ya'}checked{/if} /> Ya
+                                <input type="radio" name="login_otp" value="ya" {if: isset_or($settings.login_otp) == 'ya'}checked{/if} /> Ya
                              </label>
                              <label class="radio-inline">
-                                <input type="radio" name="login_otp" value="tidak" {if: $settings.login_otp == 'tidak' || empty($settings.login_otp)}checked{/if} /> Tidak
+                                <input type="radio" name="login_otp" value="tidak" {if: isset_or($settings.login_otp) == 'tidak' || empty($settings.login_otp)}checked{/if} /> Tidak
                              </label>
                          </div>
                     </div>

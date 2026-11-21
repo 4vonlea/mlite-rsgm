@@ -18,6 +18,9 @@ class Admin extends AdminModule
         $this->core->addJS(url('assets/jscripts/qrcode.js'), 'footer');
         $this->core->addJS(url('assets/jscripts/jquery.qrcode.js'), 'footer');
         $this->core->addJS(url('plugins/esignature/assets/signature_pad.min.js'), 'footer');
+        if (class_exists('\Systems\Lib\RmeFormRevision')) {
+            \Systems\Lib\RmeFormRevision::setDynamicCatalog($this->getRmeFormMap());
+        }
         \Systems\Lib\Event::add("rsgmgha.dropdown_menu", function ($row) {
             $this->renderDropdownMenu($row);
         });
@@ -142,7 +145,13 @@ class Admin extends AdminModule
         $rajalManageRowsMeta = [];
 
         if ($isRajalManage) {
-            $listKey = isset($variables['edukasi']) ? 'edukasi' : (isset($variables['data']) ? 'data' : '');
+            $listKey = '';
+            foreach (['edukasi', 'data', 'rows', 'list'] as $candKey) {
+                if (isset($variables[$candKey]) && is_array($variables[$candKey])) {
+                    $listKey = $candKey;
+                    break;
+                }
+            }
             if ($listKey !== '' && is_array($variables[$listKey])) {
                 $variables[$listKey] = \Systems\Lib\RmeFormRevision::enrichRows($this->core, $rajalTable, $variables[$listKey]);
                 foreach ($variables[$listKey] as $mr) {
@@ -271,7 +280,14 @@ class Admin extends AdminModule
             'ringkasan_riwayat_klinik' => 'ringkasan_riwayat_klinik',
             'rj_jatuh_nyeri_anak' => 'rj_asesmen_jatuh_nyeri_anak',
         ];
-        return $map[$dir] ?? '';
+        if (isset($map[$dir])) {
+            return $map[$dir];
+        }
+        if (class_exists('\Systems\Lib\RmeFormRevision')) {
+            \Systems\Lib\RmeFormRevision::setDynamicCatalog($this->getRmeFormMap());
+            return \Systems\Lib\RmeFormRevision::getTableByViewDir($dir);
+        }
+        return '';
     }
 
     private function buildRajalFormRevisionBannerHtml($table, array $meta)
@@ -1855,8 +1871,77 @@ public function getJs()
 
         var isDirty = false;
         var isSaving = false;
+        var isTriggeringPreview = false;
         var autoSaveTimer = null;
-        var autoSaveEnabled = true;
+        var hasExplicitPreview = /[?&]preview_mode=1(?:&|#|$)/i.test(window.location.href);
+        var hasUrlNoRawat = /[?&]no_rawat=[^&#]+/i.test(window.location.href);
+        var hasUrlId = /[?&](?:id|id_triase)=[^&#]+/i.test(window.location.href);
+        var hasPathParam = /\/form_rme\/[a-z0-9_]*form\/[^\/?#]+/i.test(window.location.pathname || '');
+        var isPreviewMode = hasExplicitPreview || (!hasUrlNoRawat && !hasUrlId && !hasPathParam);
+        var autoSaveEnabled = !isPreviewMode;
+
+        if (isPreviewMode) {
+            if (!$form.find('input[name="preview_mode"]').length) {
+                var hiddenPreview = document.createElement('input');
+                hiddenPreview.type = 'hidden';
+                hiddenPreview.name = 'preview_mode';
+                hiddenPreview.value = '1';
+                $form[0].appendChild(hiddenPreview);
+            }
+
+            // Sisipkan preview_mode=1 ke seluruh POST AJAX form_rme agar skrip custom form juga tidak menulis DB
+            $.ajaxPrefilter(function(options) {
+                if (!options || !options.url) return;
+                var u = String(options.url).toLowerCase();
+                var m = String(options.type || options.method || 'GET').toUpperCase();
+                if (m === 'POST' && (u.indexOf('form_rme') !== -1 || u.indexOf('update_bmt') !== -1)) {
+                    if (options.url.indexOf('preview_mode=') === -1) {
+                        options.url += (options.url.indexOf('?') !== -1 ? '&' : '?') + 'preview_mode=1';
+                    }
+                    if (typeof FormData !== 'undefined' && options.data instanceof FormData) {
+                        options.data.set('preview_mode', '1');
+                    }
+                }
+            });
+
+            // Banner pemberitahuan Mode Simulasi di atas form (tanpa innerHTML)
+            if (!document.getElementById('rme-preview-mode-banner')) {
+                var banner = document.createElement('div');
+                banner.id = 'rme-preview-mode-banner';
+                banner.style.background = '#fffbeb';
+                banner.style.border = '1px solid #fde68a';
+                banner.style.borderLeft = '4px solid #d97706';
+                banner.style.borderRadius = '8px';
+                banner.style.padding = '10px 14px';
+                banner.style.marginBottom = '14px';
+                banner.style.color = '#92400e';
+                banner.style.fontSize = '12.5px';
+                banner.style.display = 'flex';
+                banner.style.alignItems = 'center';
+                banner.style.justifyContent = 'space-between';
+                banner.style.flexWrap = 'wrap';
+                banner.style.gap = '10px';
+
+                var txtWrap = document.createElement('div');
+                var ico = document.createElement('i');
+                ico.className = 'fa fa-flask';
+                ico.style.marginRight = '7px';
+                txtWrap.appendChild(ico);
+                var strong = document.createElement('strong');
+                strong.textContent = 'Mode Simulasi / Pratinjau: ';
+                txtWrap.appendChild(strong);
+                txtWrap.appendChild(document.createTextNode('Formulir dibuka di luar Lembar Kerja Pasien. Anda dapat mengisi dan klik "Lihat Output (Cetak)" untuk pratinjau hasil. Data TIDAK disimpan ke database maupun riwayat pasien — untuk pengisian resmi, buka dari Lembar Kerja RME Pasien.'));
+                banner.appendChild(txtWrap);
+
+                var btnTopOut = document.createElement('button');
+                btnTopOut.type = 'button';
+                btnTopOut.className = 'btn btn-xs btn-primary btn-trigger-rme-preview';
+                btnTopOut.textContent = 'Lihat Output (Cetak)';
+                banner.appendChild(btnTopOut);
+
+                $form.before(banner);
+            }
+        }
 
         // Container Toast Notifikasi
         if (!$('#rme-toast').length) {
@@ -1937,6 +2022,21 @@ public function getJs()
                 '    <span class="rme-status-dot" id="rme-dot"></span>',
                 '    <span id="rme-status-text">Siap Mengisi</span>',
                 '  </div>',
+                '  <div id="rme-completeness-wrap" style="position:relative; display:inline-flex; align-items:center;">',
+                '    <button type="button" id="rme-completeness-pill" title="Klik untuk melihat daftar isian formulir yang masih kosong" style="display:inline-flex; align-items:center; gap:7px; background:#f8fafc; border:1px solid #cbd5e1; border-radius:999px; padding:4px 10px; font-size:11.5px; font-weight:700; color:#334155; cursor:pointer;">',
+                '      <span style="width:46px; height:6px; background:#e2e8f0; border-radius:999px; overflow:hidden; display:inline-block;">',
+                '        <span id="rme-completeness-bar" style="display:block; height:100%; width:0%; background:#3b82f6; transition:width .2s;"></span>',
+                '      </span>',
+                '      <span id="rme-completeness-txt">0%</span>',
+                '    </button>',
+                '    <div id="rme-completeness-pop" style="display:none; position:absolute; bottom:42px; right:0; width:300px; max-height:280px; overflow-y:auto; background:#fff; border:1px solid #cbd5e1; border-radius:10px; box-shadow:0 12px 28px rgba(15,23,42,.22); padding:10px 12px; z-index:9999; text-align:left;">',
+                '      <div style="font-weight:700; font-size:12px; color:#0f172a; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">',
+                '        <span><i class="fa fa-tasks text-primary"></i> Kelengkapan Form Real-Time</span>',
+                '        <span id="rme-completeness-count" style="font-size:11px; color:#64748b;">0/0</span>',
+                '      </div>',
+                '      <div id="rme-completeness-missing" style="font-size:11.5px; color:#475569;"></div>',
+                '    </div>',
+                '  </div>',
                 '  <button type="button" class="btn-rme-sticky-preview btn-trigger-rme-preview" title="Lihat hasil formulir cetak tanpa harus keluar atau menyimpan terlebih dahulu">',
                 '    <i class="fa fa-print"></i> Lihat Output (Cetak)',
                 '  </button>',
@@ -1953,6 +2053,11 @@ public function getJs()
             ].join('');
 
             $('body').append(stickyHtml);
+            if (isPreviewMode) {
+                $('#rme-sticky-bar .rme-autosave-toggle').hide();
+                $('#btn-rme-quick-save, #btn-rme-done').hide();
+                $('#rme-status-text').text('Mode Simulasi (Tidak Disimpan)');
+            }
         }
 
         var $statusText = $('#rme-status-text');
@@ -1974,6 +2079,129 @@ public function getJs()
             isDirty = true;
             setStatus('dirty', 'Ada perubahan...');
         }
+
+        // 4b. Indikator Persentase Kelengkapan Form RME Real-Time (MRMIK 12)
+        var completenessTimer = null;
+        function computeRealtimeCompleteness() {
+            var $pill = $('#rme-completeness-pill');
+            if (!$pill.length || !$form.length) return;
+
+            var ignoredNames = /^(id|id_triase|no_rawat|no_rkm_medis|no_rm|nm_pasien|nama_pasien|tgl_lahir|jk|jenis_kelamin|alamat|alamat_pasien|umur|preview_mode|revision_reason|t|ajax_save|display_.*|kop_img|search.*)$/i;
+            var optionalSuffix = /(_lain|_lainnya|_ket$|_keterangan$|_tambahan$|_notes$|_alasan$|_detail$)/i;
+            var groups = {}; // key => { filled: bool, label: string, el: DOMElement }
+
+            function getFieldLabel($el, fallbackName) {
+                var id = $el.attr('id');
+                var txt = '';
+                if (id) {
+                    var $lblFor = $form.find('label[for="' + id.replace(/"/g, '\\"') + '"]').first();
+                    if ($lblFor.length) txt = $.trim($lblFor.text());
+                }
+                if (!txt) {
+                    var $grp = $el.closest('.form-group, td, .col-md-12, .col-md-6, .col-md-4, .col-md-3, .col-sm-6, .col-sm-4');
+                    var $lbl = $grp.find('label, .control-label').first();
+                    if ($lbl.length) txt = $.trim($lbl.clone().children('input,select,textarea').remove().end().text());
+                }
+                if (!txt) txt = $el.attr('placeholder') || fallbackName.replace(/\[\]/g, '').replace(/_/g, ' ');
+                txt = txt.replace(/\s+/g, ' ').replace(/[:*]+$/g, '').trim();
+                if (txt.length > 44) txt = txt.substring(0, 44) + '...';
+                return txt || fallbackName;
+            }
+
+            $form.find('input, textarea, select').each(function() {
+                var $el = $(this);
+                var tag = (this.tagName || '').toLowerCase();
+                var type = (tag === 'input') ? String($el.attr('type') || 'text').toLowerCase() : tag;
+                if (type === 'hidden' || type === 'submit' || type === 'button' || type === 'reset' || type === 'file') return;
+                if ($el.prop('disabled') || $el.closest('.modal').length) return;
+                if ($el.is('[readonly]') && type !== 'radio' && type !== 'checkbox') return;
+                if (!$el.is(':visible')) return;
+
+                var rawName = String($el.attr('name') || $el.attr('id') || '').trim();
+                if (!rawName) return;
+                var cleanName = rawName.replace(/\[\]$/, '').replace(/\[[^\]]*\]/g, '_');
+                if (ignoredNames.test(cleanName) || optionalSuffix.test(cleanName)) return;
+
+                var key = (type === 'radio' || type === 'checkbox') ? ('grp:' + rawName) : ('fld:' + rawName);
+                var isFilled = false;
+                if (type === 'radio' || type === 'checkbox') {
+                    isFilled = $el.is(':checked');
+                } else {
+                    var v = $.trim(String($el.val() || ''));
+                    isFilled = (v !== '' && v !== '-' && v !== '0000-00-00');
+                }
+
+                if (!groups[key]) {
+                    groups[key] = { filled: isFilled, label: getFieldLabel($el, cleanName), el: this };
+                } else if (isFilled) {
+                    groups[key].filled = true;
+                }
+            });
+
+            var keys = Object.keys(groups);
+            var total = keys.length;
+            var filled = 0;
+            var missing = [];
+            for (var i = 0; i < keys.length; i++) {
+                var g = groups[keys[i]];
+                if (g.filled) filled++;
+                else missing.push(g);
+            }
+            var pct = total > 0 ? Math.round((filled / total) * 100) : 100;
+            var color = pct >= 80 ? '#10b981' : (pct >= 50 ? '#f59e0b' : '#ef4444');
+            var bg = pct >= 80 ? '#ecfdf5' : (pct >= 50 ? '#fffbeb' : '#fef2f2');
+            var bd = pct >= 80 ? '#a7f3d0' : (pct >= 50 ? '#fde68a' : '#fecaca');
+
+            $('#rme-completeness-bar').css({ width: pct + '%', background: color });
+            $('#rme-completeness-txt').text('Kelengkapan ' + pct + '%').css('color', color);
+            $('#rme-completeness-pill').css({ background: bg, borderColor: bd });
+            $('#rme-completeness-count').text(filled + '/' + total + ' isian');
+
+            var $missBox = $('#rme-completeness-missing').empty();
+            if (!missing.length) {
+                $missBox.append($('<div style="color:#047857;font-weight:600;padding:4px 0;"></div>').text('Seluruh isian inti yang tampil sudah terisi!'));
+            } else {
+                $missBox.append($('<div style="font-size:11px;color:#64748b;margin-bottom:5px;"></div>').text('Klik item di bawah untuk langsung menuju field yang kosong:'));
+                var maxShow = Math.min(missing.length, 15);
+                for (var m = 0; m < maxShow; m++) {
+                    (function(item) {
+                        var $row = $('<a href="#" style="display:block;padding:4px 6px;border-radius:5px;color:#991b1b;text-decoration:none;border-bottom:1px solid #f1f5f9;"></a>')
+                            .text('• ' + item.label)
+                            .on('click', function(ev) {
+                                ev.preventDefault();
+                                $('#rme-completeness-pop').hide();
+                                if (item.el) {
+                                    item.el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                    setTimeout(function() { try { item.el.focus(); } catch (e) {} }, 250);
+                                }
+                            });
+                        $missBox.append($row);
+                    })(missing[m]);
+                }
+                if (missing.length > maxShow) {
+                    $missBox.append($('<div style="font-size:10.5px;color:#64748b;margin-top:4px;"></div>').text('... dan ' + (missing.length - maxShow) + ' field lainnya.'));
+                }
+            }
+        }
+
+        function scheduleCompleteness() {
+            clearTimeout(completenessTimer);
+            completenessTimer = setTimeout(computeRealtimeCompleteness, 150);
+        }
+
+        $form.on('input change', 'input, textarea, select', scheduleCompleteness);
+        $(document).on('click', '#rme-completeness-pill', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            computeRealtimeCompleteness();
+            $('#rme-completeness-pop').toggle();
+        });
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('#rme-completeness-wrap').length) {
+                $('#rme-completeness-pop').hide();
+            }
+        });
+        setTimeout(computeRealtimeCompleteness, 350);
 
         // 6. Universal Live Print Preview Trigger (Kirim POST Form ke Tab Baru)
         $(document).on('click', '.btn-trigger-rme-preview, #btn_header_output, #btn_preview_output', function(e) {
@@ -2001,8 +2229,13 @@ public function getJs()
             }
 
             // Jalankan callback serialisasi lokal saja (tanpa .trigger('submit') agar tab asal tidak ikut submit/redirect ke *save -> *manage)
-            $form.triggerHandler('rme:beforeSave');
-            $form.triggerHandler('submit');
+            isTriggeringPreview = true;
+            try {
+                $form.triggerHandler('rme:beforeSave');
+                $form.triggerHandler('submit');
+            } finally {
+                isTriggeringPreview = false;
+            }
 
             var origAction = $form.data('rmeOrigAction') || $form.attr('action');
             var origTarget = $form.attr('target');
@@ -2169,6 +2402,7 @@ public function getJs()
         });
 
         function scheduleAutoSave() {
+            if (isPreviewMode) return;
             if (rmeRevMeta && (rmeRevMeta.needs_reason || rmeRevMeta.is_voided)) return;
             clearTimeout(autoSaveTimer);
             autoSaveTimer = setTimeout(function() {
@@ -2178,8 +2412,31 @@ public function getJs()
             }, 3000);
         }
 
+        if (isPreviewMode) {
+            // Cegat tombol simpan & submit langsung agar membuka Output tanpa menyimpan ke DB
+            $form.on('submit', function(e) {
+                if (isTriggeringPreview) return;
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                showToast('Mode Simulasi: menampilkan output tanpa menyimpan ke database.', 'success');
+                $('.btn-trigger-rme-preview').first().trigger('click');
+                return false;
+            });
+            $form.find('button[type="submit"], input[type="submit"]').each(function() {
+                var $btn = $(this);
+                $btn.attr('title', 'Mode Simulasi: hanya menampilkan output cetak, tidak menyimpan ke database');
+            });
+        }
+
         // Fungsi Simpan AJAX
         function performSave(isAuto, onComplete, extraReason) {
+            if (isPreviewMode) {
+                if (!isAuto) {
+                    showToast('Mode Simulasi: data tidak disimpan ke DB. Gunakan tombol Lihat Output (Cetak).', 'success');
+                }
+                if (typeof onComplete === 'function') onComplete(false, { status: 'preview_only' });
+                return;
+            }
             if (isSaving) return;
             if (rmeRevMeta && rmeRevMeta.is_voided) {
                 showToast('Formulir ini telah dibatalkan (VOID) dan tidak dapat diubah.', 'error');
@@ -4124,6 +4381,42 @@ public function getPatientContext($no_rawat)
         }
 
         return $merged;
+    }
+
+    public function renderLivePreviewBySaveRoute(string $rawMethod)
+    {
+        $map = $this->getRmeFormMap();
+        $methodLower = strtolower(trim($rawMethod));
+        $base = preg_replace('/(save|form|manage)$/i', '', $methodLower);
+
+        $targetCetak = '';
+        if (isset($map[$methodLower])) {
+            $targetCetak = $methodLower;
+        } elseif ($base !== '' && isset($map[$base . 'cetak'])) {
+            $targetCetak = $base . 'cetak';
+        } else {
+            foreach ($map as $routeCetak => $info) {
+                $rf = strtolower((string)($info['route_form'] ?? ''));
+                $rfBase = preg_replace('/(save|form|manage)$/i', '', $rf);
+                if ($rf === $methodLower || ($base !== '' && $rfBase === $base)) {
+                    $targetCetak = $routeCetak;
+                    break;
+                }
+            }
+        }
+
+        if ($targetCetak !== '') {
+            return $this->renderLiveCetakPreview($targetCetak);
+        }
+
+        header('Content-Type: text/html; charset=utf-8');
+        echo '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Mode Simulasi RME</title></head>'
+           . '<body style="font-family:Arial,sans-serif;padding:32px;background:#f8fafc;color:#0f172a;">'
+           . '<div style="max-width:560px;margin:40px auto;background:#fff;border:1px solid #fde68a;border-left:4px solid #d97706;border-radius:8px;padding:24px;">'
+           . '<h3 style="margin-top:0;color:#92400e;">Mode Simulasi / Pratinjau (Manajemen Form RME)</h3>'
+           . '<p>Data tidak disimpan ke database karena formulir dibuka dalam Mode Simulasi. Gunakan tombol <strong>Lihat Output (Cetak)</strong> pada lembar formulir untuk melihat hasil cetak.</p>'
+           . '</div></body></html>';
+        exit();
     }
 
     public function renderLiveCetakPreview($routeCetak)

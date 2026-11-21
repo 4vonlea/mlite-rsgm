@@ -317,7 +317,7 @@
                   <tbody id="detail-rows">
                     {loop: $detail}
                     <tr class="detail-row">
-                      <td style="text-align: center; vertical-align: middle;" class="row-num">{$key+1}</td>
+                      <td style="text-align: center; vertical-align: middle;" class="row-num">{?=$key + 1?}</td>
                       <td style="vertical-align: middle;" class="td-tgl">
                         <span class="view-tgl">{?= !empty($value.tanggal_jam) ? date('d/m/Y H:i', strtotime($value.tanggal_jam)) : '-' ?}</span>
                         <input type="hidden" name="detail_tanggal_jam[]" class="in-tgl" value="{?= !empty($value.tanggal_jam) ? date('Y-m-d\TH:i', strtotime($value.tanggal_jam)) : '' ?}">

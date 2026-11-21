@@ -238,7 +238,7 @@
                   <tbody id="tbody-record-nyeri">
                     {loop: $data.items}
                     <tr class="row-item-nyeri">
-                      <td style="text-align: center; vertical-align: middle;" class="row-num">{$value.idx + 1}</td>
+                      <td style="text-align: center; vertical-align: middle;" class="row-num">{?=$key + 1?}</td>
                       <td style="vertical-align: middle;" class="td-tgl">
                         <span class="view-tgl" style="font-weight: 600; color: #0f172a;">{$value.tgl_jam}</span>
                         <input type="hidden" name="record[{$value.idx}][tgl_jam]" class="in-tgl_jam" value="{$value.tgl_jam}">

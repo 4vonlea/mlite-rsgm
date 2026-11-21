@@ -757,3 +757,124 @@ CREATE TABLE IF NOT EXISTS `bridging_srb_bpjs_obat` (
   `jumlah` varchar(10) DEFAULT NULL,
   PRIMARY KEY (`no_sep`,`no_srb`,`kd_obat`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- ----------------------------------------------------------------------------
+-- Tabel log & arsip penggabungan No. RM duplikat (Opsi A: Soft Archive, MRMIK)
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mlite_pasien_merge_log` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `source_no_rkm_medis` varchar(15) NOT NULL,
+  `target_no_rkm_medis` varchar(15) NOT NULL,
+  `source_nm_pasien` varchar(100) NOT NULL DEFAULT '',
+  `target_nm_pasien` varchar(100) NOT NULL DEFAULT '',
+  `reason` text NOT NULL,
+  `fill_empty_biodata` tinyint(1) NOT NULL DEFAULT 0,
+  `total_rows_moved` int(11) NOT NULL DEFAULT 0,
+  `affected_tables_json` longtext DEFAULT NULL,
+  `source_snapshot_json` longtext DEFAULT NULL,
+  `target_before_json` longtext DEFAULT NULL,
+  `merged_by_username` varchar(100) NOT NULL DEFAULT '',
+  `merged_by_name` varchar(150) NOT NULL DEFAULT '',
+  `merged_by_role` varchar(50) NOT NULL DEFAULT '',
+  `ip_address` varchar(64) DEFAULT '',
+  `merged_at` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_source_rm` (`source_no_rkm_medis`),
+  KEY `idx_target_rm` (`target_no_rkm_medis`),
+  KEY `idx_merged_at` (`merged_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
+-- ----------------------------------------------------------------------------
+-- Tabel Audit Log Akses Baca & Cetak e-RM (MRMIK 11 & PMK 24/2022)
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mlite_rme_access_logs` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL DEFAULT 0,
+  `username` varchar(60) NOT NULL DEFAULT '',
+  `fullname` varchar(120) NOT NULL DEFAULT '',
+  `user_role` varchar(40) NOT NULL DEFAULT '',
+  `action_type` varchar(40) NOT NULL DEFAULT 'VIEW_RIWAYAT',
+  `module` varchar(50) NOT NULL DEFAULT '',
+  `route` varchar(120) NOT NULL DEFAULT '',
+  `no_rkm_medis` varchar(20) NOT NULL DEFAULT '',
+  `nm_pasien` varchar(100) NOT NULL DEFAULT '',
+  `no_rawat` varchar(30) NOT NULL DEFAULT '',
+  `detail` varchar(255) NOT NULL DEFAULT '',
+  `ip_address` varchar(45) NOT NULL DEFAULT '',
+  `user_agent` varchar(255) NOT NULL DEFAULT '',
+  `created_at` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_created_at` (`created_at`),
+  KEY `idx_no_rm` (`no_rkm_medis`),
+  KEY `idx_no_rawat` (`no_rawat`),
+  KEY `idx_username_action` (`username`, `action_type`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- ----------------------------------------------------------------------------
+-- Tabel Review Kelengkapan Rekam Medis / KLPCM Kualitatif (MRMIK 12)
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mlite_klpcm_reviews` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `no_rawat` varchar(30) NOT NULL,
+  `no_rkm_medis` varchar(20) NOT NULL DEFAULT '',
+  `status_review` enum('Lengkap','Belum Lengkap','Perlu Revisi') NOT NULL DEFAULT 'Belum Lengkap',
+  `konsistensi_klinis` tinyint(1) NOT NULL DEFAULT 0,
+  `kejelasan_catatan` tinyint(1) NOT NULL DEFAULT 0,
+  `informed_consent_ok` tinyint(1) NOT NULL DEFAULT 0,
+  `skor_kuantitatif` tinyint(3) NOT NULL DEFAULT 0,
+  `catatan` text DEFAULT NULL,
+  `reviewer_username` varchar(60) NOT NULL DEFAULT '',
+  `reviewer_name` varchar(120) NOT NULL DEFAULT '',
+  `reviewed_at` datetime NOT NULL,
+  `updated_at` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_no_rawat` (`no_rawat`),
+  KEY `idx_status_review` (`status_review`),
+  KEY `idx_reviewed_at` (`reviewed_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- ----------------------------------------------------------------------------
+-- Tabel Kamus Daftar Singkatan & Simbol Terstandar / Do Not Use (MRMIK 2.1)
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mlite_mrmik_singkatan` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `kode` varchar(50) NOT NULL,
+  `kepanjangan` varchar(255) NOT NULL,
+  `jenis` enum('diperbolehkan','dilarang','simbol') NOT NULL DEFAULT 'diperbolehkan',
+  `kategori` varchar(60) NOT NULL DEFAULT 'Umum',
+  `alternatif_benar` varchar(255) NOT NULL DEFAULT '',
+  `keterangan` text DEFAULT NULL,
+  `status` tinyint(1) NOT NULL DEFAULT 1,
+  `created_by` varchar(60) NOT NULL DEFAULT 'system',
+  `updated_at` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_jenis_kategori` (`jenis`, `kategori`),
+  KEY `idx_kode` (`kode`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
+-- ----------------------------------------------------------------------------
+-- Tabel Notifikasi Pengembalian & Verifikasi Ulang KLPCM (MRMIK 12)
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mlite_klpcm_notifications` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `no_rawat` varchar(30) NOT NULL,
+  `no_rkm_medis` varchar(20) NOT NULL DEFAULT '',
+  `nm_pasien` varchar(100) NOT NULL DEFAULT '',
+  `target_username` varchar(60) NOT NULL,
+  `target_name` varchar(120) NOT NULL DEFAULT '',
+  `notif_type` enum('RETURNED_TO_PPA','RESUBMITTED_TO_RM') NOT NULL DEFAULT 'RETURNED_TO_PPA',
+  `status_review` varchar(40) NOT NULL DEFAULT 'Perlu Revisi',
+  `message` text DEFAULT NULL,
+  `due_at` datetime DEFAULT NULL,
+  `is_read` tinyint(1) NOT NULL DEFAULT 0,
+  `is_resolved` tinyint(1) NOT NULL DEFAULT 0,
+  `created_by` varchar(60) NOT NULL DEFAULT '',
+  `created_by_name` varchar(120) NOT NULL DEFAULT '',
+  `created_at` datetime NOT NULL,
+  `resolved_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_target_active` (`target_username`, `is_resolved`, `created_at`),
+  KEY `idx_no_rawat` (`no_rawat`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

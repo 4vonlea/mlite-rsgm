@@ -549,6 +549,18 @@
     </button>
   </div>
 
+  {if: !empty($riwayat.merged_notice)}
+  <div style="background:#fffbeb; border-bottom:1px solid #fde68a; border-left:4px solid #d97706; padding:10px 20px; color:#92400e; font-size:12.5px;">
+    <i class="fa fa-compress" style="margin-right:6px;"></i>
+    <strong>Pengalihan Rekam Medis Tergabung (Arsip):</strong>
+    No. RM <code>{$riwayat.merged_notice.source_rm}</code> telah digabung ke No. RM Utama <code>{$riwayat.merged_notice.target_rm}</code>
+    pada <strong>{$riwayat.merged_notice.merged_at}</strong> oleh <strong>{$riwayat.merged_notice.merged_by}</strong>.
+    {if: !empty($riwayat.merged_notice.reason)}
+      <span style="display:block; margin-top:2px; font-style:italic;">Alasan: "{$riwayat.merged_notice.reason}"</span>
+    {/if}
+  </div>
+  {/if}
+
   <!-- IDENTITAS RINGKAS + HIGHLIGHT KLINIS LINTAS KUNJUNGAN -->
   <div class="erm-patient-strip">
     <div class="erm-patient-grid">

@@ -1,0 +1,349 @@
+<style>
+  .sgk-wrap { padding: 4px 0 24px; }
+  .sgk-hero {
+    background: linear-gradient(135deg, #0f172a 0%, #312e81 100%);
+    color: #fff; border-radius: 12px; padding: 18px 22px; margin-bottom: 18px;
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, .14);
+  }
+  .sgk-hero h3 { margin: 0 0 4px; font-size: 18px; font-weight: 700; color: #fff; }
+  .sgk-hero p { margin: 0; font-size: 12.5px; color: #c7d2fe; }
+  .sgk-badge-std {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(129, 140, 248, .22); color: #e0e7ff; border: 1px solid rgba(165, 180, 252, .35);
+    padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 700;
+  }
+  .sgk-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .sgk-tab {
+    border: 1px solid #cbd5e1; background: #fff; color: #334155; padding: 8px 14px; border-radius: 9px;
+    font-size: 12.5px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: all .15s;
+  }
+  .sgk-tab:hover { background: #f8fafc; }
+  .sgk-tab.active { background: #0f172a; color: #fff; border-color: #0f172a; }
+  .sgk-tab.active-danger { background: #b91c1c; color: #fff; border-color: #991b1b; }
+  .sgk-tab .cnt { padding: 2px 7px; border-radius: 999px; font-size: 11px; background: rgba(148,163,184,.2); }
+  .sgk-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; box-shadow: 0 1px 3px rgba(15,23,42,.04); overflow: hidden; }
+  .sgk-toolbar { padding: 12px 16px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .sgk-table { margin: 0; font-size: 12.5px; }
+  .sgk-table thead th { background: #f1f5f9; color: #334155; font-weight: 700; font-size: 11.5px; text-transform: uppercase; border-bottom: 1px solid #cbd5e1; }
+  .sgk-code { display: inline-block; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 800; font-size: 13px; padding: 3px 9px; border-radius: 6px; }
+  .sgk-code-ok { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+  .sgk-code-ban { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; text-decoration: line-through; }
+  .sgk-code-sym { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
+  @media print {
+    .sgk-hero button, .sgk-tabs, .sgk-toolbar, .sgk-act-col, .navbar, .rsgm-quickbar, .rsgm-page-header { display: none !important; }
+    .sgk-hero { background: #fff !important; color: #000 !important; border: 1px solid #000; box-shadow: none; }
+    .sgk-hero h3, .sgk-hero p { color: #000 !important; }
+  }
+</style>
+
+<div class="sgk-wrap">
+  <div class="sgk-hero">
+    <div>
+      <div class="sgk-badge-std"><i class="fa fa-book"></i> MRMIK 2.1 &bull; Standardisasi Terminologi &amp; Singkatan</div>
+      <h3>Kamus Daftar Singkatan &amp; Simbol Resmi RSGM</h3>
+      <p>Acuan resmi singkatan yang diperbolehkan, daftar singkatan yang <strong>DILARANG (Do Not Use)</strong>, serta simbol klinis &amp; odontogram bagi seluruh PPA.</p>
+    </div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+      <button type="button" onclick="window.print()" class="btn btn-sm btn-default" style="font-weight:700; border-radius:8px; padding:8px 14px;">
+        <i class="fa fa-print"></i> Cetak Daftar Resmi
+      </button>
+      {if: $can_manage}
+      <button type="button" id="btnAddSingkatan" class="btn btn-sm btn-success" style="font-weight:700; border-radius:8px; padding:8px 14px;">
+        <i class="fa fa-plus"></i> Tambah Entri
+      </button>
+      {/if}
+    </div>
+  </div>
+
+  <div id="sgkAlert" style="display:none; margin-bottom:12px;"></div>
+
+  <div class="sgk-tabs">
+    <button type="button" class="sgk-tab active" data-jenis="all"><i class="fa fa-list"></i> Semua <span class="cnt" id="cntAll">0</span></button>
+    <button type="button" class="sgk-tab" data-jenis="diperbolehkan"><i class="fa fa-check-circle text-success"></i> Diperbolehkan <span class="cnt" id="cntOk">0</span></button>
+    <button type="button" class="sgk-tab" data-jenis="dilarang"><i class="fa fa-ban text-danger"></i> Dilarang (Do Not Use) <span class="cnt" id="cntBan">0</span></button>
+    <button type="button" class="sgk-tab" data-jenis="simbol"><i class="fa fa-asterisk text-primary"></i> Simbol Klinis &amp; Odontogram <span class="cnt" id="cntSym">0</span></button>
+  </div>
+
+  <div class="sgk-card">
+    <div class="sgk-toolbar">
+      <div style="flex:1; min-width:220px;">
+        <input type="text" id="sgkSearch" class="form-control input-sm" placeholder="Cari singkatan, kepanjangan, alternatif yang benar, atau keterangan...">
+      </div>
+      <div style="min-width:190px;">
+        <select id="sgkKategori" class="form-control input-sm">
+          <option value="all">Semua Kategori</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-hover table-striped sgk-table">
+        <thead>
+          <tr>
+            <th style="width:170px;">Singkatan / Simbol</th>
+            <th style="width:130px;">Status</th>
+            <th style="width:140px;">Kategori</th>
+            <th>Arti / Kepanjangan</th>
+            <th>Penulisan yang Benar / Keterangan</th>
+            {if: $can_manage}<th class="text-center sgk-act-col" style="width:95px;">Aksi</th>{/if}
+          </tr>
+        </thead>
+        <tbody id="tbodySingkatan">
+          <tr><td colspan="{if: $can_manage}6{else}5{/if}" class="text-center text-muted" style="padding:26px;"><i class="fa fa-spinner fa-spin"></i> Memuat daftar singkatan...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{if: $can_manage}
+<div class="modal fade" id="modalSingkatan" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content" style="border-radius:12px; overflow:hidden;">
+      <div class="modal-header" style="background:#0f172a; color:#fff;">
+        <button type="button" class="close" data-dismiss="modal" style="color:#fff; opacity:.9;">&times;</button>
+        <h4 class="modal-title" id="modalSgkTitle" style="color:#fff; font-size:15px; font-weight:700;">Tambah Singkatan / Simbol</h4>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="sgkId" value="0">
+        <div class="row">
+          <div class="col-sm-6">
+            <div class="form-group">
+              <label style="font-weight:700;">Singkatan / Simbol *</label>
+              <input type="text" id="sgkKode" class="form-control" placeholder="Misal: CPPT atau QD">
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <div class="form-group">
+              <label style="font-weight:700;">Status (Jenis) *</label>
+              <select id="sgkJenis" class="form-control">
+                <option value="diperbolehkan">Diperbolehkan (Standar RSGM)</option>
+                <option value="dilarang">Dilarang (Do Not Use)</option>
+                <option value="simbol">Simbol Klinis / Odontogram</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label style="font-weight:700;">Kategori</label>
+          <input type="text" id="sgkKatInput" class="form-control" list="sgkKatList" placeholder="Umum &amp; RM / Kedokteran Gigi / Farmasi &amp; Resep">
+          <datalist id="sgkKatList">
+            <option value="Umum & RM">
+            <option value="Tanda Vital">
+            <option value="Kedokteran Gigi">
+            <option value="Radiologi Gigi">
+            <option value="Farmasi & Resep">
+            <option value="Odontogram">
+          </datalist>
+        </div>
+        <div class="form-group">
+          <label style="font-weight:700;">Arti / Kepanjangan *</label>
+          <input type="text" id="sgkKepanjangan" class="form-control" placeholder="Penjelasan lengkap singkatan atau risiko salah baca">
+        </div>
+        <div class="form-group" id="grpAlternatif">
+          <label style="font-weight:700;">Penulisan yang Benar (Wajib untuk status Dilarang)</label>
+          <input type="text" id="sgkAlternatif" class="form-control" placeholder='Misal: Tulis lengkap "unit" atau "1x sehari"'>
+        </div>
+        <div class="form-group">
+          <label style="font-weight:700;">Keterangan Tambahan</label>
+          <textarea id="sgkKet" class="form-control" rows="2"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default btn-sm" data-dismiss="modal">Batal</button>
+        <button type="button" class="btn btn-primary btn-sm" id="btnSaveSingkatan" style="font-weight:700;"><i class="fa fa-save"></i> Simpan</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="modalHapusSgk" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-sm" role="document">
+    <div class="modal-content" style="border-radius:10px; overflow:hidden;">
+      <div class="modal-header" style="background:#b91c1c; color:#fff;">
+        <h4 class="modal-title" style="color:#fff; font-size:14px; font-weight:700;">Hapus Entri Kamus</h4>
+      </div>
+      <div class="modal-body" id="hapusSgkText" style="font-size:13px;"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default btn-xs" data-dismiss="modal">Batal</button>
+        <button type="button" class="btn btn-danger btn-xs" id="btnConfirmHapusSgk" style="font-weight:700;">Ya, Hapus</button>
+      </div>
+    </div>
+  </div>
+</div>
+{/if}
+
+<script>
+(function($) {
+  'use strict';
+  var DATA_URL = '{?=url([ADMIN, "pasien", "singkatandata"])?}';
+  var SAVE_URL = '{?=url([ADMIN, "pasien", "singkatansave"])?}';
+  var DEL_URL  = '{?=url([ADMIN, "pasien", "singkatanhapus"])?}';
+  var TOKEN = '{$token}';
+  var CAN_MANAGE = {if: $can_manage}true{else}false{/if};
+  var activeJenis = 'all';
+  var rowMap = {};
+  var pendingDeleteId = 0;
+
+  function escHtml(s) {
+    if (s === null || s === undefined) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+  }
+  function showAlert(msg, type) {
+    var cls = type === 'error' ? 'alert-danger' : 'alert-success';
+    $('#sgkAlert').html('<div class="alert ' + cls + ' alert-dismissible"><button type="button" class="close" data-dismiss="alert">&times;</button>' + escHtml(msg) + '</div>').show();
+  }
+
+  function loadSingkatan() {
+    $.ajax({
+      url: DATA_URL,
+      method: 'GET',
+      dataType: 'json',
+      data: {
+        jenis: activeJenis,
+        kategori: $('#sgkKategori').val(),
+        q: $.trim($('#sgkSearch').val())
+      },
+      success: function(res) {
+        if (!res || res.status !== 'success') return;
+        var c = res.counts || {};
+        $('#cntAll').text(c.total || 0);
+        $('#cntOk').text(c.diperbolehkan || 0);
+        $('#cntBan').text(c.dilarang || 0);
+        $('#cntSym').text(c.simbol || 0);
+
+        // Populate category dropdown once/preserving selection
+        var curKat = $('#sgkKategori').val() || 'all';
+        var cats = res.categories || [];
+        var optHtml = '<option value="all">Semua Kategori</option>';
+        for (var k = 0; k < cats.length; k++) {
+          optHtml += '<option value="' + escHtml(cats[k]) + '"' + (curKat === cats[k] ? ' selected' : '') + '>' + escHtml(cats[k]) + '</option>';
+        }
+        $('#sgkKategori').html(optHtml);
+
+        var rows = res.rows || [];
+        var cols = CAN_MANAGE ? 6 : 5;
+        if (!rows.length) {
+          $('#tbodySingkatan').html('<tr><td colspan="' + cols + '" class="text-center text-muted" style="padding:26px;">Tidak ada entri yang cocok dengan pencarian.</td></tr>');
+          return;
+        }
+        rowMap = {};
+        var html = '';
+        for (var i = 0; i < rows.length; i++) {
+          var r = rows[i];
+          rowMap[r.id] = r;
+          var codeCls = r.jenis === 'dilarang' ? 'sgk-code-ban' : (r.jenis === 'simbol' ? 'sgk-code-sym' : 'sgk-code-ok');
+          var stBadge = r.jenis === 'dilarang'
+            ? '<span class="label label-danger">DILARANG</span>'
+            : (r.jenis === 'simbol' ? '<span class="label label-info">SIMBOL</span>' : '<span class="label label-success">DIPERBOLEHKAN</span>');
+          var rightCol = '';
+          if (r.alternatif_benar) {
+            rightCol += '<div style="color:#065f46;font-weight:700;"><i class="fa fa-check"></i> ' + escHtml(r.alternatif_benar) + '</div>';
+          }
+          if (r.keterangan) {
+            rightCol += '<div style="color:#475569;font-size:11.5px;">' + escHtml(r.keterangan) + '</div>';
+          }
+          html += '<tr' + (r.jenis === 'dilarang' ? ' style="background:#fffafa;"' : '') + '>' +
+            '<td><span class="sgk-code ' + codeCls + '">' + escHtml(r.kode) + '</span></td>' +
+            '<td>' + stBadge + '</td>' +
+            '<td><span class="label label-default">' + escHtml(r.kategori) + '</span></td>' +
+            '<td><strong>' + escHtml(r.kepanjangan) + '</strong></td>' +
+            '<td>' + (rightCol || '<span class="text-muted">-</span>') + '</td>' +
+            (CAN_MANAGE ? '<td class="text-center sgk-act-col"><button type="button" class="btn btn-default btn-xs js-edit-sgk" data-id="' + r.id + '" title="Edit"><i class="fa fa-pencil"></i></button> <button type="button" class="btn btn-danger btn-xs js-del-sgk" data-id="' + r.id + '" title="Hapus"><i class="fa fa-trash"></i></button></td>' : '') +
+          '</tr>';
+        }
+        $('#tbodySingkatan').html(html);
+      }
+    });
+  }
+
+  $('.sgk-tab').on('click', function() {
+    $('.sgk-tab').removeClass('active active-danger');
+    activeJenis = $(this).attr('data-jenis');
+    $(this).addClass(activeJenis === 'dilarang' ? 'active-danger' : 'active');
+    loadSingkatan();
+  });
+  var searchTimer = null;
+  $('#sgkSearch').on('input', function() {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(loadSingkatan, 200);
+  });
+  $('#sgkKategori').on('change', loadSingkatan);
+
+  if (CAN_MANAGE) {
+    $('#btnAddSingkatan').on('click', function() {
+      $('#modalSgkTitle').text('Tambah Singkatan / Simbol Baru');
+      $('#sgkId').val(0);
+      $('#sgkKode, #sgkKepanjangan, #sgkAlternatif, #sgkKet').val('');
+      $('#sgkJenis').val('diperbolehkan');
+      $('#sgkKatInput').val('Umum & RM');
+      $('#modalSingkatan').modal('show');
+    });
+    $(document).on('click', '.js-edit-sgk', function() {
+      var r = rowMap[$(this).attr('data-id')];
+      if (!r) return;
+      $('#modalSgkTitle').text('Edit Singkatan / Simbol');
+      $('#sgkId').val(r.id);
+      $('#sgkKode').val(r.kode);
+      $('#sgkJenis').val(r.jenis);
+      $('#sgkKatInput').val(r.kategori);
+      $('#sgkKepanjangan').val(r.kepanjangan);
+      $('#sgkAlternatif').val(r.alternatif_benar || '');
+      $('#sgkKet').val(r.keterangan || '');
+      $('#modalSingkatan').modal('show');
+    });
+    $('#btnSaveSingkatan').on('click', function() {
+      var $btn = $(this).prop('disabled', true);
+      $.ajax({
+        url: SAVE_URL,
+        method: 'POST',
+        dataType: 'json',
+        data: {
+          t: TOKEN,
+          id: $('#sgkId').val(),
+          kode: $('#sgkKode').val(),
+          jenis: $('#sgkJenis').val(),
+          kategori: $('#sgkKatInput').val(),
+          kepanjangan: $('#sgkKepanjangan').val(),
+          alternatif_benar: $('#sgkAlternatif').val(),
+          keterangan: $('#sgkKet').val()
+        },
+        success: function(res) {
+          $('#modalSingkatan').modal('hide');
+          showAlert((res && res.message) || 'Tersimpan.', 'success');
+          loadSingkatan();
+        },
+        error: function(xhr) {
+          showAlert((xhr.responseJSON && xhr.responseJSON.message) || 'Gagal menyimpan.', 'error');
+        },
+        complete: function() { $btn.prop('disabled', false); }
+      });
+    });
+    $(document).on('click', '.js-del-sgk', function() {
+      var r = rowMap[$(this).attr('data-id')];
+      if (!r) return;
+      pendingDeleteId = r.id;
+      $('#hapusSgkText').html('Hapus entri <strong>' + escHtml(r.kode) + '</strong> dari kamus singkatan RSGM?');
+      $('#modalHapusSgk').modal('show');
+    });
+    $('#btnConfirmHapusSgk').on('click', function() {
+      if (!pendingDeleteId) return;
+      $.ajax({
+        url: DEL_URL,
+        method: 'POST',
+        dataType: 'json',
+        data: { t: TOKEN, id: pendingDeleteId },
+        success: function(res) {
+          $('#modalHapusSgk').modal('hide');
+          showAlert((res && res.message) || 'Entri dihapus.', 'success');
+          loadSingkatan();
+        }
+      });
+    });
+  }
+
+  $(document).ready(loadSingkatan);
+})(jQuery);
+</script>
+

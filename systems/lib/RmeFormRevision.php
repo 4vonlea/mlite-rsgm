@@ -15,6 +15,79 @@ class RmeFormRevision
     /** @var array<string, bool> Cache in-process agar ALTER TABLE hanya dicek sekali per tabel */
     private static $ensuredTables = [];
 
+    /** @var array<string, array> Katalog dinamis seluruh Form RME (IGD, Rawat Inap, Bedah, Rajal) dari form_rme->getRmeFormMap() */
+    private static $dynamicCatalog = [];
+
+    /** @var array<string, string> Peta direktori view -> nama tabel untuk seluruh Form RME */
+    private static $viewDirToTable = [];
+
+    /** @var array<string, array> Cache pengecekan kolom tabel */
+    private static $tableColsCache = [];
+
+    /**
+     * Daftarkan peta seluruh formulir RME (IGD, Ranap, Bedah, Rajal) secara dinamis
+     * agar MRMIK 8 mencakup seluruh formulir selain 12 formulir Rajal eksplisit.
+     */
+    public static function setDynamicCatalog(array $formMap)
+    {
+        $skipTables = [
+            'pemeriksaan_ranap' => true, // Sudah ditangani oleh SoapRevision (composite key)
+            'mlite_triase_igd'  => true, // Primary key bukan `id` (id_triase)
+        ];
+
+        $explicit = self::registry();
+        foreach ($formMap as $info) {
+            $tbl = trim((string)($info['table'] ?? ''));
+            if ($tbl === '' || isset($skipTables[$tbl]) || !preg_match('/^[a-zA-Z0-9_]+$/', $tbl)) {
+                continue;
+            }
+            $tpl = trim((string)($info['template'] ?? ''));
+            if ($tpl !== '') {
+                $dir = explode('/', $tpl)[0];
+                if ($dir !== '' && !isset(self::$viewDirToTable[$dir])) {
+                    self::$viewDirToTable[$dir] = $tbl;
+                }
+            }
+            if (isset($explicit[$tbl]) || isset(self::$dynamicCatalog[$tbl])) {
+                continue;
+            }
+            $routeManage = strtolower(trim((string)($info['route_manage'] ?? '')));
+            $routeForm   = strtolower(trim((string)($info['route_form'] ?? '')));
+            $type = preg_replace('/manage$/i', '', $routeManage);
+            if ($type === '') {
+                $type = preg_replace('/form$/i', '', $routeForm);
+            }
+            $kode = trim((string)($info['kode'] ?? strtoupper($type)));
+            $nama = trim((string)($info['nama'] ?? $kode));
+
+            self::$dynamicCatalog[$tbl] = [
+                'type'         => $type,
+                'form_code'    => $kode,
+                'title'        => $nama,
+                'route_manage' => $routeManage,
+                'route_form'   => $routeForm,
+                'route_cetak'  => strtolower(trim((string)($info['route_cetak'] ?? ''))),
+                'tte_cols'     => [],
+                'sig_cols'     => [],
+                'ref_types'    => array_values(array_filter([$type, strtolower($kode)])),
+                'creator_cols' => ['created_by', 'nip', 'nip_petugas', 'kd_dokter', 'petugas', 'user_id'],
+                'json_cols'    => ['form_data', 'data_json', 'items', 'detail_json'],
+                'labels'       => [],
+                'is_dynamic'   => true,
+            ];
+        }
+    }
+
+    public static function getTableByViewDir($dir)
+    {
+        return self::$viewDirToTable[$dir] ?? '';
+    }
+
+    public static function isExplicitRajalTable($table)
+    {
+        return isset(self::registry()[$table]);
+    }
+
     /**
      * Registry lengkap 12 Formulir RME Rawat Jalan.
      */
@@ -246,7 +319,10 @@ class RmeFormRevision
     public static function getMetaByTable($table)
     {
         $reg = self::registry();
-        return $reg[$table] ?? null;
+        if (isset($reg[$table])) {
+            return $reg[$table];
+        }
+        return self::$dynamicCatalog[$table] ?? null;
     }
 
     public static function getMetaByType($type)
@@ -258,12 +334,18 @@ class RmeFormRevision
                 return $meta;
             }
         }
+        foreach (self::$dynamicCatalog as $table => $meta) {
+            if (strtolower($meta['type']) === $type) {
+                $meta['table'] = $table;
+                return $meta;
+            }
+        }
         return null;
     }
 
     public static function isRegisteredTable($table)
     {
-        return isset(self::registry()[$table]);
+        return isset(self::registry()[$table]) || isset(self::$dynamicCatalog[$table]);
     }
 
     /**
@@ -1568,5 +1650,226 @@ class RmeFormRevision
                 'value' => implode(' • ', $parts),
             ];
         }
+    }
+
+    /* =========================================================================
+     * INTERCEPTOR GENERIK MRMIK 8 UNTUK SELURUH FORM IGD, RAWAT INAP, & BEDAH
+     * ========================================================================= */
+
+    private static function tableHasIdColumn(\PDO $pdo, string $table): bool
+    {
+        if (!preg_match('/^[a-zA-Z0-9_]+$/', $table)) {
+            return false;
+        }
+        if (!isset(self::$tableColsCache[$table])) {
+            self::$tableColsCache[$table] = self::getValidTableColumns($pdo, $table);
+        }
+        return in_array('id', self::$tableColsCache[$table], true);
+    }
+
+    /**
+     * Petakan nama method `form_rme` (*save / *simpan / *hapus / *delete) ke metadata formulir pada getRmeFormMap().
+     */
+    public static function resolveFormByRoute(array $formMap, string $rawMethod): ?array
+    {
+        $act = strtolower(trim($rawMethod));
+        if ($act === '') {
+            return null;
+        }
+        $adminSkip = [
+            'manajemenrmesave', 'simpanaksesrme', 'simpanuserunitrme', 'tambahunitrme', 'hapusunitrme',
+            'tambahformrme', 'hapusformrme', 'batchstatusform', 'syncunitsimrs', 'tteverifysave',
+            'simpanaksesunit', 'edukasiprint', 'cetakberkas',
+        ];
+        if (in_array($act, $adminSkip, true)) {
+            return null;
+        }
+
+        // Alias khusus yang nama method-nya sedikit berbeda dari route_manage
+        $specialBaseMap = [
+            'pelayanankerohanihapus' => 'pelayanankerohanian',
+        ];
+        $base = $specialBaseMap[$act] ?? preg_replace('/(save|simpan|hapus|delete)$/i', '', $act);
+        if ($base === '' || $base === $act) {
+            return null;
+        }
+
+        foreach ($formMap as $info) {
+            $rm = preg_replace('/manage$/i', '', strtolower((string)($info['route_manage'] ?? '')));
+            $rf = preg_replace('/form$/i', '', strtolower((string)($info['route_form'] ?? '')));
+            $rc = preg_replace('/cetak$/i', '', strtolower((string)($info['route_cetak'] ?? '')));
+            if ($base === $rm || $base === $rf || $base === $rc) {
+                return $info;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Cegat aksi HAPUS/DELETE pada seluruh formulir IGD, Ranap, & Bedah agar menjadi Soft-Delete (VOID) berjejak MRMIK 8.
+     * Mengembalikan true jika sudah ditangani (controller delete permanen tidak perlu dijalankan).
+     */
+    public static function interceptGenericVoid($core, array $formMap, string $rawMethod, array $params = []): bool
+    {
+        $act = strtolower(trim($rawMethod));
+        if (!preg_match('/(hapus|delete)$/i', $act)) {
+            return false;
+        }
+        self::setDynamicCatalog($formMap);
+        $info = self::resolveFormByRoute($formMap, $act);
+        if (!$info || empty($info['table'])) {
+            return false;
+        }
+        $table = (string)$info['table'];
+        if (self::isExplicitRajalTable($table) || !self::isRegisteredTable($table)) {
+            return false;
+        }
+
+        $pdo = $core->db()->pdo();
+        if (!self::tableHasIdColumn($pdo, $table)) {
+            return false;
+        }
+
+        $id = (int)($_POST['id'] ?? ($_GET['id'] ?? ($params[0] ?? 0)));
+        if ($id <= 0) {
+            return false;
+        }
+        $reason = trim((string)($_POST['void_reason'] ?? ($_GET['void_reason'] ?? '')));
+        $res = self::voidRecord($core, $table, $id, $reason);
+
+        $isAjax = !empty($_POST['ajax_void']) || (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower((string)$_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest');
+        if ($isAjax) {
+            while (ob_get_level()) {
+                ob_end_clean();
+            }
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode($res, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            exit();
+        }
+
+        $core->setNotify(($res['status'] ?? '') === 'success' ? 'success' : 'failure', $res['message'] ?? 'Proses pembatalan (VOID) selesai.');
+        $fallbackUrl = !empty($info['route_manage']) ? url([ADMIN, 'form_rme', $info['route_manage']]) : ($_SERVER['HTTP_REFERER'] ?? url([ADMIN, 'form_rme', 'manajemenrme']));
+        redirect($fallbackUrl);
+        exit();
+    }
+
+    /**
+     * Cegat aksi SAVE/SIMPAN pada seluruh formulir IGD, Ranap, & Bedah untuk:
+     *  - Memblokir perubahan pada record VOID atau perubahan lewat 15 menit tanpa alasan koreksi (MRMIK 8)
+     *  - Mencatat entri awal (`markCreated`) atau snapshot before/after revisi (`commitRevision`) setelah DB selesai ditulis
+     */
+    public static function interceptGenericSave($core, array $formMap, string $rawMethod): void
+    {
+        $act = strtolower(trim($rawMethod));
+        if (!preg_match('/(save|simpan)$/i', $act)) {
+            return;
+        }
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+            return;
+        }
+        self::setDynamicCatalog($formMap);
+        $info = self::resolveFormByRoute($formMap, $act);
+        if (!$info || empty($info['table'])) {
+            return;
+        }
+        $table = (string)$info['table'];
+        if (self::isExplicitRajalTable($table) || !self::isRegisteredTable($table)) {
+            return;
+        }
+
+        $pdo = $core->db()->pdo();
+        if (!self::tableHasIdColumn($pdo, $table)) {
+            return;
+        }
+        self::ensureSchema($pdo, $table);
+
+        $id = (int)($_POST['id'] ?? ($_GET['id'] ?? 0));
+        $isAjax = !empty($_POST['ajax_save']) || (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower((string)$_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest');
+
+        if ($id > 0) {
+            $st = $pdo->prepare("SELECT * FROM `{$table}` WHERE id = ? LIMIT 1");
+            $st->execute([$id]);
+            $existing = $st->fetch(\PDO::FETCH_ASSOC);
+            if (!$existing) {
+                return;
+            }
+            if (!empty($existing['deleted_at'])) {
+                $err = ['status' => 'error', 'message' => 'Formulir ini sudah berstatus dibatalkan (VOID) dan tidak dapat diubah lagi (MRMIK 8).'];
+                if ($isAjax) {
+                    while (ob_get_level()) ob_end_clean();
+                    header('Content-Type: application/json; charset=utf-8');
+                    echo json_encode($err, JSON_UNESCAPED_UNICODE);
+                    exit();
+                }
+                $core->setNotify('failure', $err['message']);
+                redirect($_SERVER['HTTP_REFERER'] ?? url([ADMIN, 'form_rme', $info['route_manage'] ?? 'manajemenrme']));
+                exit();
+            }
+
+            $actor = self::getActorMeta($core);
+            $grace = self::checkGracePeriod($pdo, $table, $existing, $actor['username']);
+            $reason = trim((string)($_POST['revision_reason'] ?? ''));
+
+            if (!empty($grace['needs_reason']) && mb_strlen($reason) < 3) {
+                $resp = [
+                    'status'     => 'needs_reason',
+                    'action'     => 'amend',
+                    'why'        => $grace['why'],
+                    'table_name' => $table,
+                    'record_key' => (string)$id,
+                    'message'    => ($grace['why'] ?: 'Perubahan melewati masa tenggang 15 menit') . '. Wajib mengisi alasan koreksi (MRMIK 8).',
+                ];
+                if ($isAjax) {
+                    while (ob_get_level()) ob_end_clean();
+                    header('Content-Type: application/json; charset=utf-8');
+                    echo json_encode($resp, JSON_UNESCAPED_UNICODE);
+                    exit();
+                }
+                $core->setNotify('failure', $resp['message']);
+                redirect($_SERVER['HTTP_REFERER'] ?? url([ADMIN, 'form_rme', $info['route_form'] ?? 'manajemenrme']));
+                exit();
+            }
+
+            // Daftarkan shutdown hook untuk membandingkan snapshot DB sesudah controller selesai menyimpan
+            register_shutdown_function(function () use ($core, $pdo, $table, $id, $existing, $actor, $grace, $reason) {
+                try {
+                    $stAfter = $pdo->prepare("SELECT * FROM `{$table}` WHERE id = ? LIMIT 1");
+                    $stAfter->execute([$id]);
+                    $afterRow = $stAfter->fetch(\PDO::FETCH_ASSOC);
+                    if (!$afterRow) {
+                        return;
+                    }
+                    $diff = self::computeDiff($table, $existing, $afterRow);
+                    if (empty($diff)) {
+                        return;
+                    }
+                    $prep = [
+                        'status'   => 'allow',
+                        'existing' => $existing,
+                        'diff'     => $diff,
+                        'grace'    => $grace,
+                        'actor'    => $actor,
+                        'reason'   => $reason,
+                    ];
+                    self::commitRevision($core, $table, $id, $prep, $afterRow);
+                } catch (\Throwable $e) {
+                }
+            });
+            return;
+        }
+
+        // Entri baru (INSERT): tandai entry_created_at & created_by setelah baris baru berhasil disimpan
+        $maxIdBefore = (int)$pdo->query("SELECT COALESCE(MAX(id), 0) FROM `{$table}`")->fetchColumn();
+        register_shutdown_function(function () use ($core, $pdo, $table, $maxIdBefore) {
+            try {
+                $stNew = $pdo->prepare("SELECT id FROM `{$table}` WHERE id > ? ORDER BY id DESC LIMIT 1");
+                $stNew->execute([$maxIdBefore]);
+                $newId = (int)$stNew->fetchColumn();
+                if ($newId > 0) {
+                    self::markCreated($core, $table, $newId);
+                }
+            } catch (\Throwable $e) {
+            }
+        });
     }
 }

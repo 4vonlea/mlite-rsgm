@@ -790,10 +790,11 @@ class Admin extends AdminModule
         ->like('no_rkm_medis', '%' . $cari . '%')
         ->orLike('nm_pasien', '%' . $cari . '%')
         ->asc('no_rkm_medis')
-        ->limit(5)
+        ->limit(10)
         ->toArray();
+      $pasien = array_slice(\Systems\Lib\PasienMergeService::filterOutMergedRows($this->db()->pdo(), $pasien), 0, 5);
     }
-    echo $this->draw('pasien.html', ['pasien' => htmlspecialchars_array($pasien)]);
+    echo $this->draw('pasien.html', ['pasien' => htmlspecialchars_array($pasien ?? [])]);
     exit();
   }
 

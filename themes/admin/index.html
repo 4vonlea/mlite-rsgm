@@ -9,7 +9,7 @@
     <link rel="icon" href="{?=url()?}/{$mlite.logo}" type="image/x-icon">
     <link href="{$mlite.path}/assets/css/{$mlite.theme_admin}.min.css?v={$mlite.version}" rel="stylesheet">
     <link href="{$mlite.path}/assets/css/animate.min.css?v={$mlite.version}" rel="stylesheet">
-    <link href="{?=url(THEMES.'/admin/css/style.css?v=1149'.$mlite.version)?}" rel="stylesheet">
+    <link href="{?=url(THEMES.'/admin/css/style.css?v=1150'.$mlite.version)?}" rel="stylesheet">
     <link href="{$mlite.path}/assets/css/font-awesome.css?v={$mlite.version}" rel="stylesheet">
 <style>
 @media (max-width: 991px) {
@@ -643,7 +643,7 @@
               <li role="separator" class="rsgm-top-sep"></li>
 
               <!-- 1. Layanan -->
-              <li class="dropdown{if: isset_or($module.category) == 'layanan' && empty($mlite.is_telusur_erm)} active{/if}">
+              <li class="dropdown{if: isset_or($module.category) == 'layanan' && empty($mlite.is_mrmik_pasien_page)} active{/if}">
                 <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
                   <span>Layanan</span><i class="fa fa-angle-down rsgm-caret"></i>
                 </a>
@@ -709,55 +709,80 @@
               </li>
 
               <!-- 3. Rekam Medis (Form RME Dinamis + Modul Rekam Medik) -->
-              <li class="dropdown{if: isset_or($module.category) == 'rekammedik' || !empty($mlite.is_telusur_erm)} active{/if}">
+              <li class="dropdown{if: isset_or($module.category) == 'rekammedik' || !empty($mlite.is_mrmik_pasien_page)} active{/if}">
                 <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
                   <span>Rekam Medis</span><i class="fa fa-angle-down rsgm-caret"></i>
                 </a>
                 <ul class="dropdown-menu">
-                  <li class="dropdown-submenu{if: isset_or($module.dir) == 'form_rme' || isset_or($module.dir) == 'update_bmt'} active{/if}">
-                    <a href="#" class="dropdown-item rsgm-submenu-folder" role="button" aria-expanded="false">
-                      <i class="fa fa-file-text-o rsgm-dd-ico"></i>
-                      <span>Form RME</span>
+                  {if: $mlite.is_admin || $mlite.module_pasien}
+                  <li class="dropdown-submenu{if: isset_or($module.dir) == 'form_rme' || isset_or($module.dir) == 'update_bmt' || !empty($mlite.is_klpcm_rm) || !empty($mlite.is_akseslog_rm) || !empty($mlite.is_singkatan_rm)} active{/if}">
+                    {if: $mlite.is_admin}
+                    <a href="{?=url([ADMIN, 'form_rme', 'manajemenrme'])?}" class="dropdown-item">
+                      <i class="fa fa-sliders rsgm-dd-ico"></i>
+                      <span>Manajemen Form RME</span>
                     </a>
+                    {else}
+                    <a href="#" class="dropdown-item rsgm-submenu-folder" role="button" aria-expanded="false">
+                      <i class="fa fa-sliders rsgm-dd-ico"></i>
+                      <span>Manajemen Form RME</span>
+                    </a>
+                    {/if}
                     <ul class="dropdown-menu">
                       {if: $mlite.is_admin}
-                      <li>
+                      <li{if: isset_or($module.dir) == 'form_rme' || isset_or($module.dir) == 'update_bmt'} class="active"{/if}>
                         <a href="{?=url([ADMIN, 'form_rme', 'manajemenrme'])?}" class="dropdown-item">
                           <i class="fa fa-sliders rsgm-dd-ico"></i>
-                          <span>Manajemen Form RME</span>
+                          <span>Pengaturan Form &amp; Unit</span>
                         </a>
                       </li>
-                      {if: !empty($mlite.rme_categories)}<li role="separator" class="divider"></li>{/if}
                       {/if}
-                      {loop: $mlite.rme_categories as $cat}
-                      <li class="dropdown-submenu">
-                        <a href="#" class="dropdown-item rsgm-submenu-folder" role="button" aria-expanded="false">
-                          <i class="fa fa-folder-open-o rsgm-dd-ico"></i>
-                          <span>{$cat.nama_kategori}</span>
+                      {if: $mlite.module_pasien && $mlite.can_merge_rm}
+                      <li{if: !empty($mlite.is_klpcm_rm)} class="active"{/if}>
+                        <a href="{?=url([ADMIN, 'pasien', 'klpcm'])?}" class="dropdown-item">
+                          <i class="fa fa-check-square-o rsgm-dd-ico"></i>
+                          <span>Review Kelengkapan (KLPCM)</span>
                         </a>
-                        <ul class="dropdown-menu scrollable-menu">
-                          {loop: $cat.forms as $form}
-                          <li>
-                            <a href="{?=url([ADMIN, 'form_rme', $form.route_manage])?}" class="dropdown-item">
-                              <span class="rsgm-rme-code">{$form.kode_form}</span>
-                              <span>{$form.nama_form}</span>
-                            </a>
-                          </li>
-                          {/loop}
-                        </ul>
                       </li>
-                      {/loop}
-                      {if: empty($mlite.rme_categories) && !$mlite.is_admin}
-                      <li class="disabled"><a href="#" class="dropdown-item text-muted"><em>(Belum ada form yang diizinkan untuk unit Anda)</em></a></li>
+                      <li{if: !empty($mlite.is_akseslog_rm)} class="active"{/if}>
+                        <a href="{?=url([ADMIN, 'pasien', 'akseslog'])?}" class="dropdown-item">
+                          <i class="fa fa-shield rsgm-dd-ico"></i>
+                          <span>Log Akses e-RM</span>
+                        </a>
+                      </li>
+                      {/if}
+                      {if: $mlite.module_pasien}
+                      <li{if: !empty($mlite.is_singkatan_rm)} class="active"{/if}>
+                        <a href="{?=url([ADMIN, 'pasien', 'singkatan'])?}" class="dropdown-item">
+                          <i class="fa fa-book rsgm-dd-ico"></i>
+                          <span>Kamus Singkatan &amp; Simbol</span>
+                        </a>
+                      </li>
                       {/if}
                     </ul>
                   </li>
                   <li role="separator" class="divider"></li>
+                  {/if}
                   {if: $mlite.module_pasien && $mlite.pasien_access}
                   <li{if: !empty($mlite.is_telusur_erm)} class="active"{/if}>
                     <a href="{?=url([ADMIN, 'pasien', 'telusur'])?}" class="dropdown-item">
                       <i class="fa fa-search rsgm-dd-ico"></i>
                       <span>Telusur e-RM</span>
+                    </a>
+                  </li>
+                  {/if}
+                  {if: $mlite.module_pasien && $mlite.can_merge_rm}
+                  <li{if: !empty($mlite.is_duplikat_rm)} class="active"{/if}>
+                    <a href="{?=url([ADMIN, 'pasien', 'duplikat'])?}" class="dropdown-item">
+                      <i class="fa fa-compress rsgm-dd-ico"></i>
+                      <span>Gabung RM Duplikat</span>
+                    </a>
+                  </li>
+                  {/if}
+                  {if: $mlite.module_pasien}
+                  <li{if: !empty($mlite.is_riwayat_rme_ppa)} class="active"{/if}>
+                    <a href="{?=url([ADMIN, 'pasien', 'riwayatrme'])?}" class="dropdown-item">
+                      <i class="fa fa-history rsgm-dd-ico"></i>
+                      <span>Riwayat Form RME Saya</span>
                     </a>
                   </li>
                   {/if}
@@ -923,8 +948,31 @@
               </li>
             </ul>
 
-            <!-- KANAN BARIS 1: SISTEM, BANTUAN, IDENTITAS USER & KELUAR -->
+            <!-- KANAN BARIS 1: NOTIFIKASI KLPCM, SISTEM, BANTUAN, IDENTITAS USER & KELUAR -->
             <ul class="nav navbar-nav rsgm-topbar-right">
+              {if: $mlite.module_pasien}
+              <li class="dropdown" id="rsgmKlpcmBellDrop">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false" title="Pusat Notifikasi" style="position:relative; padding-right:14px;">
+                  <i class="fa fa-bell-o rsgm-top-ico" style="font-size:15px;"></i>
+                  <span id="rsgmKlpcmBellBadge" style="display:none; position:absolute; top:6px; right:4px; background:#dc2626; color:#fff; border-radius:999px; font-size:10px; font-weight:800; min-width:17px; height:17px; line-height:17px; text-align:center; padding:0 4px; box-shadow:0 0 0 2px #fff;">0</span>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-right" style="width:380px; max-width:94vw; padding:0; border-radius:10px; overflow:hidden; box-shadow:0 14px 32px rgba(15,23,42,.18); border:1px solid #cbd5e1; text-transform:none !important; letter-spacing:normal !important;">
+                  <li style="background:#0f172a; color:#fff; padding:11px 14px; display:flex; align-items:center; justify-content:space-between;">
+                    <span style="font-weight:700; font-size:13px;"><i class="fa fa-bell"></i> Pusat Notifikasi</span>
+                    <span id="rsgmKlpcmBellCountTxt" style="font-size:11px; color:#cbd5e1;">0 aktif</span>
+                  </li>
+                  <li id="rsgmNotifTabs" style="background:#f8fafc; border-bottom:1px solid #e2e8f0; padding:6px 10px; display:flex; gap:5px; flex-wrap:wrap;">
+                    <button type="button" class="btn btn-xs btn-primary js-notif-tab" data-cat="all" style="border-radius:999px; font-weight:700; font-size:11px;">Semua <span id="ntCntAll">0</span></button>
+                    <button type="button" class="btn btn-xs btn-default js-notif-tab" data-cat="klpcm" style="border-radius:999px; font-weight:600; font-size:11px;">KLPCM <span id="ntCntKlpcm">0</span></button>
+                    <button type="button" class="btn btn-xs btn-default js-notif-tab" data-cat="klinis" style="border-radius:999px; font-weight:600; font-size:11px;">Klinis <span id="ntCntKlinis">0</span></button>
+                    <button type="button" class="btn btn-xs btn-default js-notif-tab" data-cat="penunjang" style="border-radius:999px; font-weight:600; font-size:11px;">Penunjang <span id="ntCntPenunjang">0</span></button>
+                  </li>
+                  <li id="rsgmKlpcmBellList" style="max-height:330px; overflow-y:auto; background:#fff; padding:8px; text-transform:none;">
+                    <div class="text-center text-muted" style="padding:18px 10px; font-size:12px;">Memeriksa notifikasi...</div>
+                  </li>
+                </ul>
+              </li>
+              {/if}
               <li class="dropdown{if: isset_or($module.category) == 'main' && isset_or($module.dir) != 'dashboard'} active{/if}">
                 <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
                   <i class="fa fa-cog rsgm-top-ico"></i><span>Sistem</span><i class="fa fa-angle-down rsgm-caret"></i>
@@ -994,7 +1042,7 @@
               {if: $mlite.module_pasien}
               <li role="separator" class="rsgm-qsep"></li>
               <li>
-                <a href="{?=url([ADMIN, 'pasien', 'manage'])?}" class="rsgm-qpill{if: isset_or($module.dir) == 'pasien' && empty($mlite.is_telusur_erm)} active{/if}{if: !$mlite.pasien_access} disabled{/if}">
+                <a href="{?=url([ADMIN, 'pasien', 'manage'])?}" class="rsgm-qpill{if: isset_or($module.dir) == 'pasien' && empty($mlite.is_mrmik_pasien_page)} active{/if}{if: !$mlite.pasien_access} disabled{/if}">
                   <i class="fa fa-users ico-pasien"></i><span>Pasien</span>
                 </a>
               </li>
@@ -1114,7 +1162,7 @@
                         <div class="rsgm-page-header">
                             <div class="rsgm-page-title-wrap">
                                 <h1 class="content-title rsgm-page-title">
-                                    {if: !empty($mlite.is_telusur_erm)}<a href="{?=url([ADMIN,$module.dir,'telusur'])?}">{$module.name}</a>{elseif: $module.name == 'Rawat Jalan' | $module.name == 'Pengguna'}<a href="{?=url([ADMIN,$module.dir,'index'])?}">{$module.name}</a>{else}<a href="{?=url([ADMIN,$module.dir,'manage'])?}">{$module.name}</a>{/if}
+                                    {if: !empty($mlite.is_telusur_erm)}<a href="{?=url([ADMIN,$module.dir,'telusur'])?}">{$module.name}</a>{elseif: !empty($mlite.is_duplikat_rm)}<a href="{?=url([ADMIN,$module.dir,'duplikat'])?}">{$module.name}</a>{elseif: !empty($mlite.is_klpcm_rm)}<a href="{?=url([ADMIN,$module.dir,'klpcm'])?}">{$module.name}</a>{elseif: !empty($mlite.is_akseslog_rm)}<a href="{?=url([ADMIN,$module.dir,'akseslog'])?}">{$module.name}</a>{elseif: !empty($mlite.is_singkatan_rm)}<a href="{?=url([ADMIN,$module.dir,'singkatan'])?}">{$module.name}</a>{elseif: !empty($mlite.is_riwayat_rme_ppa)}<a href="{?=url([ADMIN,$module.dir,'riwayatrme'])?}">{$module.name}</a>{elseif: $module.name == 'Rawat Jalan' | $module.name == 'Pengguna'}<a href="{?=url([ADMIN,$module.dir,'index'])?}">{$module.name}</a>{else}<a href="{?=url([ADMIN,$module.dir,'manage'])?}">{$module.name}</a>{/if}
                                 </h1>
                             </div>
                             <nav class="rsgm-breadcrumb-nav" aria-label="Breadcrumb">
@@ -1281,14 +1329,49 @@
     }
     </script>
     <!-- End PWA Support -->
+    <!-- Modal Konfirmasi PPA: Tandai Berkas KLPCM Sudah Dilengkapi -->
+    <div class="modal fade" id="modalPpaResubmitKlpcm" tabindex="-1" role="dialog">
+      <div class="modal-dialog modal-sm" role="document" style="width:430px; max-width:94vw;">
+        <div class="modal-content" style="border-radius:12px; overflow:hidden;">
+          <div class="modal-header" style="background:#065f46; color:#fff;">
+            <button type="button" class="close" data-dismiss="modal" style="color:#fff; opacity:.9;">&times;</button>
+            <h4 class="modal-title" style="color:#fff; font-size:14.5px; font-weight:700;"><i class="fa fa-check-circle"></i> Konfirmasi Sudah Dilengkapi</h4>
+          </div>
+          <div class="modal-body" style="font-size:12.5px;">
+            <input type="hidden" id="ppaResubNoRawat">
+            <div id="ppaResubInfo" class="well well-sm" style="margin-bottom:10px;"></div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label for="ppaResubNote" style="font-weight:700;">Catatan Perbaikan untuk Komite RM (Opsional)</label>
+              <textarea id="ppaResubNote" class="form-control" rows="2" placeholder="Contoh: Form RJ04 &amp; TTE DPJP sudah dilengkapi..."></textarea>
+            </div>
+            <div id="ppaResubErr" class="text-danger" style="display:none; margin-top:6px; font-weight:600;"></div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default btn-xs" data-dismiss="modal">Batal</button>
+            <button type="button" class="btn btn-success btn-xs" id="btnConfirmPpaResubmit" style="font-weight:700; padding:5px 12px;"><i class="fa fa-paper-plane"></i> Kirim ke Komite RM</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script>
     jQuery(function () {
-      jQuery(document).on('click', '.rsgm-header-nav a.rsgm-submenu-folder, #display .dropdown-submenu > a[href="#"], .display .dropdown-submenu > a[href="#"]', function (e) {
+      function closeTableDropdowns() {
+        jQuery('.dropdown-menu[data-parent]').hide().find('.submenu-open').removeClass('submenu-open');
+        jQuery('#display td.open, .display td.open, [data-attachedUl].open').removeClass('open');
+      }
+      jQuery(document).on('click', '.rsgm-header-nav a.rsgm-submenu-folder, #display .dropdown-submenu > a[href="#"], .display .dropdown-submenu > a[href="#"], .dropdown-menu[data-parent] .dropdown-submenu > a[href="#"]', function (e) {
         e.preventDefault();
         e.stopPropagation();
         var parentItem = jQuery(this).parent('.dropdown-submenu');
         parentItem.siblings('.dropdown-submenu').removeClass('submenu-open');
         parentItem.toggleClass('submenu-open');
+      });
+      jQuery(document).on('click', '.dropdown-menu[data-parent] a:not(.dropdown-toggle), #display td .dropdown-menu a[data-toggle="modal"], .display td .dropdown-menu a[data-toggle="modal"]', function () {
+        closeTableDropdowns();
+      });
+      jQuery(document).on('show.bs.modal', '.modal', function () {
+        closeTableDropdowns();
       });
       jQuery(document).on('hidden.bs.dropdown', '.rsgm-header-nav .dropdown, #display td, .display td', function () {
         jQuery(this).find('.submenu-open').removeClass('submenu-open');
@@ -1296,6 +1379,139 @@
       jQuery(document).on('click', '.rsgm-period-menu input', function (e) {
         e.stopPropagation();
       });
+
+      // Pusat Notifikasi Navbar (KLPCM, Rujukan Internal, Supervisi Koas, Penunjang)
+      if (jQuery('#rsgmKlpcmBellDrop').length) {
+        var bellNotifUrl = '{?=url([ADMIN, "pasien", "klpcmnotif"])?}';
+        var bellResubUrl = '{?=url([ADMIN, "pasien", "klpcmresubmit"])?}';
+        var bellRiwayatBase = '{?=url([ADMIN, "pasien", "riwayatperawatan"])?}'.replace(/\?.*$/, '');
+        var bellToken = (typeof mlite !== 'undefined' && mlite.token) ? mlite.token : '';
+        var bellAllItems = [];
+        var bellActiveCat = 'all';
+
+        function escBell(s) {
+          if (s === null || s === undefined) return '';
+          return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+        }
+
+        function renderBellList() {
+          var filtered = [];
+          for (var i = 0; i < bellAllItems.length; i++) {
+            if (bellActiveCat === 'all' || bellAllItems[i].category === bellActiveCat) {
+              filtered.push(bellAllItems[i]);
+            }
+          }
+          if (!filtered.length) {
+            jQuery('#rsgmKlpcmBellList').html('<div class="text-center text-muted" style="padding:22px 14px; font-size:12.5px; text-transform:none;"><i class="fa fa-check-circle text-success" style="font-size:20px;display:block;margin-bottom:6px;"></i>Tidak ada notifikasi yang perlu ditindaklanjuti.</div>');
+            return;
+          }
+          var html = '';
+          for (var j = 0; j < filtered.length; j++) {
+            var it = filtered[j];
+            var sev = it.severity || 'info';
+            var bg = sev === 'danger' ? '#fef2f2' : (sev === 'warning' ? '#fffbeb' : '#f8fafc');
+            var bd = sev === 'danger' ? '#fecaca' : (sev === 'warning' ? '#fde68a' : '#e2e8f0');
+            var badgeCls = sev === 'danger' ? 'label-danger' : (sev === 'warning' ? 'label-warning' : 'label-info');
+            var catPill = '<span style="font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:4px;background:#e2e8f0;color:#334155;margin-right:4px;">' + escBell(it.category_label || it.category) + '</span>';
+
+            var actHtml = '';
+            if (it.action_type === 'klpcm_ppa') {
+              var rUrl = bellRiwayatBase + '/' + encodeURIComponent(it.no_rkm_medis || '') + (bellToken ? ('?t=' + encodeURIComponent(bellToken)) : '');
+              actHtml = '<a href="' + rUrl + '" target="_blank" class="btn btn-default btn-xs" style="font-weight:600;text-transform:none;"><i class="fa fa-folder-open-o"></i> Buka e-RM</a> ' +
+                '<button type="button" class="btn btn-success btn-xs js-open-ppa-resubmit" data-norawat="' + escBell(it.no_rawat) + '" data-pasien="' + escBell((it.nm_pasien || '') + ' (' + (it.no_rkm_medis || '') + ')') + '" style="font-weight:700;text-transform:none;"><i class="fa fa-check"></i> Sudah Dilengkapi</button>';
+            } else if (it.action_url) {
+              actHtml = '<a href="' + it.action_url + '" class="btn btn-primary btn-xs" style="font-weight:700;text-transform:none;">' + escBell(it.action_label || 'Buka') + '</a>';
+            }
+
+            html += '<div style="background:' + bg + '; border:1px solid ' + bd + '; border-radius:8px; padding:9px 11px; margin-bottom:7px; font-size:12px; text-transform:none;">' +
+              '<div style="display:flex; justify-content:space-between; align-items:center; gap:4px; margin-bottom:3px;">' +
+                '<strong style="color:#0f172a;">' + escBell(it.title || '-') + (it.no_rkm_medis ? ' <span style="color:#64748b;font-weight:500;">(' + escBell(it.no_rkm_medis) + ')</span>' : '') + '</strong>' +
+              '</div>' +
+              '<div style="margin-bottom:4px;">' + catPill + '<span class="label ' + badgeCls + '" style="font-size:9.5px;">' + escBell(it.badge || '') + '</span></div>' +
+              '<div style="color:#334155; margin-bottom:6px; line-height:1.35;">' + escBell(it.message || '-') + '</div>' +
+              '<div style="display:flex; justify-content:space-between; align-items:center; gap:6px; flex-wrap:wrap;">' +
+                '<span style="font-size:10px; color:#64748b; font-family:monospace;">' + escBell(it.no_rawat || it.created_at || '') + '</span>' +
+                '<div>' + actHtml + '</div>' +
+              '</div>' +
+            '</div>';
+          }
+          jQuery('#rsgmKlpcmBellList').html(html);
+        }
+
+        function refreshKlpcmBell() {
+          jQuery.getJSON(bellNotifUrl, function (res) {
+            if (!res || res.status !== 'success') return;
+            var cnt = parseInt(res.count || 0, 10);
+            var counts = res.counts || { all: cnt, klpcm: cnt, klinis: 0, penunjang: 0 };
+            bellAllItems = res.items || [];
+            if (cnt > 0) {
+              jQuery('#rsgmKlpcmBellBadge').text(cnt > 99 ? '99+' : cnt).show();
+            } else {
+              jQuery('#rsgmKlpcmBellBadge').hide();
+            }
+            jQuery('#rsgmKlpcmBellCountTxt').text(cnt + ' aktif');
+            jQuery('#ntCntAll').text(counts.all || 0);
+            jQuery('#ntCntKlpcm').text(counts.klpcm || 0);
+            jQuery('#ntCntKlinis').text(counts.klinis || 0);
+            jQuery('#ntCntPenunjang').text(counts.penunjang || 0);
+            renderBellList();
+          });
+        }
+
+        window.refreshKlpcmBell = refreshKlpcmBell;
+        jQuery(document).on('click', '.js-notif-tab', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          bellActiveCat = jQuery(this).attr('data-cat') || 'all';
+          jQuery('.js-notif-tab').removeClass('btn-primary').addClass('btn-default');
+          jQuery(this).removeClass('btn-default').addClass('btn-primary');
+          renderBellList();
+        });
+        jQuery('#rsgmKlpcmBellDrop').on('click', '.dropdown-menu', function (e) {
+          if (!jQuery(e.target).closest('a').length) {
+            e.stopPropagation();
+          }
+        });
+        jQuery(document).on('click', '.js-open-ppa-resubmit', function (e) {
+          e.preventDefault();
+          var nr = jQuery(this).attr('data-norawat') || '';
+          var ps = jQuery(this).attr('data-pasien') || '';
+          jQuery('#ppaResubNoRawat').val(nr);
+          jQuery('#ppaResubInfo').html('<strong>Pasien:</strong> ' + escBell(ps) + '<br><strong>No. Rawat:</strong> <code>' + escBell(nr) + '</code>');
+          jQuery('#ppaResubNote').val('');
+          jQuery('#ppaResubErr').hide();
+          jQuery('#rsgmKlpcmBellDrop').removeClass('open');
+          jQuery('#modalPpaResubmitKlpcm').modal('show');
+        });
+        jQuery('#btnConfirmPpaResubmit').on('click', function () {
+          var $b = jQuery(this).prop('disabled', true);
+          jQuery.ajax({
+            url: bellResubUrl,
+            method: 'POST',
+            dataType: 'json',
+            data: {
+              t: bellToken,
+              no_rawat: jQuery('#ppaResubNoRawat').val(),
+              note: jQuery('#ppaResubNote').val()
+            },
+            success: function (res) {
+              if (res && res.status === 'success') {
+                jQuery('#modalPpaResubmitKlpcm').modal('hide');
+                refreshKlpcmBell();
+                if (window.reloadRiwayatRmePpa) window.reloadRiwayatRmePpa();
+              } else {
+                jQuery('#ppaResubErr').text((res && res.message) || 'Gagal mengirim konfirmasi.').show();
+              }
+            },
+            error: function (xhr) {
+              jQuery('#ppaResubErr').text((xhr.responseJSON && xhr.responseJSON.message) || 'Terjadi kesalahan jaringan.').show();
+            },
+            complete: function () { $b.prop('disabled', false); }
+          });
+        });
+
+        refreshKlpcmBell();
+      }
     });
     </script>
     <script src="{?= url(THEMES.'/admin/js/scripts.js?v='.$mlite.version) ?}"></script>

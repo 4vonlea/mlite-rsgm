@@ -80,46 +80,10 @@ class Admin extends Main
 
         $this->assign['presensi'] = $this->db('mlite_modules')->where('dir', 'presensi')->oneArray();
 
-        // Hak Akses Form RME berdasarkan Unit Pengguna
+        // Hak Akses Admin & Gabung RM
         $this->assign['is_admin'] = ($access == 'all') || ($this->getUserInfo('role', $id) == 'admin') || ($id == 1);
+        $this->assign['can_merge_rm'] = \Systems\Lib\PasienMergeService::canManageMerge($this);
         $this->assign['rme_categories'] = [];
-        try {
-            if ($this->db('mlite_modules')->where('dir', 'form_rme')->oneArray() || $this->db('mlite_modules')->where('dir', 'update_bmt')->oneArray()) {
-                if ($this->assign['is_admin']) {
-                    $forms = $this->db('mlite_rme_form')->where('status', '1')->asc('kategori')->asc('urutan')->toArray();
-                } else {
-                    $userCap = $this->getUserInfo('cap', $id);
-                    $poliCodes = !empty($userCap) ? array_filter(array_map('trim', explode(',', $userCap))) : [];
-                    $forms = [];
-                    if (!empty($poliCodes)) {
-                        $forms = $this->db('mlite_rme_unit_form')
-                            ->join('mlite_rme_form', 'mlite_rme_form.id = mlite_rme_unit_form.form_id')
-                            ->where('mlite_rme_unit_form.status', '1')
-                            ->where('mlite_rme_form.status', '1')
-                            ->where('mlite_rme_unit_form.kd_poli', 'IN', $poliCodes)
-                            ->select('DISTINCT mlite_rme_form.*')
-                            ->asc('mlite_rme_form.kategori')
-                            ->asc('mlite_rme_form.urutan')
-                            ->toArray();
-                    }
-                }
-
-                $categories = [];
-                if (!empty($forms)) {
-                    foreach ($forms as $f) {
-                        $cat = !empty($f['kategori']) ? $f['kategori'] : 'Umum';
-                        if (!isset($categories[$cat])) {
-                            $categories[$cat] = [
-                                'nama_kategori' => $cat,
-                                'forms' => []
-                            ];
-                        }
-                        $categories[$cat]['forms'][] = $f;
-                    }
-                }
-                $this->assign['rme_categories'] = array_values($categories);
-            }
-        } catch (\Exception $e) {}
 
         $this->tpl->set('mlite', $this->assign);
         echo $this->tpl->draw(THEMES.'/admin/'.$file, true);
@@ -153,15 +117,75 @@ class Admin extends Main
             $isRadiologiLaporanPacs = ($name === 'laporan' && in_array(strtolower($method), ['laporanradiologipacs', 'hapusradiologipacs']) && in_array($this->getUserInfo('role'), ['radiologi', 'admin']));
             $userAccess = explode(',', (string)$this->getUserInfo('access'));
             $isPasienRiwayat = ($name === 'pasien' && in_array(strtolower($method), ['riwayatperawatan', 'pdfriwayatperawatan']) && !empty($_SESSION['mlite_user']));
+            $isPasienDuplikat = ($name === 'pasien' && strpos(strtolower((string)$method), 'duplikat') === 0 && \Systems\Lib\PasienMergeService::canManageMerge($this));
+            $isPasienMrmikAdmin = ($name === 'pasien' && (strpos(strtolower((string)$method), 'akseslog') === 0 || in_array(strtolower((string)$method), ['klpcm', 'klpcmdata', 'klpcmsave', 'klpcmcsv', 'klpcmppas'], true)) && \Systems\Lib\MrmikService::canManageMrmik($this));
+            $isPasienSingkatan = ($name === 'pasien' && (strpos(strtolower((string)$method), 'singkatan') === 0 || in_array(strtolower((string)$method), ['klpcmnotif', 'klpcmresubmit', 'riwayatrme', 'riwayatrmedata'], true)) && !empty($_SESSION['mlite_user']));
             $isProfil = ($name === 'profil' && !empty($_SESSION['mlite_user']));
-            if (($this->getUserInfo('access') == 'all') || in_array($name, $userAccess) || ($name === 'form_rme' && in_array('update_bmt', $userAccess)) || ($name === 'update_bmt' && in_array('form_rme', $userAccess)) || $isSaveSignature || $isRadiologiLaporanPacs || $isPasienRiwayat || $isProfil) {
+            if (($this->getUserInfo('access') == 'all') || in_array($name, $userAccess) || ($name === 'form_rme' && in_array('update_bmt', $userAccess)) || ($name === 'update_bmt' && in_array('form_rme', $userAccess)) || $isSaveSignature || $isRadiologiLaporanPacs || $isPasienRiwayat || $isPasienDuplikat || $isPasienMrmikAdmin || $isPasienSingkatan || $isProfil) {
+                $rawMethodForMrmik = (string)$method;
                 if ($name === 'laporan' && strtolower($method) === 'manage' && $this->getUserInfo('role') === 'radiologi' && !in_array('laporan', explode(',', $this->getUserInfo('access')))) {
                     redirect(url([ADMIN, 'laporan', 'laporanradiologipacs']));
                     exit;
                 }
                 if ($name === 'form_rme' || $name === 'update_bmt') {
                     $this->checkRmeFormAccess($method);
+
+                    // Mode Simulasi / Pratinjau (Manajemen RME, Katalog, atau form dibuka tanpa konteks pasien di luar Lembar Kerja): cegah seluruh penulisan/hapus DB
+                    $rawMethodLower = strtolower((string)$method);
+                    $refererStr = (string)($_SERVER['HTTP_REFERER'] ?? '');
+                    $refererIsStandaloneForm = false;
+                    if ($refererStr !== '' && preg_match('/\/form_rme\/([a-z0-9_]*form)(?:\/([^\/?#]+))?/i', $refererStr, $refM)) {
+                        $refHasPathParam = !empty($refM[2]);
+                        $refHasNoRawat = (bool)preg_match('/[?&]no_rawat=[^&#]+/i', $refererStr);
+                        $refHasId = (bool)preg_match('/[?&](?:id|id_triase)=[^&#]+/i', $refererStr);
+                        if (!$refHasPathParam && !$refHasNoRawat && !$refHasId) {
+                            $refererIsStandaloneForm = true;
+                        }
+                    }
+                    $isPreviewMode = (
+                        (string)($_POST['preview_mode'] ?? '') === '1' ||
+                        (string)($_GET['preview_mode'] ?? '') === '1' ||
+                        strpos($refererStr, 'preview_mode=1') !== false ||
+                        $refererIsStandaloneForm
+                    );
+                    $isFormWriteMethod = preg_match('/(save|hapus|delete|void|tteverifysave)$/i', $rawMethodLower)
+                        && !in_array($rawMethodLower, ['manajemenrmesave', 'batchstatusform', 'syncunitsimrs', 'simpanaksesunit'], true);
+
+                    if ($isPreviewMode && $isFormWriteMethod) {
+                        $isAjaxReq = (
+                            (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower((string)$_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') ||
+                            !empty($_POST['ajax_save']) ||
+                            $rawMethodLower === 'tteverifysave'
+                        );
+                        if ($isAjaxReq) {
+                            header('Content-Type: application/json; charset=utf-8');
+                            echo json_encode([
+                                'status'  => 'preview_only',
+                                'message' => 'Mode Simulasi (Manajemen Form RME): data tidak disimpan ke database. Klik "Lihat Output (Cetak)" untuk pratinjau hasil.',
+                            ], JSON_UNESCAPED_UNICODE);
+                            exit;
+                        }
+                        if (method_exists($this->module->form_rme, 'renderLivePreviewBySaveRoute')) {
+                            $this->module->form_rme->renderLivePreviewBySaveRoute($rawMethodLower);
+                            exit;
+                        }
+                        $this->setNotify('warning', 'Mode Simulasi (Manajemen Form RME): data tidak disimpan ke database.');
+                        redirect($_SERVER['HTTP_REFERER'] ?? url([ADMIN, 'form_rme', 'manajemenrme']));
+                        exit;
+                    }
+
+                    // MRMIK 8: Perluasan revisi berjejak & soft-delete VOID ke seluruh form IGD, Rawat Inap, & Bedah
+                    if (!$isPreviewMode && method_exists($this->module->form_rme, 'getRmeFormMap')) {
+                        $rmeFormMap = $this->module->form_rme->getRmeFormMap();
+                        \Systems\Lib\RmeFormRevision::setDynamicCatalog($rmeFormMap);
+                        \Systems\Lib\RmeFormRevision::interceptGenericVoid($this, $rmeFormMap, $rawMethodLower, array_values($params));
+                        \Systems\Lib\RmeFormRevision::interceptGenericSave($this, $rmeFormMap, $rawMethodLower);
+                    }
                 }
+
+                // MRMIK 11: Catat otomatis akses baca & cetak e-RM ke mlite_rme_access_logs
+                \Systems\Lib\MrmikService::captureRequestAccess($this, $name, $rawMethodForMrmik, array_values($params));
+
                 $anyMethod = 'any'.ucfirst($method);
                 $method = strtolower($_SERVER['REQUEST_METHOD']).ucfirst($method);
 
@@ -178,6 +202,21 @@ class Admin extends Main
                 $details['dir'] = parseUrl()[0];
                 if ($name === 'pasien' && !empty($this->assign['is_telusur_erm'])) {
                     $details['name'] = 'Telusur e-RM';
+                    $details['category'] = 'rekammedik';
+                } elseif ($name === 'pasien' && !empty($this->assign['is_duplikat_rm'])) {
+                    $details['name'] = 'Gabung RM Duplikat';
+                    $details['category'] = 'rekammedik';
+                } elseif ($name === 'pasien' && !empty($this->assign['is_akseslog_rm'])) {
+                    $details['name'] = 'Log Akses e-RM';
+                    $details['category'] = 'rekammedik';
+                } elseif ($name === 'pasien' && !empty($this->assign['is_klpcm_rm'])) {
+                    $details['name'] = 'Review Kelengkapan (KLPCM)';
+                    $details['category'] = 'rekammedik';
+                } elseif ($name === 'pasien' && !empty($this->assign['is_singkatan_rm'])) {
+                    $details['name'] = 'Kamus Singkatan & Simbol';
+                    $details['category'] = 'rekammedik';
+                } elseif ($name === 'pasien' && !empty($this->assign['is_riwayat_rme_ppa'])) {
+                    $details['name'] = 'Riwayat Form RME Saya';
                     $details['category'] = 'rekammedik';
                 }
 
@@ -299,7 +338,21 @@ class Admin extends Main
 
     public function createNav($activeModule, $activeMethod)
     {
-        $this->assign['is_telusur_erm'] = ($activeModule === 'pasien' && strtolower((string)$activeMethod) === 'telusur');
+        $actLower = strtolower((string)$activeMethod);
+        $this->assign['is_telusur_erm'] = ($activeModule === 'pasien' && $actLower === 'telusur');
+        $this->assign['is_duplikat_rm'] = ($activeModule === 'pasien' && $actLower === 'duplikat');
+        $this->assign['is_akseslog_rm'] = ($activeModule === 'pasien' && $actLower === 'akseslog');
+        $this->assign['is_klpcm_rm']    = ($activeModule === 'pasien' && $actLower === 'klpcm');
+        $this->assign['is_singkatan_rm']= ($activeModule === 'pasien' && $actLower === 'singkatan');
+        $this->assign['is_riwayat_rme_ppa'] = ($activeModule === 'pasien' && $actLower === 'riwayatrme');
+        $this->assign['is_mrmik_pasien_page'] = (
+            $this->assign['is_telusur_erm'] ||
+            $this->assign['is_duplikat_rm'] ||
+            $this->assign['is_akseslog_rm'] ||
+            $this->assign['is_klpcm_rm'] ||
+            $this->assign['is_singkatan_rm'] ||
+            $this->assign['is_riwayat_rme_ppa']
+        );
 
         if (!empty($_SESSION['mlite_force_change'])) {
             $this->assign['nav'] = [

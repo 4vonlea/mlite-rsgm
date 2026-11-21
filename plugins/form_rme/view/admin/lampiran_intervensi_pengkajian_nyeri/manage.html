@@ -29,7 +29,7 @@
                         <tbody>
                             {loop: $data}
                             <tr>
-                                <td style="text-align: center;">{$value.key + 1}</td>
+                                <td style="text-align: center;">{?=$key + 1?}</td>
                                 <td><span class="label label-info">{$value.no_rawat}</span></td>
                                 <td><strong>{$value.no_rkm_medis}</strong></td>
                                 <td><strong>{$value.nm_pasien}</strong></td>

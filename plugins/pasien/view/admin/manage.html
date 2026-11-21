@@ -128,7 +128,7 @@
       return str;
   }
 
-  function createMenuItem(label, href, modalTarget) {
+  function createMenuItem(label, href, modalTarget, iconClass) {
       var li = document.createElement('li');
       var a = document.createElement('a');
       a.setAttribute('href', safeHref(href));
@@ -136,9 +136,48 @@
           a.setAttribute('data-toggle', 'modal');
           a.setAttribute('data-target', modalTarget);
       }
-      a.textContent = label;
+      if (iconClass) {
+          var ico = document.createElement('i');
+          ico.className = iconClass;
+          a.appendChild(ico);
+          a.appendChild(document.createTextNode(' '));
+      }
+      a.appendChild(document.createTextNode(label));
       li.appendChild(a);
       return li;
+  }
+
+  function createMenuDivider() {
+      var li = document.createElement('li');
+      li.className = 'divider';
+      return li;
+  }
+
+  function createSubmenu(label, iconClass, buildChildren) {
+      var subLi = document.createElement('li');
+      subLi.className = 'dropdown-submenu';
+      var subToggle = document.createElement('a');
+      subToggle.setAttribute('href', '#');
+      subToggle.className = 'dropdown-toggle';
+      subToggle.setAttribute('data-toggle', 'dropdown');
+      subToggle.setAttribute('role', 'button');
+      subToggle.setAttribute('aria-haspopup', 'true');
+      subToggle.setAttribute('aria-expanded', 'false');
+      if (iconClass) {
+          var ico = document.createElement('i');
+          ico.className = iconClass;
+          subToggle.appendChild(ico);
+      }
+      var span = document.createElement('span');
+      span.textContent = label;
+      subToggle.appendChild(span);
+      subLi.appendChild(subToggle);
+
+      var subMenu = document.createElement('ul');
+      subMenu.className = 'dropdown-menu';
+      buildChildren(subMenu);
+      subLi.appendChild(subMenu);
+      return subLi;
   }
 
   function renderStatusRow(colspan, message, isError) {
@@ -207,41 +246,45 @@
                       menu.className = 'dropdown-menu';
                       menu.setAttribute('role', 'menu');
 
-                      if(response.meta && response.meta.cek_vclaim) {
-                          menu.appendChild(createMenuItem('[VClaim] Cek Nomor Kartu', item.cekbynokartu, '#asuransiModal'));
-                          menu.appendChild(createMenuItem('[VClaim] Cek Nomor KTP', item.cekbynik, '#asuransiModal'));
-                      }
-                      if(response.meta && response.meta.cek_pcare) {
-                          menu.appendChild(createMenuItem('[PCare] Cek Nomor Kartu', item.pcare_bynokartu, '#asuransiModal'));
-                          menu.appendChild(createMenuItem('[PCare] Cek Nomor KTP', item.pcare_bynik, '#asuransiModal'));
+                      var hasVclaim = !!(response.meta && response.meta.cek_vclaim);
+                      var hasPcare = !!(response.meta && response.meta.cek_pcare);
+                      if (hasVclaim || hasPcare) {
+                          menu.appendChild(createSubmenu(
+                              hasVclaim ? 'BPJS VClaim' : 'BPJS PCare',
+                              'fa fa-shield rsgm-ico-emerald',
+                              function(bpjsMenu) {
+                                  if (hasVclaim) {
+                                      bpjsMenu.appendChild(createMenuItem('Cek Nomor Kartu', item.cekbynokartu, '#asuransiModal', 'fa fa-credit-card rsgm-ico-emerald'));
+                                      bpjsMenu.appendChild(createMenuItem('Cek Nomor KTP', item.cekbynik, '#asuransiModal', 'fa fa-id-card-o rsgm-ico-emerald'));
+                                  }
+                                  if (hasVclaim && hasPcare) {
+                                      bpjsMenu.appendChild(createMenuDivider());
+                                  }
+                                  if (hasPcare) {
+                                      bpjsMenu.appendChild(createMenuItem('[PCare] Cek Nomor Kartu', item.pcare_bynokartu, '#asuransiModal', 'fa fa-credit-card rsgm-ico-teal'));
+                                      bpjsMenu.appendChild(createMenuItem('[PCare] Cek Nomor KTP', item.pcare_bynik, '#asuransiModal', 'fa fa-id-card-o rsgm-ico-teal'));
+                                  }
+                              }
+                          ));
                       }
 
-                      var subLi = document.createElement('li');
-                      subLi.className = 'dropdown-submenu';
-                      var subToggle = document.createElement('a');
-                      subToggle.setAttribute('href', '#');
-                      subToggle.className = 'dropdown-toggle';
-                      subToggle.setAttribute('data-toggle', 'dropdown');
-                      subToggle.setAttribute('role', 'button');
-                      subToggle.setAttribute('aria-haspopup', 'true');
-                      subToggle.setAttribute('aria-expanded', 'false');
-                      subToggle.textContent = 'Pendaftaran';
-                      subLi.appendChild(subToggle);
+                      menu.appendChild(createSubmenu(
+                          'Pendaftaran',
+                          'fa fa-calendar-plus-o rsgm-ico-indigo',
+                          function(subMenu) {
+                              if (response.meta && response.meta.active_modules && response.meta.active_modules.oral_diagnostic) {
+                                  subMenu.appendChild(createMenuItem('Oral Diagnostic', item.oral_diagnostic, null, 'fa fa-asterisk rsgm-ico-amber'));
+                              }
+                              if (response.meta && response.meta.active_modules && response.meta.active_modules.igd) {
+                                  subMenu.appendChild(createMenuItem('IGD / UGD', item.igd, null, 'fa fa-ambulance rsgm-ico-rose'));
+                              }
+                              subMenu.appendChild(createMenuItem('Poliklinik / Rawat Jalan', item.rawat_jalan, null, 'fa fa-stethoscope rsgm-ico-blue'));
+                          }
+                      ));
 
-                      var subMenu = document.createElement('ul');
-                      subMenu.className = 'dropdown-menu';
-                      if(response.meta && response.meta.active_modules && response.meta.active_modules.oral_diagnostic) {
-                          subMenu.appendChild(createMenuItem('Oral Diagnostic', item.oral_diagnostic, null));
-                      }
-                      if(response.meta && response.meta.active_modules && response.meta.active_modules.igd) {
-                          subMenu.appendChild(createMenuItem('IGD / UGD', item.igd, null));
-                      }
-                      subMenu.appendChild(createMenuItem('Poliklinik / Rawat Jalan', item.rawat_jalan, null));
-                      subLi.appendChild(subMenu);
-                      menu.appendChild(subLi);
-
-                      menu.appendChild(createMenuItem('Elektronik Rekam Medis', item.riwayatperawatan, '#riwayatModal'));
-                      menu.appendChild(createMenuItem('Folder Berkas Digital', item.folder, null));
+                      menu.appendChild(createMenuDivider());
+                      menu.appendChild(createMenuItem('Elektronik Rekam Medis', item.riwayatperawatan, '#riwayatModal', 'fa fa-folder-open rsgm-ico-blue'));
+                      menu.appendChild(createMenuItem('Folder Berkas Digital', item.folder, null, 'fa fa-file-image-o rsgm-ico-emerald'));
                       tdRm.appendChild(menu);
                       tr.appendChild(tdRm);
 

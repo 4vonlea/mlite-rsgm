@@ -1,0 +1,966 @@
+<style>
+  .rsgm-dup-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .rsgm-dup-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 13px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    color: #334155;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .rsgm-dup-tab:hover {
+    border-color: #3b82f6;
+    color: #1d4ed8;
+    background: #eff6ff;
+  }
+  .rsgm-dup-tab.is-active {
+    background: #0284c7;
+    border-color: #0284c7;
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25);
+  }
+  .rsgm-dup-tab .dup-cnt {
+    display: inline-block;
+    padding: 1px 7px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    background: #f1f5f9;
+    color: #0f172a;
+  }
+  .rsgm-dup-tab.is-active .dup-cnt {
+    background: rgba(255, 255, 255, 0.22);
+    color: #ffffff;
+  }
+  .rsgm-dup-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .rsgm-dup-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: #ffffff;
+    margin-bottom: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  }
+  .rsgm-dup-card-head {
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 9px 14px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .rsgm-dup-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    border: 1px solid #cbd5e1;
+    background: #f1f5f9;
+    color: #334155;
+  }
+  .rsgm-dup-badge.tone-emerald { background: #ecfdf5; border-color: #a7f3d0; color: #047857; }
+  .rsgm-dup-badge.tone-amber { background: #fffbeb; border-color: #fde68a; color: #b45309; }
+  .rsgm-dup-badge.tone-rose { background: #fff1f2; border-color: #fecdd3; color: #be123c; }
+  .rsgm-dup-badge.tone-sky { background: #f0f9ff; border-color: #bae6fd; color: #0369a1; }
+  .rsgm-dup-badge.tone-indigo { background: #eef2ff; border-color: #c7d2fe; color: #4338ca; }
+
+  .rsgm-compare-grid {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 14px;
+    align-items: start;
+  }
+  @media (max-width: 991px) {
+    .rsgm-compare-grid { grid-template-columns: 1fr; }
+  }
+  .rsgm-compare-box {
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    overflow: hidden;
+  }
+  .rsgm-compare-box.is-source { border-color: #fecaca; }
+  .rsgm-compare-box.is-target { border-color: #a7f3d0; }
+  .rsgm-compare-box-head {
+    padding: 10px 14px;
+    font-weight: 700;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .rsgm-compare-box.is-source .rsgm-compare-box-head {
+    background: #fef2f2;
+    color: #991b1b;
+    border-bottom: 1px solid #fecaca;
+  }
+  .rsgm-compare-box.is-target .rsgm-compare-box-head {
+    background: #ecfdf5;
+    color: #065f46;
+    border-bottom: 1px solid #a7f3d0;
+  }
+  .rsgm-compare-box-body {
+    padding: 12px 14px;
+    font-size: 12.5px;
+  }
+  .rsgm-stat-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 10px 0;
+  }
+  .rsgm-manual-picker {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 767px) {
+    .rsgm-manual-picker { grid-template-columns: 1fr; }
+  }
+  .rsgm-picker-box {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 14px;
+    background: #f8fafc;
+  }
+  .rsgm-picker-results {
+    margin-top: 8px;
+    max-height: 260px;
+    overflow-y: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #ffffff;
+  }
+  .rsgm-picker-row {
+    padding: 8px 10px;
+    border-bottom: 1px solid #f1f5f9;
+    cursor: pointer;
+    font-size: 12.5px;
+  }
+  .rsgm-picker-row:hover {
+    background: #eff6ff;
+  }
+  .rsgm-picker-row.is-selected {
+    background: #dbeafe;
+    border-left: 3px solid #2563eb;
+  }
+</style>
+
+<div class="row" style="margin-bottom:100px;">
+  <div class="col-md-12">
+    <div class="panel panel-default">
+      <div class="panel-heading rsgm-panel-head">
+        <h3 class="panel-title">
+          <i class="fa fa-compress" style="margin-right:6px; color:#0284c7;"></i> Deteksi &amp; Gabung Rekam Medis Duplikat
+        </h3>
+        <div class="text-muted" style="font-size:12px;">
+          Soft Archive (Opsi A) &bull; Seluruh kunjungan, Radiologi/Mini PACS, Lab, Tindakan, Form RME, Billing &amp; SEP menyatu aman ke RM Utama
+        </div>
+      </div>
+      <div class="panel-body">
+        <div id="dupGlobalAlert" style="display:none; margin-bottom:12px;"></div>
+
+        <div class="rsgm-dup-tabs" id="dupTabBar">
+          <button type="button" class="rsgm-dup-tab is-active" data-tab="nik">
+            <i class="fa fa-id-card-o"></i> NIK Sama <span class="dup-cnt" data-cnt="nik">0</span>
+          </button>
+          <button type="button" class="rsgm-dup-tab" data-tab="bpjs">
+            <i class="fa fa-shield"></i> No. BPJS Sama <span class="dup-cnt" data-cnt="bpjs">0</span>
+          </button>
+          <button type="button" class="rsgm-dup-tab" data-tab="nama_tgl">
+            <i class="fa fa-users"></i> Nama + Tgl Lahir <span class="dup-cnt" data-cnt="nama_tgl">0</span>
+          </button>
+          <button type="button" class="rsgm-dup-tab" data-tab="anomali">
+            <i class="fa fa-exclamation-triangle"></i> Anomali Format RM <span class="dup-cnt" data-cnt="anomali">0</span>
+          </button>
+          <button type="button" class="rsgm-dup-tab" data-tab="manual">
+            <i class="fa fa-hand-pointer-o"></i> Gabung Manual 2 RM
+          </button>
+          <button type="button" class="rsgm-dup-tab" data-tab="riwayat">
+            <i class="fa fa-history"></i> Riwayat Gabung RM <span class="dup-cnt" data-cnt="riwayat">0</span>
+          </button>
+        </div>
+
+        <div id="dupListSection">
+          <div class="rsgm-dup-toolbar">
+            <div class="input-group" style="max-width:380px; width:100%;">
+              <input type="text" id="dupSearchInput" class="form-control input-sm" placeholder="Cari No. RM, Nama Pasien, NIK, atau No. BPJS...">
+              <span class="input-group-btn">
+                <button type="button" id="dupSearchBtn" class="btn btn-sm btn-primary"><i class="fa fa-search"></i> Cari</button>
+              </span>
+            </div>
+            <div class="text-muted" style="font-size:12px;" id="dupMetaInfo">Memuat data...</div>
+          </div>
+
+          <div id="dupListContainer"></div>
+
+          <nav class="rsgm-table-footer" style="margin-top:12px;">
+            <div><span class="rsgm-total-pill" id="dupTotalPill">Total: 0</span></div>
+            <div><ul class="pagination no-margin" id="dupPagination"></ul></div>
+          </nav>
+        </div>
+
+        <div id="dupManualSection" style="display:none;">
+          <div class="alert alert-info" style="font-size:12.5px; margin-bottom:14px;">
+            <i class="fa fa-info-circle"></i> Gunakan mode ini jika kedua No. RM tidak terdeteksi otomatis (misalnya karena perbedaan ejaan nama, salah ketik NIK, atau salah ketik tanggal lahir).
+          </div>
+          <div class="rsgm-manual-picker">
+            <div class="rsgm-picker-box">
+              <div style="font-weight:700; color:#991b1b; margin-bottom:8px;">
+                <i class="fa fa-sign-out"></i> 1. Pilih RM Sumber (Duplikat / Akan Diarsipkan)
+              </div>
+              <div class="input-group">
+                <input type="text" id="manualSourceSearch" class="form-control input-sm" placeholder="Ketik No. RM / Nama / NIK...">
+                <span class="input-group-btn">
+                  <button type="button" id="manualSourceSearchBtn" class="btn btn-sm btn-default"><i class="fa fa-search"></i></button>
+                </span>
+              </div>
+              <div id="manualSourcePicked" style="margin-top:8px; font-size:12px; color:#64748b;">Belum dipilih</div>
+              <div id="manualSourceResults" class="rsgm-picker-results" style="display:none;"></div>
+            </div>
+
+            <div class="rsgm-picker-box">
+              <div style="font-weight:700; color:#065f46; margin-bottom:8px;">
+                <i class="fa fa-check-circle"></i> 2. Pilih RM Utama (Master Aktif)
+              </div>
+              <div class="input-group">
+                <input type="text" id="manualTargetSearch" class="form-control input-sm" placeholder="Ketik No. RM / Nama / NIK...">
+                <span class="input-group-btn">
+                  <button type="button" id="manualTargetSearchBtn" class="btn btn-sm btn-default"><i class="fa fa-search"></i></button>
+                </span>
+              </div>
+              <div id="manualTargetPicked" style="margin-top:8px; font-size:12px; color:#64748b;">Belum dipilih</div>
+              <div id="manualTargetResults" class="rsgm-picker-results" style="display:none;"></div>
+            </div>
+          </div>
+
+          <div style="margin-top:16px; text-align:right;">
+            <button type="button" id="btnManualCompare" class="btn btn-primary" disabled>
+              <i class="fa fa-columns"></i> Bandingkan &amp; Gabung 2 RM Terpilih
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Perbandingan & Eksekusi Gabung RM -->
+<div class="modal fade" id="mergeCompareModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-lg" role="document" style="width:94%; max-width:1080px;">
+    <div class="modal-content">
+      <div class="modal-header" style="background:#f8fafc; border-bottom:1px solid #e2e8f0;">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" style="font-weight:700; color:#0f172a;">
+          <i class="fa fa-compress text-primary"></i> Verifikasi &amp; Penggabungan Rekam Medis (Opsi A — Soft Archive)
+        </h4>
+      </div>
+      <div class="modal-body" id="mergeCompareBody" style="background:#f8fafc;">
+        <div class="text-center text-muted" style="padding:30px;">Memuat perbandingan rekam medis...</div>
+      </div>
+      <div class="modal-footer" style="background:#ffffff;">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Batal</button>
+        <button type="button" class="btn btn-danger" id="btnExecuteMerge" disabled>
+          <i class="fa fa-compress"></i> Eksekusi Gabung RM Sekarang
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Preview e-RM Pasien -->
+<div class="modal fade" id="riwayatModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-full" role="document">
+    <div class="modal-content"></div>
+  </div>
+</div>
+
+<script type="text/javascript">
+(function ($) {
+  'use strict';
+
+  var endpoints = {
+    data: '{?=url([ADMIN, "pasien", "duplikatdata"])?}',
+    search: '{?=url([ADMIN, "pasien", "duplikatsearch"])?}',
+    compare: '{?=url([ADMIN, "pasien", "duplikatcompare"])?}',
+    merge: '{?=url([ADMIN, "pasien", "duplikatmerge"])?}',
+    riwayatBase: '{?=url([ADMIN, "pasien", "riwayatperawatan"])?}'
+  };
+  var csrfToken = '{$token}';
+
+  var state = {
+    tab: 'nik',
+    page: 1,
+    q: '',
+    manualSource: null,
+    manualTarget: null,
+    compareSourceRm: '',
+    compareTargetRm: ''
+  };
+
+  function el(tag, className, text) {
+    var node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text !== undefined && text !== null) node.textContent = String(text);
+    return node;
+  }
+
+  function showGlobalAlert(type, message) {
+    var box = document.getElementById('dupGlobalAlert');
+    if (!box) return;
+    box.replaceChildren();
+    var alertDiv = el('div', 'alert alert-' + (type === 'success' ? 'success' : 'danger'));
+    alertDiv.style.marginBottom = '0';
+    var closeBtn = el('button', 'close', '×');
+    closeBtn.type = 'button';
+    closeBtn.addEventListener('click', function () { box.style.display = 'none'; });
+    alertDiv.appendChild(closeBtn);
+    alertDiv.appendChild(document.createTextNode(message));
+    box.appendChild(alertDiv);
+    box.style.display = 'block';
+  }
+
+  function buildRiwayatUrl(noRm) {
+    var parts = endpoints.riwayatBase.split('?');
+    var base = parts[0].replace(/\/$/, '') + '/' + encodeURIComponent(noRm);
+    return parts.length > 1 ? (base + '?' + parts[1]) : base;
+  }
+
+  function updateCounts(counts) {
+    if (!counts) return;
+    Object.keys(counts).forEach(function (k) {
+      var badge = document.querySelector('#dupTabBar .dup-cnt[data-cnt="' + k + '"]');
+      if (badge) badge.textContent = String(counts[k] || 0);
+    });
+  }
+
+  function renderPagination(meta) {
+    var ul = document.getElementById('dupPagination');
+    if (!ul) return;
+    ul.replaceChildren();
+    var page = meta.page || 1;
+    var totalPages = meta.total_page || 1;
+    var total = meta.total || 0;
+    $('#dupTotalPill').text('Total: ' + total + (state.tab === 'riwayat' ? ' riwayat' : ' grup'));
+    $('#dupMetaInfo').text('Halaman ' + page + ' dari ' + totalPages);
+
+    if (totalPages <= 1) return;
+    function addPageBtn(label, targetPage, disabled, active) {
+      var li = el('li', (disabled ? 'disabled ' : '') + (active ? 'active' : ''));
+      var a = el('a', null, label);
+      a.setAttribute('href', '#');
+      a.addEventListener('click', function (e) {
+        e.preventDefault();
+        if (!disabled && !active) loadList(targetPage);
+      });
+      li.appendChild(a);
+      ul.appendChild(li);
+    }
+    addPageBtn('«', 1, page <= 1, false);
+    addPageBtn('‹', Math.max(1, page - 1), page <= 1, false);
+    var start = Math.max(1, page - 2);
+    var end = Math.min(totalPages, page + 2);
+    for (var p = start; p <= end; p++) {
+      addPageBtn(String(p), p, false, p === page);
+    }
+    addPageBtn('›', Math.min(totalPages, page + 1), page >= totalPages, false);
+    addPageBtn('»', totalPages, page >= totalPages, false);
+  }
+
+  function renderGroups(items) {
+    var container = document.getElementById('dupListContainer');
+    container.replaceChildren();
+
+    if (!items || !items.length) {
+      var empty = el('div', 'alert alert-success text-center', 'Tidak ada kandidat duplikat aktif pada kategori ini.');
+      empty.style.margin = '12px 0';
+      container.appendChild(empty);
+      return;
+    }
+
+    items.forEach(function (grp) {
+      var card = el('div', 'rsgm-dup-card');
+      var head = el('div', 'rsgm-dup-card-head');
+
+      var headLeft = el('div');
+      var lbl = el('strong', null, grp.group_label || grp.group_key);
+      lbl.style.color = '#0f172a';
+      headLeft.appendChild(lbl);
+      headLeft.appendChild(document.createTextNode(' '));
+      headLeft.appendChild(el('span', 'rsgm-dup-badge tone-sky', (grp.members ? grp.members.length : 0) + ' No. RM'));
+      head.appendChild(headLeft);
+
+      if (grp.suggested_master) {
+        head.appendChild(el('span', 'rsgm-dup-badge tone-emerald', 'Rekomendasi RM Utama: ' + grp.suggested_master));
+      }
+      card.appendChild(head);
+
+      var tblWrap = el('div', 'table-responsive');
+      var tbl = el('table', 'table table-striped table-condensed no-margin');
+      var thead = el('thead');
+      var hTr = el('tr');
+      ['No. RM', 'Nama Pasien', 'Tgl Lahir', 'NIK / No. BPJS', 'Alamat', 'Kunjungan', 'Aksi'].forEach(function (h) {
+        hTr.appendChild(el('th', null, h));
+      });
+      thead.appendChild(hTr);
+      tbl.appendChild(thead);
+
+      var tbody = el('tbody');
+      (grp.members || []).forEach(function (m) {
+        var isSuggested = m.no_rkm_medis === grp.suggested_master;
+        var tr = el('tr');
+
+        var tdRm = el('td');
+        tdRm.style.whiteSpace = 'nowrap';
+        tdRm.appendChild(el('strong', null, m.no_rkm_medis));
+        tdRm.appendChild(document.createElement('br'));
+        if (isSuggested) {
+          tdRm.appendChild(el('span', 'rsgm-dup-badge tone-emerald', 'RM Utama'));
+        } else if (!m.is_standard_rm) {
+          tdRm.appendChild(el('span', 'rsgm-dup-badge tone-rose', 'Format Anomali'));
+        } else {
+          tdRm.appendChild(el('span', 'rsgm-dup-badge tone-amber', 'Kandidat Duplikat'));
+        }
+        tr.appendChild(tdRm);
+
+        var tdNm = el('td');
+        tdNm.appendChild(el('strong', null, m.nm_pasien || '-'));
+        var subNm = el('div', 'text-muted', (m.jk === 'L' ? 'Laki-laki' : 'Perempuan') + ' • Daftar: ' + (m.tgl_daftar || '-'));
+        subNm.style.fontSize = '11px';
+        tdNm.appendChild(subNm);
+        tr.appendChild(tdNm);
+
+        var tdDob = el('td', null, m.tgl_lahir || '-');
+        tdDob.style.whiteSpace = 'nowrap';
+        tr.appendChild(tdDob);
+
+        var tdIds = el('td');
+        tdIds.style.fontSize = '12px';
+        tdIds.appendChild(el('div', null, 'NIK: ' + (m.no_ktp && m.no_ktp.trim() ? m.no_ktp.trim() : '-')));
+        tdIds.appendChild(el('div', 'text-muted', 'BPJS: ' + (m.no_peserta && m.no_peserta.trim() ? m.no_peserta.trim() : '-')));
+        tr.appendChild(tdIds);
+
+        var tdAlmt = el('td', null, m.alamat || '-');
+        tdAlmt.style.maxWidth = '220px';
+        tr.appendChild(tdAlmt);
+
+        var tdVis = el('td');
+        tdVis.style.whiteSpace = 'nowrap';
+        tdVis.appendChild(el('span', 'rsgm-dup-badge tone-indigo', String(m.visit_count || 0) + ' kunjungan'));
+        if (m.last_visit) {
+          var lv = el('div', 'text-muted', 'Terakhir: ' + m.last_visit);
+          lv.style.fontSize = '11px';
+          tdVis.appendChild(lv);
+        }
+        tr.appendChild(tdVis);
+
+        var tdAct = el('td');
+        tdAct.style.whiteSpace = 'nowrap';
+
+        var btnErm = el('a', 'btn btn-xs btn-default', 'e-RM');
+        btnErm.setAttribute('href', buildRiwayatUrl(m.no_rkm_medis));
+        btnErm.setAttribute('data-toggle', 'modal');
+        btnErm.setAttribute('data-target', '#riwayatModal');
+        btnErm.style.marginRight = '5px';
+        tdAct.appendChild(btnErm);
+
+        if (grp.members.length >= 2 && !isSuggested && grp.suggested_master) {
+          var btnMerge = el('button', 'btn btn-xs btn-primary', 'Gabung → ' + grp.suggested_master);
+          btnMerge.type = 'button';
+          btnMerge.addEventListener('click', function () {
+            openCompareModal(m.no_rkm_medis, grp.suggested_master);
+          });
+          tdAct.appendChild(btnMerge);
+        } else if (grp.members.length === 1) {
+          var btnPick = el('button', 'btn btn-xs btn-warning', 'Pilih Pasangan Manual');
+          btnPick.type = 'button';
+          btnPick.addEventListener('click', function () {
+            state.manualSource = m;
+            switchTab('manual');
+            renderManualPicked('source');
+          });
+          tdAct.appendChild(btnPick);
+        }
+
+        tr.appendChild(tdAct);
+        tbody.appendChild(tr);
+      });
+
+      tbl.appendChild(tbody);
+      tblWrap.appendChild(tbl);
+      card.appendChild(tblWrap);
+      container.appendChild(card);
+    });
+  }
+
+  function renderHistory(items) {
+    var container = document.getElementById('dupListContainer');
+    container.replaceChildren();
+
+    if (!items || !items.length) {
+      container.appendChild(el('div', 'alert alert-info text-center', 'Belum ada riwayat penggabungan No. RM.'));
+      return;
+    }
+
+    var wrap = el('div', 'table-responsive');
+    var tbl = el('table', 'table table-striped table-bordered table-condensed');
+    var thead = el('thead');
+    var hTr = el('tr');
+    ['Waktu', 'RM Sumber (Arsip) → RM Utama', 'Alasan (MRMIK 8)', 'Baris Dipindah', 'Petugas', 'e-RM'].forEach(function (h) {
+      hTr.appendChild(el('th', null, h));
+    });
+    thead.appendChild(hTr);
+    tbl.appendChild(thead);
+
+    var tbody = el('tbody');
+    items.forEach(function (r) {
+      var tr = el('tr');
+      var tdTgl = el('td', null, r.merged_at || '-');
+      tdTgl.style.whiteSpace = 'nowrap';
+      tr.appendChild(tdTgl);
+
+      var tdPair = el('td');
+      tdPair.appendChild(el('span', 'rsgm-dup-badge tone-rose', r.source_no_rkm_medis));
+      tdPair.appendChild(document.createTextNode(' (' + (r.source_nm_pasien || '-') + ') → '));
+      tdPair.appendChild(el('span', 'rsgm-dup-badge tone-emerald', r.target_no_rkm_medis));
+      tdPair.appendChild(document.createTextNode(' (' + (r.target_nm_pasien || '-') + ')'));
+      tr.appendChild(tdPair);
+
+      tr.appendChild(el('td', null, r.reason || '-'));
+
+      var tdRows = el('td');
+      tdRows.appendChild(el('strong', null, String(r.total_rows_moved || 0) + ' baris'));
+      if (r.affected_tables && r.affected_tables.length) {
+        var tNames = r.affected_tables.map(function (t) { return t.table + ' (' + t.moved + ')'; }).join(', ');
+        var subT = el('div', 'text-muted', tNames);
+        subT.style.fontSize = '11px';
+        tdRows.appendChild(subT);
+      }
+      tr.appendChild(tdRows);
+
+      var tdUser = el('td', null, (r.merged_by_name || r.merged_by_username || '-') + (r.merged_by_role ? ' (' + r.merged_by_role + ')' : ''));
+      tr.appendChild(tdUser);
+
+      var tdBtn = el('td');
+      var aErm = el('a', 'btn btn-xs btn-default', 'Buka RM Utama');
+      aErm.setAttribute('href', buildRiwayatUrl(r.target_no_rkm_medis));
+      aErm.setAttribute('data-toggle', 'modal');
+      aErm.setAttribute('data-target', '#riwayatModal');
+      tdBtn.appendChild(aErm);
+      tr.appendChild(tdBtn);
+
+      tbody.appendChild(tr);
+    });
+    tbl.appendChild(tbody);
+    wrap.appendChild(tbl);
+    container.appendChild(wrap);
+  }
+
+  function loadList(page) {
+    state.page = page || 1;
+    var container = document.getElementById('dupListContainer');
+    container.replaceChildren(el('div', 'text-center text-muted', 'Memuat data duplikat rekam medis...'));
+
+    $.ajax({
+      url: endpoints.data,
+      type: 'GET',
+      dataType: 'json',
+      data: {
+        tab: state.tab,
+        q: state.q,
+        page: state.page,
+        per_page: 12
+      },
+      success: function (resp) {
+        if (!resp || resp.status !== 'success') {
+          container.replaceChildren(el('div', 'alert alert-danger', (resp && resp.message) || 'Gagal memuat data.'));
+          return;
+        }
+        updateCounts(resp.counts);
+        if (resp.tab === 'riwayat') {
+          renderHistory(resp.items);
+        } else {
+          renderGroups(resp.items);
+        }
+        renderPagination(resp.meta || {});
+      },
+      error: function () {
+        container.replaceChildren(el('div', 'alert alert-danger', 'Gagal terhubung ke server.'));
+      }
+    });
+  }
+
+  function switchTab(tab) {
+    state.tab = tab;
+    $('#dupTabBar .rsgm-dup-tab').removeClass('is-active');
+    $('#dupTabBar .rsgm-dup-tab[data-tab="' + tab + '"]').addClass('is-active');
+    if (tab === 'manual') {
+      $('#dupListSection').hide();
+      $('#dupManualSection').show();
+    } else {
+      $('#dupManualSection').hide();
+      $('#dupListSection').show();
+      loadList(1);
+    }
+  }
+
+  function renderManualPicked(side) {
+    var picked = side === 'source' ? state.manualSource : state.manualTarget;
+    var targetEl = document.getElementById(side === 'source' ? 'manualSourcePicked' : 'manualTargetPicked');
+    targetEl.replaceChildren();
+    if (!picked) {
+      targetEl.textContent = 'Belum dipilih';
+    } else {
+      var badge = el('span', 'rsgm-dup-badge ' + (side === 'source' ? 'tone-rose' : 'tone-emerald'), picked.no_rkm_medis);
+      targetEl.appendChild(badge);
+      targetEl.appendChild(document.createTextNode(' ' + (picked.nm_pasien || '-') + ' (Lahir: ' + (picked.tgl_lahir || '-') + ', ' + (picked.visit_count || 0) + ' kunjungan)'));
+    }
+    var ready = !!(state.manualSource && state.manualTarget && state.manualSource.no_rkm_medis !== state.manualTarget.no_rkm_medis);
+    $('#btnManualCompare').prop('disabled', !ready);
+  }
+
+  function searchManual(side) {
+    var q = $.trim($(side === 'source' ? '#manualSourceSearch' : '#manualTargetSearch').val() || '');
+    var resBox = document.getElementById(side === 'source' ? 'manualSourceResults' : 'manualTargetResults');
+    if (!q) {
+      resBox.style.display = 'none';
+      return;
+    }
+    resBox.replaceChildren(el('div', 'rsgm-picker-row text-muted', 'Mencari pasien...'));
+    resBox.style.display = 'block';
+
+    $.getJSON(endpoints.search, { q: q }, function (resp) {
+      resBox.replaceChildren();
+      var items = (resp && resp.items) || [];
+      if (!items.length) {
+        resBox.appendChild(el('div', 'rsgm-picker-row text-muted', 'Pasien aktif tidak ditemukan.'));
+        return;
+      }
+      items.forEach(function (it) {
+        var row = el('div', 'rsgm-picker-row');
+        row.appendChild(el('strong', null, it.no_rkm_medis + ' — ' + (it.nm_pasien || '-')));
+        var sub = el('div', 'text-muted', 'Lahir: ' + (it.tgl_lahir || '-') + ' | NIK: ' + (it.no_ktp || '-') + ' | ' + (it.visit_count || 0) + ' kunjungan');
+        sub.style.fontSize = '11px';
+        row.appendChild(sub);
+        row.addEventListener('click', function () {
+          if (side === 'source') state.manualSource = it;
+          else state.manualTarget = it;
+          renderManualPicked(side);
+          $(resBox).find('.rsgm-picker-row').removeClass('is-selected');
+          $(row).addClass('is-selected');
+        });
+        resBox.appendChild(row);
+      });
+    });
+  }
+
+  function buildPatientCompareBox(data, isSource) {
+    var p = data.pasien || {};
+    var st = data.stats || {};
+    var box = el('div', 'rsgm-compare-box ' + (isSource ? 'is-source' : 'is-target'));
+
+    var head = el('div', 'rsgm-compare-box-head');
+    head.appendChild(el('span', null, (isSource ? 'RM SUMBER (DIARSIPKAN): ' : 'RM UTAMA (MASTER AKTIF): ') + (p.no_rkm_medis || '')));
+    box.appendChild(head);
+
+    var body = el('div', 'rsgm-compare-box-body');
+    var nameH = el('div', null, p.nm_pasien || '-');
+    nameH.style.fontWeight = '700';
+    nameH.style.fontSize = '15px';
+    nameH.style.marginBottom = '6px';
+    body.appendChild(nameH);
+
+    var fields = [
+      ['NIK / KTP', p.no_ktp],
+      ['No. BPJS', p.no_peserta],
+      ['Tgl Lahir / JK', (p.tgl_lahir || '-') + ' (' + (p.jk || '-') + ')'],
+      ['No. Telepon', p.no_tlp],
+      ['Alamat', p.alamat],
+      ['Tgl Daftar', p.tgl_daftar]
+    ];
+    fields.forEach(function (pair) {
+      var line = el('div');
+      line.style.marginBottom = '3px';
+      line.appendChild(el('strong', null, pair[0] + ': '));
+      line.appendChild(document.createTextNode(pair[1] && String(pair[1]).trim() ? String(pair[1]).trim() : '-'));
+      body.appendChild(line);
+    });
+
+    var chips = el('div', 'rsgm-stat-chips');
+    [
+      ['Kunjungan', st.kunjungan, 'tone-indigo'],
+      ['Form RME', st.rme, 'tone-sky'],
+      ['Radiologi', st.radiologi, 'tone-amber'],
+      ['Lab', st.lab, 'tone-amber'],
+      ['Tindakan', st.tindakan, 'tone-emerald'],
+      ['SOAP', st.soap, 'tone-sky'],
+      ['Resep', st.resep, 'tone-emerald'],
+      ['Billing', st.billing, 'tone-indigo'],
+      ['Berkas', st.berkas, 'tone-sky'],
+      ['SEP BPJS', st.sep, 'tone-emerald']
+    ].forEach(function (item) {
+      chips.appendChild(el('span', 'rsgm-dup-badge ' + item[2], item[0] + ': ' + (item[1] || 0)));
+    });
+    body.appendChild(chips);
+
+    var visTitle = el('div', null, 'Kunjungan Terakhir:');
+    visTitle.style.fontWeight = '700';
+    visTitle.style.marginTop = '8px';
+    body.appendChild(visTitle);
+
+    var visits = data.recent_visits || [];
+    if (!visits.length) {
+      body.appendChild(el('div', 'text-muted', 'Belum ada riwayat kunjungan.'));
+    } else {
+      var ul = el('ul');
+      ul.style.paddingLeft = '18px';
+      ul.style.margin = '4px 0 0 0';
+      visits.forEach(function (v) {
+        ul.appendChild(el('li', null, (v.tgl_registrasi || '-') + ' • ' + (v.nm_poli || v.kd_poli || '-') + ' (' + (v.no_rawat || '-') + ')'));
+      });
+      body.appendChild(ul);
+    }
+
+    box.appendChild(body);
+    return box;
+  }
+
+  function openCompareModal(sourceRm, targetRm) {
+    state.compareSourceRm = sourceRm;
+    state.compareTargetRm = targetRm;
+
+    var body = document.getElementById('mergeCompareBody');
+    body.replaceChildren(el('div', 'text-center text-muted', 'Memuat rincian perbandingan 2 rekam medis...'));
+    $('#btnExecuteMerge').prop('disabled', true);
+    $('#mergeCompareModal').modal('show');
+
+    $.ajax({
+      url: endpoints.compare,
+      type: 'GET',
+      dataType: 'json',
+      data: { source_rm: sourceRm, target_rm: targetRm },
+      success: function (resp) {
+        if (!resp || resp.status !== 'success') {
+          body.replaceChildren(el('div', 'alert alert-danger', (resp && resp.message) || 'Gagal memuat perbandingan.'));
+          return;
+        }
+        renderCompareContent(resp);
+      },
+      error: function (xhr) {
+        var msg = (xhr.responseJSON && xhr.responseJSON.message) || 'Gagal memuat perbandingan rekam medis.';
+        body.replaceChildren(el('div', 'alert alert-danger', msg));
+      }
+    });
+  }
+
+  function renderCompareContent(resp) {
+    var body = document.getElementById('mergeCompareBody');
+    body.replaceChildren();
+
+    var grid = el('div', 'rsgm-compare-grid');
+    grid.appendChild(buildPatientCompareBox(resp.source, true));
+
+    var mid = el('div', 'text-center');
+    mid.style.paddingTop = '40px';
+    var swapBtn = el('button', 'btn btn-sm btn-default', '⇄ Tukar');
+    swapBtn.type = 'button';
+    swapBtn.title = 'Tukar RM Sumber dan RM Utama';
+    swapBtn.addEventListener('click', function () {
+      openCompareModal(state.compareTargetRm, state.compareSourceRm);
+    });
+    mid.appendChild(swapBtn);
+    grid.appendChild(mid);
+
+    grid.appendChild(buildPatientCompareBox(resp.target, false));
+    body.appendChild(grid);
+
+    var optsPanel = el('div');
+    optsPanel.style.background = '#ffffff';
+    optsPanel.style.border = '1px solid #e2e8f0';
+    optsPanel.style.borderRadius = '10px';
+    optsPanel.style.padding = '14px';
+    optsPanel.style.marginTop = '14px';
+
+    // Fillable biodata info
+    var fillable = resp.fillable_biodata || [];
+    var cbWrap = el('div', 'checkbox');
+    cbWrap.style.marginTop = '0';
+    var cbLabel = el('label');
+    var cbFill = document.createElement('input');
+    cbFill.type = 'checkbox';
+    cbFill.id = 'chkFillEmptyBiodata';
+    cbFill.checked = true;
+    cbLabel.appendChild(cbFill);
+    cbLabel.appendChild(document.createTextNode(' Lengkapi otomatis biodata kosong di RM Utama dari RM Sumber'));
+    cbWrap.appendChild(cbLabel);
+    optsPanel.appendChild(cbWrap);
+
+    if (fillable.length) {
+      var previewTxt = fillable.map(function (f) { return f.label + ': ' + f.value; }).join(' | ');
+      var fDiv = el('div', 'text-success', 'Akan disalin ke RM Utama: ' + previewTxt);
+      fDiv.style.fontSize = '12px';
+      fDiv.style.marginBottom = '10px';
+      optsPanel.appendChild(fDiv);
+    }
+
+    var fgReason = el('div', 'form-group');
+    var lblReason = el('label', null, 'Alasan Penggabungan (Wajib untuk Audit MRMIK 8)');
+    var txtReason = document.createElement('input');
+    txtReason.type = 'text';
+    txtReason.id = 'inputMergeReason';
+    txtReason.className = 'form-control input-sm';
+    txtReason.value = 'Penggabungan rekam medis duplikat (identitas pasien sama)';
+    txtReason.placeholder = 'Contoh: Duplikat RM tanpa nol depan (59761 -> 059761), pasien sama.';
+    fgReason.appendChild(lblReason);
+    fgReason.appendChild(txtReason);
+    optsPanel.appendChild(fgReason);
+
+    var confirmWrap = el('div', 'checkbox');
+    confirmWrap.style.marginBottom = '0';
+    var confirmLbl = el('label');
+    confirmLbl.style.color = '#991b1b';
+    confirmLbl.style.fontWeight = '600';
+    var chkConfirm = document.createElement('input');
+    chkConfirm.type = 'checkbox';
+    chkConfirm.id = 'chkConfirmMerge';
+    confirmLbl.appendChild(chkConfirm);
+    confirmLbl.appendChild(document.createTextNode(' Saya telah memverifikasi bahwa RM ' + state.compareSourceRm + ' dan RM ' + state.compareTargetRm + ' adalah pasien yang sama. Pindahkan seluruh riwayat ke ' + state.compareTargetRm + ' dan arsipkan ' + state.compareSourceRm + '.'));
+    confirmWrap.appendChild(confirmLbl);
+    optsPanel.appendChild(confirmWrap);
+
+    var modalErr = el('div');
+    modalErr.id = 'mergeModalError';
+    modalErr.style.marginTop = '10px';
+    modalErr.style.display = 'none';
+    optsPanel.appendChild(modalErr);
+
+    body.appendChild(optsPanel);
+
+    function syncBtnState() {
+      var ok = chkConfirm.checked && $.trim(txtReason.value).length >= 5;
+      $('#btnExecuteMerge').prop('disabled', !ok);
+    }
+    chkConfirm.addEventListener('change', syncBtnState);
+    txtReason.addEventListener('input', syncBtnState);
+    syncBtnState();
+  }
+
+  $('#btnExecuteMerge').on('click', function () {
+    var btn = $(this);
+    var reason = $.trim($('#inputMergeReason').val() || '');
+    var fillEmpty = $('#chkFillEmptyBiodata').is(':checked') ? '1' : '0';
+    var errBox = document.getElementById('mergeModalError');
+
+    if (reason.length < 5) {
+      if (errBox) {
+        errBox.replaceChildren(el('div', 'alert alert-danger', 'Alasan penggabungan wajib minimal 5 karakter.'));
+        errBox.style.display = 'block';
+      }
+      return;
+    }
+
+    btn.prop('disabled', true).text('Memproses penggabungan...');
+    $.ajax({
+      url: endpoints.merge,
+      type: 'POST',
+      dataType: 'json',
+      data: {
+        t: csrfToken,
+        source_rm: state.compareSourceRm,
+        target_rm: state.compareTargetRm,
+        reason: reason,
+        fill_empty_biodata: fillEmpty
+      },
+      success: function (resp) {
+        btn.text('Eksekusi Gabung RM Sekarang');
+        if (!resp || resp.status !== 'success') {
+          btn.prop('disabled', false);
+          if (errBox) {
+            errBox.replaceChildren(el('div', 'alert alert-danger', (resp && resp.message) || 'Penggabungan gagal.'));
+            errBox.style.display = 'block';
+          }
+          return;
+        }
+        $('#mergeCompareModal').modal('hide');
+        showGlobalAlert('success', resp.message || 'Penggabungan RM berhasil.');
+        state.manualSource = null;
+        state.manualTarget = null;
+        renderManualPicked('source');
+        renderManualPicked('target');
+        if (state.tab === 'manual') {
+          switchTab('riwayat');
+        } else {
+          loadList(state.page);
+        }
+      },
+      error: function (xhr) {
+        btn.prop('disabled', false).text('Eksekusi Gabung RM Sekarang');
+        var msg = (xhr.responseJSON && xhr.responseJSON.message) || 'Terjadi kesalahan saat menggabungkan RM.';
+        if (errBox) {
+          errBox.replaceChildren(el('div', 'alert alert-danger', msg));
+          errBox.style.display = 'block';
+        }
+      }
+    });
+  });
+
+  $('#dupTabBar').on('click', '.rsgm-dup-tab', function () {
+    switchTab($(this).attr('data-tab') || 'nik');
+  });
+
+  $('#dupSearchBtn').on('click', function () {
+    state.q = $.trim($('#dupSearchInput').val() || '');
+    loadList(1);
+  });
+  $('#dupSearchInput').on('keypress', function (e) {
+    if (e.which === 13) {
+      e.preventDefault();
+      state.q = $.trim($(this).val() || '');
+      loadList(1);
+    }
+  });
+
+  $('#manualSourceSearchBtn').on('click', function () { searchManual('source'); });
+  $('#manualTargetSearchBtn').on('click', function () { searchManual('target'); });
+  $('#manualSourceSearch').on('keypress', function (e) { if (e.which === 13) { e.preventDefault(); searchManual('source'); } });
+  $('#manualTargetSearch').on('keypress', function (e) { if (e.which === 13) { e.preventDefault(); searchManual('target'); } });
+
+  $('#btnManualCompare').on('click', function () {
+    if (state.manualSource && state.manualTarget) {
+      openCompareModal(state.manualSource.no_rkm_medis, state.manualTarget.no_rkm_medis);
+    }
+  });
+
+  $('body').on('hidden.bs.modal', '#riwayatModal', function () {
+    $(this).removeData('bs.modal');
+  });
+
+  $(document).ready(function () {
+    loadList(1);
+  });
+})(window.jQuery);
+</script>
+

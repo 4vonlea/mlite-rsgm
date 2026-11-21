@@ -3331,7 +3331,7 @@ table.dataTable thead .sorting_desc:after {
     min-width: 256px !important;
     width: auto !important;
     height: auto !important;
-    z-index: 1055 !important;
+    z-index: 1035 !important;
     background-color: #ffffff !important;
     font-family: inherit !important;
     text-transform: none !important;

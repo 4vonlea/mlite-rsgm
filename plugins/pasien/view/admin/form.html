@@ -19,7 +19,7 @@
                 <label for="no_rkm_medis" class="col-sm-3 control-label">Nomor RM</label>
                 <div class="col-sm-4">
                   <div class="rsgm-norm-wrap">
-                    <input type="text" id="no_rkm_medis" name="no_rkm_medis" class="form-control rsgm-norm-input rsgm-auto-input" placeholder="Otomatis" value="{if: !empty($is_edit)}{$pasien.no_rkm_medis}{else}{$no_rkm_medis_baru}{/if}" maxlength="10" {if: !empty($is_edit)}disabled{/if} autocomplete="off">
+                    <input type="text" id="no_rkm_medis" name="no_rkm_medis" class="form-control rsgm-norm-input rsgm-auto-input" placeholder="6 digit angka" value="{if: !empty($is_edit)}{$pasien.no_rkm_medis}{else}{$no_rkm_medis_baru}{/if}" maxlength="6" inputmode="numeric" pattern="[0-9]{6}" {if: !empty($is_edit)}disabled{/if} autocomplete="off">
                     <label class="rsgm-manual-check" title="Centang jika ingin mengisi No. RM secara manual">
                       <input type="checkbox" name="manual" id="norm_manual" {if: !empty($is_edit)}disabled{/if}>
                       <span>Manual</span>
@@ -47,7 +47,7 @@
                 </div>
                 <label for="tgl_lahir" class="col-sm-2 control-label rsgm-label-inline">Tgl. Lahir</label>
                 <div class="col-sm-3">
-                  <input type="text" id="tgl_lahir" name="tgl_lahir" class="form-control tgl_lahir" placeholder="DD-MM-YYYY" autocomplete="off" value="{$pasien.tgl_lahir}">
+                  <input type="text" id="tgl_lahir" name="tgl_lahir" class="form-control tgl_lahir" placeholder="DD-MM-YYYY" maxlength="10" autocomplete="off" value="{$pasien.tgl_lahir}">
                 </div>
               </div>
               <div class="{if: $admin_mode == 'simple'}hidden{/if}">
@@ -111,7 +111,7 @@
                 </div>
                 <label for="no_peserta" class="col-sm-2 control-label rsgm-label-inline">No. Kartu</label>
                 <div class="col-sm-3">
-                  <input type="text" name="no_peserta" id="no_peserta" class="form-control noKartu" placeholder="No. BPJS / Asuransi" value="{$pasien.no_peserta}">
+                  <input type="text" name="no_peserta" id="no_peserta" class="form-control noKartu" placeholder="13 digit BPJS / No. Asuransi" maxlength="25" value="{$pasien.no_peserta}">
                 </div>
               </div>
             </div>
@@ -147,7 +147,7 @@
               <div class="form-group">
                 <label for="no_ktp" class="col-sm-3 control-label">Nomor KTP</label>
                 <div class="col-sm-9">
-                  <input type="text" name="no_ktp" id="no_ktp" class="form-control no_ktp" placeholder="16 digit NIK (tekan Enter untuk cek BPJS)" value="{$pasien.no_ktp}">
+                  <input type="text" name="no_ktp" id="no_ktp" class="form-control no_ktp" placeholder="16 digit NIK (tekan Enter untuk cek BPJS)" maxlength="16" inputmode="numeric" autocomplete="off" value="{$pasien.no_ktp}">
                 </div>
               </div>
               <div class="form-group">
@@ -211,11 +211,11 @@
               <div class="form-group">
                 <label class="col-sm-3 control-label">Telepon</label>
                 <div class="col-sm-4">
-                  <input type="text" name="no_tlp" class="form-control noTelepon" placeholder="No. HP / WA" value="{$pasien.no_tlp}">
+                  <input type="text" name="no_tlp" class="form-control noTelepon" placeholder="08xxxxxxxxxx (9-15 digit)" maxlength="15" inputmode="tel" autocomplete="off" value="{$pasien.no_tlp}">
                 </div>
                 <label for="email" class="col-sm-1 control-label rsgm-label-inline">Email</label>
                 <div class="col-sm-4">
-                  <input type="text" id="email" name="email" class="form-control" placeholder="Alamat email" value="{$pasien.email}">
+                  <input type="email" id="email" name="email" class="form-control" placeholder="Alamat email" maxlength="100" value="{$pasien.email}">
                 </div>
               </div>
             </div>
