@@ -158,6 +158,9 @@ $("#display").on("click",".riwayat_perawatan", function(event){
 
 // ketika baris data diklik
 $("#display").on("click", ".edit", function(event){
+  if ($(event.target).closest('a[href="#ubah_dokter"]').length) {
+    return;
+  }
   var baseURL = mlite.url + '/' + mlite.admin;
   event.preventDefault();
   var url = baseURL + '/oral_diagnostic/form?t=' + mlite.token;
@@ -280,66 +283,48 @@ $("#form").on("click","#hapus", function(event){
   });
 });
 
-$("#display").on("click", ".sep", function(event){
+$(document).on("click", ".sep", function(event){
   var baseURL = mlite.url + '/' + mlite.admin;
   event.preventDefault();
+
+  var no_peserta = ($(this).attr("data-no_peserta") || '').trim();
+
+  // 1. Validasi nomor kartu peserta SEBELUM menutup tabel display
+  if (!no_peserta || no_peserta === '-' || no_peserta === '') {
+    alert('Nomor kartu BPJS pasien kosong atau belum terisi di data rekam medis!');
+    return false;
+  }
+
+  // 2. Batalkan request VClaim sebelumnya jika masih berjalan (cegah race condition)
+  if (window.currentVclaimXHR && typeof window.currentVclaimXHR.abort === 'function') {
+    try { window.currentVclaimXHR.abort(); } catch(e) {}
+  }
+
+  // 3. Reset form SEP terlebih dahulu agar data pasien sebelumnya bersih total
+  if (typeof window.resetFormSep === 'function') {
+    window.resetFormSep();
+  }
+
+  var d = new Date();
+  var pad = function(n) { return (n < 10 ? '0' : '') + n; };
+  var curr_date = d.getFullYear() + "-" + pad(d.getMonth()+1) + "-" + pad(d.getDate());
 
   var no_rawat = $(this).attr("data-no_rawat");
   var no_rkm_medis = $(this).attr("data-no_rkm_medis");
   var nm_pasien = $(this).attr("data-nm_pasien");
   var tgl_registrasi = $(this).attr("data-tgl_registrasi");
-  var no_peserta = $(this).attr("data-no_peserta");
+  var kd_dokter = $(this).attr("data-kd_dokter") || '';
+  var nm_dokter = $(this).attr("data-nm_dokter") || '';
+  var kd_poli = $(this).attr("data-kd_poli") || '';
+  var nm_poli = $(this).attr("data-nm_poli") || '';
 
-  var url = baseURL + '/vclaim/bynokartu/' + no_peserta + '/{?=date('Y-m-d')?}?t=' + mlite.token;
+  // Filter out dokter skrining OD (199403032202201). DPJP harus dokter spesialis perujuk/tujuan di poli
+  if (kd_dokter === '199403032202201') {
+    kd_dokter = '';
+    nm_dokter = '';
+  }
 
-  $.get(url,function(data) {
-    var json_obj = [data];
-    if(!json_obj[0]) {
-      alert('Koneksi ke server BPJS terputus. Silahkan ulangi lagi!');
-    } else if(json_obj[0].metaData.code == 200) {
-      $('.nama_peserta').text(json_obj[0].response.peserta.nama);
-      $('#no_kartu_peserta').text(json_obj[0].response.peserta.noKartu);
-      $('#no_mr_peserta').text(no_rkm_medis);
-      $('#nik_peserta').text(json_obj[0].response.peserta.nik);
-      $('#tgl_lahir_peserta').text(json_obj[0].response.peserta.tglLahir);
-      $('#status_peserta').text(json_obj[0].response.peserta.statusPeserta.keterangan);
-      $('#jenis_peserta').text(json_obj[0].response.peserta.jenisPeserta.keterangan);
-      $('.prolainis_peserta').text(json_obj[0].response.peserta.informasi.prolanisPRB);
-
-      var jenis_kelamin = 'Laki-Laki';
-      if(json_obj[0].response.peserta.sex == 'P') {
-        var jenis_kelamin = 'Perempuan';
-      }
-
-      $('input:text[name=sep_jenis_kelamin_nama]').val(jenis_kelamin);
-      $('input:text[name=sep_jenis_kelamin_kode]').val(json_obj[0].response.peserta.sex);
-      $('input:text[name=sep_tanggal_lahir]').val(json_obj[0].response.peserta.tglLahir);
-      $('input:text[name=sep_jenis_peserta]').val(json_obj[0].response.peserta.jenisPeserta.keterangan);
-      $('input:text[name=sep_no_kartu]').val(json_obj[0].response.peserta.noKartu);
-      $('input:text[name=sep_norm]').val(json_obj[0].response.peserta.mr.noMR);
-      $('input:text[name=sep_eksekutif_kode]').val("0");
-      $('input:text[name=sep_eksekutif_nama]').val("Tidak");
-      $('input:text[name=sep_kunjungan_kode]').val("0");
-      $('input:text[name=sep_kunjungan_nama]').val("Normal");
-      $('input:text[name=sep_cob_kode]').val("0");
-      $('input:text[name=sep_cob_nama]').val("Tidak");
-      $('input:text[name=sep_katarak_kode]').val("0");
-      $('input:text[name=sep_katarak_nama]').val("Tidak");
-      $('input:text[name=sep_status_kecelakaan_kode]').val("0");
-      $('input:text[name=sep_status_kecelakaan_nama]').val("Tidak");
-      $('input:text[name=sep_penjamin_kecelakaan_kode]').val("0");
-      $('input:text[name=sep_penjamin_kecelakaan_nama]').val("Tidak");
-      $('input:text[name=sep_suplesi_kode]').val("0");
-      $('input:text[name=sep_suplesi_nama]').val("Tidak");
-      $('input:text[name=sep_kelas_kode]').val(json_obj[0].response.peserta.hakKelas.kode);
-      $('input:text[name=sep_kelas_nama]').val(json_obj[0].response.peserta.hakKelas.keterangan);
-      $('input:text[name=sep_nomor_telepon]').val(json_obj[0].response.peserta.mr.noTelepon);
-
-    } else {
-      alert(json_obj[0].metaData.message);
-    }
-  }, 'json');
-
+  // 4. Set data identitas registrasi
   $('input:text[name=sep_no_rawat]').val(no_rawat);
   $('input:text[name=no_rkm_medis]').val(no_rkm_medis);
   $('input:text[name=nm_pasien]').val(nm_pasien);
@@ -347,13 +332,131 @@ $("#display").on("click", ".sep", function(event){
   $('input:text[name=nomor_asuransi]').val(no_peserta);
   $('input:text[name=no_kartu_pcare]').val(no_peserta);
   $('input:text[name=no_kartu_rs]').val(no_peserta);
+  $('input:text[name=sep_no_kartu]').val(no_peserta);
+  $('input:text[name=sep_norm]').val(no_rkm_medis);
+  if (nm_dokter && nm_dokter.trim() !== '') {
+    $('#sep_dpjp_yang_melayani_nama').val(nm_dokter);
+    $('#sep_dpjp_pelayanan_nama').val(nm_dokter);
+  } else {
+    $('#sep_dpjp_yang_melayani_nama').val('');
+    $('#sep_dpjp_pelayanan_nama').val('');
+  }
+  if (kd_dokter && kd_dokter.trim() !== '') {
+    $('#sep_dpjp_yang_melayani_kode').val(kd_dokter);
+    $('#sep_dpjp_pelayanan_kode').val(kd_dokter);
+  } else {
+    $('#sep_dpjp_yang_melayani_kode').val('');
+    $('#sep_dpjp_pelayanan_kode').val('');
+  }
+  if (kd_poli && kd_poli.trim() !== '' && kd_poli !== 'OD') {
+    $('#sep_spesialis_kode').val(kd_poli);
+    $('#sep_spesialis_nama').val(nm_poli);
+  } else {
+    $('#sep_spesialis_kode').val('');
+    $('#sep_spesialis_nama').val('');
+  }
+
+  // 5. Tampilkan form SEP
   $("#display").hide();
   $("#form_rincian").hide();
   $("#form").hide();
   $("#notif").hide();
   $("#form_soap").hide();
+  $("#form_berkasdigital").hide();
   $("#form_sep").show();
   $("#bukaform").hide();
+
+  // 6. Tampilkan animasi loading overlay
+  if (typeof window.showVclaimLoading === 'function') {
+    window.showVclaimLoading('Memeriksa Kartu Peserta...', 'Menghubungkan ke BPJS VClaim...');
+  }
+
+  var url = baseURL + '/vclaim/bynokartu/' + encodeURIComponent(no_peserta) + '/' + curr_date + '?t=' + mlite.token;
+
+  window.currentVclaimXHR = $.get(url, function(data) {
+    try {
+      var json_obj = [typeof data === 'string' ? JSON.parse(data) : data];
+      if(!json_obj[0]) {
+        alert('Koneksi ke server BPJS terputus. Silahkan ulangi lagi!');
+        if (typeof window.hideVclaimLoading === 'function') {
+          window.hideVclaimLoading();
+        }
+      } else if(json_obj[0].metaData && json_obj[0].metaData.code == 200) {
+        $('.nama_peserta').text(json_obj[0].response.peserta.nama);
+        $('#no_kartu_peserta').text(json_obj[0].response.peserta.noKartu);
+        $('#no_mr_peserta').text(no_rkm_medis);
+        $('#nik_peserta').text(json_obj[0].response.peserta.nik);
+        $('#prov_umum_peserta').text(json_obj[0].response.peserta.provUmum ? json_obj[0].response.peserta.provUmum.nmProvider : '');
+        $('#tgl_lahir_peserta').text(json_obj[0].response.peserta.tglLahir);
+        $('#status_peserta').text(json_obj[0].response.peserta.statusPeserta ? json_obj[0].response.peserta.statusPeserta.keterangan : '');
+        $('#jenis_peserta').text(json_obj[0].response.peserta.jenisPeserta ? json_obj[0].response.peserta.jenisPeserta.keterangan : '');
+        $('.prolainis_peserta').text((json_obj[0].response.peserta.informasi && json_obj[0].response.peserta.informasi.prolanisPRB) ? json_obj[0].response.peserta.informasi.prolanisPRB : '');
+
+        var jenis_kelamin = 'Laki-Laki';
+        if(json_obj[0].response.peserta.sex == 'P') {
+          jenis_kelamin = 'Perempuan';
+        }
+
+        $('input:text[name=sep_jenis_kelamin_nama]').val(jenis_kelamin);
+        $('input:text[name=sep_jenis_kelamin_kode]').val(json_obj[0].response.peserta.sex);
+        $('input:text[name=sep_tanggal_lahir]').val(json_obj[0].response.peserta.tglLahir);
+        $('input:text[name=sep_jenis_peserta]').val(json_obj[0].response.peserta.jenisPeserta ? json_obj[0].response.peserta.jenisPeserta.keterangan : '');
+        $('input:text[name=sep_no_kartu]').val(json_obj[0].response.peserta.noKartu);
+        $('input:text[name=sep_norm]').val((json_obj[0].response.peserta.mr && json_obj[0].response.peserta.mr.noMR) ? json_obj[0].response.peserta.mr.noMR : no_rkm_medis);
+        $('input:text[name=sep_eksekutif_kode]').val("0");
+        $('input:text[name=sep_eksekutif_nama]').val("Tidak");
+        $('input:text[name=sep_kunjungan_kode]').val("0");
+        $('input:text[name=sep_kunjungan_nama]').val("Normal");
+        $('input:text[name=sep_cob_kode]').val("0");
+        $('input:text[name=sep_cob_nama]').val("Tidak");
+        $('input:text[name=sep_katarak_kode]').val("0");
+        $('input:text[name=sep_katarak_nama]').val("Tidak");
+        $('input:text[name=sep_status_kecelakaan_kode]').val("0");
+        $('input:text[name=sep_status_kecelakaan_nama]').val("Tidak");
+        $('input:text[name=sep_penjamin_kecelakaan_kode]').val("0");
+        $('input:text[name=sep_penjamin_kecelakaan_nama]').val("Tidak");
+        $('input:text[name=sep_suplesi_kode]').val("0");
+        $('input:text[name=sep_suplesi_nama]').val("Tidak");
+        if (json_obj[0].response.peserta.hakKelas) {
+          $('input:text[name=sep_kelas_kode]').val(json_obj[0].response.peserta.hakKelas.kode);
+          $('input:text[name=sep_kelas_nama]').val(json_obj[0].response.peserta.hakKelas.keterangan);
+        }
+        if (json_obj[0].response.peserta.mr && json_obj[0].response.peserta.mr.noTelepon) {
+          $('input:text[name=sep_nomor_telepon]').val(json_obj[0].response.peserta.mr.noTelepon);
+        }
+
+        // Lanjutkan auto-fetch rujukan & DPJP dengan loading state
+        if (typeof window.vclaimAutoFetchRujukan === 'function') {
+          window.vclaimAutoFetchRujukan(no_peserta, no_rawat, nm_dokter, function() {
+            if (typeof window.hideVclaimLoading === 'function') {
+              window.hideVclaimLoading();
+            }
+          }, kd_dokter);
+        } else {
+          if (typeof window.hideVclaimLoading === 'function') {
+            window.hideVclaimLoading();
+          }
+        }
+      } else {
+        alert(json_obj[0].metaData ? json_obj[0].metaData.message : 'Respon BPJS tidak valid');
+        if (typeof window.hideVclaimLoading === 'function') {
+          window.hideVclaimLoading();
+        }
+      }
+    } catch(err) {
+      alert('Terjadi kesalahan memproses data peserta dari BPJS.');
+      if (typeof window.hideVclaimLoading === 'function') {
+        window.hideVclaimLoading();
+      }
+    }
+  }).fail(function(xhr, status, error) {
+    if (status !== 'abort') {
+      alert('Gagal menghubungi server BPJS VClaim.');
+      if (typeof window.hideVclaimLoading === 'function') {
+        window.hideVclaimLoading();
+      }
+    }
+  });
 });
 
 
@@ -494,8 +597,8 @@ $("#form_soap").on("click", "#simpan_soap", function(event){
     event.preventDefault();
 
     var no_rawat        = $('input:text[name=no_rawat]').val();
-    var tgl_perawatan   = $('input:text[name=tgl_perawatan]').val();
-    var jam_rawat       = $('input:text[name=jam_rawat]').val();
+    var tgl_perawatan   = $('#form_soap input[name=tgl_perawatan]').val();
+    var jam_rawat       = $('#form_soap input[name=jam_rawat]').val();
     var suhu_tubuh      = $('input:text[name=suhu_tubuh]').val();
     var tensi           = $('input:text[name=tensi]').val() || '-';
     var nadi            = $('input:text[name=nadi]').val();
@@ -572,7 +675,7 @@ $("#form_soap").on("click", "#simpan_soap", function(event){
 
       var now = new Date();
       var jam_now = ("0" + now.getHours()).slice(-2) + ":" + ("0" + now.getMinutes()).slice(-2) + ":" + ("0" + now.getSeconds()).slice(-2);
-      $('input:text[name=jam_rawat]').val(jam_now);
+      $('#form_soap input[name=jam_rawat]').val(jam_now);
 
       $('#notif').html("<div class=\"alert alert-success alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
       "Data soap telah disimpan!"+
@@ -582,7 +685,7 @@ $("#form_soap").on("click", "#simpan_soap", function(event){
   {/if}
 });
 
-// ketika tombol hapus ditekan
+// ketika tombol edit ditekan
 $("#soap").on("click",".edit_soap", function(event){
   var baseURL = mlite.url + '/' + mlite.admin;
   event.preventDefault();
@@ -607,8 +710,8 @@ $("#soap").on("click",".edit_soap", function(event){
   var evaluasi        = $(this).attr("data-evaluasi");
   var spo2            = $(this).attr("data-spo2");
 
-  $('input:text[name=tgl_perawatan]').val(tgl_perawatan);
-  $('input:text[name=jam_rawat]').val(jam_rawat);
+  $('#form_soap input[name=tgl_perawatan]').val(tgl_perawatan);
+  $('#form_soap input[name=jam_rawat]').val(jam_rawat);
   $('input:text[name=suhu_tubuh]').val(suhu_tubuh);
   $('input:text[name=tensi]').val(tensi);
   $('input:text[name=nadi]').val(nadi);
@@ -802,7 +905,7 @@ $('input:text[name=radiologi]').on('input focus click', function(e){
 // tombol toggle daftar radiologi
 $("#form_rincian").on("click", "#btn_toggle_radiologi", function(e){
   e.preventDefault();
-  if ($("#radiologi").is(":visible")) {
+  if ($("#radiologi").is(":visible") && $.trim($("#radiologi").html()) !== "") {
     $("#radiologi").hide();
   } else {
     var baseURL = mlite.url + '/' + mlite.admin;
@@ -812,6 +915,8 @@ $("#form_rincian").on("click", "#btn_toggle_radiologi", function(e){
     $.post(url, {radiologi: radiologi} ,function(data) {
       $("#radiologi").html(data).show();
       $("#layanan").hide();
+    }).fail(function(xhr) {
+      bootbox.alert('Gagal memuat daftar pemeriksaan radiologi (' + xhr.status + ').');
     });
   }
 });
@@ -842,6 +947,9 @@ $("#layanan").on("click", ".pilih_layanan", function(event){
   $('#provider').show();
   $('#aturan_pakai').hide();
   $('#info_tambahan').hide();
+  if ($('#pilih_provider').val() != '') {
+    $('#pilih_provider').trigger('change');
+  }
 });
 
 // ketika baris data diklik
@@ -876,13 +984,28 @@ $("#form_rincian").on("click", "#simpan_rincian", function(event){
   var kode_provider   = $('input:text[name=kode_provider]').val();
   var kode_provider2   = $('input:text[name=kode_provider2]').val();
   var tgl_perawatan   = $('input:text[name=tgl_perawatan]').val();
-  var jam_rawat       = $('input:text[name=jam_reg]').last().val();
+  var jam_rawat       = $('#form_rincian #jam_reg').val() || $('input:text[name=jam_reg]').last().val();
   var biaya           = $('input:text[name=biaya]').val();
   var aturan_pakai    = $('input:text[name=aturan_pakai]').val();
   var kat             = $('input:hidden[name=kat]').val();
   var jml             = $('input:text[name=jml]').val();
   var informasi_tambahan = $('textarea[name=informasi_tambahan]').val();
   var diagnosa_klinis = $('input:text[name=diagnosa_klinis]').val();
+
+  if (kat === 'tindakan') {
+    if (!provider) {
+      bootbox.alert('Silakan pilih Jenis Provider terlebih dahulu.');
+      return;
+    }
+    if ((provider === 'rawat_jl_dr' || provider === 'rawat_jl_drpr') && !kode_provider) {
+      bootbox.alert('Silakan pilih Nama Dokter dari daftar.');
+      return;
+    }
+    if ((provider === 'rawat_jl_pr' || provider === 'rawat_jl_drpr') && !kode_provider2) {
+      bootbox.alert('Silakan pilih Nama Perawat dari daftar.');
+      return;
+    }
+  }
 
   var url = baseURL + '/oral_diagnostic/savedetail?t=' + mlite.token;
   $.post(url, {no_rawat : no_rawat,
@@ -899,12 +1022,11 @@ $("#form_rincian").on("click", "#simpan_rincian", function(event){
   informasi_tambahan : informasi_tambahan,
   diagnosa_klinis : diagnosa_klinis
   }, function(data) {
-    if (typeof data === 'string' && data.indexOf('{"status":"error"') !== -1) {
-      try {
-        var res = JSON.parse(data);
-        bootbox.alert(res.message);
-        return;
-      } catch(e) {}
+    var res = null;
+    try { res = (typeof data === 'object') ? data : JSON.parse(data); } catch(e) { res = null; }
+    if (res && res.status === 'error') {
+      bootbox.alert(res.message || 'Gagal menyimpan tindakan.');
+      return;
     }
 
     // tampilkan data
@@ -917,8 +1039,7 @@ $("#form_rincian").on("click", "#simpan_rincian", function(event){
     });
     $.post(baseURL + '/oral_diagnostic/cekwaktu?t=' + mlite.token, {
     } ,function(data) {
-      $("#form_rincian #jam_reg").val(data);
-      $('input:text[name=jam_reg]').last().val(data).focus();
+      $("#form_rincian #jam_reg").val(data).focus();
     });
     $('input:hidden[name=kd_jenis_prw]').val("");
     $('input:text[name=nm_perawatan]').val("");
@@ -936,6 +1057,8 @@ $("#form_rincian").on("click", "#simpan_rincian", function(event){
     "Data pasien telah disimpan!"+
     "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
     "</div>").show();
+  }).fail(function(xhr) {
+    bootbox.alert('Gagal menyimpan rincian tindakan (' + xhr.status + ').');
   });
 });
 
@@ -1149,6 +1272,197 @@ $("#form_soap").on("click",".assesment", function(event){
       });
   }).modal();
   return false;
+});
+
+$(document).off('click', 'a[href="#ubah_dokter"]').on('click', 'a[href="#ubah_dokter"]', function(event){
+  var baseURL = mlite.url + '/' + mlite.admin;
+  event.preventDefault();
+  var no_rawat = $(this).attr("data-no_rawat");
+  var kd_dokter = $(this).attr("data-kd_dokter");
+  var url = baseURL + '/oral_diagnostic/ubahdokter?t=' + mlite.token;
+
+  var selectHtml = $('#hidden_dokter_select').html();
+
+  bootbox.dialog({
+    title: "Ubah Dokter Kunjungan",
+    message: "<p>Silahkan pilih dokter pengganti:</p>" + selectHtml,
+    buttons: {
+      cancel: {
+        label: "Batal",
+        className: 'btn-default'
+      },
+      ok: {
+        label: "Simpan",
+        className: 'btn-primary',
+        callback: function() {
+          var new_kd_dokter = $('.bootbox #pilih_ubah_dokter').val();
+          $.post(url, {
+            no_rawat: no_rawat,
+            kd_dokter: new_kd_dokter
+          }, function(data) {
+            var res = {};
+            try { res = typeof data === 'object' ? data : JSON.parse(data); } catch(e) { res = {}; }
+            if (res.status == 'success') {
+              $('#notif').html("<div class=\"alert alert-success alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
+              res.message+
+              "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
+              "</div>").show();
+              if ($('#submit_periode_rawat_jalan').length) {
+                $('#submit_periode_rawat_jalan').trigger('click');
+              } else {
+                $("#display").load(baseURL + '/oral_diagnostic/display?t=' + mlite.token);
+              }
+            } else {
+              bootbox.alert(res.message || 'Gagal mengubah dokter.');
+            }
+          });
+        }
+      }
+    }
+  });
+
+  $('.bootbox #pilih_ubah_dokter').val(kd_dokter);
+  $('.bootbox select').selectator({
+    useDimmer: false,
+    useSearch: true,
+    labels: {
+      search: 'Cari...'
+    }
+  });
+  event.stopPropagation();
+  return false;
+});
+
+$(document).off('click', '.btn-tte').on('click', '.btn-tte', function(e) {
+    e.preventDefault();
+    var ref_type = $(this).attr('data-ref_type');
+    var ref_id = $(this).attr('data-ref_id');
+    var signer_name = $(this).attr('data-signer_name');
+    var baseURL = mlite.url + '/' + mlite.admin;
+    var url = baseURL + '/esignature/saveSignature?t=' + mlite.token;
+
+    if ($('#tte-modal-style').length === 0) {
+        $('head').append('<style id="tte-modal-style">'+
+            '.modal-tte-center { display: flex !important; align-items: center; justify-content: center; background: rgba(0,0,0,0.5); }' +
+            '.modal-tte-center .modal-dialog { margin: auto; width: 400px; max-width: 90vw; }' +
+            '.modal-tte-center .modal-content { border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); border: none; }' +
+            '.modal-tte-center .modal-header { border-bottom: none; padding-top: 20px; }' +
+            '.modal-tte-center .modal-footer { border-top: none; background: #f8f9fa; border-radius: 0 0 12px 12px; padding: 15px 20px; }' +
+            '.modal-tte-center .btn-tte-confirm { background: #3498db; color: white; border: none; padding: 8px 20px; border-radius: 20px; font-weight: bold; width: 100%; transition: all 0.3s; }' +
+            '.modal-tte-center .btn-tte-confirm:hover { background: #2980b9; }' +
+            '.modal-tte-center .btn-tte-cancel { color: #888; background: transparent; border: none; font-weight: bold; padding: 8px; width: 100%; margin-top: 5px; }' +
+            '.modal-tte-center .btn-tte-cancel:hover { color: #555; }' +
+        '</style>');
+    }
+
+    var formHtml = '<div class="text-center" style="padding: 10px;">' +
+        '<i class="fa fa-lock fa-4x text-primary" style="margin-bottom: 20px; color: #3498db;"></i>' +
+        '<h4 style="margin-bottom: 15px; color: #333; font-weight: bold;">Tanda Tangan Elektronik</h4>' +
+        '<p class="text-muted" style="margin-bottom: 25px; font-size: 14px;">Masukkan kata sandi (login) akun MLITE Anda untuk memverifikasi dokumen ini.<br><strong style="color: #e74c3c;">Pastikan isian data telah benar dan sesuai.</strong></p>' +
+        '<div class="form-group">' +
+            '<input type="password" id="tte-passphrase-input" class="form-control text-center" placeholder="Kata Sandi" style="font-size: 18px; letter-spacing: 2px; padding: 20px 15px; border-radius: 8px; border: 2px solid #ddd; outline: none; box-shadow: none;">' +
+        '</div>' +
+    '</div>';
+
+    var dialog = bootbox.dialog({
+        message: formHtml,
+        className: 'modal-tte-center',
+        closeButton: false,
+        buttons: {
+            confirm: {
+                label: 'VERIFIKASI SEKARANG',
+                className: 'btn-tte-confirm',
+                callback: function () {
+                    var passphrase = $('#tte-passphrase-input').val();
+                    if (passphrase === "") {
+                        $('#tte-passphrase-input').css('border-color', '#e74c3c');
+                        $('#tte-passphrase-input').animate({marginLeft: "-10px"}, 100).animate({marginLeft: "10px"}, 100).animate({marginLeft: "0"}, 100);
+                        return false;
+                    }
+
+                    var processingDialog = bootbox.dialog({
+                        message: '<p class="text-center mb-0" style="padding: 20px;"><i class="fa fa-spin fa-spinner fa-2x text-primary" style="margin-bottom:10px;"></i><br>Sedang memverifikasi...</p>',
+                        closeButton: false,
+                        className: 'modal-tte-center'
+                    });
+
+                    $.post(url, {
+                        ref_type: ref_type,
+                        ref_id: ref_id,
+                        signer_name: signer_name,
+                        passphrase: passphrase
+                    }, function(response) {
+                        processingDialog.modal('hide');
+                        var res = {};
+                        try {
+                            res = typeof response === 'object' ? response : JSON.parse(response);
+                        } catch(e) {
+                            bootbox.alert({
+                                message: 'Gagal: Sesi mungkin telah berakhir atau server mengalami kendala.',
+                                className: 'modal-tte-center'
+                            });
+                            return;
+                        }
+                        if (res.status == 'success') {
+                            bootbox.alert({
+                                message: 'Sukses: Tanda tangan elektronik berhasil disimpan.',
+                                className: 'modal-tte-center'
+                            });
+                            var container = $('#sign_container_' + ref_id);
+                            if (container.length) {
+                                var verifyUrl = mlite.url + '/esignature/verify/' + res.hash;
+                                var qrClass = 'qr_' + res.hash.substring(0, 8);
+                                container.html(
+                                    '<a href="' + verifyUrl + '" target="_blank" class="rsgm-cppt-qr-card">' +
+                                    '<div class="' + qrClass + ' rsgm-cppt-qr"></div>' +
+                                    '<div class="rsgm-cppt-qr-meta">' +
+                                      '<span class="rsgm-cppt-qr-ok"><i class="fa fa-check-circle"></i> Terverifikasi TTE</span>' +
+                                      '<span class="rsgm-cppt-qr-sub">Klik QR untuk cek validitas</span>' +
+                                    '</div>' +
+                                    '</a>'
+                                );
+                                $('.' + qrClass).qrcode({
+                                    width: 76,
+                                    height: 76,
+                                    text: res.hash
+                                });
+                            } else {
+                                $("#display").load(baseURL + '/oral_diagnostic/display?t=' + mlite.token);
+                            }
+                        } else {
+                            bootbox.alert({
+                                message: 'Gagal: ' + (res.message || 'Kata sandi tidak valid.'),
+                                className: 'modal-tte-center'
+                            });
+                        }
+                    }).fail(function(xhr) {
+                        processingDialog.modal('hide');
+                        var res = {};
+                        try { res = JSON.parse(xhr.responseText || '{}'); } catch(e) {}
+                        bootbox.alert({
+                            message: 'Gagal: ' + (res.message || 'Terjadi kesalahan pada server.'),
+                            className: 'modal-tte-center'
+                        });
+                    });
+                }
+            },
+            cancel: {
+                label: 'Batal',
+                className: 'btn-tte-cancel',
+                callback: function() {}
+            }
+        }
+    });
+
+    dialog.on('shown.bs.modal', function() {
+        $('#tte-passphrase-input').focus();
+        $('#tte-passphrase-input').on('keypress', function(e) {
+            if (e.which === 13) {
+                e.preventDefault();
+                $('.btn-tte-confirm').click();
+            }
+        });
+    });
 });
 
 {if: $mlite.websocket == 'ya'}

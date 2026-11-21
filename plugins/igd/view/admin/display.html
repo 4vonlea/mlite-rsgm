@@ -22,7 +22,7 @@
           <td style="white-space: nowrap;">
             <span class="dropdown-toggle" data-toggle="dropdown" data-disabled="true" aria-expanded="true"><button type="button" name="button" class="btn btn-sm btn-default">{$value.no_rkm_medis} <span class="caret"></span></button></span>
             <ul class="dropdown-menu" role="menu">
-              {if: $this->core->getUserInfo('role') == 'admin' || $this->core->getUserInfo('role') == 'medis' || $this->core->getUserInfo('role') == 'paramedis'}
+              {if: $this->core->getUserInfo('role') == 'admin' || $this->core->getUserInfo('role') == 'medis' || $this->core->getUserInfo('role') == 'paramedis' || $this->core->getUserInfo('role') == 'rekammedis' || $this->core->getUserInfo('role') == 'pengguna'}
               {? \Systems\Lib\Event::call('rsgmgha.dropdown_menu', [$value]) ?}
               {/if}
               {if: $cek_vclaim}
@@ -30,7 +30,7 @@
                 <li><a href="{?=url([ADMIN, 'pasien', 'vclaim_bynik', $value.no_ktp, date('Y-m-d')])?}" data-toggle="modal" data-target="#asuransiModal"><i class="fa fa-id-card-o rsgm-ico-emerald"></i> [BPJS] Cek Nomor KTP</a></li>
               {/if}
               <li><a href="{?=url([ADMIN, 'pasien', 'riwayatperawatan', $value.no_rkm_medis])?}" data-toggle="modal" data-target="#riwayatModal"><i class="fa fa-folder-open rsgm-ico-blue"></i> Elektronik Rekam Medis</a></li>
-              {if: $this->core->getUserInfo('role') == 'admin' || $this->core->getUserInfo('role') == 'medis' || $this->core->getUserInfo('role') == 'paramedis'}
+              {if: $this->core->getUserInfo('role') == 'admin' || $this->core->getUserInfo('role') == 'medis' || $this->core->getUserInfo('role') == 'paramedis' || $this->core->getUserInfo('role') == 'rekammedis' || $this->core->getUserInfo('role') == 'pengguna'}
               <li><a href="#soap" data-no_rawat="{$value.no_rawat}" data-no_rkm_medis="{$value.no_rkm_medis}" data-nm_pasien="{$value.nm_pasien}" data-umur="{$value.umurdaftar} {$value.sttsumur}"><i class="fa fa-stethoscope rsgm-ico-blue"></i> SOAPIE &amp; Pemeriksaan</a></li>
               <li><a href="#layanan_obat" data-no_rawat="{$value.no_rawat}" data-no_rkm_medis="{$value.no_rkm_medis}" data-nm_pasien="{$value.nm_pasien}"><i class="fa fa-medkit rsgm-ico-teal"></i> Layanan &amp; Tindakan</a></li>
               <li><a href="#triase_igd" data-no_rawat="{$value.no_rawat}" data-no_rkm_medis="{$value.no_rkm_medis}" data-nm_pasien="{$value.nm_pasien}" data-tgl_registrasi="{$value.tgl_registrasi}"><i class="fa fa-ambulance rsgm-ico-rose"></i> Triase IGD</a></li>
@@ -46,7 +46,7 @@
                   <li><a href="{?=url([ADMIN,'igd','suratsakit',convertNorawat($value.no_rawat)])?}" target="_blank"><i class="fa fa-bed rsgm-ico-amber"></i> Surat Keterangan Sakit</a></li>
                 </ul>
               </li>
-              {if: $this->core->getUserInfo('role') == 'admin' || $this->core->getUserInfo('role') == 'medis' || $this->core->getUserInfo('role') == 'paramedis'}
+              {if: $this->core->getUserInfo('role') == 'admin' || $this->core->getUserInfo('role') == 'medis' || $this->core->getUserInfo('role') == 'paramedis' || $this->core->getUserInfo('role') == 'rekammedis' || $this->core->getUserInfo('role') == 'pengguna'}
               <li class="divider"></li>
               <li><a href="#berkas_digital" data-no_rawat="{$value.no_rawat}" data-no_rkm_medis="{$value.no_rkm_medis}" data-nm_pasien="{$value.nm_pasien}"><i class="fa fa-file-image-o rsgm-ico-emerald"></i> Berkas Digital</a></li>
               <li><a href="#status_rawat" data-no_rawat="{$value.no_rawat}" data-stts="{$value.stts}"><i class="fa fa-tag rsgm-ico-amber"></i> Status Rawat</a></li>

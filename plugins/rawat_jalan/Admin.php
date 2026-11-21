@@ -1063,6 +1063,17 @@ class Admin extends AdminModule
         foreach ($rows as $row) {
           $bridging_sep = $this->db('bridging_sep')->where('no_rawat', $row['no_rawat'])->oneArray();
           $row['no_sep'] = isset_or($bridging_sep['no_sep']);
+
+          // Cek kehadiran / check-in pasien
+          $antrian_loket = $this->db('mlite_antrian_loket')
+            ->where('no_rkm_medis', $row['no_rkm_medis'])
+            ->where('postdate', $row['tgl_registrasi'])
+            ->oneArray();
+          $row['checkin_time'] = '';
+          if ($antrian_loket) {
+            $row['checkin_time'] = !empty($antrian_loket['end_time']) ? $antrian_loket['end_time'] : $antrian_loket['start_time'];
+          }
+
           $this->assign['list'][] = $row;
         }
 
@@ -1731,24 +1742,38 @@ class Admin extends AdminModule
         $this->core->addJS(url('assets/jscripts/jquery-ui.js'), 'footer');
         $this->core->addJS(url('assets/jscripts/jquery.timepicker.js'), 'footer');
         $this->_addHeaderFiles();
-        $rows = $this->db('jadwal')->join('dokter', 'dokter.kd_dokter = jadwal.kd_dokter')->join('poliklinik', 'poliklinik.kd_poli = jadwal.kd_poli')->toArray();
+        $rows = $this->db('jadwal')
+            ->join('dokter', 'dokter.kd_dokter = jadwal.kd_dokter')
+            ->join('poliklinik', 'poliklinik.kd_poli = jadwal.kd_poli')
+            ->asc('dokter.nm_dokter')
+            ->asc('jadwal.hari_kerja')
+            ->asc('jadwal.jam_mulai')
+            ->toArray();
         $this->assign['jadwal'] = [];
         foreach ($rows as $row) {
-            $row['delURL'] = url([ADMIN, 'rawat_jalan', 'jadwaldel', $row['kd_dokter'], $row['hari_kerja']]);
-            $row['editURL'] = url([ADMIN, 'rawat_jalan', 'jadwaledit', $row['kd_dokter'], $row['hari_kerja']]);
+            $row['delURL'] = url([ADMIN, 'rawat_jalan', 'jadwaldel', $row['kd_dokter'], $row['hari_kerja'], rawurlencode($row['jam_mulai'])]);
+            $row['editURL'] = url([ADMIN, 'rawat_jalan', 'jadwaledit', $row['kd_dokter'], $row['hari_kerja'], rawurlencode($row['jam_mulai'])]);
             $this->assign['jadwal'][] = $row;
         }
 
         return $this->draw('jadwal.html', ['pendaftaran' => htmlspecialchars_array($this->assign)]);
     }
 
-    public function getJadwalDel($kd_dokter, $hari_kerja)
+    public function getJadwalDel($kd_dokter, $hari_kerja, $jam_mulai = null)
     {
-        if ($pendaftaran = $this->db('jadwal')->where('kd_dokter', $kd_dokter)->where('hari_kerja', $hari_kerja)->oneArray()) {
-            if ($this->db('jadwal')->where('kd_dokter', $kd_dokter)->where('hari_kerja', $hari_kerja)->delete()) {
-                $this->notify('success', 'Hapus sukses');
+        $q = $this->db('jadwal')->where('kd_dokter', $kd_dokter)->where('hari_kerja', $hari_kerja);
+        if ($jam_mulai) {
+            $q->where('jam_mulai', urldecode($jam_mulai));
+        }
+        if ($pendaftaran = $q->oneArray()) {
+            $del = $this->db('jadwal')->where('kd_dokter', $kd_dokter)->where('hari_kerja', $hari_kerja);
+            if ($jam_mulai) {
+                $del->where('jam_mulai', urldecode($jam_mulai));
+            }
+            if ($del->delete()) {
+                $this->notify('success', 'Jadwal dokter berhasil dihapus');
             } else {
-                $this->notify('failure', 'Hapus gagal');
+                $this->notify('failure', 'Gagal menghapus jadwal dokter');
             }
         }
         redirect(url([ADMIN, 'rawat_jalan', 'jadwal']));
@@ -1768,22 +1793,22 @@ class Admin extends AdminModule
         } else {
             $this->assign['form'] = [
               'kd_dokter' => '',
-              'hari_kerja' => '',
-              'jam_mulai' => '',
-              'jam_selesai' => '',
+              'hari_kerja' => 'SENIN',
+              'jam_mulai' => '08:00:00',
+              'jam_selesai' => '12:00:00',
               'kd_poli' => '',
-              'kuota' => ''
+              'kuota' => '25'
             ];
         }
         $this->assign['title'] = 'Tambah Jadwal Dokter';
-        $this->assign['dokter'] = $this->db('dokter')->toArray();
-        $this->assign['poliklinik'] = $this->db('poliklinik')->toArray();
+        $this->assign['dokter'] = $this->db('dokter')->where('status', '1')->asc('nm_dokter')->toArray();
+        $this->assign['poliklinik'] = $this->db('poliklinik')->where('status', '1')->asc('nm_poli')->toArray();
         $this->assign['hari_kerja'] = $this->core->getEnum('jadwal', 'hari_kerja');
-        $this->assign['postUrl'] = url([ADMIN, 'rawat_jalan', 'jadwalsave', $this->assign['form']['kd_dokter'], $this->assign['form']['hari_kerja']]);
+        $this->assign['postUrl'] = url([ADMIN, 'rawat_jalan', 'jadwalsave']);
         return $this->draw('jadwal.form.html', ['pendaftaran' => htmlspecialchars_array($this->assign)]);
     }
 
-    public function getJadwalEdit($id, $hari_kerja)
+    public function getJadwalEdit($id, $hari_kerja, $jam_mulai = null)
     {
         $this->core->addCSS(url('assets/css/jquery-ui.css'));
         $this->core->addCSS(url('assets/css/jquery.timepicker.css'));
@@ -1792,55 +1817,57 @@ class Admin extends AdminModule
         $this->core->addJS(url('assets/jscripts/jquery-ui.js'), 'footer');
         $this->core->addJS(url('assets/jscripts/jquery.timepicker.js'), 'footer');
         $this->_addHeaderFiles();
-        $row = $this->db('jadwal')->where('kd_dokter', $id)->where('hari_kerja', $hari_kerja)->oneArray();
+        $q = $this->db('jadwal')->where('kd_dokter', $id)->where('hari_kerja', $hari_kerja);
+        if ($jam_mulai) {
+            $q->where('jam_mulai', urldecode($jam_mulai));
+        }
+        $row = $q->oneArray();
         if (!empty($row)) {
             $this->assign['form'] = $row;
-            $this->assign['title'] = 'Edit Jadwal';
+            $this->assign['title'] = 'Edit Jadwal Dokter';
             $this->assign['hari_kerja'] = $this->core->getEnum('jadwal', 'hari_kerja');
-            $this->assign['dokter'] = $this->db('dokter')->toArray();
-            $this->assign['poliklinik'] = $this->db('poliklinik')->toArray();
+            $this->assign['dokter'] = $this->db('dokter')->asc('nm_dokter')->toArray();
+            $this->assign['poliklinik'] = $this->db('poliklinik')->asc('nm_poli')->toArray();
 
-            $this->assign['postUrl'] = url([ADMIN, 'rawat_jalan', 'jadwalsave', $this->assign['form']['kd_dokter'], $this->assign['form']['hari_kerja']]);
+            $this->assign['postUrl'] = url([ADMIN, 'rawat_jalan', 'jadwalsave', $row['kd_dokter'], $row['hari_kerja'], rawurlencode($row['jam_mulai'])]);
             return $this->draw('jadwal.form.html', ['pendaftaran' => htmlspecialchars_array($this->assign)]);
         } else {
             redirect(url([ADMIN, 'rawat_jalan', 'jadwal']));
         }
     }
 
-    public function postJadwalSave($id = null, $hari_kerja = null)
+    public function postJadwalSave($id = null, $hari_kerja = null, $jam_mulai = null)
     {
-        $errors = 0;
-
-        if (!$id) {
-            $location = url([ADMIN, 'rawat_jalan', 'jadwal']);
-        } else {
-            $location = url([ADMIN, 'rawat_jalan', 'jadwaledit', $_POST['kd_dokter'], $_POST['hari_kerja']]);
-        }
+        $location = url([ADMIN, 'rawat_jalan', 'jadwal']);
 
         if (checkEmptyFields(['kd_dokter', 'hari_kerja', 'kd_poli'], $_POST)) {
-            $this->notify('failure', 'Isian kosong');
-            redirect($location, $_POST);
+            $this->notify('failure', 'Mohon lengkapi dokter, hari kerja, dan poliklinik!');
+            $redirectUrl = $id ? url([ADMIN, 'rawat_jalan', 'jadwaledit', $id, $hari_kerja]) : url([ADMIN, 'rawat_jalan', 'jadwaladd']);
+            redirect($redirectUrl, $_POST);
         }
 
-        if (!$errors) {
-            unset($_POST['save']);
-
-            if (!$id) {    // new
-                $query = $this->db('jadwal')->save($_POST);
-            } else {        // edit
-                $query = $this->db('jadwal')->where('kd_dokter', $id)->where('hari_kerja', $hari_kerja)->save($_POST);
-            }
-
-            if ($query) {
-                $this->notify('success', 'Simpan sukes');
-            } else {
-                $this->notify('failure', 'Simpan gagal');
-            }
-
-            redirect($location);
+        unset($_POST['save']);
+        if (empty($_POST['kuota'])) {
+            $_POST['kuota'] = 0;
         }
 
-        redirect($location, $_POST);
+        if (!$id) {    // new
+            $query = $this->db('jadwal')->save($_POST);
+        } else {        // edit
+            $q = $this->db('jadwal')->where('kd_dokter', $id)->where('hari_kerja', $hari_kerja);
+            if ($jam_mulai) {
+                $q->where('jam_mulai', urldecode($jam_mulai));
+            }
+            $query = $q->save($_POST);
+        }
+
+        if ($query) {
+            $this->notify('success', 'Jadwal dokter berhasil disimpan');
+        } else {
+            $this->notify('failure', 'Gagal menyimpan jadwal dokter');
+        }
+
+        redirect($location);
     }
 
     public function postStatusRawat()
@@ -1853,6 +1880,28 @@ class Admin extends AdminModule
       $stts = $_POST['stts'] ?? '';
 
       if (empty($no_rawat) || empty($stts)) {
+        exit();
+      }
+
+      $reg = $this->db('reg_periksa')->where('no_rawat', $no_rawat)->oneArray();
+      $tgl_reg = $reg['tgl_registrasi'] ?? date('Y-m-d');
+      $rm = $reg['no_rkm_medis'] ?? '';
+
+      $antrian_loket = $this->db('mlite_antrian_loket')
+        ->where('no_rkm_medis', $rm)
+        ->where('postdate', $tgl_reg)
+        ->oneArray();
+
+      $is_hadir = $antrian_loket && (!empty($antrian_loket['end_time']) || !empty($antrian_loket['start_time']));
+
+      // Jika belum hadir di pendaftaran, hanya status Batal atau Berkas Dikirim yang diizinkan
+      if (!$is_hadir && !in_array($stts, ['Batal', 'Berkas Dikirim'])) {
+        header('HTTP/1.1 400 Bad Request');
+        header('Content-Type: application/json');
+        echo json_encode([
+          'status' => 'error',
+          'message' => 'Status rawat tidak dapat diubah karena pasien belum ditandai Hadir di pendaftaran.'
+        ]);
         exit();
       }
 
@@ -1874,26 +1923,31 @@ class Admin extends AdminModule
               'dikirim' => $datetime
             ]);
           }
-          $reg = $this->db('reg_periksa')->where('no_rawat', $no_rawat)->oneArray();
           if ($reg && $reg['stts'] == 'Berkas Diterima') {
             $this->db('reg_periksa')->where('no_rawat', $no_rawat)->save(['stts' => 'Belum']);
           }
       } else if ($stts == 'Berkas Diterima') {
+          $dikirim_auto = date('Y-m-d H:i:s', strtotime($datetime) - 300);
           if(!$cek) {
             $this->db('mutasi_berkas')->save([
               'no_rawat' => htmlspecialchars($no_rawat, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
               'status' => 'Sudah Diterima',
-              'dikirim' => $datetime,
+              'dikirim' => $dikirim_auto,
               'diterima' => $datetime,
               'kembali' => '1900-01-01 00:00:00',
               'tidakada' => '1900-01-01 00:00:00',
               'ranap' => '1900-01-01 00:00:00'
             ]);
           } else {
-            $this->db('mutasi_berkas')->where('no_rawat', $no_rawat)->save([
+            $update_data = [
               'status' => 'Sudah Diterima',
               'diterima' => $datetime
-            ]);
+            ];
+            // Jika RM belum klik kirim (kosong atau tanggal default) atau tanggal kirim >= diterima
+            if (empty($cek['dikirim']) || $cek['dikirim'] <= '1970-01-01 00:00:00' || strtotime($cek['dikirim']) >= strtotime($datetime)) {
+              $update_data['dikirim'] = $dikirim_auto;
+            }
+            $this->db('mutasi_berkas')->where('no_rawat', $no_rawat)->save($update_data);
           }
           $this->db('reg_periksa')->where('no_rawat', $no_rawat)->save(['stts' => 'Berkas Diterima']);
       } else {
@@ -1909,6 +1963,260 @@ class Admin extends AdminModule
     {
       $this->db('reg_periksa')->where('no_rawat', $_POST['no_rawat'])->save([
         'status_lanjut' => $_POST['status_lanjut']
+      ]);
+      exit();
+    }
+
+    public function postCheckinPasien()
+    {
+      $no_rawat = $_POST['no_rawat'] ?? '';
+      if (strpos($no_rawat, '/') === false && strlen($no_rawat) == 14) {
+        $no_rawat = revertNorawat($no_rawat);
+      }
+      $no_rkm_medis = $_POST['no_rkm_medis'] ?? '';
+      $tgl_registrasi = $_POST['tgl_registrasi'] ?? date('Y-m-d');
+      $reg = $this->db('reg_periksa')->where('no_rawat', $no_rawat)->oneArray();
+
+      if (empty($no_rawat) || empty($no_rkm_medis)) {
+        header('Content-Type: application/json');
+        echo json_encode(['status' => 'error', 'message' => 'Data nomor rawat atau no RM tidak lengkap']);
+        exit();
+      }
+
+      $now_time = date('H:i:s');
+      $start_time = date('H:i:s', strtotime('-3 minutes'));
+      $no_reg = !empty($reg['no_reg']) ? $reg['no_reg'] : '1';
+
+      $cek = $this->db('mlite_antrian_loket')
+        ->where('no_rkm_medis', $no_rkm_medis)
+        ->where('postdate', $tgl_registrasi)
+        ->oneArray();
+
+      if (!$cek) {
+        $this->db('mlite_antrian_loket')->save([
+          'type' => 'Loket',
+          'noantrian' => $no_reg,
+          'postdate' => $tgl_registrasi,
+          'start_time' => $start_time,
+          'end_time' => $now_time,
+          'no_rkm_medis' => $no_rkm_medis,
+          'status' => 2
+        ]);
+      } else {
+        $this->db('mlite_antrian_loket')
+          ->where('no_rkm_medis', $no_rkm_medis)
+          ->where('postdate', $tgl_registrasi)
+          ->save([
+            'start_time' => $start_time,
+            'end_time' => $now_time,
+            'status' => 2
+          ]);
+      }
+
+      // Jika ada mlite_antrian_referensi, simpan langsung Task 1 dan Task 2
+      $antrol = $this->db('mlite_antrian_referensi')
+        ->where('tanggal_periksa', $tgl_registrasi)
+        ->where('no_rkm_medis', $no_rkm_medis)
+        ->oneArray();
+
+      if (!$antrol) {
+        $p = $this->db('pasien')->where('no_rkm_medis', $no_rkm_medis)->oneArray();
+        if ($p && !empty($p['no_peserta'])) {
+          $antrol = $this->db('mlite_antrian_referensi')
+            ->where('tanggal_periksa', $tgl_registrasi)
+            ->where('nomor_kartu', $p['no_peserta'])
+            ->oneArray();
+        }
+      }
+
+      if ($antrol && !empty($antrol['kodebooking'])) {
+        $kb = $antrol['kodebooking'];
+        $t1 = $this->db('mlite_antrian_referensi_taskid')->where('nomor_referensi', $kb)->where('taskid', '1')->oneArray();
+        if (!$t1) {
+          $this->db('mlite_antrian_referensi_taskid')->save([
+            'tanggal_periksa' => $tgl_registrasi,
+            'nomor_referensi' => $kb,
+            'taskid' => 1,
+            'waktu' => strtotime($tgl_registrasi . ' ' . $start_time) * 1000,
+            'status' => 'Belum',
+            'keterangan' => ''
+          ]);
+        } elseif ($t1['status'] != 'Sudah') {
+          $this->db('mlite_antrian_referensi_taskid')->where('nomor_referensi', $kb)->where('taskid', '1')->save([
+            'waktu' => strtotime($tgl_registrasi . ' ' . $start_time) * 1000
+          ]);
+        }
+
+        $t2 = $this->db('mlite_antrian_referensi_taskid')->where('nomor_referensi', $kb)->where('taskid', '2')->oneArray();
+        if (!$t2) {
+          $this->db('mlite_antrian_referensi_taskid')->save([
+            'tanggal_periksa' => $tgl_registrasi,
+            'nomor_referensi' => $kb,
+            'taskid' => 2,
+            'waktu' => strtotime($tgl_registrasi . ' ' . $now_time) * 1000,
+            'status' => 'Belum',
+            'keterangan' => ''
+          ]);
+        } elseif ($t2['status'] != 'Sudah') {
+          $this->db('mlite_antrian_referensi_taskid')->where('nomor_referensi', $kb)->where('taskid', '2')->save([
+            'waktu' => strtotime($tgl_registrasi . ' ' . $now_time) * 1000
+          ]);
+        }
+      }
+
+      header('Content-Type: application/json');
+      echo json_encode([
+        'status' => 'success',
+        'message' => 'Pasien berhasil di-check-in hadir pada jam ' . $now_time,
+        'checkin_time' => $now_time
+      ]);
+      exit();
+    }
+
+    public function postPanggilPasien()
+    {
+      $no_rawat = $_POST['no_rawat'] ?? '';
+      $no_rkm_medis = $_POST['no_rkm_medis'] ?? '';
+      $kd_poli = $_POST['kd_poli'] ?? '';
+      $kd_dokter = $_POST['kd_dokter'] ?? '';
+      $no_reg = $_POST['no_reg'] ?? '';
+      $nm_pasien = $_POST['nm_pasien'] ?? '';
+      $nm_poli = $_POST['nm_poli'] ?? '';
+      $now_time = date('H:i:s');
+      $tgl = date('Y-m-d');
+      $now_ms = time() * 1000;
+
+      if (!empty($no_rawat)) {
+        $reg = $this->db('reg_periksa')->where('no_rawat', $no_rawat)->oneArray();
+        if ($reg) {
+          $tgl = $reg['tgl_registrasi'];
+          if ($reg['stts'] == 'Belum') {
+            $this->db('reg_periksa')->where('no_rawat', $no_rawat)->save(['stts' => 'Berkas Diterima']);
+          }
+        }
+      }
+
+      // Update state panggilan untuk Display TV Poliklinik (Auto-create jika belum ada di database server)
+      $display_fields = [
+        'panggil_poli_nomor' => $no_reg,
+        'panggil_poli_nama' => $nm_pasien,
+        'panggil_poli_tujuan' => $nm_poli,
+        'panggil_poli_kd_poli' => $kd_poli,
+        'panggil_poli_waktu' => (string)time()
+      ];
+      foreach ($display_fields as $fld => $fval) {
+        $check_setting = $this->db('mlite_settings')->where('module', 'anjungan')->where('field', $fld)->oneArray();
+        if ($check_setting) {
+          $this->db('mlite_settings')->where('module', 'anjungan')->where('field', $fld)->save(['value' => $fval]);
+        } else {
+          $this->db('mlite_settings')->save(['module' => 'anjungan', 'field' => $fld, 'value' => $fval]);
+        }
+      }
+
+      // Catat Task ID 4 untuk BPJS Antrean
+      if (!empty($no_rkm_medis)) {
+        $antrol = $this->db('mlite_antrian_referensi')
+          ->where('tanggal_periksa', $tgl)
+          ->where('no_rkm_medis', $no_rkm_medis)
+          ->oneArray();
+
+        if (!$antrol) {
+          $p = $this->db('pasien')->where('no_rkm_medis', $no_rkm_medis)->oneArray();
+          if ($p && !empty($p['no_peserta'])) {
+            $antrol = $this->db('mlite_antrian_referensi')
+              ->where('tanggal_periksa', $tgl)
+              ->where('nomor_kartu', $p['no_peserta'])
+              ->oneArray();
+          }
+        }
+
+        if ($antrol && !empty($antrol['kodebooking'])) {
+          $kb = $antrol['kodebooking'];
+          
+          // Pastikan Task ID 3 terisi (Waktu tunggu poli)
+          $t3 = $this->db('mlite_antrian_referensi_taskid')->where('nomor_referensi', $kb)->where('taskid', '3')->oneArray();
+          if (!$t3) {
+            $t2 = $this->db('mlite_antrian_referensi_taskid')->where('nomor_referensi', $kb)->where('taskid', '2')->oneArray();
+            $waktu_t3 = $t2 ? $t2['waktu'] : ($now_ms - 60000);
+            $this->db('mlite_antrian_referensi_taskid')->save([
+              'tanggal_periksa' => $tgl,
+              'nomor_referensi' => $kb,
+              'taskid' => 3,
+              'waktu' => $waktu_t3,
+              'status' => 'Belum',
+              'keterangan' => 'Menunggu di poli ' . $nm_poli
+            ]);
+          }
+
+          // Catat Task ID 4 (Mulai pelayanan poli)
+          $t4 = $this->db('mlite_antrian_referensi_taskid')->where('nomor_referensi', $kb)->where('taskid', '4')->oneArray();
+          if (!$t4) {
+            $this->db('mlite_antrian_referensi_taskid')->save([
+              'tanggal_periksa' => $tgl,
+              'nomor_referensi' => $kb,
+              'taskid' => 4,
+              'waktu' => $now_ms,
+              'status' => 'Belum',
+              'keterangan' => 'Mulai pelayanan poli ' . $nm_poli
+            ]);
+          }
+        }
+      }
+
+      header('Content-Type: application/json');
+      echo json_encode([
+        'status' => 'success',
+        'message' => 'Pasien ' . $nm_pasien . ' (No. ' . $no_reg . ') berhasil dipanggil ke ' . $nm_poli,
+        'panggil_time' => $now_time
+      ]);
+      exit();
+    }
+
+    public function postBatalCheckinPasien()
+    {
+      $no_rkm_medis = $_POST['no_rkm_medis'] ?? '';
+      $tgl_registrasi = $_POST['tgl_registrasi'] ?? date('Y-m-d');
+
+      if (!empty($no_rkm_medis)) {
+        $this->db('mlite_antrian_loket')
+          ->where('no_rkm_medis', $no_rkm_medis)
+          ->where('postdate', $tgl_registrasi)
+          ->delete();
+
+        $antrol = $this->db('mlite_antrian_referensi')
+          ->where('tanggal_periksa', $tgl_registrasi)
+          ->where('no_rkm_medis', $no_rkm_medis)
+          ->oneArray();
+
+        if (!$antrol) {
+          $p = $this->db('pasien')->where('no_rkm_medis', $no_rkm_medis)->oneArray();
+          if ($p && !empty($p['no_peserta'])) {
+            $antrol = $this->db('mlite_antrian_referensi')
+              ->where('tanggal_periksa', $tgl_registrasi)
+              ->where('nomor_kartu', $p['no_peserta'])
+              ->oneArray();
+          }
+        }
+
+        if ($antrol && !empty($antrol['kodebooking'])) {
+          $kb = $antrol['kodebooking'];
+          $this->db('mlite_antrian_referensi_taskid')
+            ->where('nomor_referensi', $kb)
+            ->where('taskid', '1')
+            ->where('status', '!=', 'Sudah')
+            ->delete();
+          $this->db('mlite_antrian_referensi_taskid')
+            ->where('nomor_referensi', $kb)
+            ->where('taskid', '2')
+            ->where('status', '!=', 'Sudah')
+            ->delete();
+        }
+      }
+
+      header('Content-Type: application/json');
+      echo json_encode([
+        'status' => 'success',
+        'message' => 'Status kehadiran / check-in pasien berhasil dibatalkan'
       ]);
       exit();
     }
@@ -2476,6 +2784,32 @@ class Admin extends AdminModule
           if(!empty($save_reg)) {
               $this->db('reg_periksa')->where('no_rawat', $_POST['no_rawat'])->save($save_reg);
           }
+      }
+
+      // Catat Task ID 5 untuk Antrean BPJS (Selesai Pelayanan Poli)
+      if ($res['status'] === 'success' && !empty($_POST['no_rawat'])) {
+        try {
+          $reg_p = $this->db('reg_periksa')->where('no_rawat', $_POST['no_rawat'])->oneArray();
+          if ($reg_p) {
+            $antrol = $this->db('mlite_antrian_referensi')->where('tanggal_periksa', $reg_p['tgl_registrasi'])->where('no_rkm_medis', $reg_p['no_rkm_medis'])->oneArray();
+            if ($antrol && !empty($antrol['kodebooking'])) {
+              $kb = $antrol['kodebooking'];
+              $t5 = $this->db('mlite_antrian_referensi_taskid')->where('nomor_referensi', $kb)->where('taskid', '5')->oneArray();
+              if (!$t5) {
+                $this->db('mlite_antrian_referensi_taskid')->save([
+                  'tanggal_periksa' => $reg_p['tgl_registrasi'],
+                  'nomor_referensi' => $kb,
+                  'taskid' => 5,
+                  'waktu' => time() * 1000,
+                  'status' => 'Belum',
+                  'keterangan' => 'Selesai pelayanan dokter poli'
+                ]);
+              }
+            }
+          }
+        } catch (\Throwable $e) {
+          // Jangan ganggu respons JSON SOAP jika pencatatan Task ID BPJS terkendala
+        }
       }
 
       header('Content-Type: application/json; charset=utf-8');

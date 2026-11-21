@@ -1,14 +1,18 @@
 <div class="modal-header">
     <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span> Tutup</button>
-    <h4 class="modal-title">Add Antrian BPJS</h4>
+    <h4 class="modal-title"><i class="fa fa-ticket"></i> Antrean Online BPJS</h4>
 </div>
 <div class="modal-body">
-    <h5>Request:</h5>
-    <pre>{?=isset_or($request)?}</pre><br><br>
-    <h5>Response:</h5>
-    <pre>{?=isset_or($response)?}</pre><br><br>
-    <h5>Status:</h5>
-    <pre>{?=isset_or($status)?}</pre><br><br>
+    <div class="alert {if: strpos($status, 'berhasil') !== false || strpos($status, 'SUDAH TERDAFTAR') !== false || strpos($status, 'telah dikirim') !== false || strpos($status, 'Sudah terdaftar') !== false}alert-success{elseif: strpos($status, 'Error') !== false || strpos($status, 'Gagal') !== false}alert-danger{else}alert-info{/if}" style="font-size: 14px;">
+        <strong><i class="fa fa-info-circle"></i> Status Pengiriman:</strong><br>
+        {?=isset_or($status)?}
+    </div>
+
+    <h5><strong>Request Payload:</strong></h5>
+    <pre style="max-height: 200px; overflow-y: auto; background: #f8f9fa; font-size: 11px;">{?=isset_or($request)?}</pre>
+
+    <h5><strong>Response Server BPJS:</strong></h5>
+    <pre style="max-height: 200px; overflow-y: auto; background: #f8f9fa; font-size: 11px;">{?=isset_or($response)?}</pre>
 </div>
 <div class="modal-footer">
     <button type="button" class="btn btn-primary" data-dismiss="modal">Tutup</button>

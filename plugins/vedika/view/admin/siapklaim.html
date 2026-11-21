@@ -1,0 +1,236 @@
+<div class="row">
+  <div class="col-md-7">
+    <h3 style="margin-top:0;">
+      <i class="fa fa-check-circle text-success"></i> Daftar Pasien Siap Klaim BPJS
+      <small style="display:block;margin-top:4px;color:#718096;">Pasien yang telah memenuhi seluruh variabel wajib, siap diverifikasi internal, grouping, dan dimasukkan batch kolektif</small>
+    </h3>
+  </div>
+  <div class="col-md-5 text-right">
+    <a href="{?=url([ADMIN, 'vedika', 'auditperiode', '?tgl_awal=' . $tgl_awal . '&tgl_akhir=' . $tgl_akhir . '&from=siapklaim'])?}" class="btn btn-warning" onclick="return confirm('Jalankan audit kesiapan berkas & data klinis pasien BPJS untuk periode/rentang tanggal ini?');"><i class="fa fa-refresh"></i> Audit Massal Tanggal Ini</a>
+    <a href="{?=url([ADMIN, 'vedika', 'kolektif'])?}" class="btn btn-primary" style="margin-left:5px;"><i class="fa fa-cubes"></i> Kelola Batch &raquo;</a>
+  </div>
+</div>
+<hr style="margin-top:10px;margin-bottom:20px;">
+
+<!-- FILTER BAR -->
+<div class="panel panel-default">
+  <div class="panel-body">
+    <form class="form-inline" action="" method="GET">
+      <div class="form-group">
+        <label><i class="fa fa-calendar"></i> Tanggal:</label>
+        <input type="text" name="tgl_awal" class="form-control tanggal input-sm" style="width:110px;" value="{?=$tgl_awal?}" placeholder="YYYY-MM-DD">
+        <span> s/d </span>
+        <input type="text" name="tgl_akhir" class="form-control tanggal input-sm" style="width:110px;" value="{?=$tgl_akhir?}" placeholder="YYYY-MM-DD">
+      </div>
+      <div class="btn-group btn-group-sm" style="margin-left:6px;margin-right:6px;">
+        <button type="button" class="btn btn-default btn-quick-date" data-range="today" title="Set tanggal hari ini"><i class="fa fa-clock-o"></i> Hari Ini</button>
+        <button type="button" class="btn btn-default btn-quick-date" data-range="yesterday" title="Set tanggal kemarin">Kemarin</button>
+        <button type="button" class="btn btn-default btn-quick-date" data-range="this_month" title="Set awal sampai akhir bulan ini">Bulan Ini</button>
+      </div>
+      <div class="form-group" style="margin-left:5px;">
+        <label>Pelayanan:</label>
+        <select name="status_lanjut" class="form-control input-sm">
+          <option value="">Semua</option>
+          <option value="Ralan" {if: $status_lanjut == 'Ralan'}selected{/if}>Rawat Jalan</option>
+          <option value="Ranap" {if: $status_lanjut == 'Ranap'}selected{/if}>Rawat Inap</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin-left:5px;">
+        <input type="text" name="search" class="form-control input-sm" style="width:130px;" value="{?=$search?}" placeholder="Cari Pasien">
+      </div>
+      <div class="form-group" style="margin-left:5px;">
+        <select name="order" class="form-control input-sm" title="Urutan Tanggal">
+          <option value="DESC" {if: $order == 'DESC'}selected{/if}>Terkini (DESC)</option>
+          <option value="ASC" {if: $order == 'ASC'}selected{/if}>Terlama (ASC)</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin-left:5px;">
+        <select name="limit" class="form-control input-sm" title="Jumlah Data Ditampilkan">
+          <option value="100" {if: $limit == 100}selected{/if}>100 Data</option>
+          <option value="250" {if: $limit == 250}selected{/if}>250 Data</option>
+          <option value="500" {if: $limit == 500}selected{/if}>500 Data</option>
+          <option value="1000" {if: $limit == 1000}selected{/if}>1000 Data</option>
+          <option value="all" {if: $limit == 0}selected{/if}>Semua Data</option>
+        </select>
+      </div>
+      <input type="hidden" name="t" value="{?=$_SESSION['token']?}">
+      <button type="submit" class="btn btn-primary btn-sm" style="margin-left:5px;"><i class="fa fa-filter"></i> Saring</button>
+    </form>
+  </div>
+</div>
+
+<form action="{?=url([ADMIN, 'vedika', 'kolektif'])?}" method="POST">
+  <input type="hidden" name="t" value="{?=$_SESSION['token']?}">
+
+  <div class="panel panel-default">
+    <div class="panel-heading" style="padding:10px 15px;">
+      <div class="row">
+        <div class="col-md-6">
+          <h3 class="panel-title" style="line-height:30px;">
+            <b>Ditemukan {?=number_format($total_all)?} Pasien Siap Diproses Klaim</b>
+            {if: $total_all > $total}
+            <span class="badge" style="background:#38a169;margin-left:5px;">Menampilkan {?=$total?} data ({if: $order == 'DESC'}terkini{else}terlama{/if})</span>
+            {/if}
+          </h3>
+        </div>
+        <div class="col-md-6 text-right">
+          <div class="form-inline">
+            <label style="font-size:12px;margin-right:5px;">Masukkan Pasien Terpilih ke Batch:</label>
+            <select name="batch_id" class="form-control input-sm" required style="max-width:200px;">
+              <option value="">-- Pilih Batch Aktif --</option>
+              {loop: $batches}
+              <option value="{?=$value.id?}">{?=$value.kode_batch?} ({?=$value.nama_batch?})</option>
+              {/loop}
+            </select>
+            <button type="submit" name="add_to_batch" class="btn btn-sm btn-success" style="margin-left:5px;">
+              <i class="fa fa-plus"></i> Tambahkan
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-hover table-striped" style="margin-bottom:0;font-size:13px;">
+        <thead>
+          <tr class="active">
+            <th width="30" class="text-center"><input type="checkbox" id="checkAll"></th>
+            <th>No. Rawat / RM</th>
+            <th>Nama Pasien</th>
+            <th>Tgl Pelayanan / Poli</th>
+            <th>No. SEP</th>
+            <th>Billing RS</th>
+            <th>Verif Internal</th>
+            <th>Status Klaim</th>
+            <th class="text-center">Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          {if: count($rows) > 0}
+          {loop: $rows}
+          <tr>
+            <td class="text-center">
+              <input type="checkbox" name="selected_rawat[]" value="{?=$value.no_rawat?}" class="check-item">
+            </td>
+            <td>
+              <b>{?=$value.no_rawat?}</b><br>
+              <span class="label label-default">RM: {?=$value.no_rkm_medis?}</span>
+            </td>
+            <td>
+              <b>{?=$value.nm_pasien?}</b><br>
+              <small class="text-muted">Kartu: {?=$value.no_peserta?:'-'?}</small>
+            </td>
+            <td>
+              {?=$value.tgl_registrasi?}<br>
+              <span class="text-primary">{?=$value.nm_poli?}</span>
+            </td>
+            <td>
+              <span class="label label-success">{?=$value.no_sep?}</span>
+            </td>
+            <td>
+              <b>Rp {?=number_format($value.total_billing, 0, ',', '.')?}</b>
+            </td>
+            <td>
+              {if: $value.is_internal_verified}
+              <span class="label label-success"><i class="fa fa-check"></i> Terverifikasi</span>
+              {else}
+              <span class="label label-warning"><i class="fa fa-clock-o"></i> Menunggu Verif</span><br>
+              <small>Admin: {?=$value.verif_admin_status?:'pending'?}, Medis: {?=$value.verif_medis_status?:'pending'?}</small>
+              {/if}
+            </td>
+            <td>
+              <span class="label label-info">{?=strtoupper(str_replace('_', ' ', $value.status_readiness))?}</span>
+            </td>
+            <td class="text-center" style="white-space:nowrap;">
+              <a href="{?=url([ADMIN, 'vedika', 'pdf', convertNorawat($value.no_rawat)])?}" target="_blank" class="btn btn-default btn-xs" title="Preview Dokumen Klaim">
+                <i class="fa fa-file-pdf-o text-danger"></i> PDF
+              </a>
+              <a href="{?=url([ADMIN, 'vedika', 'grouping', '?search=' . $value.no_sep])?}" target="_blank" class="btn btn-primary btn-xs" title="Proses Grouping INA-CBG">
+                <i class="fa fa-calculator"></i> Grouping
+              </a>
+            </td>
+          </tr>
+          {/loop}
+          {else}
+          <tr>
+            <td colspan="9" class="text-center" style="padding:35px 20px;">
+              <i class="fa fa-folder-open-o fa-3x text-muted"></i><br>
+              <b style="font-size:15px;color:#4a5568;">Belum ada pasien yang berstatus Siap Klaim pada filter ini.</b><br>
+              <p class="text-muted" style="max-width:650px;margin:8px auto;">
+                Kriteria Pasien Siap Klaim (Skor 100%): Memenuhi SEP (Bridging VClaim / Scan Berkas Digital), Catatan Medis (Resume/EMR SOAP), Autentikasi DPJP, Diagnosa Utama ICD-10 (P1), Prosedur ICD-9-CM, Pemeriksaan Odontogram/Gigi, dan Billing Tagihan Rumah Sakit.
+              </p>
+              <a href="{?=url([ADMIN, 'vedika', 'auditperiode', '?tgl_awal=' . $tgl_awal . '&tgl_akhir=' . $tgl_akhir . '&from=siapklaim'])?}" class="btn btn-warning btn-sm" onclick="return confirm('Jalankan audit kesiapan berkas & data klinis pasien BPJS untuk periode/rentang tanggal ini?');">
+                <i class="fa fa-refresh"></i> Jalankan Audit & Sinkronisasi Pasien Periode Ini
+              </a>
+            </td>
+          </tr>
+          {/if}
+        </tbody>
+      </table>
+    </div>
+    {if: $total_pages > 1}
+    <div class="panel-footer" style="padding:8px 15px;">
+      <div class="row">
+        <div class="col-md-6" style="line-height:30px;">
+          Menampilkan <b>{?=$total?}</b> data dari total <b>{?=number_format($total_all)?}</b> pasien ({if: $order == 'DESC'}terkini{else}terlama{/if}).
+        </div>
+        <div class="col-md-6 text-right">
+          <ul class="pagination pagination-sm" style="margin:0;">
+            <li class="{if: $page <= 1}disabled{/if}">
+              <a href="{if: $page > 1}?page={?=$page - 1?}&{?=$query_string?}{else}javascript:void(0){/if}">&laquo;</a>
+            </li>
+            {loop: $page_numbers}
+            <li class="{if: $value == $page}active{/if}">
+              <a href="?page={?=$value?}&{?=$query_string?}">{?=$value?}</a>
+            </li>
+            {/loop}
+            <li class="{if: $page >= $total_pages}disabled{/if}">
+              <a href="{if: $page < $total_pages}?page={?=$page + 1?}&{?=$query_string?}{else}javascript:void(0){/if}">&raquo;</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    {/if}
+  </div>
+</form>
+
+<script>
+  $(function() {
+    $('.tanggal').datetimepicker({
+      format: 'YYYY-MM-DD',
+      locale: 'id'
+    });
+
+    // Quick filter shortcut buttons (Hari Ini, Kemarin, Bulan Ini)
+    $('.btn-quick-date').on('click', function(e) {
+      e.preventDefault();
+      var range = $(this).data('range');
+      var now = new Date();
+      var pad = function(n) { return (n < 10 ? '0' : '') + n; };
+      var fmt = function(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
+
+      if (range === 'today') {
+        var str = fmt(now);
+        $('input[name="tgl_awal"]').val(str);
+        $('input[name="tgl_akhir"]').val(str);
+      } else if (range === 'yesterday') {
+        var yest = new Date(now);
+        yest.setDate(yest.getDate() - 1);
+        var str = fmt(yest);
+        $('input[name="tgl_awal"]').val(str);
+        $('input[name="tgl_akhir"]').val(str);
+      } else if (range === 'this_month') {
+        var firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+        var lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        $('input[name="tgl_awal"]').val(fmt(firstDay));
+        $('input[name="tgl_akhir"]').val(fmt(lastDay));
+      }
+      $(this).closest('form').submit();
+    });
+
+    $('#checkAll').on('change', function() {
+      $('.check-item').prop('checked', $(this).is(':checked'));
+    });
+  });
+</script>
+

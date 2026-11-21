@@ -1,0 +1,190 @@
+<script>
+function printContent(el){
+  var restorepage = document.body.innerHTML;
+  var printcontent = document.getElementById(el).innerHTML;
+  document.body.innerHTML = printcontent;
+  window.print();
+  document.body.innerHTML = restorepage;
+  window.close();
+}
+</script>
+<body>
+  {if: isset($data_rujuk.no_rujukan)}
+  <div id="cetakrujukan">
+    <style type="text/css">
+      html {
+        font-size:15px;
+        font-family: Arial, sans-serif;
+        margin: 20px;
+      }
+      table td {
+        font-size:15px;
+        padding: 3px 6px;
+        vertical-align: top;
+      }
+      .cetak, .tutup {
+        display:inline-block;
+        padding:6px 16px;
+        margin:10px;
+        font-size:14px;
+        font-weight:bold;
+        cursor: pointer;
+        border-radius: 4px;
+      }
+      .cetak {
+        background-color: #337ab7;
+        color: #fff;
+        border: 1px solid #2e6da4;
+      }
+      .tutup {
+        background-color: #e6e6e6;
+        color: #333;
+        border: 1px solid #adadad;
+      }
+    </style>
+    <table width="1000">
+      <tr>
+        <td>
+          <table width="100%">
+            <tr>
+              <td width="350">
+                <img src="{?=url()?}/plugins/vclaim/img/bpjslogo.png" alt="BPJS Kesehatan" width="320">
+              </td>
+              <td width="650">
+                <div style="font-size:24px;text-align:center;font-weight:bold;">
+                  SURAT RUJUKAN RUMAH SAKIT
+                </div>
+                <div style="font-size:18px;text-align:center;">
+                  {?=isset_or($settings.nama_instansi)?}
+                </div>
+              </td>
+            </tr>
+          </table>
+          <hr style="border: 1px solid #333; margin: 10px 0;">
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <table width="100%">
+            <tr>
+              <td width="180">Kepada Yth.</td>
+              <td width="10">:</td>
+              <td width="430"><b>{?=isset_or($data_rujuk.nm_ppkDirujuk)?}</b></td>
+              <td width="160">No. Rujukan</td>
+              <td width="10">:</td>
+              <td><b>{?=isset_or($data_rujuk.no_rujukan)?}</b></td>
+            </tr>
+            <tr>
+              <td>Poli Tujuan</td>
+              <td>:</td>
+              <td>{?=isset_or($data_rujuk.nama_poliRujukan)?}</td>
+              <td>Tgl. Rujukan</td>
+              <td>:</td>
+              <td>{?=isset_or($data_rujuk.tglRujukan)?}</td>
+            </tr>
+            <tr>
+              <td>Tipe Rujukan</td>
+              <td>:</td>
+              <td>{?=isset_or($data_rujuk.tipeRujukan)?}</td>
+              <td>Rencana Kunjungan</td>
+              <td>:</td>
+              <td>{?=isset_or($data_rujuk.tglRencanaKunjungan)?}</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr>
+        <td><br>Mohon pemeriksaan dan penanganan lebih lanjut penderita :</td>
+      </tr>
+      <tr>
+        <td>
+          <table width="100%">
+            <tr>
+              <td width="180">No. Kartu BPJS</td>
+              <td width="10">:</td>
+              <td colspan="4">{?=isset_or($data_rujuk.no_kartu)?}</td>
+            </tr>
+            <tr>
+              <td>Nama Pasien</td>
+              <td>:</td>
+              <td colspan="4"><b>{?=isset_or($data_rujuk.nama_pasien)?}</b> ({?=isset_or($data_rujuk.jkel)?})</td>
+            </tr>
+            <tr>
+              <td>No. Rekam Medis</td>
+              <td>:</td>
+              <td colspan="4">{?=isset_or($data_rujuk.nomr)?}</td>
+            </tr>
+            <tr>
+              <td>Tgl. Lahir</td>
+              <td>:</td>
+              <td colspan="4">{?=isset_or($data_rujuk.tanggal_lahir)?}</td>
+            </tr>
+            <tr>
+              <td>Diagnosa Rujukan</td>
+              <td>:</td>
+              <td colspan="4">{?=isset_or($data_rujuk.diagRujukan)?} - {?=isset_or($data_rujuk.nama_diagRujukan)?}</td>
+            </tr>
+            <tr>
+              <td>Jenis Pelayanan</td>
+              <td>:</td>
+              <td colspan="4">{if: isset_or($data_rujuk.jnsPelayanan) == '1'}Rawat Inap{else}Rawat Jalan{/if}</td>
+            </tr>
+            <tr>
+              <td>Catatan / Keterangan</td>
+              <td>:</td>
+              <td colspan="4">{?=isset_or($data_rujuk.catatan)?}</td>
+            </tr>
+            <tr>
+              <td>No. Asal SEP</td>
+              <td>:</td>
+              <td colspan="4">{?=isset_or($data_rujuk.no_sep)?}</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <br>Demikian atas bantuannya diucapkan terima kasih.<br><br>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <table width="100%">
+            <tr>
+              <td width="300">
+                <div id="qrcodeRujuk"></div>
+                <i style="font-size:11px;">Tgl. Cetak: {?=date('d/m/Y H:i:s')?}</i>
+              </td>
+              <td width="380"></td>
+              <td width="320" align="center">
+                Mengetahui DPJP / Dokter Pengirim,<br><br><br><br>
+                ( _____________________________ )
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </div>
+  <center style="margin-top:40px;">
+    <button class="tutup" type="button" onclick="javascript:window.close();">Tutup Window</button>
+    <button class="cetak" onclick="printContent('cetakrujukan')" type="button">Cetak Surat Rujukan</button>
+  </center>
+  <script src="{?=url()?}/assets/jscripts/jquery.min.js"></script>
+  <script type="text/javascript" src="{?=url()?}/assets/jscripts/jquery.qrcode.js"></script>
+  <script type="text/javascript" src="{?=url()?}/assets/jscripts/qrcode.js"></script>
+  <script>
+    jQuery('#qrcodeRujuk').qrcode({
+      text  : "No.Rujukan: {?=isset_or($data_rujuk.no_rujukan)?}",
+      width : 75,
+      height: 75
+    });
+  </script>
+  {else}
+  <div style="margin:50px; text-align:center;">
+    <h3>Data Rujukan Keluar tidak ditemukan!</h3>
+    <button onclick="window.close()" class="tutup">Tutup Window</button>
+  </div>
+  {/if}
+</body>
+

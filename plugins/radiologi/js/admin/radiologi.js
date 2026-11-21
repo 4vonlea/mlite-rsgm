@@ -127,6 +127,16 @@ $("#rincian").off("click", ".cetak_hasil_semua").on("click", ".cetak_hasil_semua
   window.open(baseURL + '/radiologi/cetakhasil?no_rawat=' + encodeURIComponent(no_rawat) + '&jam=all&status=' + encodeURIComponent(status) + '&t=' + mlite.token);
 });
 
+$("#rincian").off("click", ".cetak_expertise").on("click", ".cetak_expertise", function(event){
+  var baseURL = mlite.url + '/' + mlite.admin;
+  event.preventDefault();
+  var no_rawat = $(this).attr("data-no_rawat") || $('input:text[name=no_rawat]').val() || $('input[name=no_rawat]').val();
+  var tgl_periksa = $(this).attr("data-tgl_periksa") || '';
+  var jam = $(this).attr("data-jam_periksa") || '';
+  var status = $(this).attr("data-status") || $('input:text[name=status]').val() || 'Ralan';
+  window.open(baseURL + '/radiologi/cetakexpertise?no_rawat=' + encodeURIComponent(no_rawat) + '&tgl_periksa=' + encodeURIComponent(tgl_periksa) + '&jam=' + encodeURIComponent(jam) + '&status=' + encodeURIComponent(status) + '&t=' + mlite.token);
+});
+
 $("#rincian").on("click",".cetak_permintaan", function(event){
   var baseURL = mlite.url + '/' + mlite.admin;
   event.preventDefault();
@@ -551,76 +561,76 @@ $("#rincian").on("click",".hasil_radiologi", function(event){
   var jam_periksa = $(this).attr("data-jam_periksa");
   var status = $(this).attr("data-status");
 
+  var card = $(this).closest('.rsgm-rad-card');
+  var nm_perawatan = $.trim(card.find('.rsgm-rad-exam-name').first().text()) || 'Pemeriksaan Radiologi';
+  var existing_hasil = card.find('.existing-hasil-input').first().val() || '';
+  var nm_pasien = $.trim($('#form_rincian input[name=nm_pasien]').val()) || '-';
+  var no_rkm_medis = $.trim($('#form_rincian input[name=no_rkm_medis]').val()) || '-';
+
   var set_stok = ''
-      + '<div style="padding: 4px 2px;">'
-      + '  <div class="form-group" style="margin-bottom: 16px;">'
-      + '    <label style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: #334155; display: block; margin-bottom: 6px;">'
+      + '<div style="padding: 2px;">'
+      + '  <div id="exp_form_error" class="alert alert-danger" style="display:none; margin-bottom:12px; padding:8px 12px; border-radius:8px; font-size:12.5px;"></div>'
+      + '  <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:10px 14px; margin-bottom:14px; display:flex; flex-wrap:wrap; gap:14px; font-size:12.5px; color:#334155;">'
+      + '    <div><span style="color:#64748b;">Pasien:</span> <strong id="exp_info_pasien"></strong> <span style="color:#64748b;">(RM: <span id="exp_info_rm"></span>)</span></div>'
+      + '    <div><span style="color:#64748b;">Pemeriksaan:</span> <strong id="exp_info_exam"></strong></div>'
+      + '    <div><span style="color:#64748b;">Tanggal:</span> <strong id="exp_info_tgl"></strong></div>'
+      + '  </div>'
+      + '  <div class="form-group" style="margin-bottom: 4px;">'
+      + '    <label for="hasil" style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.4px; color:#334155; display:block; margin-bottom:6px;">'
       + '      <i class="fa fa-file-text-o text-primary"></i> Bacaan / Hasil Expertise Dokter Radiologi'
       + '    </label>'
-      + '    <textarea name="hasil" id="hasil" rows="5" class="form-control" placeholder="Ketik deskripsi hasil bacaan / expertise radiologi di sini..." style="border-radius: 8px !important; border: 1px solid #cbd5e1; font-size: 13px; padding: 10px 12px; line-height: 1.55;"></textarea>'
+      + '    <textarea name="hasil" id="hasil" rows="12" class="form-control" placeholder="Teman Sejawat,&#10;Foto Panoramik View&#10;- Alignment maxilla dan mandibula baik&#10;- Tidak tampak fraktur maupun destruksi tulang&#10;...&#10;&#10;Kesan :&#10;- ..." style="border-radius:8px !important; border:1px solid #cbd5e1; font-size:13px; padding:10px 12px; line-height:1.6;"></textarea>'
+      + '    <span class="help-block" style="margin-top:6px; margin-bottom:0; font-size:11.5px; color:#64748b;">'
+      + '      <i class="fa fa-info-circle text-info"></i> Gunakan baris <strong>Kesan :</strong> tersendiri agar bagian Kesan otomatis tercetak tebal di PDF Expertise.'
+      + '    </span>'
       + '  </div>'
-      + '  <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 16px;">'
-      + '    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">'
-      + '      <label style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: #0f172a; margin: 0;">'
-      + '        <i class="fa fa-television text-info"></i> Unggah Citra Rontgen &amp; Konversi DICOM Mini PACS'
-      + '      </label>'
-      + '      <span style="font-size: 11px; color: #64748b; background: #fff; border: 1px solid #cbd5e1; border-radius: 999px; padding: 2px 10px; font-weight: 600;">Format: JPG / PNG</span>'
-      + '    </div>'
-      + '    <form method="post" action="" enctype="multipart/form-data">'
-      + '      <div class="row" style="margin-bottom: 12px;">'
-      + '        <div class="col-sm-8" style="margin-bottom: 8px;">'
-      + '          <input type="file" name="file" id="file" class="form-control" accept="image/*" style="border-radius: 7px !important; border: 1px solid #cbd5e1; height: 36px; padding: 5px 10px; background: #fff;">'
-      + '        </div>'
-      + '        <div class="col-sm-4">'
-      + '          <select id="pacs_modality" class="form-control" style="border-radius: 7px !important; border: 1px solid #cbd5e1; height: 36px; font-size: 12.5px; font-weight: 600; background: #fff;">'
-      + '            <option value="CR">Modality: CR (Radiografi)</option>'
-      + '            <option value="PX">Modality: PX (Panoramic)</option>'
-      + '            <option value="IO">Modality: IO (Intraoral)</option>'
-      + '            <option value="DX">Modality: DX (Digital X-Ray)</option>'
-      + '            <option value="CT">Modality: CT / CBCT</option>'
-      + '          </select>'
-      + '        </div>'
-      + '      </div>'
-      + '      <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">'
-      + '        <button type="button" class="btn btn-info" id="btn_upload" style="border-radius: 7px !important; text-transform: none !important; transform: none !important; font-weight: 600; font-size: 12.5px; padding: 7px 14px !important; background: #2563eb !important; border-color: #1d4ed8 !important; color: #fff !important;">'
-      + '          <i class="fa fa-picture-o"></i> Upload Lampiran Gambar'
-      + '        </button>'
-      + '        <button type="button" class="btn btn-success" id="btn_upload_pacs" style="border-radius: 7px !important; text-transform: none !important; transform: none !important; font-weight: 600; font-size: 12.5px; padding: 7px 14px !important; background: #0f172a !important; border-color: #334155 !important; color: #38bdf8 !important;">'
-      + '          <i class="fa fa-television"></i> Upload &amp; Konversi ke Mini PACS (DICOM)'
-      + '        </button>'
-      + '      </div>'
-      + '    </form>'
-      + '    <div id="preview" style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px;"></div>'
-      + '  </div>'
-      + '  <div id="preview_hasil"></div>'
       + '</div>';
 
-  // tampilkan dialog konfirmasi
+  // tampilkan dialog input expertise
   var box = bootbox.dialog({
     message: set_stok,
     size: 'large',
-    title: '<i class="fa fa-edit text-primary"></i> Input Expertise &amp; Citra Radiologi',
+    title: '<i class="fa fa-file-text-o text-primary"></i> Input Expertise Radiologi',
     buttons: {
       main: {
         label: '<i class="fa fa-save"></i> Simpan Hasil Expertise',
         className: 'btn-primary',
         callback() {
-          var hasil = $('#hasil').val();
+          var hasil = $('#hasil').val() || '';
+          if ($.trim(hasil) === '') {
+            $('#exp_form_error').text('Silakan isi hasil bacaan / expertise radiologi terlebih dahulu.').show();
+            $('#hasil').focus();
+            return false;
+          }
+          $('#exp_form_error').hide();
           $.post(url, {
             no_rawat: no_rawat,
             tgl_periksa: tgl_periksa,
             jam_periksa: jam_periksa,
             hasil: hasil
           } ,function(data) {
-            var url = baseURL + '/radiologi/rincian?t=' + mlite.token;
-            $.post(url, {no_rawat : no_rawat, status : status
-            }, function(data) {
-              $("#rincian").html(data).show();
+            var res = null;
+            try { res = (typeof data === 'object') ? data : JSON.parse(data); } catch(e) { res = null; }
+            if (res && res.status === 'error') {
+              bootbox.alert(res.message || 'Gagal menyimpan hasil radiologi.');
+              return;
+            }
+            var reloadUrl = baseURL + '/radiologi/rincian?t=' + mlite.token;
+            $.post(reloadUrl, {no_rawat : no_rawat, status : status
+            }, function(rincianHtml) {
+              $("#rincian").html(rincianHtml).show();
             });
             $('#notif').html("<div class=\"alert alert-success alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
             "Hasil radiologi telah disimpan!"+
             "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
             "</div>").show();
+          }).fail(function(xhr) {
+            var msg = 'Gagal menyimpan hasil radiologi.';
+            try {
+              var err = JSON.parse(xhr.responseText);
+              if (err && err.message) msg = err.message;
+            } catch(e) {}
+            bootbox.alert(msg);
           });
         }
       },
@@ -631,105 +641,11 @@ $("#rincian").on("click",".hasil_radiologi", function(event){
     }
   });
   box.on("shown.bs.modal", function() {
-    $('#btn_upload').click(function(){
-
-      var baseURL = mlite.url + '/' + mlite.admin;
-      var url= baseURL + '/radiologi/uploadhasil?t=' + mlite.token;
-
-      var fd = new FormData();
-      var files = $('#file')[0].files[0];
-      if(!files) {
-        bootbox.alert("Silakan pilih file gambar terlebih dahulu.");
-        return;
-      }
-      fd.append('file',files);
-      fd.append('no_rawat',no_rawat);
-      fd.append('tgl_periksa',tgl_periksa);
-      fd.append('jam_periksa',jam_periksa);
-
-      var btn = $(this);
-      var oldHtml = btn.html();
-      btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Mengunggah...');
-
-      $.ajax({
-        url: url,
-        type: 'post',
-        data: fd,
-        contentType: false,
-        processData: false,
-        dataType: 'json',
-        success: function(data)
-        {
-            btn.prop('disabled', false).html(oldHtml);
-            if(data.status == 'success')
-            {
-                $('#preview').append("<div style='border:1px solid #cbd5e1; padding:4px; border-radius:8px; background:#fff;'><img src='"+data.result+"' style='height:90px; border-radius:4px; object-fit:contain;'></div>");
-                $.post(baseURL + '/radiologi/rincian?t=' + mlite.token, {no_rawat: no_rawat, status: status}, function(rincianHtml) {
-                  $("#rincian").html(rincianHtml).show();
-                });
-            }
-            else if(data.status == 'failure')
-            {
-                bootbox.alert(data.result);
-            }
-        },
-        error: function() {
-            btn.prop('disabled', false).html(oldHtml);
-            bootbox.alert("Terjadi kesalahan saat mengunggah lampiran gambar.");
-        }
-      });
-    });
-
-    $('#btn_upload_pacs').click(function(){
-      var baseURL = mlite.url + '/' + mlite.admin;
-      var url= baseURL + '/mini_pacs/apiupload?t=' + mlite.token;
-
-      var fd = new FormData();
-      var files = $('#file')[0].files[0];
-      if(!files) {
-        bootbox.alert("Silakan pilih file gambar (JPEG/PNG) terlebih dahulu.");
-        return;
-      }
-      var modality = $('#pacs_modality').val() || 'CR';
-      fd.append('file_image',files);
-      fd.append('no_rawat',no_rawat);
-      fd.append('modality',modality);
-
-      var btn = $(this);
-      var oldHtml = btn.html();
-      btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Mengonversi DICOM...');
-
-      $.ajax({
-        url: url,
-        type: 'post',
-        data: fd,
-        contentType: false,
-        processData: false,
-        dataType: 'json',
-        success: function(data)
-        {
-            btn.prop('disabled', false).html(oldHtml);
-            if(data.status == 'success')
-            {
-                bootbox.alert("Berhasil mengunggah dan mengonversi citra ke Mini PACS (DICOM)!");
-                if(data.result) {
-                    $('#preview').append("<div style='border:2px solid #38bdf8; padding:4px; border-radius:8px; background:#0f172a;'><img src='"+data.result+"' style='height:90px; border-radius:4px; object-fit:contain;'></div>");
-                }
-                $.post(baseURL + '/radiologi/rincian?t=' + mlite.token, {no_rawat: no_rawat, status: status}, function(rincianHtml) {
-                  $("#rincian").html(rincianHtml).show();
-                });
-            }
-            else
-            {
-                bootbox.alert(data.message || 'Gagal mengunggah ke Mini PACS');
-            }
-        },
-        error: function() {
-            btn.prop('disabled', false).html(oldHtml);
-            bootbox.alert("Terjadi kesalahan jaringan saat menghubungi server Mini PACS.");
-        }
-      });
-    });
+    $('#exp_info_pasien').text(nm_pasien);
+    $('#exp_info_rm').text(no_rkm_medis);
+    $('#exp_info_exam').text(nm_perawatan);
+    $('#exp_info_tgl').text(tgl_periksa + (jam_periksa ? ' ' + jam_periksa : ''));
+    $('#hasil').val(existing_hasil).focus();
   });
 
   box.modal('show');
@@ -769,8 +685,8 @@ $("#rincian").on("click",".validasi_permintaan_radiologi", function(event){
           // tampilkan data
           $("#rincian").html(data).show();
         });
-        $('#notif').html("<div class=\"alert alert-danger alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
-        "Validasi permintaan laboratorium telah selesai!"+
+        $('#notif').html("<div class=\"alert alert-success alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
+        "Validasi permintaan radiologi telah selesai!"+
         "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
         "</div>").show();
       });
@@ -807,8 +723,8 @@ $("#rincian").on("click",".validasi_hasil_radiologi", function(event){
           // tampilkan data
           $("#rincian").html(data).show();
         });
-        $('#notif').html("<div class=\"alert alert-danger alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
-        "Validasi permintaan laboratorium telah selesai!"+
+        $('#notif').html("<div class=\"alert alert-success alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
+        "Validasi hasil radiologi telah selesai!"+
         "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
         "</div>").show();
       });

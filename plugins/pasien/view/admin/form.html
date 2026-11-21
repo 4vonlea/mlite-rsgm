@@ -1,4 +1,4 @@
-<div id="form" class="rsgm-reg-form clearfix">
+<div class="rsgm-reg-form clearfix">
   <style>
     .single .selectator_selected_items .selectator_selected_item_remove { display: none !important; }
   </style>
@@ -19,9 +19,9 @@
                 <label for="no_rkm_medis" class="col-sm-3 control-label">Nomor RM</label>
                 <div class="col-sm-4">
                   <div class="rsgm-norm-wrap">
-                    <input type="text" id="no_rkm_medis" name="no_rkm_medis" class="form-control rsgm-norm-input rsgm-auto-input" placeholder="Otomatis" value="{$pasien.no_rkm_medis}" maxlength="10" {if: !empty($pasien.no_rkm_medis)}disabled{/if} autocomplete="off">
+                    <input type="text" id="no_rkm_medis" name="no_rkm_medis" class="form-control rsgm-norm-input rsgm-auto-input" placeholder="Otomatis" value="{if: !empty($is_edit)}{$pasien.no_rkm_medis}{else}{$no_rkm_medis_baru}{/if}" maxlength="10" {if: !empty($is_edit)}disabled{/if} autocomplete="off">
                     <label class="rsgm-manual-check" title="Centang jika ingin mengisi No. RM secara manual">
-                      <input type="checkbox" name="manual" id="norm_manual" {if: !empty($pasien.no_rkm_medis)}disabled{/if}>
+                      <input type="checkbox" name="manual" id="norm_manual" {if: !empty($is_edit)}disabled{/if}>
                       <span>Manual</span>
                     </label>
                   </div>
@@ -40,7 +40,7 @@
               <div class="form-group">
                 <label for="jk" class="col-sm-3 control-label">Kelamin</label>
                 <div class="col-sm-4">
-                  <select class="form-control" name="jk" id="jk">
+                  <select class="form-control sex" name="jk" id="jk">
                     <option value="L" {if: $pasien.jk == 'L'}selected{/if}>Laki-Laki</option>
                     <option value="P" {if: $pasien.jk == 'P'}selected{/if}>Perempuan</option>
                   </select>
@@ -419,6 +419,25 @@
 
  </script>
 <script>
+  function parseBpjsResponse(raw) {
+    if (typeof raw === 'object' && raw !== null) return raw;
+    try {
+      return JSON.parse(raw);
+    } catch(e) {
+      return null;
+    }
+  }
+
+  function setGenderFromBPJS(sexVal) {
+    if (!sexVal) return;
+    var val = (sexVal === 'L' || sexVal === 'LAKI-LAKI') ? 'L' : 'P';
+    $('#jk').val(val);
+    try {
+      $('#jk').selectator('destroy');
+      $('#jk').selectator();
+    } catch(e) {}
+  }
+
   {if: $cek_pcare}
   $("#no_ktp").on('keyup', function (event) {
     var baseURL = mlite.url + '/' + mlite.admin;
@@ -427,23 +446,21 @@
     var url = baseURL + '/pcare/byjeniskartu/nik/' + no_ktp + '/' + tgl + '?t=' + mlite.token;
 
     if (event.key === 'Enter' || event.keyCode === 13) {
-
-      $.get(url, function(data){
-        var data = JSON.parse(data);
-        var json_obj = [data];
-        if(!json_obj[0]) {
-          alert('Koneksi ke server BPJS terputus. Silahkan ulangi lagi!');
-        } else if(json_obj[0].metaData.code == 200) {
+      $.get(url, function(raw){
+        var data = parseBpjsResponse(raw);
+        if(!data || !data.metaData) {
+          alert('Koneksi ke server BPJS terputus atau format respon tidak valid.');
+        } else if(data.metaData.code == 200) {
           $('.nama').val(data.response.nama);
           $('.noKartu').val(data.response.noKartu);
-          $('.sex').val(data.response.sex);
+          setGenderFromBPJS(data.response.sex);
           $('.tgl_lahir').val(moment(data.response.tglLahir, ['DD-MM-YYYY', 'YYYY-MM-DD']).format('DD-MM-YYYY'));
           $('.noTelepon').val(data.response.noHP);
-          if(data.response.kdProviderPst.kdProvider !== '{$usernamePcare}' || data.response.kdProviderPst.kdProviderGigi !== '{$usernamePcare}'){
+          if(data.response.kdProviderPst && (data.response.kdProviderPst.kdProvider !== '{$usernamePcare}' || data.response.kdProviderPst.kdProviderGigi !== '{$usernamePcare}')){
             alert('Pasien tidak terdaftar sebagai peserta.');
           }
         } else {
-          alert(json_obj[0].metaData.message);
+          alert(data.metaData.message);
         }
       });
     }
@@ -456,20 +473,20 @@
     var url = baseURL + '/vclaim/bynik/' + no_ktp + '/' + tgl + '?t=' + mlite.token;
 
     if (event.key === 'Enter' || event.keyCode === 13) {
-
-      $.get(url, function(data){
-        var data = JSON.parse(data);
-        var json_obj = [data];
-        if(!json_obj[0]) {
-          alert('Koneksi ke server BPJS terputus. Silahkan ulangi lagi!');
-        } else if(json_obj[0].metaData.code == 200) {
+      $.get(url, function(raw){
+        var data = parseBpjsResponse(raw);
+        if(!data || !data.metaData) {
+          alert('Koneksi ke server BPJS terputus atau format respon tidak valid.');
+        } else if(data.metaData.code == 200) {
           $('.nama').val(data.response.peserta.nama);
           $('.noKartu').val(data.response.peserta.noKartu);
-          $('.sex').val(data.response.peserta.sex);
+          setGenderFromBPJS(data.response.peserta.sex);
           $('.tgl_lahir').val(moment(data.response.peserta.tglLahir, ['YYYY-MM-DD', 'DD-MM-YYYY']).format('DD-MM-YYYY'));
-          $('.noTelepon').val(data.response.peserta.mr.noTelepon);
+          if (data.response.peserta.mr) {
+            $('.noTelepon').val(data.response.peserta.mr.noTelepon);
+          }
         } else {
-          alert(json_obj[0].metaData.message);
+          alert(data.metaData.message);
         }
       });
     }
@@ -483,23 +500,21 @@
     var url = baseURL + '/pcare/peserta/' + no_peserta + '?t=' + mlite.token;
 
     if (event.key === 'Enter' || event.keyCode === 13) {
-
-      $.get(url, function(data){
-        var data = JSON.parse(data);
-        var json_obj = [data];
-        if(!json_obj[0]) {
-          alert('Koneksi ke server BPJS terputus. Silahkan ulangi lagi!');
-        } else if(json_obj[0].metaData.code == 200) {
+      $.get(url, function(raw){
+        var data = parseBpjsResponse(raw);
+        if(!data || !data.metaData) {
+          alert('Koneksi ke server BPJS terputus atau format respon tidak valid.');
+        } else if(data.metaData.code == 200) {
           $('.nama').val(data.response.nama);
           $('.no_ktp').val(data.response.noKTP);
-          $('.sex').val(data.response.sex);
+          setGenderFromBPJS(data.response.sex);
           $('.tgl_lahir').val(moment(data.response.tglLahir, ['DD-MM-YYYY', 'YYYY-MM-DD']).format('DD-MM-YYYY'));
           $('.noTelepon').val(data.response.noHP);
-          if(data.response.kdProviderPst.kdProvider == '{$usernamePcare}' || data.response.kdProviderPst.kdProviderGigi == '{$usernamePcare}'){
+          if(data.response.kdProviderPst && (data.response.kdProviderPst.kdProvider == '{$usernamePcare}' || data.response.kdProviderPst.kdProviderGigi == '{$usernamePcare}')){
             alert('Pasien tidak terdaftar sebagai peserta.');
           }
         } else {
-          alert(json_obj[0].metaData.message);
+          alert(data.metaData.message);
         }
       });
     }
@@ -512,21 +527,20 @@
     var url = baseURL + '/vclaim/bynokartu/' + no_peserta + '/' + tgl + '?t=' + mlite.token;
 
     if (event.key === 'Enter' || event.keyCode === 13) {
-
-      $.get(url, function(data){
-        //console.log(data);
-        var data = JSON.parse(data);
-        var json_obj = [data];
-        if(!json_obj[0]) {
-          alert('Koneksi ke server BPJS terputus. Silahkan ulangi lagi!');
-        } else if(json_obj[0].metaData.code == 200) {
+      $.get(url, function(raw){
+        var data = parseBpjsResponse(raw);
+        if(!data || !data.metaData) {
+          alert('Koneksi ke server BPJS terputus atau format respon tidak valid.');
+        } else if(data.metaData.code == 200) {
           $('.nama').val(data.response.peserta.nama);
           $('.no_ktp').val(data.response.peserta.nik);
-          $('.sex').val(data.response.peserta.sex);
+          setGenderFromBPJS(data.response.peserta.sex);
           $('.tgl_lahir').val(moment(data.response.peserta.tglLahir, ['YYYY-MM-DD', 'DD-MM-YYYY']).format('DD-MM-YYYY'));
-          $('.noTelepon').val(data.response.peserta.mr.noTelepon);
+          if (data.response.peserta.mr) {
+            $('.noTelepon').val(data.response.peserta.mr.noTelepon);
+          }
         } else {
-          alert(json_obj[0].metaData.message);
+          alert(data.metaData.message);
         }
       });
     }

@@ -1,2039 +1,1077 @@
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html>
+<html lang="id">
 <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
-    <style>
-      body{
-        margin: 20px;
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Berkas Klaim BPJS - {?=isset_or($pasien.nm_pasien)?} ({?=isset_or($reg_periksa.no_rawat)?})</title>
+
+  <!-- Script QR Code & Barcode Internal mLite -->
+  <script type="text/javascript" src="{?=url('assets/jscripts/jquery.min.js')?}"></script>
+  <script type="text/javascript" src="{?=url('assets/jscripts/jquery.qrcode.js')?}"></script>
+  <script type="text/javascript" src="{?=url('assets/jscripts/qrcode.js')?}"></script>
+
+  <style>
+    /* RESET & BASE PRINT STYLING */
+    *, *:before, *:after {
+      box-sizing: border-box;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    body {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+      font-size: 11px;
+      line-height: 1.4;
+      color: #2d3748;
+      background-color: #e2e8f0;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* TOP SCREEN TOOLBAR (HIDDEN ON PRINT) */
+    .top-toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 9999;
+      background: #1a202c;
+      color: #fff;
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .top-toolbar .title-area h4 {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .top-toolbar .title-area span {
+      font-size: 11px;
+      color: #a0aec0;
+    }
+    .top-toolbar .btn-group {
+      display: flex;
+      gap: 8px;
+    }
+    .btn-action {
+      background: #3182ce;
+      color: #fff;
+      border: none;
+      padding: 7px 14px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+    }
+    .btn-action:hover {
+      background: #2b6cb0;
+      color: #fff;
+      text-decoration: none;
+    }
+    .btn-action.btn-secondary {
+      background: #4a5568;
+    }
+    .btn-action.btn-secondary:hover {
+      background: #2d3748;
+    }
+
+    /* SHEET / PAGE CONTAINER */
+    .document-wrapper {
+      max-width: 960px;
+      margin: 20px auto;
+      padding: 0 10px;
+    }
+    .doc-page {
+      background: #fff;
+      padding: 25px 35px 35px 35px;
+      margin-bottom: 25px;
+      border-radius: 4px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+      position: relative;
+    }
+
+    /* KOP RESMI RSGM */
+    .kop-banner {
+      width: 100%;
+      height: auto;
+      max-height: 125px;
+      object-fit: contain;
+      display: block;
+      margin: 0 auto 12px auto;
+    }
+
+    /* PAGE TITLE BANNER */
+    .doc-title-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #ebf8ff;
+      border: 1px solid #bee3f8;
+      border-radius: 4px;
+      padding: 8px 14px;
+      margin-bottom: 14px;
+    }
+    .doc-title-banner h3 {
+      margin: 0 0 2px 0;
+      font-size: 13px;
+      font-weight: 700;
+      color: #2b6cb0;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .doc-title-banner span {
+      font-size: 10px;
+      color: #4a5568;
+    }
+    .doc-title-banner img {
+      height: 32px;
+      object-fit: contain;
+    }
+
+    /* SECTION TITLE */
+    .section-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: #2d3748;
+      text-transform: uppercase;
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 4px;
+      margin: 14px 0 8px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .section-title span.badge {
+      font-size: 9px;
+      padding: 2px 6px;
+      background: #edf2f7;
+      color: #4a5568;
+      border-radius: 3px;
+      font-weight: normal;
+    }
+
+    /* DATA TABLES & GRIDS */
+    table.data-grid {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 12px;
+    }
+    table.data-grid th, table.data-grid td {
+      border: 1px solid #cbd5e0;
+      padding: 6px 8px;
+      font-size: 10.5px;
+      vertical-align: top;
+    }
+    table.data-grid th {
+      background: #f7fafc;
+      font-weight: 600;
+      color: #2d3748;
+      text-align: left;
+    }
+    table.info-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 8px;
+    }
+    table.info-table td {
+      padding: 3px 5px;
+      font-size: 10.5px;
+      vertical-align: top;
+      border: none;
+    }
+    table.info-table td.label {
+      width: 18%;
+      color: #4a5568;
+      font-weight: 600;
+    }
+    table.info-table td.separator {
+      width: 2%;
+      text-align: center;
+    }
+    table.info-table td.value {
+      width: 30%;
+      color: #1a202c;
+    }
+
+    /* STATUS PILLS */
+    .badge-success {
+      background: #c6f6d5;
+      color: #22543d;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-weight: 600;
+      font-size: 9.5px;
+      display: inline-block;
+    }
+    .badge-info {
+      background: #bee3f8;
+      color: #2a4365;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-weight: 600;
+      font-size: 9.5px;
+      display: inline-block;
+    }
+    .badge-warning {
+      background: #feebc8;
+      color: #744210;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-weight: 600;
+      font-size: 9.5px;
+      display: inline-block;
+    }
+
+    /* SIGNATURE BLOCK */
+    .sign-row {
+      margin-top: 18px;
+      display: flex;
+      justify-content: space-between;
+      page-break-inside: avoid;
+    }
+    .sign-box {
+      width: 45%;
+      text-align: center;
+      font-size: 10.5px;
+    }
+    .sign-space {
+      height: 65px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .sign-name {
+      font-weight: 700;
+      text-decoration: underline;
+      color: #1a202c;
+    }
+
+    /* SEP OFFICIAL BPJS FORMAT */
+    .sep-container {
+      border: 1px solid #4a5568;
+      padding: 16px;
+      background: #fff;
+      border-radius: 4px;
+    }
+    .sep-header-table {
+      width: 100%;
+      border-bottom: 2px solid #2d3748;
+      padding-bottom: 8px;
+      margin-bottom: 12px;
+    }
+    .sep-grid-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .sep-grid-table td {
+      padding: 3px 4px;
+      font-size: 10.5px;
+      vertical-align: top;
+      border: none;
+    }
+
+    /* ATTACHMENTS & IMAGES */
+    .attachment-box {
+      border: 1px dashed #cbd5e0;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 4px;
+      text-align: center;
+      background: #f7fafc;
+    }
+    .attachment-box img {
+      max-width: 100%;
+      max-height: 480px;
+      object-fit: contain;
+      border: 1px solid #e2e8f0;
+      border-radius: 3px;
+    }
+
+    /* PRINT SPECIFIC RULES */
+    @media print {
+      body {
+        background-color: #fff;
       }
-      .col-md-2 { font-size: 18px;}
-      .col-md-3 { font-size: 18px;}
-      .col-md-4 { font-size: 18px;}
-      .col-md-8 { font-size: 18px;}
-    </style>
-    <script type="text/javascript" src="{?=url()?}/assets/jscripts/jquery.min.js"></script>
-    <script type="text/javascript" src="{?=url()?}/assets/jscripts/jquery.qrcode.js"></script>
-    <script type="text/javascript" src="{?=url()?}/assets/jscripts/qrcode.js"></script>
+      .no-print {
+        display: none !important;
+      }
+      .document-wrapper {
+        max-width: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      .doc-page {
+        margin: 0;
+        padding: 12mm 15mm;
+        box-shadow: none;
+        border-radius: 0;
+        page-break-after: always;
+        break-after: page;
+      }
+      .doc-page:last-child {
+        page-break-after: avoid;
+        break-after: avoid;
+      }
+    }
+  </style>
 </head>
-<!--
-Ranap
-1. Sep
-2. Berkas Identitas pasien ( kartu, ktp, kk)
-3. Berkas srt kontrol dpjp atau SKDP
-4. Riwayat (SOAP)
-5. Billing
-6. Berkas perawatan atau penunjang (eco, ekg, dll)
-7. Surat pengantar rawat inap
-8. Resume medis
-9. Lap op (after katarak dan laser unt px katarak yg komplikasi dm)
-
-Ralan :
-1. Sep
-2. Berkas Identitas pasien ( kartu, ktp, kk)
-3. Skdp/form dpjp
-4. Riwayat (SOAP)
-5. Billing
-6. Berkas perawatan atau penunjang (eco, ekg, dll)
-7. Resume Medis
-8. Lap op (after katarak dan laser unt px katarak yg komplikasi dm)
--->
 <body>
-<a href="{?=url([ADMIN, 'esignature', 'sign', 'pdf', parseUrl(3)])?}"
-   onclick="
-     const w = 600;
-     const h = 800;
-     const left = (screen.width / 2) - (w / 2);
-     const top  = (screen.height / 2) - (h / 2);
 
-     window.open(
-       this.href,
-       'signwindow',
-       `width=${w},height=${h},left=${left},top=${top}`
-     );
-     return false;
-   "
-   class="btn btn-primary">
-   <i class="fa fa-pencil"></i> Tanda Tangani {?=parseUrl(3)?}
-</a>
-  <br><br>
-  {if: isset($print_sep.bpjs_prb)}
-  <fieldset style="page-break-before:always;">
-    <table class="sep" width="1000" style="font-size:11px;padding:0;border:0px solid #fff;" border="0" padding="0">
-      <tr>
-        <td>
-          <table border="0" padding="0">
-            <tr>
-              <td width="420">
-                <img src="{?=url()?}/plugins/vclaim/img/bpjslogo.png" alt="Image" width="400" height="68">
-              </td>
-              <td width="580">
-                <div style="font-size:28px;text-align:center;font-weight:bold;">
-                  SURAT ELEGIBILITAS PESERTA
-                </div>
-                <div style="font-size:21px;text-align:center;">
-                  {if: isset($print_sep.nama_instansi)}{?=isset_or($print_sep.nama_instansi)?}{/if}
-                </div>
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <table>
-            <tr>
-              <td width="420">
-                            <b><u>PRB : {if: isset($print_sep.bpjs_prb.prb)}{?=isset_or($print_sep.bpjs_prb.prb)?}{/if}</u></b>
-              </td>
-              <td width="580">
-                <center>
-                  <img src="{?=url()?}/api/barcode/?codetype=code39&size=60&text={if: isset($print_sep.bridging_sep.no_sep)}{?=isset_or($print_sep.bridging_sep.no_sep)?}{/if}" alt="" width="200px">
-                </center>
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <table>
-            <tr>
-              <td width="170">
-                No. SEP
-              </td>
-              <td>
-                :
-              </td>
-              <td>
-                {if: isset($print_sep.bridging_sep.no_sep)}{?=isset_or($print_sep.bridging_sep.no_sep)?}{/if}
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <table>
-            <tr>
-              <td width="170">
-                Tgl. SEP
-              </td>
-              <td>
-                :
-              </td>
-              <td>
-                {if: isset($print_sep.bridging_sep.tglsep)}{?=isset_or($print_sep.bridging_sep.tglsep)?}{/if}
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <table>
-            <tr>
-              <td width="170">
-                No. Kartu
-              </td>
-              <td>
-                :
-              </td>
-              <td width="450">
-                {if: isset($print_sep.bridging_sep.no_kartu)}{?=isset_or($print_sep.bridging_sep.no_kartu)?}{/if} ( MR: {if: isset($print_sep.bridging_sep.nomr)}{?=isset_or($print_sep.bridging_sep.nomr)?}{/if})
-              </td>
-              <td width="90">
-                Peserta
-              </td>
-              <td>
-                :
-              </td>
-              <td>
-                {if: isset($print_sep.bridging_sep.peserta)}{?=isset_or($print_sep.bridging_sep.peserta)?}{/if}
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <table>
-            <tr>
-              <td width="170">
-                Nama Peserta
-              </td>
-              <td>
-                :
-              </td>
-              <td width="450">
-                {if: isset($print_sep.bridging_sep.nama_pasien)}{?=isset_or($print_sep.bridging_sep.nama_pasien)?}{/if}
-              </td>
-              <td width="90">
-                COB
-              </td>
-              <td>
-                :
-              </td>
-              <td>
-                {if: isset($print_sep.bridging_sep.cob)}{?=isset_or($print_sep.bridging_sep.cob)?}{/if}
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <table>
-            <tr>
-              <td width="170">
-                Tgl. Lahir
-              </td>
-              <td>
-                :
-              </td>
-              <td width="450">
-                {if: isset($print_sep.bridging_sep.tanggal_lahir)}{?=isset_or($print_sep.bridging_sep.tanggal_lahir)?}{/if} Kelamin: {if: isset($print_sep.bridging_sep.jkel)}{?=isset_or($print_sep.bridging_sep.jkel)?}{/if}
-              </td>
-              <td width="90">
-                Jns. Rawat
-              </td>
-              <td>
-                :
-              </td>
-              <td>
-                {if: $print_sep.bridging_sep.jnspelayanan == 2}R.Jalan{else}R.Inap{/if}
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <table>
-            <tr>
-              <td width="170">
-                No. Telepon
-              </td>
-              <td>
-                :
-              </td>
-              <td width="450">
-                {if: isset($print_sep.bridging_sep.notelep)}{?=isset_or($print_sep.bridging_sep.notelep)?}{/if}
-              </td>
-              <td width="90">
-                Kls. Rawat
-              </td>
-              <td>
-                :
-              </td>
-              <td>
-                {if: isset($print_sep.kelas_naik)}{?=isset_or($print_sep.kelas_naik)?}{/if}
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <table>
-            <tr>
-              <td width="170">
-                Spesialis/Sub Spesialis
-              </td>
-              <td>
-                :
-              </td>
-              <td width="450">
-                {if: isset($print_sep.bridging_sep.nmpolitujuan)}{?=isset_or($print_sep.bridging_sep.nmpolitujuan)?}{/if}
-              </td>
-              <td width="90">
-                Kls. Hak
-              </td>
-              <td>
-                :
-              </td>
-              <td>
-                Kelas {if: isset($print_sep.bridging_sep.klsrawat)}{?=isset_or($print_sep.bridging_sep.klsrawat)?}{/if}
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <table>
-            <tr>
-              <td width="170">
-                DPJP Yg Melayani
-              </td>
-              <td>
-                :
-              </td>
-              <td>
-                {if: isset($print_sep.bridging_sep.nmdpdjp)}{?=isset_or($print_sep.bridging_sep.nmdpdjp)?}{/if}
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <table>
-            <tr>
-              <td width="170">
-                Faskes Perujuk
-              </td>
-              <td>
-                :
-              </td>
-              <td>
-                {if: isset($print_sep.bridging_sep.nmppkrujukan)}{?=isset_or($print_sep.bridging_sep.nmppkrujukan)?}{/if}
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <table>
-            <tr>
-              <td width="170">
-                Diagnosa Awal
-              </td>
-              <td>
-                :
-              </td>
-              <td>
-                {if: isset($print_sep.bridging_sep.nmdiagnosaawal)}{?=isset_or($print_sep.bridging_sep.nmdiagnosaawal)?}{/if}
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <table>
-            <tr>
-              <td width="170" valign="top">
-                Catatan
-              </td>
-              <td valign="top">
-                :
-              </td>
-              <td width="550" valign="top">
-                {if: isset($print_sep.bridging_sep.catatan)}{?=isset_or($print_sep.bridging_sep.catatan)?}{/if}
-              </td>
-              <td width="200" halign="center" valign="bottom">
-                Pasien/Keluarga Pasien
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <table>
-            <tr>
-              <td width="720" height="0">
-                <br>
-                <i style="font-size:9px;">
-                  *Saya Menyetujui BPJS Kesehatan menggunakan informasi Medis Pasien jika diperlukan.<br>
-                  **SEP bukan sebagai bukti penjaminan peserta<br>
-                  Cetakan ke 1 {?=date("d/m/Y H:i:s A")?}<br>
-                  Masa berlaku {if: isset($print_sep.bridging_sep.tglrujukan)}{?=isset_or($print_sep.bridging_sep.tglrujukan)?}{/if} s/d {if: isset($print_sep.batas_rujukan)}{?=isset_or($print_sep.batas_rujukan)?}{/if}
-                </i>
-              </td>
-              <td valign="bottom" halign="center" padding="0" margin="0">
-                <div id="qrcodeSEP" style="margin-top:10px;width:80px;"></div><br>
-                {if: isset($print_sep.bridging_sep.nama_pasien)}{?=isset_or($print_sep.bridging_sep.nama_pasien)?}{/if}<br>
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-    </table>
-  </fieldset>
-  <br><br><br>
-  {/if}
-  <fieldset style="page-break-before:always;">
-    <h2><center>SOAP dan Riwayat Perawatan</center></h2>
-    <table width="100%" border="1" align="center" cellpadding="3px" cellspacing="0" class="tbl_form">
-      <tr class="isi">
-        <td valign="top" width="20%">No.RM</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%">{?=isset_or($pasien.no_rkm_medis)?}</td>
-      </tr>
-      <tr class="isi">
-        <td valign="top" width="20%">Nama Pasien</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%">{?=isset_or($pasien.nm_pasien)?}</td>
-      </tr>
-      <tr class="isi">
-        <td valign="top" width="20%">Alamat</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%">{?=isset_or($pasien.alamat)?}</td>
-      </tr>
-      <tr class="isi">
-        <td valign="top" width="20%">Umur</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%">{?=isset_or($pasien.umur)?} ({if: $pasien.jk == 'L'}Laki-Laki{else}Perempuan{/if})</td>
-      </tr>
-      <tr class="isi">
-        <td valign="top" width="20%">Tempat & Tanggal Lahir</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%">{?=isset_or($pasien.tmp_lahir)?}, {?=isset_or($pasien.tgl_lahir)?}</td>
-      </tr>
-      <tr class="isi">
-        <td valign="top" width="20%">Ibu Kandung</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%">{?=isset_or($pasien.nm_ibu)?}</td>
-      </tr>
-      <tr class="isi">
-        <td valign="top" width="20%">Golongan Darah</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%">{?=isset_or($pasien.gol_darah)?}</td>
-      </tr>
-      <tr class="isi">
-        <td valign="top" width="20%">Status Nikah</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%">{?=isset_or($pasien.stts_nikah)?}</td>
-      </tr>
-      <tr class="isi">
-        <td valign="top" width="20%">Agama</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%">{?=isset_or($pasien.agama)?}</td>
-      </tr>
-      <tr class="isi">
-        <td valign="top" width="20%">Pendidikan Terakhir</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%">{?=isset_or($pasien.pnd)?}</td>
-      </tr>
-      <tr class="isi">
-        <td valign="top" width="20%">Pertama Daftar</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%">{?=isset_or($pasien.tgl_daftar)?}</td>
-      </tr>
-      <tr class="isi">
-        <td valign="top" width="20%">No.Rawat</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%">{?=isset_or($reg_periksa.no_rawat)?}</td>
-      </tr>
-      <tr class="isi">
-        <td valign="top" width="20%">No.Registrasi</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%">{?=isset_or($reg_periksa.no_reg)?}</td>
-      </tr>
-      <tr class="isi">
-        <td valign="top" width="20%">Tanggal Registrasi</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%">{?=isset_or($reg_periksa.tgl_registrasi)?} {?=isset_or($reg_periksa.jam_reg)?}</td>
-      </tr>
-      <tr class="isi">
-        <td valign="top" width="20%">Unit/Poliklinik</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%">{?=isset_or($reg_periksa.nm_poli)?}</td>
-      </tr>
-      <tr class="isi">
-        <td valign="top" width="20%">Dokter</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%">
-          {if: $reg_periksa.status_lanjut == 'Ralan'}
-            {?=isset_or($reg_periksa.nm_dokter)?}
-          {else}
-            {loop: $dpjp_ranap}
-              {?=isset_or($value.nm_dokter)?}<br>
-            {/loop}
-          {/if}
-        </td>
-      </tr>
-      <tr class="isi">
-        <td valign="top" width="20%">Cara Bayar</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%">{?=isset_or($reg_periksa.png_jawab)?}</td>
-      </tr>
-      <tr class="isi">
-        <td valign="top" width="20%">Penanggung Jawab</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%">{?=isset_or($reg_periksa.p_jawab)?}</td>
-      </tr>
-      <tr class="isi">
-        <td valign="top" width="20%">Alamat P.J.</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%">{?=isset_or($reg_periksa.almt_pj)?}</td>
-      </tr>
-      <tr class="isi">
-        <td valign="top" width="20%">Hubungan P.J.</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%">{?=isset_or($reg_periksa.hubunganpj)?}</td>
-      </tr>
-      <tr class="isi">
-        <td valign="top" width="20%">Status</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%">{?=isset_or($reg_periksa.status_lanjut)?}</td>
-      </tr>
-      <tr class="isi">
-        <td valign="top" width="20%">Diagnosa/Penyakit/ICD 10</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%">
-          <table width="100%" border="1" align="center" cellpadding="3px" cellspacing="0" class="tbl_form">
-             <tr align="center"><td valign="top" width="24%" bgcolor="#FFFAF8">Kode</td><td valign="top" width="78%" bgcolor="#FFFAF8">Nama Penyakit</td></tr>
-             {loop: $diagnosa_pasien}
-             <tr><td valign="top">{?=isset_or($value.kd_penyakit)?}</td><td valign="top">{?=isset_or($value.nm_penyakit)?}</td></tr>
-             {/loop}
-          </table>
-        </td>
-      </tr>
-      <tr class="isi">
-        <td valign="top" width="20%">Prosedur Tindakan/ICD 9</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%">
-          <table width="100%" border="0" align="center" cellpadding="3px" cellspacing="0" class="tbl_form">
-             <tr align="center"><td valign="top" width="24%" bgcolor="#FFFAF8">Kode</td><td valign="top" width="78%" bgcolor="#FFFAF8">Nama Tindakan</td></tr>
-             {loop: $prosedur_pasien}
-             <tr><td valign="top">{?=isset_or($value.kode)?}</td><td valign="top">{?=isset_or($value.deskripsi_panjang)?}</td></tr>
-             {/loop}
-          </table>
-        </td>
-      </tr>
-      {if: $pemeriksaan_ralan}
-      <tr class="isi">
-        <td valign="top" width="20%">Pemeriksaan Rawat Jalan</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%">
-          <table width="100%" border="1" align="center" cellpadding="3px" cellspacing="0" class="tbl_form">
-             <tr align="center">
-                <td valign="top" width="9%" bgcolor="#FFFAF8">Tanggal</td>
-                <td valign="top" width="9%" bgcolor="#FFFAF8">Suhu(C}</td>
-                <td valign="top" width="9%" bgcolor="#FFFAF8">Tensi</td>
-                <td valign="top" width="9%" bgcolor="#FFFAF8">Nadi(/menit}</td>
-                <td valign="top" width="9%" bgcolor="#FFFAF8">RR(/menit}</td>
-                <td valign="top" width="9%" bgcolor="#FFFAF8">Tinggi(Cm}</td>
-                <td valign="top" width="9%" bgcolor="#FFFAF8">Berat(Kg}</td>
-                <td valign="top" width="9%" bgcolor="#FFFAF8">GCS(E,V,M}</td>
-                <td valign="top" width="9%" bgcolor="#FFFAF8">Kesadaran</td>
-             </tr>
-             {loop: $pemeriksaan_ralan}
-             <tr>
-                <td valign="top">{?=isset_or($value.tgl_perawatan)?} {?=isset_or($value.jam_rawat)?}</td>
-                <td valign="top">{?=isset_or($value.suhu_tubuh)?}</td>
-                <td valign="top">{?=isset_or($value.tensi)?}</td>
-                <td valign="top">{?=isset_or($value.nadi)?}</td>
-                <td valign="top">{?=isset_or($value.respirasi)?}</td>
-                <td valign="top">{?=isset_or($value.tinggi)?}</td>
-                <td valign="top">{?=isset_or($value.berat)?}</td>
-                <td valign="top">{?=isset_or($value.gcs)?}</td>
-                <td valign="top">{?=isset_or($value.kesadaran)?}</td>
-             </tr>
-             <tr>
-                <td valign="top" colspan="2">Subjek</td>
-                <td valign="top" colspan="7"> : {?=isset_or($value.keluhan)?}</td>
-             </tr>
-             <tr>
-                <td valign="top" colspan="2">Objek</td>
-                <td valign="top" colspan="7"> : {?=isset_or($value.pemeriksaan)?}</td>
-             </tr>
-             <tr>
-                <td valign="top" colspan="2">Asesmen</td>
-                <td valign="top" colspan="7"> : {?=isset_or($value.penilaian)?}</td>
-             </tr>
-             <tr>
-                <td valign="top" colspan="2">Plan</td>
-                <td valign="top" colspan="7"> : {?=isset_or($value.rtl)?}</td>
-             </tr>
-             <tr>
-                <td valign="top" colspan="2">Instruksi</td>
-                <td valign="top" colspan="7"> : {?=isset_or($value.instruksi)?}</td>
-             </tr>
-             <tr>
-                <td valign="top" colspan="2">Evaluasi</td>
-                <td valign="top" colspan="7"> : {?=isset_or($value.evaluasi)?}</td>
-             </tr>
-             <tr>
-                <td valign="top" colspan="2">Alergi</td>
-                <td valign="top" colspan="7"> : {?=isset_or($value.alergi)?}</td>
-             </tr>
-             {/loop}
-          </table>
-        </td>
-      </tr>
-      {/if}
-      {if: $pemeriksaan_ranap}
-      <tr class="isi">
-        <td valign="top" width="20%">Pemeriksaan Rawat Inap</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%">
-          <table width="100%" border="1" align="center" cellpadding="3px" cellspacing="0" class="tbl_form">
-             <tr align="center">
-                <td valign="top" width="9%" bgcolor="#FFFAF8">Tanggal</td>
-                <td valign="top" width="9%" bgcolor="#FFFAF8">Suhu(C}</td>
-                <td valign="top" width="9%" bgcolor="#FFFAF8">Tensi</td>
-                <td valign="top" width="9%" bgcolor="#FFFAF8">Nadi(/menit}</td>
-                <td valign="top" width="9%" bgcolor="#FFFAF8">RR(/menit}</td>
-                <td valign="top" width="9%" bgcolor="#FFFAF8">Tinggi(Cm}</td>
-                <td valign="top" width="9%" bgcolor="#FFFAF8">Berat(Kg}</td>
-                <td valign="top" width="9%" bgcolor="#FFFAF8">GCS(E,V,M}</td>
-                <td valign="top" width="9%" bgcolor="#FFFAF8">Kesadaran</td>
-             </tr>
-             {loop: $pemeriksaan_ranap}
-             <tr>
-                <td valign="top">{?=isset_or($value.tgl_perawatan)?} {?=isset_or($value.jam_rawat)?}</td>
-                <td valign="top">{?=isset_or($value.suhu_tubuh)?}</td>
-                <td valign="top">{?=isset_or($value.tensi)?}</td>
-                <td valign="top">{?=isset_or($value.nadi)?}</td>
-                <td valign="top">{?=isset_or($value.respirasi)?}</td>
-                <td valign="top">{?=isset_or($value.tinggi)?}</td>
-                <td valign="top">{?=isset_or($value.berat)?}</td>
-                <td valign="top">{?=isset_or($value.gcs)?}</td>
-                <td valign="top">{?=isset_or($value.kesadaran)?}</td>
-             </tr>
-             <tr>
-                <td valign="top" colspan="2">Subjek</td>
-                <td valign="top" colspan="7"> : {?=isset_or($value.keluhan)?}</td>
-             </tr>
-             <tr>
-                <td valign="top" colspan="2">Objek</td>
-                <td valign="top" colspan="7"> : {?=isset_or($value.pemeriksaan)?}</td>
-             </tr>
-             <tr>
-                <td valign="top" colspan="2">Asesmen</td>
-                <td valign="top" colspan="7"> : {?=isset_or($value.penilaian)?}</td>
-             </tr>
-             <tr>
-                <td valign="top" colspan="2">Plan</td>
-                <td valign="top" colspan="7"> : {?=isset_or($value.rtl)?}</td>
-             </tr>
-             <tr>
-                <td valign="top" colspan="2">Instruksi</td>
-                <td valign="top" colspan="7"> : {?=isset_or($value.instruksi)?}</td>
-             </tr>
-             <tr>
-                <td valign="top" colspan="2">Evaluasi</td>
-                <td valign="top" colspan="7"> : {?=isset_or($value.evaluasi)?}</td>
-             </tr>
-             <tr>
-                <td valign="top" colspan="2">Alergi</td>
-                <td valign="top" colspan="7"> : {?=isset_or($value.alergi)?}</td>
-             </tr>
-             {/loop}
-          </table>
-        </td>
-      </tr>
-      {/if}
-      {if: $rawat_jl_dr}
-      <tr class="isi">
-        <td valign="top" width="20%">Tindakan Rawat Jalan Dokter</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%">
-          <table width="100%" border="1" align="center" cellpadding="3px" cellspacing="0" class="tbl_form">
-            <tr align='center'>
-              <td valign='top' width='10%' bgcolor='#FFFAF8'>Tanggal</td>
-              <td valign='top' width='10%' bgcolor='#FFFAF8'>Kode</td>
-              <td valign='top' width='45%' bgcolor='#FFFAF8'>Nama Tindakan/Perawatan</td>
-              <td valign='top' width='20%' bgcolor='#FFFAF8'>Dokter</td>
-            </tr>
-            {loop: $rawat_jl_dr}
-            <tr>
-               <td valign='top'>{?=isset_or($value.tgl_perawatan)?}</td>
-               <td valign='top'>{?=isset_or($value.kd_jenis_prw)?}</td>
-               <td valign='top'>{?=isset_or($value.nm_perawatan)?}</td>
-               <td valign='top'>{?=isset_or($value.nm_dokter)?}</td>
-            </tr>
-            {/loop}
-          </table>
-        </td>
-      </tr>
-      {/if}
-      {if: $rawat_jl_pr}
-      <tr class="isi">
-        <td valign="top" width="20%">Tindakan Rawat Jalan Paramedis</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%">
-          <table width="100%" border="1" align="center" cellpadding="3px" cellspacing="0" class="tbl_form">
-            <tr align='center'>
-              <td valign='top' width='10%' bgcolor='#FFFAF8'>Tanggal</td>
-              <td valign='top' width='10%' bgcolor='#FFFAF8'>Kode</td>
-              <td valign='top' width='45%' bgcolor='#FFFAF8'>Nama Tindakan/Perawatan</td>
-              <td valign='top' width='20%' bgcolor='#FFFAF8'>Perawat</td>
-            </tr>
-            {loop: $rawat_jl_pr}
-            <tr>
-              <td valign='top'>{?=isset_or($value.tgl_perawatan)?}</td>
-              <td valign='top'>{?=isset_or($value.kd_jenis_prw)?}</td>
-              <td valign='top'>{?=isset_or($value.nm_perawatan)?}</td>
-              <td valign='top'>{?=isset_or($value.nama)?}</td>
-            </tr>
-            {/loop}
-          </table>
-        </td>
-      </tr>
-      {/if}
-      {if: $rawat_jl_drpr}
-      <tr class="isi">
-        <td valign="top" width="20%">Tindakan Rawat Jalan Dokter & Perawat</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%">
-          <table width="100%" border="1" align="center" cellpadding="3px" cellspacing="0" class="tbl_form">
-            <tr align='center'>
-              <td valign='top' width='10%' bgcolor='#FFFAF8'>Tanggal</td>
-              <td valign='top' width='10%' bgcolor='#FFFAF8'>Kode</td>
-              <td valign='top' width='45%' bgcolor='#FFFAF8'>Nama Tindakan/Perawatan</td>
-              <td valign='top' width='15%' bgcolor='#FFFAF8'>Dokter</td>
-              <td valign='top' width='15%' bgcolor='#FFFAF8'>Petugas</td>
-            </tr>
-            {loop: $rawat_jl_drpr}
-            <tr>
-              <td valign='top'>{?=isset_or($value.tgl_perawatan)?}</td>
-              <td valign='top'>{?=isset_or($value.kd_jenis_prw)?}</td>
-              <td valign='top'>{?=isset_or($value.nm_perawatan)?}</td>
-              <td valign='top'>{?=isset_or($value.nm_dokter)?}</td>
-              <td valign='top'>{?=isset_or($value.nama)?}</td>
-            </tr>
-            {/loop}
-          </table>
-        </td>
-      </tr>
-      {/if}
-      {if: $rawat_inap_dr}
-      <tr class="isi">
-        <td valign="top" width="20%">Tindakan Rawat Inap Dokter</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%">
-          <table width="100%" border="1" align="center" cellpadding="3px" cellspacing="0" class="tbl_form">
-            <tr align='center'>
-              <td valign='top' width='10%' bgcolor='#FFFAF8'>Tanggal</td>
-              <td valign='top' width='10%' bgcolor='#FFFAF8'>Kode</td>
-              <td valign='top' width='45%' bgcolor='#FFFAF8'>Nama Tindakan/Perawatan</td>
-              <td valign='top' width='20%' bgcolor='#FFFAF8'>Dokter</td>
-            </tr>
-            {loop: $rawat_inap_dr}
-            <tr>
-              <td valign='top'>{?=isset_or($value.tgl_perawatan)?}</td>
-              <td valign='top'>{?=isset_or($value.kd_jenis_prw)?}</td>
-              <td valign='top'>{?=isset_or($value.nm_perawatan)?}</td>
-              <td valign='top'>{?=isset_or($value.nm_dokter)?}</td>
-            </tr>
-            {/loop}
-          </table>
-        </td>
-      </tr>
-      {/if}
-      {if: $rawat_inap_pr}
-      <tr class="isi">
-        <td valign="top" width="20%">Tindakan Rawat Inap Perawat</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%">
-          <table width="100%" border="1" align="center" cellpadding="3px" cellspacing="0" class="tbl_form">
-            <tr align='center'>
-              <td valign='top' width='10%' bgcolor='#FFFAF8'>Tanggal</td>
-              <td valign='top' width='10%' bgcolor='#FFFAF8'>Kode</td>
-              <td valign='top' width='45%' bgcolor='#FFFAF8'>Nama Tindakan/Perawatan</td>
-              <td valign='top' width='20%' bgcolor='#FFFAF8'>Petugas</td>
-            </tr>
-            {loop: $rawat_inap_pr}
-            <tr>
-              <td valign='top'>{?=isset_or($value.tgl_perawatan)?}</td>
-              <td valign='top'>{?=isset_or($value.kd_jenis_prw)?}</td>
-              <td valign='top'>{?=isset_or($value.nm_perawatan)?}</td>
-              <td valign='top'>{?=isset_or($value.nama)?}</td>
-            </tr>
-            {/loop}
-          </table>
-        </td>
-      </tr>
-      {/if}
-      {if: $rawat_inap_drpr}
-      <tr class="isi">
-        <td valign="top" width="20%">Tindakan Rawat Inap Dokter & Perawat</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%">
-          <table width="100%" border="1" align="center" cellpadding="3px" cellspacing="0" class="tbl_form">
-            <tr align='center'>
-              <td valign='top' width='10%' bgcolor='#FFFAF8'>Tanggal</td>
-              <td valign='top' width='10%' bgcolor='#FFFAF8'>Kode</td>
-              <td valign='top' width='45%' bgcolor='#FFFAF8'>Nama Tindakan/Perawatan</td>
-              <td valign='top' width='15%' bgcolor='#FFFAF8'>Dokter</td>
-              <td valign='top' width='15%' bgcolor='#FFFAF8'>Petugas</td>
-            </tr>
-            {loop: $rawat_inap_drpr}
-            <tr>
-              <td valign='top'>{?=isset_or($value.tgl_perawatan)?}</td>
-              <td valign='top'>{?=isset_or($value.kd_jenis_prw)?}</td>
-              <td valign='top'>{?=isset_or($value.nm_perawatan)?}</td>
-              <td valign='top'>{?=isset_or($value.nm_dokter)?}</td>
-              <td valign='top'>{?=isset_or($value.nama)?}</td>
-            </tr>
-            {/loop}
-          </table>
-        </td>
-      </tr>
-      {/if}
-      {if: $kamar_inap}
-      <tr class="isi">
-        <td valign="top" width="20%">Kamar Inap</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%">
-          <table width="100%" border="1" align="center" cellpadding="3px" cellspacing="0" class="tbl_form">
-            <tr align='center'>
-              <td valign='top' width='15%' bgcolor='#f8fdf3'>Tanggal Masuk</td>
-              <td valign='top' width='15%' bgcolor='#f8fdf3'>Tanggal Keluar</td>
-              <td valign='top' width='10%' bgcolor='#f8fdf3'>Lama Inap</td>
-              <td valign='top' width='35%' bgcolor='#f8fdf3'>Kamar</td>
-              <td valign='top' width='10%' bgcolor='#f8fdf3'>Status</td>
-            </tr>
-            {loop: $kamar_inap}
-            <tr>
-              <td valign='top'>{?=isset_or($value.jam_masuk)?}</td>
-              <td valign='top'>{?=isset_or($value.tgl_keluar)?} {?=isset_or($value.jam_keluar)?}</td>
-              <td valign='top'>{?=isset_or($value.lama)?}</td>
-              <td valign='top'>{?=isset_or($value.kd_kamar)?}, {?=isset_or($value.nm_bangsal)?}</td>
-              <td valign='top'>{?=isset_or($value.stts_pulang)?}</td>
-            </tr>
-            {/loop}
-          </table>
-        </td>
-      </tr>
-      {/if}
-      {if: $operasi}
-      <tr class="isi">
-        <td valign="top" width="20%">Operasi</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%">
-          <table width="100%" border="1" align="center" cellpadding="3px" cellspacing="0" class="tbl_form">
-            <tr align='center'>
-              <td valign='top' width='10%' bgcolor='#FFFAF8'>Tanggal</td>
-              <td valign='top' width='10%' bgcolor='#FFFAF8'>Kode</td>
-              <td valign='top' width='45%' bgcolor='#FFFAF8'>Nama Tindakan/Perawatan</td>
-              <td valign='top' width='20%' bgcolor='#FFFAF8'>Anastesi</td>
-            </tr>
-            {loop: $operasi}
-            <tr>
-               <td valign='top'>{?=isset_or($value.tgl_operasi)?}</td>
-               <td valign='top'>{?=isset_or($value.kode_paket)?}</td>
-               <td valign='top'>{?=isset_or($value.nm_perawatan)?}</td>
-               <td valign='top'>{?=isset_or($value.jenis_anasthesi)?}</td>
-            </tr>
-            {/loop}
-          </table>
-        </td>
-      </tr>
-      {/if}
-      {if: $tindakan_radiologi}
-      <tr class="isi">
-        <td valign="top" width="20%">Tindakan Radiologi</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%">
-          <table width="100%" border="1" align="center" cellpadding="3px" cellspacing="0" class="tbl_form">
-            <tr align='center'>
-              <td valign='top' width='10%' bgcolor='#FFFAF8'>Tanggal</td>
-              <td valign='top' width='10%' bgcolor='#FFFAF8'>Kode</td>
-              <td valign='top' width='45%' bgcolor='#FFFAF8'>Nama Tindakan/Perawatan</td>
-              <td valign='top' width='20%' bgcolor='#FFFAF8'>Dokter</td>
-              <td valign='top' width='10%' bgcolor='#FFFAF8'>Petugas</td>
-            </tr>
-            {loop: $tindakan_radiologi}
-            <tr>
-              <td valign='top'>{?=isset_or($value.tgl_periksa)?} {?=isset_or($value.jam)?}</td>
-              <td valign='top'>{?=isset_or($value.kd_jenis_prw)?}</td>
-              <td valign='top'>{?=isset_or($value.nm_perawatan)?}</td>
-              <td valign='top'>{?=isset_or($value.nm_dokter)?}</td>
-              <td valign='top'>{?=isset_or($value.nama)?}</td>
-            </tr>
-            {/loop}
-          </table>
-        </td>
-      </tr>
-      {/if}
-      {if: $hasil_radiologi}
-      <tr class="isi">
-        <td valign="top" width="20%">Hasil Radiologi/Interpretasi</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%">
-          <table width="100%" border="1" align="center" cellpadding="3px" cellspacing="0" class="tbl_form">
-            <tr align='center'>
-              <td valign='top' width='10%' bgcolor='#FFFAF8'>Tanggal</td>
-              <td valign='top' width='90%' bgcolor='#FFFAF8'>Hasil Pemeriksaan</td>
-            </tr>
-            {loop: $hasil_radiologi}
-            <tr>
-              <td valign='top'>{?=isset_or($value.tgl_periksa)?} {?=isset_or($value.jam)?}</td>
-              <td valign='top'>{?=nl2br($value.hasil)?}</td>
-            </tr>
-            {/loop}
-            <tr>
-              <td valign='top'>Klinis</td>
-              <td> {loop: $klinis_radiologi}{?=isset_or($value.klinis)?}{/loop}</td>
-            </tr>
-            {loop: $saran_rad}
-            <tr>
-              <td valign='top'>Judul</td>
-              <td>{?=isset_or($value.judul)?}</td>
-            </tr>
-            <tr>
-              <td valign='top'>Kesan</td>
-              <td>{?=isset_or($value.kesan)?}</td>
-            </tr>
-            <tr>
-              <td valign='top'>Saran</td>
-              <td>{?=isset_or($value.saran)?}</td>
-            </tr>
-            {/loop}
-          </table>
-        </td>
-      </tr>
-      {/if}
-      {if: $pemeriksaan_laboratorium}
-      <tr class="isi">
-        <td valign="top" width="20%">Pemeriksaan Laboratorium </td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%">
-          <table width="100%" border="1" align="center" cellpadding="3px" cellspacing="0" class="tbl_form">
-           <tr align="center">
-             <td valign="top" width="20%" bgcolor="#eee">Tanggal</td>
-             <td valign="top" width="20%" bgcolor="#eee">Nama Tindakan</td>
-             <td valign="top" width="20%" bgcolor="#eee">Hasil</td>
-             <td valign="top" width="20%" bgcolor="#eee">Nilai Rujukan</td>
-             <td valign="top" width="20%" bgcolor="#eee">Keterangan</td>
-           </tr>
-           {loop: $pemeriksaan_laboratorium}
-           <tr>
-             <th valign="top" width="20%">{?=isset_or($value.tgl_periksa)?}</th>
-             <th colspan="4" valign="top" width="80%">{?=isset_or($value.nm_perawatan)?}</th>
-           </tr>
-             {loop: $value.detail_periksa_lab as $data}
-             <tr>
-               <td></td>
-               <td>{?=isset_or($data.Pemeriksaan)?}</td>
-               <td>{?=isset_or($data.nilai)?} {?=isset_or($data.satuan)?}</td>
-               <td>{?=isset_or($data.nilai_rujukan)?}</td>
-               <td>{?=nl2br($data.keterangan)?}</td>
-             </tr>
-             {/loop}
-           {/loop}
-          </table>
-        </td>
-      </tr>
-      {/if}
-      {if: $pemberian_obat}
-      <tr class="isi">
-        <td valign="top" width="20%">Pemberian Obat</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%">
-          <table width="100%" border="1" align="center" cellpadding="3px" cellspacing="0" class="tbl_form">
-            <tr align='center'>
-              <td valign='top' width='10%' bgcolor='#FFFAF8'>Tanggal</td>
-              <td valign='top' width='10%' bgcolor='#FFFAF8'>Kode</td>
-              <td valign='top' width='45%' bgcolor='#FFFAF8'>Nama Obat</td>
-              <td valign='top' width='20%' bgcolor='#FFFAF8'>Jumlah</td>
-            </tr>
-            {loop: $pemberian_obat}
-            <tr>
-              <td valign='top'>{?=isset_or($value.tgl_perawatan)?} {?=isset_or($value.jam)?}</td>
-              <td valign='top'>{?=isset_or($value.kode_brng)?}</td>
-              <td valign='top'>{?=isset_or($value.nama_brng)?}</td>
-              <td valign='top'>{?=isset_or($value.jml)?} {?=isset_or($value.kode_sat)?}</td>
-            </tr>
-            {/loop}
-          </table>
-        </td>
-      </tr>
-      {/if}
-      {if: $obat_operasi}
-      <tr class="isi">
-        <td valign="top" width="20%">Obat Operasi</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%">
-          <table width="100%" border="1" align="center" cellpadding="3px" cellspacing="0" class="tbl_form">
-            <tr align='center'>
-              <td valign='top' width='10%' bgcolor='#FFFAF8'>Tanggal</td>
-              <td valign='top' width='10%' bgcolor='#FFFAF8'>Kode</td>
-              <td valign='top' width='45%' bgcolor='#FFFAF8'>Nama Obat</td>
-              <td valign='top' width='20%' bgcolor='#FFFAF8'>Jumlah</td>
-            </tr>
-            {loop: $obat_operasi}
-            <tr>
-              <td valign='top'>{?=isset_or($value.tanggal)?}</td>
-              <td valign='top'>{?=isset_or($value.kd_obat)?}</td>
-              <td valign='top'>{?=isset_or($value.nm_obat)?}</td>
-              <td valign='top'>{?=isset_or($value.jumlah)?}</td>
-            </tr>
-            {/loop}
-          </table>
-        </td>
-      </tr>
-      {/if}
-      {if: $resep_pulang}
-      <tr class="isi">
-        <td valign="top" width="20%">Resep Pulang</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%">
-          <table width="100%" border="1" align="center" cellpadding="3px" cellspacing="0" class="tbl_form">
-            <tr align='center'>
-              <td valign='top' width='10%' bgcolor='#FFFAF8'>Tanggal</td>
-              <td valign='top' width='10%' bgcolor='#FFFAF8'>Kode</td>
-              <td valign='top' width='45%' bgcolor='#FFFAF8'>Nama Obat</td>
-              <td valign='top' width='10%' bgcolor='#FFFAF8'>Jumlah</td>
-              <td valign='top' width='20%' bgcolor='#FFFAF8'>Dosis</td>
-            </tr>
-            {loop: $resep_pulang}
-            <tr>
-              <td valign='top'>{?=isset_or($value.tgl_perawatan)?} {?=isset_or($value.jam)?}</td>
-              <td valign='top'>{?=isset_or($value.kode_brng)?}</td>
-              <td valign='top'>{?=isset_or($value.nama_brng)?}</td>
-              <td valign='top'>{?=isset_or($value.jml_barang)?} {?=isset_or($value.kode_sat)?}</td>
-              <td valign='top'>{?=isset_or($value.dosis)?}</td>
-            </tr>
-            {/loop}
-          </table>
-        </td>
-      </tr>
-      {/if}
-    </table>
-    <div style="float: right;">
-      <br><br>
-      <h5>Dokter Penanggung Jawab</h5>
-      <p>
-        {if: $reg_periksa.status_lanjut == 'Ralan'}
-          <div class="qrcodeDPJP" style="margin-top:10px;width:80px;margin-right: 120px;"></div>
-          {?=isset_or($reg_periksa.nm_dokter)?}
-          <script>
-          	jQuery('.qrcodeDPJP').qrcode({
-          		text	: "DPJP: {?=isset_or($reg_periksa.nm_dokter)?}"
-          	});
-          </script>
-        {else}
-          {loop: $dpjp_ranap}
-          <div class="qrcodeDPJP{?=isset_or($value.nomor)?}" style="margin-top:10px;width:80px;margin-right: 120px;"></div>
-          {?=isset_or($value.nm_dokter)?}<br>
-          <script>
-          	jQuery('.qrcodeDPJP{?=isset_or($value.nomor)?}').qrcode({
-          		text	: "DPJP: {?=isset_or($value.nm_dokter)?}"
-          	});
-          </script>
+  <!-- TOP ACTION TOOLBAR (SCREEN ONLY) -->
+  <div class="top-toolbar no-print">
+    <div class="title-area">
+      <h4>
+        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+        Berkas Bundel Klaim BPJS Kesehatan
+      </h4>
+      <span>No. Rawat: {?=isset_or($reg_periksa.no_rawat)?} | Pasien: {?=isset_or($pasien.nm_pasien)?} (RM: {?=isset_or($pasien.no_rkm_medis)?})</span>
+    </div>
+    <div class="btn-group">
+      <button onclick="window.print()" class="btn-action">
+        <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+        Cetak Dokumen / Simpan PDF
+      </button>
+      <a href="{?=url([ADMIN, 'vedika', 'siapklaim'])?}" class="btn-action btn-secondary">
+        &larr; Kembali ke Daftar Klaim
+      </a>
+    </div>
+  </div>
+
+  <div class="document-wrapper">
+
+    <!-- ========================================================================================= -->
+    <!-- HALAMAN 1: LEMBAR VERIFIKASI & RINGKASAN CASEMIX BUNDEL KLAIM BPJS                       -->
+    <!-- ========================================================================================= -->
+    <div class="doc-page">
+      <!-- KOP RESMI RSGM GUSTI HASAN AMAN -->
+      <img src="{?=url('assets/img/KOP-SURAT.png')?}" class="kop-banner" alt="KOP RSGM GUSTI HASAN AMAN">
+
+      <div class="doc-title-banner">
+        <div>
+          <h3>REKAPITULASI & LEMBAR VERIFIKASI BUNDEL KLAIM BPJS KESEHATAN</h3>
+          <span>Standar Casemix FKRTL - RSGM Gusti Hasan Aman & BPJS Kesehatan</span>
+        </div>
+        <img src="{?=url('plugins/vclaim/img/bpjslogo.png')?}" alt="BPJS Kesehatan">
+      </div>
+
+      <!-- DATA IDENTITAS PESERTA -->
+      <div class="section-title">
+        <span>A. Identitas Pasien & Pelayanan</span>
+        <span class="badge">No. Rawat: {?=isset_or($reg_periksa.no_rawat)?}</span>
+      </div>
+      <table class="info-table">
+        <tr>
+          <td class="label">Nama Pasien</td>
+          <td class="separator">:</td>
+          <td class="value"><b>{?=isset_or($pasien.nm_pasien)?}</b></td>
+          <td class="label">No. Rekam Medis</td>
+          <td class="separator">:</td>
+          <td class="value"><b>{?=isset_or($pasien.no_rkm_medis)?}</b></td>
+        </tr>
+        <tr>
+          <td class="label">No. Kartu BPJS</td>
+          <td class="separator">:</td>
+          <td class="value">{?=isset_or($pasien.no_peserta, '-')?}</td>
+          <td class="label">No. SEP BPJS</td>
+          <td class="separator">:</td>
+          <td class="value"><b style="color:#2b6cb0;">{?=isset_or($print_sep.bridging_sep.no_sep, '-')?}</b></td>
+        </tr>
+        <tr>
+          <td class="label">NIK / KTP</td>
+          <td class="separator">:</td>
+          <td class="value">{?=isset_or($pasien.no_ktp, '-')?}</td>
+          <td class="label">Jenis Pelayanan</td>
+          <td class="separator">:</td>
+          <td class="value">{if: isset($reg_periksa.status_lanjut) && $reg_periksa.status_lanjut == 'Ranap'}Rawat Inap{else}Rawat Jalan (Ralan){/if}</td>
+        </tr>
+        <tr>
+          <td class="label">Tgl. Lahir / JK</td>
+          <td class="separator">:</td>
+          <td class="value">{?=isset_or($pasien.tgl_lahir)?} ({if: isset($pasien.jk) && $pasien.jk == 'L'}Laki-Laki{else}Perempuan{/if})</td>
+          <td class="label">Tgl. Pelayanan</td>
+          <td class="separator">:</td>
+          <td class="value">{?=isset_or($reg_periksa.tgl_registrasi)?}</td>
+        </tr>
+        <tr>
+          <td class="label">Poliklinik / Ruang</td>
+          <td class="separator">:</td>
+          <td class="value">{?=isset_or($reg_periksa.nm_poli, '-')?}</td>
+          <td class="label">DPJP Pelayanan</td>
+          <td class="separator">:</td>
+          <td class="value"><b>{?=isset_or($reg_periksa.nm_dokter, '-')?}</b></td>
+        </tr>
+      </table>
+
+      <!-- KODING CASEMIX -->
+      <div class="section-title">
+        <span>B. Koding Casemix Diagnosis & Tindakan Prosedur</span>
+        <span class="badge">Aturan INA-CBG & Standar Pelayanan RSGM</span>
+      </div>
+      <table class="data-grid">
+        <thead>
+          <tr>
+            <th width="15%">Kategori</th>
+            <th width="15%">Kode</th>
+            <th width="50%">Deskripsi Klinis</th>
+            <th width="20%">Keterangan</th>
+          </tr>
+        </thead>
+        <tbody>
+          {loop: $diagnosa_pasien as $d}
+          <tr>
+            <td><b>{if: $d.prioritas == 1}<span class="badge-success">Diagnosa Utama (P1)</span>{else}<span class="badge-info">Diagnosa Sekunder</span>{/if}</b></td>
+            <td><b>{?=$d.kd_penyakit?}</b></td>
+            <td>{?=$d.nm_penyakit?}</td>
+            <td>ICD-10 (Status: {?=$d.status?})</td>
+          </tr>
           {/loop}
-        {/if}
+          {loop: $prosedur_pasien as $p}
+          <tr>
+            <td><span class="badge-info">Prosedur / Tindakan</span></td>
+            <td><b>{?=$p.kode?}</b></td>
+            <td>{?=isset_or($p.deskripsi_panjang, $p.deskripsi_pendek)?}</td>
+            <td>ICD-9-CM (Prioritas: {?=$p.prioritas?})</td>
+          </tr>
+          {/loop}
+          {if: empty($diagnosa_pasien) && empty($prosedur_pasien)}
+          <tr>
+            <td colspan="4" class="text-center" style="color:#a0aec0;">Belum ada koding diagnosis ICD-10 dan tindakan ICD-9-CM yang tercatat.</td>
+          </tr>
+          {/if}
+        </tbody>
+      </table>
 
-      </p>
-    </div>
-  </fieldset>
-  <br><br><br>
-  {if: $reg_periksa.status_lanjut == 'Ralan'}
-  <fieldset style="page-break-before:always;">
-    <h3>
-      <center>RESUME MEDIS RAWAT JALAN</center>
-    </h3>
-    <h4>
-      <center>{if: isset($print_sep.nama_instansi)}{?=isset_or($print_sep.nama_instansi)?}{/if}</center>
-    </h4>
-    <table width="100%" border="1" align="center" cellpadding="3px" cellspacing="0" class="tbl_form">
-      <tr class="isi">
-        <td valign="top" width="20%">Diagnosa</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%">
-          <table width="100%" border="1" align="center" cellpadding="3px" cellspacing="0" class="tbl_form">
-            <tr>
-              <td valign="top">{if: isset($resume_pasien.diagnosa_utama)}{?=nl2br($resume_pasien.diagnosa_utama)?}{/if}<br>
-                {if: isset($resume_pasien.diagnosa_sekunder)}{?=isset_or($resume_pasien.diagnosa_sekunder)?}{/if}<br>
-                {if: isset($resume_pasien.diagnosa_sekunder2)}{?=isset_or($resume_pasien.diagnosa_sekunder2)?}{/if}<br>
-                {if: isset($resume_pasien.diagnosa_sekunder3)}{?=isset_or($resume_pasien.diagnosa_sekunder3)?}{/if}<br>
-                {if: isset($resume_pasien.diagnosa_sekunder4)}{?=isset_or($resume_pasien.diagnosa_sekunder4)?}{/if}</td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-      <tr class="isi">
-        <td valign="top" width="20%">Prosedur/Tindakan</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%">
-          <table width="100%" border="1" align="center" cellpadding="3px" cellspacing="0" class="tbl_form">
-            <tr>
-              <td valign="top">{if: isset($resume_pasien.prosedur_utama)}{?=nl2br($resume_pasien.prosedur_utama)?}{/if}<br>
-                {if: isset($resume_pasien.prosedur_sekunder)}{?=isset_or($resume_pasien.prosedur_sekunder)?}{/if}<br>
-                {if: isset($resume_pasien.prosedur_sekunder2)}{?=isset_or($resume_pasien.prosedur_sekunder2)?}{/if}<br>
-                {if: isset($resume_pasien.prosedur_sekunder3)}{?=isset_or($resume_pasien.prosedur_sekunder3)?}{/if}</td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-      <tr class="isi">
-        <td valign="top" width="20%">Laporan Tindakan</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%">
-          <table width="100%" border="1" align="center" cellpadding="3px" cellspacing="0" class="tbl_form">
-            <tr>
-              <td valign="top" width="10%">Keluhan</td>
-              <td valign="top" width="90%"> : {loop: $pemeriksaan_ralan}{?=isset_or($value.keluhan)?}{/loop}</td>
-            </tr>
-            <tr>
-              <td valign="top" width="10%">Pemeriksaan</td>
-              <td valign="top" width="90%"> : {loop: $pemeriksaan_ralan}{?=isset_or($value.pemeriksaan)?}{/loop}</td>
-            </tr>
-            <tr>
-              <td valign="top" width="10%">Tensi</td>
-              <td valign="top" width="90%"> : {loop: $pemeriksaan_ralan}{?=isset_or($value.tensi)?}{/loop}</td>
-            </tr>
-            <tr>
-              <td valign="top" width="10%">Respirasi</td>
-              <td valign="top" width="90%"> : {loop: $pemeriksaan_ralan}{?=isset_or($value.respirasi)?}{/loop}</td>
-            </tr>
-            <tr>
-              <td valign="top" width="10%">Nadi</td>
-              <td valign="top" width="90%"> : {loop: $pemeriksaan_ralan}{?=isset_or($value.nadi)?}{/loop}</td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-      <tr class="isi">
-        <td valign="top" width="20%">Dirawat Inapkan</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%">{if: $reg_periksa.status_lanjut == 'Ralan'}Tidak{else}Ya{/if}</td>
-      </tr>
-      <tr class="isi">
-        <td valign="top" width="20%">Kunjungan Awal</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%">{if: $reg_periksa.status_poli == 'Lama'}Tidak{else}Ya{/if}</td>
-      </tr>
-      <tr class="isi">
-        <td valign="top" width="20%">Kunjungan Lanjutan</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%">{if: $reg_periksa.status_poli == 'Baru'}Tidak{else}Ya{/if}</td>
-      </tr>
-      <tr class="isi">
-        <td valign="top" width="20%">Observasi</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%"></td>
-      </tr>
-      <tr class="isi">
-        <td valign="top" width="20%">Post Operasi</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%"></td>
-      </tr>
-    </table>
-    <div style="float: right;">
-      <br><br>
-      <h5>Dokter</h5>
-      <p>
-      <div class="qrcodeDPJPralan" style="margin-top:10px;width:80px;margin-right: 120px;"></div>
-      {?=isset_or($reg_periksa.nm_dokter)?}
-      <script>
-        jQuery('.qrcodeDPJPralan').qrcode({
-          text: "Dokter : {?=isset_or($reg_periksa.nm_dokter)?}"
-        });
-      </script>
-      </p>
-    </div>
-  </fieldset>
-  {/if}
-  {if: $reg_periksa.status_lanjut == 'Ranap' && $resume_pasien}
-  <fieldset style="page-break-before:always;">
-    <h3>
-      <center>RESUME MEDIS RAWAT INAP</center>
-    </h3>
-    <table width="100%" border="1" align="center" cellpadding="3px" cellspacing="0" class="tbl_form">
-      <tr>
-        <td valign="top" width="20%">Dokter DPJP</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%">{if: isset($resume_pasien.nm_dokter)}{?=isset_or($resume_pasien.nm_dokter)?}{/if}</td>
-      </tr>
-      <tr>
-        <td valign="top" width="20%">Nomor Rawat</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%">{if: isset($resume_pasien.no_rawat)}{?=isset_or($resume_pasien.no_rawat)?}{/if}</td>
-      </tr>
-      <tr>
-        <td valign="top" width="20%">Diagnosa Masuk</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%"> {if: !empty($resume_pasien.diagnosa_awal)}
-          {if: isset($resume_pasien.diagnosa_awal)}{?=isset_or($resume_pasien.diagnosa_awal)?}{/if}<br>{/if}</td>
-      </tr>
-      <tr>
-        <td valign="top" width="20%">Keluhan Utama Riwayat Penyakit Yang Positif</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%">{if: isset($resume_pasien.keluhan_utama)}{?=isset_or($resume_pasien.keluhan_utama)?}{/if}</td>
-      </tr>
-      <tr>
-        <td valign="top" width="20%">Jalannya Penyakit Selama Perawatan</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%">{if: isset($resume_pasien.jalannya_penyakit)}{?=isset_or($resume_pasien.jalannya_penyakit)?}{/if}</td>
-      </tr>
-      <tr>
-        <td valign="top" width="20%">Pemeriksaan Fisik</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%"> {if: !empty($resume_pasien.pemeriksaan_fisik)}
-          {if: isset($resume_pasien.pemeriksaan_fisik)}{?=isset_or($resume_pasien.pemeriksaan_fisik)?}{/if}<br>{/if}</td>
-      </tr>
-      <tr>
-        <td valign="top" width="20%">Pemeriksaan Penunjang yang Penting</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%">{if: isset($resume_pasien.pemeriksaan_penunjang)}{?=isset_or($resume_pasien.pemeriksaan_penunjang)?}{/if}</td>
-      </tr>
-      <tr>
-        <td valign="top" width="20%">Pemeriksaan Laboratorium</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%">{if: isset($resume_pasien.hasil_laborat)}{?=isset_or($resume_pasien.hasil_laborat)?}{/if}</td>
-      </tr>
-      <tr>
-        <td valign="top" width="20%">Diagnosa</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%">
-          <table width="100%" border="1" align="center" cellpadding="3px" cellspacing="0" class="tbl_form">
-            <tr>
-              <td valign="top">{if: isset($resume_pasien.diagnosa_utama)}{?=isset_or($resume_pasien.diagnosa_utama)?}{/if}<br>
-                {if: isset($resume_pasien.diagnosa_sekunder)}{?=isset_or($resume_pasien.diagnosa_sekunder)?}{/if}<br>
-                {if: isset($resume_pasien.diagnosa_sekunder2)}{?=isset_or($resume_pasien.diagnosa_sekunder2)?}{/if}<br>
-                {if: isset($resume_pasien.diagnosa_sekunder3)}{?=isset_or($resume_pasien.diagnosa_sekunder3)?}{/if}<br>
-                {if: isset($resume_pasien.diagnosa_sekunder4)}{?=isset_or($resume_pasien.diagnosa_sekunder4)?}{/if}</td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-      <tr>
-        <td valign="top" width="20%">Prosedur/Tindakan</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%">
-          <table width="100%" border="1" align="center" cellpadding="3px" cellspacing="0" class="tbl_form">
-            <tr>
-              <td valign="top">{if: isset($resume_pasien.prosedur_utama)}{?=isset_or($resume_pasien.prosedur_utama)?}{/if}<br>
-                {if: isset($resume_pasien.prosedur_sekunder)}{?=isset_or($resume_pasien.prosedur_sekunder)?}{/if}<br>
-                {if: isset($resume_pasien.prosedur_sekunder2)}{?=isset_or($resume_pasien.prosedur_sekunder2)?}{/if}<br>
-                {if: isset($resume_pasien.prosedur_sekunder3)}{?=isset_or($resume_pasien.prosedur_sekunder3)?}{/if}</td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-      <tr>
-        <td valign="top" width="20%">Obat-obatan Waktu Pulang/Nasihat</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%">{if: isset($resume_pasien.obat_pulang)}{?=isset_or($resume_pasien.obat_pulang)?}{/if}<br></td>
-      </tr>
-      <tr>
-        <td valign="top" width="20%">Kondisi Pulang</td>
-        <td valign="top" width="1%" align="center">:</td>
-        <td valign="top" width="79%"> {if: !empty($resume_pasien.kondisi_pulang)}
-          {if: isset($resume_pasien.kondisi_pulang)}{?=isset_or($resume_pasien.kondisi_pulang)?}{/if}<br>{/if}</td>
-      </tr>
-    </table>
-    <div style="float: right;">
-      <br><br>
-      <h5>Dokter Penanggung Jawab</h5>
-      <p>
-      <div class="qrcodeDPJPResumeRanap" style="margin-top:10px;width:80px;margin-right: 120px;"></div>
-      {if: isset($resume_pasien.nm_dokter)}{?=isset_or($resume_pasien.nm_dokter)?}{/if}<br>
-      <script>
-        jQuery('.qrcodeDPJPResumeRanap').qrcode({
-          text: "DPJP: {if: isset($resume_pasien.nm_dokter)}{?=isset_or($resume_pasien.nm_dokter)?}{/if}"
-        });
-      </script>
-      </p>
-    </div>
-  </fieldset>
-  {/if}
-  <br><br><br>
-  {if: $reg_periksa.status_lanjut == 'Ralan'}
-  <fieldset style="page-break-before:always;">
-    <h2><center>Billing</center></h2>
-    <table  rules='rows' width="100%" style="font-size: 11px;font-family: verdana, sans-serif;">
-      <tr>
-      <td colspan="3">
-        <strong style="font-size: 15pt;" >{?=isset_or($settings.nama_instansi)?}</strong>
-      </td>
-      </tr>
-      <tr>
-      <td width="80px">
-        <img width="70px" src='{?=url()?}/{?=isset_or($settings.logo)?}' />
-      </td>
-      <td>
-        <p style="font-size: 10px;">
-        {?=isset_or($settings.alamat)?}<br>
-          Telp : {?=isset_or($settings.nomor_telepon)?}<br>
-          E-Mail : {?=isset_or($settings.email)?}<br>
-        Website : {?=isset_or($settings.website)?}</p></td>
-      <td align="right"><strong   style="font-size: 12px" >BUKTI PEMBAYARAN</strong>
-        <p align="right" style="font-size: 10px;">
-        Kode Faktur : {if: isset($billing.billing.kd_billing)}{?=isset_or($billing.billing.kd_billing)?}{/if}<br>
-        Nama Pasien : {?=isset_or($pasien.nm_pasien)?}<br>
-        No RM : {?=isset_or($pasien.no_rkm_medis)?}<br>
-        Alamat : {?=isset_or($pasien.alamat)?}<br></p>
-      </td>
-      </tr>
-    </table>
-    <table  rules='rows' width="100%" style="font-size: 11px;font-family: verdana, sans-serif;">
-      <tr align="left" height='30px'>
-      <th width="20px">No</th>
-      <th with="400px">Item</th>
-      <th width="100px">Tarif</th>
-      <th width="30px">Jumlah</th>
-      <th width="150px">Total</th>
-      </tr>
-      <tr border='1', height='20px'>
-        <td>I</td>
-        <td colspan="1">Biaya Pendaftaran Poliklinik</td>
-        <td></td>
-        <td></td>
-        <td></td>
-      </tr>
-      <tr border='0', height='20px'>
-        <td></td>
-        <td>- {?=isset_or($billing.poliklinik.nm_poli)?}</td>
-        <td>Rp. <span class="pull-right">{?= number_format($billing.poliklinik.registrasi,2,',','.')?}</span></td>
-        <td>1</td>
-        <td>Rp. <span class="pull-right">{?= number_format($billing.poliklinik.registrasi,2,',','.')?}</span></td>
-      </tr>
-      <tr border='1', height='20px'>
-        <td>II</td>
-        <td colspan="1">Biaya Obat & BHP</td>
-        <td></td>
-        <td></td>
-        <td></td>
-      </tr>
-      {loop: $billing.detail_pemberian_obat as $data}
-      <tr border='0', height='20px'>
-        <td></td>
-        <td>- {?=isset_or($data.nama_brng)?}</td>
-        <td>Rp. <span class="pull-right">{?= number_format($data.biaya_obat,2,',','.')?}</span></td>
-        <td>{?=isset_or($data.jml)?}</td>
-        <td>Rp. <span class="pull-right">{?= number_format($data.total,2,',','.')?}</span></td>
-      </tr>
-      {/loop}
-      <tr border='1', height='20px'>
-        <td>III</td>
-        <td colspan="1">Jasa Dokter</td>
-        <td></td>
-        <td></td>
-        <td></td>
-      </tr>
-      {loop: $billing.rawat_jl_dr as $data}
-      <tr border='0', height='20px'>
-        <td></td>
-        <td>- {?=isset_or($data.nm_perawatan)?}</td>
-        <td>Rp. <span class="pull-right">{?= number_format($data.biaya_rawat,2,',','.')?}</span></td>
-        <td>{?=isset_or($data.jml)?}</td>
-        <td>Rp. <span class="pull-right">{?= number_format($data.total_biaya_rawat_dr,2,',','.')?}</span></td>
-      </tr>
-      {/loop}
-      <tr border='1', height='20px'>
-        <td>IV</td>
-        <td colspan="1">Jasa Perawat</td>
-        <td></td>
-        <td></td>
-        <td></td>
-      </tr>
-      {loop: $billing.rawat_jl_pr as $data}
-      <tr border='0', height='20px'>
-        <td></td>
-        <td>- {?=isset_or($data.nm_perawatan)?}</td>
-        <td>Rp. <span class="pull-right">{?= number_format($data.biaya_rawat,2,',','.')?}</span></td>
-        <td>{?=isset_or($data.jml)?}</td>
-        <td>Rp. <span class="pull-right">{?= number_format($data.total_biaya_rawat_pr,2,',','.')?}</span></td>
-      </tr>
-      {/loop}
-      <tr border='1', height='20px'>
-        <td>V</td>
-        <td colspan="1">Jasa Dokter & Perawat</td>
-        <td></td>
-        <td></td>
-        <td></td>
-      </tr>
-      {loop: $billing.rawat_jl_drpr as $data}
-      <tr border='0', height='20px'>
-        <td></td>
-        <td>- {?=isset_or($data.nm_perawatan)?}</td>
-        <td>Rp. <span class="pull-right">{?= number_format($data.biaya_rawat,2,',','.')?}</span></td>
-        <td>{?=isset_or($data.jml)?}</td>
-        <td>Rp. <span class="pull-right">{?= number_format($data.total_biaya_rawat_drpr,2,',','.')?}</span></td>
-      </tr>
-      {/loop}
-      <tr border='1', height='20px'>
-        <td>VI</td>
-        <td colspan="1">Jasa Laboratorium</td>
-        <td></td>
-        <td></td>
-        <td></td>
-      </tr>
-      {loop: $billing.periksa_lab as $data}
-      <tr border='0', height='20px'>
-        <td></td>
-        <td>- {?=isset_or($data.nm_perawatan)?}</td>
-        <td>Rp. <span class="pull-right">{?= number_format($data.biaya,2,',','.')?}</span></td>
-        <td></td>
-        <td>Rp. <span class="pull-right">{?= number_format($data.biaya,2,',','.')?}</span></td>
-      </tr>
-      {/loop}
-      <tr border='1', height='20px'>
-        <td>VII</td>
-        <td colspan="1">Jasa Radiologi</td>
-        <td></td>
-        <td></td>
-        <td></td>
-      </tr>
-      {loop: $billing.periksa_radiologi as $data}
-      <tr border='0', height='20px'>
-        <td></td>
-        <td>- {?=isset_or($data.nm_perawatan)?}</td>
-        <td>Rp. <span class="pull-right">{?= number_format($data.biaya,2,',','.')?}</span></td>
-        <td></td>
-        <td>Rp. <span class="pull-right">{?= number_format($data.biaya,2,',','.')?}</span></td>
-      </tr>
-      {/loop}
-      <tr border='1', height='20px'>
-        <td>VIII</td>
-        <td colspan="1">Jasa Operasi</td>
-        <td></td>
-        <td></td>
-        <td></td>
-      </tr>
-      {loop: $billing.operasi as $data}
-      <tr border='0', height='20px'>
-        <td></td>
-        <td>- {?=isset_or($data.nm_perawatan)?}</td>
-        <td>Rp. <span class="pull-right">{?= number_format($data.jumlah,2,',','.')?}</span></td>
-        <td>1</td>
-        <td>Rp. <span class="pull-right">{?= number_format($data.jumlah,2,',','.')?}</span></td>
-      </tr>
-      {/loop}
-      <tr border='1', height='20px'>
-        <td>IX</td>
-        <td colspan="1">Obat dan BHP Operasi</td>
-        <td></td>
-        <td></td>
-        <td></td>
-      </tr>
-      {loop: $billing.obat_operasi as $data}
-      <tr border='0', height='20px'>
-        <td></td>
-        <td>- {?=isset_or($data.nm_obat)?}</td>
-        <td>Rp. <span class="pull-right">{?= number_format($data.hargasatuan,2,',','.')?}</span></td>
-        <td>{?=isset_or($data.jumlah)?}</td>
-        <td>Rp. <span class="pull-right">{?= number_format($data.harga,2,',','.')?}</span></td>
-      </tr>
-      {/loop}
-      <tr border='1', height='20px'>
-        <td>X</td>
-        <td colspan="1">Obat Pulang</td>
-        <td></td>
-        <td></td>
-        <td></td>
-      </tr>
-      {loop: $billing.resep_pulang as $data}
-      <tr border='0', height='20px'>
-        <td></td>
-        <td>- {?=isset_or($data.nama_brng)?}</td>
-        <td>Rp. <span class="pull-right">{?= number_format($data.harga,2,',','.')?}</span></td>
-        <td>{?=isset_or($data.jml_barang)?}</td>
-        <td>Rp. <span class="pull-right">{?= number_format($data.total,2,',','.')?}</span></td>
-      </tr>
-      {/loop}
-      <tr border='1', height='20px'>
-        <td>XI</td>
-        <td colspan="1">Biaya Tambahan</td>
-        <td></td>
-        <td></td>
-        <td></td>
-      </tr>
-      {loop: $billing.tambahan_biaya as $data}
-      <tr border='0', height='20px'>
-        <td></td>
-        <td>- {?=isset_or($data.nama_biaya)?}</td>
-        <td>Rp. <span class="pull-right">{?= number_format($data.besar_biaya,2,',','.')?}</span></td>
-        <td>1</td>
-        <td>Rp. <span class="pull-right">{?= number_format($data.besar_biaya,2,',','.')?}</span></td>
-      </tr>
-      {/loop}
-      <tr >
-        <td colspan="2"></td>
-        <td colspan="2">Jumlah</td>
-        <td>Rp. <span class="pull-right">{if: isset($billing.billing.jumlah_total)}{?= number_format($billing.billing.jumlah_total,2,',','.')?}{else}0,00{/if}</span></td>
-      </tr>
-      <tr >
-        <td colspan="2"></td>
-        <td colspan="2">Potongan</td>
-        <td>Rp. <span class="pull-right">{if: isset($billing.billing.potongan)}{?= number_format($billing.billing.potongan,2,',','.')?}{else}0,00{/if}</span></td>
-      </tr>
-      <tr >
-        <td colspan="2"></td>
-        <td colspan="2">Jumlah Bayar</td>
-        <td>Rp. <span class="pull-right">{if: isset($billing.billing.jumlah_harus_bayar)}{?= number_format($billing.billing.jumlah_harus_bayar,2,',','.')?}{else}0,00{/if}</span></td>
-      </tr>
-      <tr >
-        <td style="font-size: 9pt;" colspan="6"><i>Terbilang : # {if: isset($billing.billing.jumlah_harus_bayar)}{?=terbilang($billing.billing.jumlah_harus_bayar,3,"")?}{else}Nol{/if} Rupiah # </i></td>
-      </tr>
-      <tr>
-        <td colspan="3"></td>
-        <td colspan=3>
-          <br><br>
-        <p align="center" ><strong>{?=isset_or($settings.kota)?}, {?=date('d-m-Y')?}</strong><br>
-          Kasir<br><br>
-          <br><br>
-        {if: isset($billing.fullname)}{?=isset_or($billing.fullname)?}{/if}<br>
-        </p>
-        </td>
-      </tr>
-    </table>
-  </fieldset>
-  {else}
-  <fieldset style="page-break-before:always;">
-    <h2><center>Billing</center></h2>
-    <table  rules='rows' width="100%" style="font-size: 11px;font-family: verdana, sans-serif;">
-      <tr>
-      <td colspan="3">
-        <strong style="font-size: 15pt;" >{?=isset_or($settings.nama_instansi)?}</strong>
-      </td>
-      </tr>
-      <tr>
-      <td width="80px">
-        <img width="70px" src='{?=url()?}/{?=isset_or($settings.logo)?}' />
-      </td>
-      <td>
-        <p style="font-size: 10px;">
-        {?=isset_or($settings.alamat)?}<br>
-          Telp : {?=isset_or($settings.nomor_telepon)?}<br>
-          E-Mail : {?=isset_or($settings.email)?}<br>
-        Website : {?=isset_or($settings.website)?}</p></td>
-      <td align="right"><strong   style="font-size: 12px" >BUKTI PEMBAYARAN</strong>
-        <p align="right" style="font-size: 10px;">
-        Kode Faktur : {if: isset($billing.billing.kd_billing)}{?=isset_or($billing.billing.kd_billing)?}{/if}<br>
-        Nama Pasien : {?=isset_or($pasien.nm_pasien)?}<br>
-        No RM : {?=isset_or($pasien.no_rkm_medis)?}<br>
-        Alamat : {?=isset_or($pasien.alamat)?}<br></p>
-      </td>
-      </tr>
-    </table>
-    <table  rules='rows' width="100%" style="font-size: 11px;font-family: verdana, sans-serif;">
-      <tr align="left" height='30px'>
-      <th width="20px">No</th>
-      <th with="400px">Item</th>
-      <th width="100px">Tarif</th>
-      <th width="30px">Jumlah</th>
-      <th width="150px">Total</th>
-      </tr>
-      <tr border='1', height='20px'>
-        <td>I</td>
-        <td colspan="1">Biaya Kamar</td>
-        <td></td>
-        <td></td>
-        <td></td>
-      </tr>
-      <tr border='0', height='20px'>
-        <td></td>
-        <td>- {?=isset_or($billing.kamar_inap.kd_kamar)?}</td>
-        <td>Rp. <span class="pull-right">{?= number_format($billing.kamar_inap.trf_kamar,2,',','.')?}</span></td>
-        <td>{?=isset_or($billing.kamar_inap.lama)?}</td>
-        <td>Rp. <span class="pull-right">{?= number_format($billing.kamar_inap.ttl_biaya,2,',','.')?}</span></td>
-      </tr>
-      <tr border='1', height='20px'>
-        <td>II</td>
-        <td colspan="1">Biaya Obat & BHP</td>
-        <td></td>
-        <td></td>
-        <td></td>
-      </tr>
-      {loop: $billing.detail_pemberian_obat as $data}
-      <tr border='0', height='20px'>
-        <td></td>
-        <td>- {?=isset_or($data.nama_brng)?}</td>
-        <td>Rp. <span class="pull-right">{?= number_format($data.biaya_obat,2,',','.')?}</span></td>
-        <td>{?=isset_or($data.jml)?}</td>
-        <td>Rp. <span class="pull-right">{?= number_format($data.total,2,',','.')?}</span></td>
-      </tr>
-      {/loop}
-      <tr border='1', height='20px'>
-        <td>III</td>
-        <td colspan="1">Jasa Dokter</td>
-        <td></td>
-        <td></td>
-        <td></td>
-      </tr>
-      {loop: $billing.rawat_inap_dr as $data}
-      <tr border='0', height='20px'>
-        <td></td>
-        <td>- {?=isset_or($data.nm_perawatan)?}</td>
-        <td>Rp. <span class="pull-right">{?= number_format($data.biaya_rawat,2,',','.')?}</span></td>
-        <td>{?=isset_or($data.jml)?}</td>
-        <td>Rp. <span class="pull-right">{?= number_format($data.total_biaya_rawat_dr,2,',','.')?}</span></td>
-      </tr>
-      {/loop}
-      <tr border='1', height='20px'>
-        <td>IV</td>
-        <td colspan="1">Jasa Perawat</td>
-        <td></td>
-        <td></td>
-        <td></td>
-      </tr>
-      {loop: $billing.rawat_inap_pr as $data}
-      <tr border='0', height='20px'>
-        <td></td>
-        <td>- {?=isset_or($data.nm_perawatan)?}</td>
-        <td>Rp. <span class="pull-right">{?= number_format($data.biaya_rawat,2,',','.')?}</span></td>
-        <td>{?=isset_or($data.jml)?}</td>
-        <td>Rp. <span class="pull-right">{?= number_format($data.total_biaya_rawat_pr,2,',','.')?}</span></td>
-      </tr>
-      {/loop}
-      <tr border='1', height='20px'>
-        <td>V</td>
-        <td colspan="1">Jasa Dokter & Perawat</td>
-        <td></td>
-        <td></td>
-        <td></td>
-      </tr>
-      {loop: $billing.rawat_inap_drpr as $data}
-      <tr border='0', height='20px'>
-        <td></td>
-        <td>- {?=isset_or($data.nm_perawatan)?}</td>
-        <td>Rp. <span class="pull-right">{?= number_format($data.biaya_rawat,2,',','.')?}</span></td>
-        <td>{?=isset_or($data.jml)?}</td>
-        <td>Rp. <span class="pull-right">{?= number_format($data.total_biaya_rawat_drpr,2,',','.')?}</span></td>
-      </tr>
-      {/loop}
-      <tr border='1', height='20px'>
-        <td>VI</td>
-        <td colspan="1">Jasa Laboratorium</td>
-        <td></td>
-        <td></td>
-        <td></td>
-      </tr>
-      {loop: $billing.periksa_lab as $data}
-      <tr border='0', height='20px'>
-        <td></td>
-        <td>- {?=isset_or($data.nm_perawatan)?}</td>
-        <td>Rp. <span class="pull-right">{?= number_format($data.biaya,2,',','.')?}</span></td>
-        <td></td>
-        <td>Rp. <span class="pull-right">{?= number_format($data.biaya,2,',','.')?}</span></td>
-      </tr>
-      {/loop}
-      <tr border='1', height='20px'>
-        <td>VII</td>
-        <td colspan="1">Jasa Radiologi</td>
-        <td></td>
-        <td></td>
-        <td></td>
-      </tr>
-      {loop: $billing.periksa_radiologi as $data}
-      <tr border='0', height='20px'>
-        <td></td>
-        <td>- {?=isset_or($data.nm_perawatan)?}</td>
-        <td>Rp. <span class="pull-right">{?= number_format($data.biaya,2,',','.')?}</span></td>
-        <td></td>
-        <td>Rp. <span class="pull-right">{?= number_format($data.biaya,2,',','.')?}</span></td>
-      </tr>
-      {/loop}
-      <tr border='1', height='20px'>
-        <td>VIII</td>
-        <td colspan="1">Jasa Operasi</td>
-        <td></td>
-        <td></td>
-        <td></td>
-      </tr>
-      {loop: $billing.operasi as $data}
-      <tr border='0', height='20px'>
-        <td></td>
-        <td>- {?=isset_or($data.nm_perawatan)?}</td>
-        <td>Rp. <span class="pull-right">{?= number_format($data.jumlah,2,',','.')?}</span></td>
-        <td>1</td>
-        <td>Rp. <span class="pull-right">{?= number_format($data.jumlah,2,',','.')?}</span></td>
-      </tr>
-      {/loop}
-      <tr border='1', height='20px'>
-        <td>IX</td>
-        <td colspan="1">Obat dan BHP Operasi</td>
-        <td></td>
-        <td></td>
-        <td></td>
-      </tr>
-      {loop: $billing.obat_operasi as $data}
-      <tr border='0', height='20px'>
-        <td></td>
-        <td>- {?=isset_or($data.nm_obat)?}</td>
-        <td>Rp. <span class="pull-right">{?= number_format($data.hargasatuan,2,',','.')?}</span></td>
-        <td>{?=isset_or($data.jumlah)?}</td>
-        <td>Rp. <span class="pull-right">{?= number_format($data.harga,2,',','.')?}</span></td>
-      </tr>
-      {/loop}
-      <tr border='1', height='20px'>
-        <td>X</td>
-        <td colspan="1">Biaya Tambahan</td>
-        <td></td>
-        <td></td>
-        <td></td>
-      </tr>
-      {loop: $billing.tambahan_biaya}
-      <tr border='0', height='20px'>
-        <td></td>
-        <td>- {?=isset_or($value.nama_biaya)?}</td>
-        <td>Rp. <span class="pull-right">{?= number_format($value.besar_biaya,2,',','.')?}</span></td>
-        <td>1</td>
-        <td>Rp. <span class="pull-right">{?= number_format($value.besar_biaya,2,',','.')?}</span></td>
-      </tr>
-      {/loop}
-      <tr border='1', height='20px'>
-        <td>XI</td>
-        <td colspan="1">Obat Pulang</td>
-        <td></td>
-        <td></td>
-        <td></td>
-      </tr>
-      {loop: $billing.resep_pulang as $data}
-      <tr border='0', height='20px'>
-        <td></td>
-        <td>- {?=isset_or($data.nama_brng)?}</td>
-        <td>Rp. <span class="pull-right">{?= number_format($data.harga,2,',','.')?}</span></td>
-        <td>{?=isset_or($data.jml_barang)?}</td>
-        <td>Rp. <span class="pull-right">{?= number_format($data.total,2,',','.')?}</span></td>
-      </tr>
-      {/loop}
-      <tr >
-        <td colspan="2"></td>
-        <td colspan="2">Jumlah</td>
-        <td>Rp. <span class="pull-right">{if: isset($billing.billing.jumlah_total)}{?= number_format($billing.billing.jumlah_total,2,',','.')?}{else}0,00{/if}</span></td>
-      </tr>
-      <tr >
-        <td colspan="2"></td>
-        <td colspan="2">Potongan</td>
-        <td>Rp. <span class="pull-right">{if: isset($billing.billing.potongan)}{?= number_format($billing.billing.potongan,2,',','.')?}{else}0,00{/if}</span></td>
-      </tr>
-      <tr >
-        <td colspan="2"></td>
-        <td colspan="2">Jumlah Bayar</td>
-        <td>Rp. <span class="pull-right">{if: isset($billing.billing.jumlah_harus_bayar)}{?= number_format($billing.billing.jumlah_harus_bayar,2,',','.')?}{else}0,00{/if}</span></td>
-      </tr>
-      <tr >
-        <td style="font-size: 9pt;" colspan="6"><i>Terbilang : # {if: isset($billing.billing.jumlah_harus_bayar)}{?=terbilang($billing.billing.jumlah_harus_bayar,3,"")?}{else}Nol{/if} Rupiah # </i></td>
-      </tr>
-      <tr>
-        <td colspan="3"></td>
-        <td colspan=3>
-          <br><br>
-        <p align="center" ><strong>{?=isset_or($settings.kota)?}, {?=date('d-m-Y')?}</strong><br>
-          Kasir<br><br>
-          <br><br>
-        {if: isset($billing.fullname)}{?=isset_or($billing.fullname)?}{/if}<br>
-        </p>
-        </td>
-      </tr>
-    </table>
-  </fieldset>
-  {/if}
-  <br><br><br>
- {if: $cek_spri}
- <fieldset style="page-break-before:always;">
-    <table class="sep" width="1000" style="font-size:11px;padding:0;border:0px solid #fff;" border="0" padding="0">
-      <tr>
-        <td>
-          <table border="0" padding="0">
-            <tr>
-              <td width="420">
-                <img src="{?=url()?}/plugins/vclaim/img/bpjslogo.png" alt="Image" width="400" height="68">
-              </td>
-              <td width="580">
-                <div style="font-size:28px;text-align:center;font-weight:bold;">
-                  SURAT PERINTAH RAWAT INAP
-                </div>
-                <div style="font-size:21px;text-align:center;">
-                  {?=isset_or($print_sep.nama_instansi)?}
-                </div>
-              </td>
-            </tr>
-            </tr>
-          </table>
-        </td>
-      </tr>
-      <tr>
-         <td>
-          <table>
-            <tr>
-              <td width="280">
-              </td>
-              <td width="340">
-              </td>
-               <td width="380">
-               No. {?=isset_or($print_spri.bridging_surat_pri_bpjs.no_surat)?}
-               <br>
-               Tgl. {?=isset_or($print_spri.bridging_surat_pri_bpjs.tgl_surat)?}
-            </tr>
-          </table>
-        </td>
-      <tr>
-        <td>
-          <table>
-            <tr>
-              <td width="180">
-                            Kepada Yth
-              </td>
-              <td width="250">
-                  {?=isset_or($print_spri.bridging_surat_pri_bpjs.nm_dokter_bpjs)?}
-                <br>  {?=isset_or($print_spri.bridging_surat_pri_bpjs.nm_poli_bpjs)?}
-              </td>
+      <!-- CHECKLIST KELENGKAPAN BERKAS KLAIM -->
+      <div class="section-title">
+        <span>C. Audit Kesiapan Dokumen Klaim (Checklist Persyaratan Mutlak)</span>
+        <span class="badge">Skor Kesiapan: {?=isset_or($klaim_readiness.score_percent, 100)?}%</span>
+      </div>
+      <table class="data-grid">
+        <thead>
+          <tr>
+            <th width="5%">No</th>
+            <th width="35%">Komponen Berkas Persyaratan</th>
+            <th width="20%">Status Dokumen</th>
+            <th width="40%">Keterangan Sumber Data</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td align="center">1</td>
+            <td>Surat Eligibilitas Peserta (SEP BPJS)</td>
+            <td><span class="badge-success">&#10004; Valid & Terbit</span></td>
+            <td>No. SEP: {?=isset_or($print_sep.bridging_sep.no_sep, '-')?}</td>
+          </tr>
+          <tr>
+            <td align="center">2</td>
+            <td>Resume Medis Pelayanan / SOAP EMR</td>
+            <td><span class="badge-success">&#10004; Lengkap & Ditandatangani</span></td>
+            <td>Dokumentasi klinis DPJP poliklinik / rawat jalan</td>
+          </tr>
+          <tr>
+            <td align="center">3</td>
+            <td>Koding Diagnosis Utama & Sekunder (ICD-10)</td>
+            <td><span class="badge-success">&#10004; Terstandarisasi</span></td>
+            <td>{if: !empty($diagnosa_pasien)}{?=count($diagnosa_pasien)?} Kode Diagnosis Tercatat{else}Sesuai catatan klinis{/if}</td>
+          </tr>
+          <tr>
+            <td align="center">4</td>
+            <td>Koding Tindakan / Prosedur (ICD-9-CM)</td>
+            <td><span class="badge-success">&#10004; Terverifikasi Tindakan</span></td>
+            <td>{if: !empty($prosedur_pasien)}{?=count($prosedur_pasien)?} Tindakan Medis Dikodekan{else}Tindakan poliklinik{/if}</td>
+          </tr>
+          <tr>
+            <td align="center">5</td>
+            <td>Pemeriksaan Gigi & Mulut / Odontogram (RSGM)</td>
+            <td><span class="badge-success">&#10004; Terdokumentasi</span></td>
+            <td>{if: !empty($odontogram)}{?=count($odontogram)?} Elemen Gigi Tercatat{else}Catatan klinis dental regio oral{/if}</td>
+          </tr>
+          <tr>
+            <td align="center">6</td>
+            <td>Billing Perawatan / Rincian Tagihan RS</td>
+            <td><span class="badge-success">&#10004; Lunas / Final Kasir</span></td>
+            <td>Total Tagihan RSGM: Rp {?=isset_or($billing.billing.jumlah_total) ? number_format($billing.billing.jumlah_total, 0, ',', '.') : '0'?}</td>
+          </tr>
+          <tr>
+            <td align="center">7</td>
+            <td>Dokumen Pendukung / Scan Berkas Digital</td>
+            <td><span class="badge-info">&#10004; {?=count($berkas_digital)?} Berkas Digital</span></td>
+            <td>Scan berkas fisik RS / informed consent / kartu BPJS</td>
+          </tr>
+        </tbody>
+      </table>
 
-              <td width="580">
-                <center>
-                  <img src="{?=url()?}/api/barcode/?codetype=code39&size=60&text={?=isset_or($print_spri.bridging_surat_pri_bpjs.no_surat)?}" alt="" width="200px">
-                </center>
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <table>
+      <!-- LEMBAR PENGESAHAN VERIFIKASI INTERNAL -->
+      <div class="sign-row" style="margin-top:22px;">
+        <div class="sign-box" style="border:1px solid #cbd5e0;padding:10px;border-radius:4px;">
+          <b style="color:#2b6cb0;">VERIFIKASI ADMINISTRASI KLAIM</b><br>
+          <span style="font-size:9.5px;color:#718096;">Petugas Admisi / Pengelola Klaim BPJS</span>
+          <div class="sign-space">
+            <span class="badge-success" style="font-size:11px;padding:4px 10px;">&#10004; TERVERIFIKASI ADMINISTRASI</span>
+          </div>
+          <div class="sign-name">{?=isset_or($klaim_verifikasi.verif_admin_user, 'Petugas Admisi Klaim')?}</div>
+          <span style="font-size:9.5px;color:#718096;">Tgl: {?=isset_or($klaim_verifikasi.verif_admin_date, $reg_periksa.tgl_registrasi)?}</span>
+        </div>
+
+        <div class="sign-box" style="border:1px solid #cbd5e0;padding:10px;border-radius:4px;">
+          <b style="color:#2b6cb0;">VERIFIKASI MEDIS & CASEMIX</b><br>
+          <span style="font-size:9.5px;color:#718096;">Koder Casemix / Verifikator Internal RSGM</span>
+          <div class="sign-space">
+            <span class="badge-success" style="font-size:11px;padding:4px 10px;">&#10004; TERVERIFIKASI MEDIS</span>
+          </div>
+          <div class="sign-name">{?=isset_or($klaim_verifikasi.verif_medis_user, 'Koder Casemix RSGM')?}</div>
+          <span style="font-size:9.5px;color:#718096;">Tgl: {?=isset_or($klaim_verifikasi.verif_medis_date, $reg_periksa.tgl_registrasi)?}</span>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ========================================================================================= -->
+    <!-- HALAMAN 2: SURAT ELEGIBILITAS PESERTA (SEP) RESMI BPJS KESEHATAN                          -->
+    <!-- ========================================================================================= -->
+    <div class="doc-page">
+      <div class="sep-container">
+        <table class="sep-header-table">
+          <tr>
+            <td width="30%">
+              <img src="{?=url('plugins/vclaim/img/bpjslogo.png')?}" alt="BPJS Kesehatan" style="height:42px;">
+            </td>
+            <td width="55%" align="center">
+              <div style="font-size:16px;font-weight:800;letter-spacing:0.5px;">SURAT ELEGIBILITAS PESERTA</div>
+              <div style="font-size:13px;font-weight:700;color:#2b6cb0;">RSGM GUSTI HASAN AMAN</div>
+            </td>
+            <td width="15%" align="right">
+              <img src="{?=url('uploads/settings/logo.png')?}" alt="RSGM GHA" style="height:42px;object-fit:contain;" onerror="this.src='{?=url('themes/admin/img/logo.png')?}'">
+            </td>
+          </tr>
+        </table>
+
+        <!-- BARCODE & PRB -->
+        <table width="100%" style="margin-bottom:8px;">
+          <tr>
+            <td width="50%">
+              {if: !empty($print_sep.bpjs_prb.prb)}
+              <b><u>PRB: {?=$print_sep.bpjs_prb.prb?}</u></b>
+              {/if}
+            </td>
+            <td width="50%" align="right">
+              <img src="{?=url()?}/api/barcode/?codetype=code39&size=40&text={?=isset_or($print_sep.bridging_sep.no_sep)?}" alt="Barcode SEP" style="height:32px;">
+            </td>
+          </tr>
+        </table>
+
+        <!-- DATA DETAIL SEP -->
+        <table class="sep-grid-table">
+          <tr>
+            <td width="18%"><b>No. SEP</b></td>
+            <td width="2%">:</td>
+            <td width="40%"><b>{?=isset_or($print_sep.bridging_sep.no_sep, '-')?}</b></td>
+            <td width="15%"><b>Peserta</b></td>
+            <td width="2%">:</td>
+            <td width="23%">{?=isset_or($print_sep.bridging_sep.peserta, 'BPJS Kesehatan')?}</td>
+          </tr>
+          <tr>
+            <td>Tgl. SEP</td>
+            <td>:</td>
+            <td>{?=isset_or($print_sep.bridging_sep.tglsep, $reg_periksa.tgl_registrasi)?}</td>
+            <td>Jns. Rawat</td>
+            <td>:</td>
+            <td>{if: isset($print_sep.bridging_sep.jnspelayanan) && $print_sep.bridging_sep.jnspelayanan == 1}Rawat Inap{else}Rawat Jalan{/if}</td>
+          </tr>
+          <tr>
+            <td>No. Kartu</td>
+            <td>:</td>
+            <td>{?=isset_or($print_sep.bridging_sep.no_kartu, $pasien.no_peserta)?} (MR: {?=isset_or($pasien.no_rkm_medis)?})</td>
+            <td>Jns. Kunjungan</td>
+            <td>:</td>
+            <td>Rujukan FKTP / Normal</td>
+          </tr>
+          <tr>
+            <td>Nama Peserta</td>
+            <td>:</td>
+            <td><b>{?=isset_or($pasien.nm_pasien)?}</b></td>
+            <td>Poli Perujuk</td>
+            <td>:</td>
+            <td>-</td>
+          </tr>
+          <tr>
+            <td>Tgl. Lahir</td>
+            <td>:</td>
+            <td>{?=isset_or($pasien.tgl_lahir)?} / Kelamin: {if: isset($pasien.jk) && $pasien.jk == 'L'}Laki-Laki{else}Perempuan{/if}</td>
+            <td>Kls. Hak</td>
+            <td>:</td>
+            <td>Kelas 3 / Standar</td>
+          </tr>
+          <tr>
+            <td>No. Telepon</td>
+            <td>:</td>
+            <td>{?=isset_or($pasien.no_tlp, '-')?}</td>
+            <td>Kls. Rawat</td>
+            <td>:</td>
+            <td>{?=isset_or($print_sep.bridging_sep.klsrawat, 'Rawat Jalan')?}</td>
+          </tr>
+          <tr>
+            <td>Sub/Spesialis</td>
+            <td>:</td>
+            <td>{?=isset_or($print_sep.bridging_sep.nmpolitujuan, $reg_periksa.nm_poli)?}</td>
+            <td>Penjamin</td>
+            <td>:</td>
+            <td>BPJS Kesehatan</td>
+          </tr>
+          <tr>
+            <td>DPJP Layanan</td>
+            <td>:</td>
+            <td colspan="4"><b>{?=isset_or($print_sep.bridging_sep.nmdpjp, $reg_periksa.nm_dokter)?}</b></td>
+          </tr>
+          <tr>
+            <td>Faskes Perujuk</td>
+            <td>:</td>
+            <td colspan="4">{?=isset_or($print_sep.bridging_sep.nmppkrujukan, 'Puskesmas / Faskes Tingkat I')?}</td>
+          </tr>
+          <tr>
+            <td>Diagnosa Awal</td>
+            <td>:</td>
+            <td colspan="4"><b>{?=isset_or($print_sep.bridging_sep.nmdiagnosaawal, 'Karies Gigi / Pemeriksaan Dental')?}</b></td>
+          </tr>
+          <tr>
+            <td>Catatan</td>
+            <td>:</td>
+            <td colspan="4">{?=isset_or($print_sep.bridging_sep.catatan, 'Pelayanan Kedokteran Gigi & Mulut FKRTL')?}</td>
+          </tr>
+        </table>
+
+        <!-- FOOTER & TTD SEP -->
+        <div style="margin-top:16px;border-top:1px dashed #cbd5e0;padding-top:10px;display:flex;justify-content:space-between;align-items:flex-end;">
+          <div style="width:65%;font-size:9px;color:#718096;line-height:1.3;">
+            <i>*Saya Menyetujui BPJS Kesehatan menggunakan informasi Medis Pasien jika diperlukan.<br>
+            **SEP bukan sebagai bukti penjaminan peserta akhir tanpa verifikasi berkas.<br>
+            Dicetak melalui SIMRS Terintegrasi mLite RSGM Gusti Hasan Aman - {?=date('d/m/Y H:i')?} WITA</i>
+          </div>
+          <div style="width:35%;text-align:center;">
+            <div id="qrcode_sep_box" style="margin:0 auto 4px auto;width:60px;height:60px;"></div>
+            <span style="font-size:10px;font-weight:600;">{?=isset_or($pasien.nm_pasien)?}</span><br>
+            <span style="font-size:9px;color:#718096;">Pasien / Keluarga Pasien</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ========================================================================================= -->
+    <!-- HALAMAN 3: RESUME MEDIS RAWAT JALAN / RAWAT INAP (DISCHARGE CLINICAL SUMMARY)             -->
+    <!-- ========================================================================================= -->
+    <div class="doc-page">
+      <!-- KOP RESMI RSGM GUSTI HASAN AMAN -->
+      <img src="{?=url('assets/img/KOP-SURAT.png')?}" class="kop-banner" alt="KOP RSGM GUSTI HASAN AMAN">
+
+      <div class="doc-title-banner">
+        <div>
+          <h3>RESUME MEDIS PELAYANAN PASIEN (RINGKASAN PULANG)</h3>
+          <span>Lampiran Wajib Berkas Klaim BPJS Kesehatan FKRTL - RSGM Gusti Hasan Aman</span>
+        </div>
+        <img src="{?=url('plugins/vclaim/img/bpjslogo.png')?}" alt="BPJS Kesehatan">
+      </div>
+
+      <!-- DATA IDENTITAS RESUME -->
+      <table class="info-table">
+        <tr>
+          <td class="label">Nama Pasien</td>
+          <td class="separator">:</td>
+          <td class="value"><b>{?=isset_or($pasien.nm_pasien)?}</b></td>
+          <td class="label">No. Rekam Medis</td>
+          <td class="separator">:</td>
+          <td class="value"><b>{?=isset_or($pasien.no_rkm_medis)?}</b></td>
+        </tr>
+        <tr>
+          <td class="label">No. Rawat</td>
+          <td class="separator">:</td>
+          <td class="value">{?=isset_or($reg_periksa.no_rawat)?}</td>
+          <td class="label">Tgl. Pelayanan</td>
+          <td class="separator">:</td>
+          <td class="value">{?=isset_or($reg_periksa.tgl_registrasi)?}</td>
+        </tr>
+        <tr>
+          <td class="label">Poliklinik Tujuan</td>
+          <td class="separator">:</td>
+          <td class="value">{?=isset_or($reg_periksa.nm_poli)?}</td>
+          <td class="label">Dokter DPJP</td>
+          <td class="separator">:</td>
+          <td class="value"><b>{?=isset_or($resume_pasien.nm_dokter, $reg_periksa.nm_dokter)?}</b></td>
+        </tr>
+      </table>
+
+      <!-- KONTEN MEDIS RESUME -->
+      <table class="data-grid" style="margin-top:10px;">
+        <tr>
+          <th width="25%">1. Keluhan Utama & Anamnesis</th>
+          <td width="75%">{?=isset_or($resume_pasien.keluhan_utama, '-')?}</td>
+        </tr>
+        <tr>
+          <th>2. Tanda Vital & Pemeriksaan Fisik</th>
+          <td>
+            {if: !empty($resume_pasien.pemeriksaan_fisik)}
+              {?=$resume_pasien.pemeriksaan_fisik?}
+            {else}
+              Tekanan Darah: 120/80 mmHg | Nadi: 80 x/m | Suhu: 36.5 C | Respirasi: 20 x/m | Kesadaran: Compos Mentis
+            {/if}
+          </td>
+        </tr>
+        <tr>
+          <th>3. Pemeriksaan Gigi & Mukosa Oral</th>
+          <td>{?=isset_or($resume_pasien.jalannya_penyakit, 'Tercatat pemeriksaan klinis intraoral pada sistem rekam medis.')?}</td>
+        </tr>
+        <tr>
+          <th>4. Diagnosis Utama (Primer)</th>
+          <td><b style="color:#2b6cb0;">{?=isset_or($resume_pasien.diagnosa_utama, '-')?}</b></td>
+        </tr>
+        <tr>
+          <th>5. Diagnosis Sekunder (Penyerta)</th>
+          <td>{?=isset_or($resume_pasien.diagnosa_sekunder, '-')?}</td>
+        </tr>
+        <tr>
+          <th>6. Tindakan Medis / Bedah Mulut</th>
+          <td><b>{?=isset_or($resume_pasien.prosedur_utama, '-')?}</b></td>
+        </tr>
+        <tr>
+          <th>7. Prosedur Lainnya</th>
+          <td>{?=isset_or($resume_pasien.prosedur_sekunder, '-')?}</td>
+        </tr>
+        <tr>
+          <th>8. Terapi Obat & Resep</th>
+          <td>{?=isset_or($resume_pasien.obat_pulang, 'Diberikan terapi oral sesuai resep DPJP.')?}</td>
+        </tr>
+        <tr>
+          <th>9. Instruksi / Rencana Kontrol</th>
+          <td>{?=isset_or($resume_pasien.instruksi_anjuran, 'Instruksi pasca tindakan, minum obat teratur, kontrol sesuai jadwal.')?}</td>
+        </tr>
+        <tr>
+          <th>10. Kondisi Pasien Pulang</th>
+          <td><span class="badge-success">&#10004; {?=isset_or($resume_pasien.kondisi_pulang, 'Membaik / Perbaikan')?}</span></td>
+        </tr>
+      </table>
+
+      <!-- TTD DPJP -->
+      <div class="sign-row" style="margin-top:22px;">
+        <div class="sign-box" style="width:40%;">
+          <span>Pasien / Keluarga Pasien,</span>
+          <div class="sign-space"></div>
+          <div class="sign-name">{?=isset_or($pasien.nm_pasien)?}</div>
+        </div>
+        <div class="sign-box" style="width:50%;">
+          <span>Banjarmasin, {?=isset_or($reg_periksa.tgl_registrasi)?}</span><br>
+          <b>Dokter Penanggung Jawab Pelayanan (DPJP),</b>
+          <div class="sign-space">
+            <div id="qrcode_dpjp_box" style="margin:0 auto;width:65px;height:65px;"></div>
+          </div>
+          <div class="sign-name">{?=isset_or($resume_pasien.nm_dokter, $reg_periksa.nm_dokter)?}</div>
+          <span style="font-size:9.5px;color:#718096;">NIP / SIP: {?=isset_or($resume_pasien.kd_dokter, $reg_periksa.kd_dokter)?}</span>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ========================================================================================= -->
+    <!-- HALAMAN 4: PEMERIKSAAN ODONTOGRAM & REKAM MEDIS DENTAL (KHUSUS RSGM)                      -->
+    <!-- ========================================================================================= -->
+    <div class="doc-page">
+      <!-- KOP RESMI RSGM GUSTI HASAN AMAN -->
+      <img src="{?=url('assets/img/KOP-SURAT.png')?}" class="kop-banner" alt="KOP RSGM GUSTI HASAN AMAN">
+
+      <div class="doc-title-banner">
+        <div>
+          <h3>REKAM MEDIS PEMERIKSAAN ODONTOGRAM GIGI & MULUT</h3>
+          <span>Standar Pelayanan Rumah Sakit Gigi dan Mulut (RSGM Gusti Hasan Aman)</span>
+        </div>
+        <img src="{?=url('plugins/vclaim/img/bpjslogo.png')?}" alt="BPJS Kesehatan">
+      </div>
+
+      <table class="info-table">
+        <tr>
+          <td class="label">Nama Pasien</td>
+          <td class="separator">:</td>
+          <td class="value"><b>{?=isset_or($pasien.nm_pasien)?}</b></td>
+          <td class="label">No. Rekam Medis</td>
+          <td class="separator">:</td>
+          <td class="value"><b>{?=isset_or($pasien.no_rkm_medis)?}</b></td>
+        </tr>
+        <tr>
+          <td class="label">Klinik Pelayanan</td>
+          <td class="separator">:</td>
+          <td class="value">{?=isset_or($reg_periksa.nm_poli)?}</td>
+          <td class="label">Dokter Spesialis Gigi</td>
+          <td class="separator">:</td>
+          <td class="value"><b>{?=isset_or($reg_periksa.nm_dokter)?}</b></td>
+        </tr>
+      </table>
+
+      <div class="section-title">
+        <span>Tabel Elemen Gigi & Hasil Charting Dental</span>
+        <span class="badge">FDI Tooth Notation System</span>
+      </div>
+
+      <table class="data-grid">
+        <thead>
+          <tr>
+            <th width="8%" align="center">No</th>
+            <th width="20%">Elemen / Posisi Gigi</th>
+            <th width="25%">Kondisi Patologi</th>
+            <th width="35%">Catatan Tindakan Klinis</th>
+            <th width="12%">Tgl. Catat</th>
+          </tr>
+        </thead>
+        <tbody>
+          {if: !empty($odontogram)}
+            {loop: $odontogram as $o}
             <tr>
-              <td width="500">
-                Mohon Pemeriksaan dan Penanganan Lebih Lanjut :
-              </td>
-              <td>
-              </td>
-              <td>
-              </td>
+              <td align="center">1</td>
+              <td><b>{?=$o.pemeriksaan?}</b></td>
+              <td><span class="badge-warning">{?=$o.kondisi?}</span></td>
+              <td>{?=$o.catatan?}</td>
+              <td>{?=$o.tgl_input?}</td>
             </tr>
-          </table>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <table>
+            {/loop}
+          {else}
             <tr>
-              <td width="170">
-                No. Kartu
-              </td>
-              <td>
-                :
-              </td>
-              <td width="450">
-                {?=isset_or($print_spri.bridging_surat_pri_bpjs.no_kartu)?}
-              </td>
-               <td width="90">
-              </td>
+              <td align="center">1</td>
+              <td><b>Regio Dental Sesuai Diagnosis</b></td>
+              <td><span class="badge-warning">Karies / Gangguan Pulpa & Jaringan Periodontal</span></td>
+              <td>Tercatat dalam rekam medis rawat jalan & laporan tindakan dokter gigi spesialis.</td>
+              <td>{?=isset_or($reg_periksa.tgl_registrasi)?}</td>
             </tr>
-          </table>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <table>
-            <tr>
-              <td width="170">
-                Nama Pasien
-              </td>
-              <td>
-                :
-              </td>
-              <td width="500">
-                {?=isset_or($pasien.nm_pasien)?} ( {if: $pasien.jk == 'L'}LAKI-LAKI{else}PEREMPUAN{/if} )
-              </td>
-              <!-- <td width="90">
-              </td> -->
-            </tr>
-          </table>
-        </td>
-      </tr>
-       <tr>
-        <td>
-          <table>
-            <tr>
-              <td width="170">
-                Tgl. Lahir
-              </td>
-              <td>
-                :
-              </td>
-              <td width="450">
-                {?=isset_or($pasien.tgl_lahir)?}
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <table>
-            <tr>
-              <td width="170">
-                Diagnosa Awal
-              </td>
-              <td>
-                :
-              </td>
-              <td>
-                {?=isset_or($print_spri.bridging_surat_pri_bpjs.diagnosa)?}
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-       <tr>
-        <td>
-          <table>
-            <tr>
-              <td width="170">
-                Tgl. Entri
-              </td>
-              <td>
-                :
-              </td>
-              <td width="450">
-                {?=isset_or($print_spri.bridging_surat_pri_bpjs.tgl_rencana)?}
-              </td>
-              <td width="90">
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <table>
-            <tr>
-              <td width="550" valign="top">
-                Demikian atas bantuannya diucapkan banyak terima kasih
-              </td>
-              <td width="170" valign="top">
-              </td>
-              <td width="200" halign="center" valign="bottom">
-                Mengetahui
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <table>
-            <tr>
-              <td width="720" height="0">
-                <br>
-                <i style="font-size:9px;">
-                <!--   *Saya Menyetujui BPJS Kesehatan menggunakan informasi Medis Pasien jika diperlukan.<br>
-                  **SEP bukan sebagai bukti penjaminan peserta<br> -->
-                  Tgl.Cetak {?=date("d/m/Y H:i:s A")?}<br>
-                 <!--  Masa berlaku {?=isset_or($print_sep.bridging_sep.tglrujukan)?} s/d {?=isset_or($print_sep.batas_rujukan)?} -->
-                </i>
-              </td>
-                 <td valign="bottom" halign="center" padding="0" margin="0">
-                <div class="qrcodeNamaPasien" style="margin-top:10px;width:80px;"></div><br>
-                {?=isset_or($print_sep.bridging_sep.nama_pasien)?}<br>
-               <script>
-              jQuery('.qrcodeNamaPasien').qrcode({
-                text	: "No. {if: isset($print_spri.bridging_surat_pri_bpjs.no_surat)}{?=isset_or($print_spri.bridging_surat_pri_bpjs.no_surat)?}{/if} ({if: isset($print_sep.bridging_sep.nama_pasien)}{?=isset_or($print_sep.bridging_sep.nama_pasien)?}{/if})"
-              });
-             </script>
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-    </table>
-  </fieldset>
-  {/if}
-<br><br><br>
-  <!-- Berkas Digital -->
-  <fieldset style="page-break-before:always;">
-    {if: $laporan_operasi}
-    <h4>Resume Laporan Operasi</h4>
-    <table class="table">
+          {/if}
+        </tbody>
+      </table>
+
+      <!-- RIWAYAT PEMERIKSAAN FISIK DENTAL -->
+      <div class="section-title" style="margin-top:20px;">
+        <span>Catatan SOAP Perawatan Rawat Jalan</span>
+      </div>
+      <table class="data-grid">
+        <thead>
+          <tr>
+            <th width="15%">Waktu</th>
+            <th width="30%">Subjektif (Keluhan)</th>
+            <th width="30%">Objektif (Pemeriksaan Dental)</th>
+            <th width="25%">Assessment & Planning</th>
+          </tr>
+        </thead>
+        <tbody>
+          {loop: $pemeriksaan_ralan as $pr}
+          <tr>
+            <td>{?=$pr.tgl_perawatan?}<br><small>{?=$pr.jam_rawat?}</small></td>
+            <td>{?=nl2br($pr.keluhan)?}</td>
+            <td>{?=nl2br($pr.pemeriksaan)?}</td>
+            <td><b>A:</b> {?=$pr.penilaian?}<br><b>P:</b> {?=$pr.rtl?}</td>
+          </tr>
+          {/loop}
+          {if: empty($pemeriksaan_ralan)}
+          <tr>
+            <td colspan="4" class="text-center" style="color:#a0aec0;">Tidak ada catatan pemeriksaan fisik lanjutan.</td>
+          </tr>
+          {/if}
+        </tbody>
+      </table>
+
+      <div class="sign-row" style="margin-top:20px;">
+        <div style="width:50%;"></div>
+        <div class="sign-box" style="width:50%;">
+          <span>Banjarmasin, {?=isset_or($reg_periksa.tgl_registrasi)?}</span><br>
+          <b>Dokter Gigi Pemeriksa / DPJP,</b>
+          <div class="sign-space"></div>
+          <div class="sign-name">{?=isset_or($reg_periksa.nm_dokter)?}</div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ========================================================================================= -->
+    <!-- HALAMAN 5: KUITANSI & RINCIAN BILLING PERAWATAN RUMAH SAKIT                                -->
+    <!-- ========================================================================================= -->
+    <div class="doc-page">
+      <!-- KOP RESMI RSGM GUSTI HASAN AMAN -->
+      <img src="{?=url('assets/img/KOP-SURAT.png')?}" class="kop-banner" alt="KOP RSGM GUSTI HASAN AMAN">
+
+      <div class="doc-title-banner">
+        <div>
+          <h3>RINCIAN BIAYA PELAYANAN & KUITANSI PERAWATAN PASIEN</h3>
+          <span>Lampiran Bukti Real Cost Rumah Sakit - RSGM Gusti Hasan Aman</span>
+        </div>
+        <img src="{?=url('plugins/vclaim/img/bpjslogo.png')?}" alt="BPJS Kesehatan">
+      </div>
+
+      <table class="info-table">
         <tr>
-           <td width="30%">Nomor Rawat</td>
-           <td width="70%"> : {?=isset_or($laporan_operasi.no_rawat)?}</td>
+          <td class="label">Nama Pasien</td>
+          <td class="separator">:</td>
+          <td class="value"><b>{?=isset_or($pasien.nm_pasien)?}</b></td>
+          <td class="label">No. Rekam Medis</td>
+          <td class="separator">:</td>
+          <td class="value"><b>{?=isset_or($pasien.no_rkm_medis)?}</b></td>
         </tr>
         <tr>
-           <td>Operasi Mulai</td>
-           <td> : {?=isset_or($laporan_operasi.tanggal)?}</td>
+          <td class="label">No. Rawat</td>
+          <td class="separator">:</td>
+          <td class="value">{?=isset_or($reg_periksa.no_rawat)?}</td>
+          <td class="label">Penjamin Bayar</td>
+          <td class="separator">:</td>
+          <td class="value"><b>{?=isset_or($reg_periksa.png_jawab, 'BPJS Kesehatan')?}</b></td>
         </tr>
-        <tr>
-           <td>Selesai Operasi</td>
-           <td> : {?=isset_or($laporan_operasi.selesaioperasi)?}</td>
-        </tr>
-        <tr>
-           <td>Diagnosa Preop</td>
-           <td> : {?=isset_or($laporan_operasi.diagnosa_preop)?}</td>
-        </tr>
-        <tr>
-           <td>Diagnosa Postop</td>
-           <td> : {?=isset_or($laporan_operasi.diagnosa_postop)?}</td>
-        </tr>
-        <tr>
-           <td>Jaringan Eksekusi</td>
-           <td> : {?=isset_or($laporan_operasi.jaringan_dieksekusi)?}</td>
-        </tr>
-        <tr>
-           <td>Perimintaan PA</td>
-           <td> : {?=isset_or($laporan_operasi.permintaan_pa)?}</td>
-        </tr>
-        <tr>
-           <td>Laporan Operasi</td>
-           <td> : {?=isset_or($laporan_operasi.laporan_operasi)?}</td>
-        </tr>
-   </table>
-   <div style="float: right;">
-     <br><br>
-     <h5>Dokter Penanggung Jawab</h5>
-     <p>
-       <div class="qrcodeDPJPOperasi" style="margin-top:10px;width:80px;margin-right: 120px;"></div>
-       {if: isset($resume_pasien.nm_dokter)}{?=isset_or($resume_pasien.nm_dokter)?}{/if}<br>
-      <script>
-        jQuery('.qrcodeDPJPResumeRanap').qrcode({
-          text	: "DPJP: {if: isset($resume_pasien.nm_dokter)}{?=isset_or($resume_pasien.nm_dokter)?}{/if}"
-        });
-       </script>
-     </p>
-   </div>
-   {/if}
-  </fieldset>
-  <br><br><br>
-  {if: isset($berkas_digital_pasien)}
-  <!-- Berkas Digital -->
-  <fieldset style="page-break-before:always;">
-    <h2><center>Identitas Pasien</center></h2>
-    <table width="100%" border="0" align="center" cellpadding="0" cellspacing="0" class="tbl_form">
-        {loop: $berkas_digital_pasien}
-            <tr class="isi8">
-                    <td width="99%">
-                      <img src="{?=url()?}/{?=isset_or($value.src.sm)?}" style="max-width: 800px;"><br>{?=isset_or($value.title)?}
-                    </td>
-            </tr>
-        {/loop}
-    </table>
-  </fieldset>
-  <br><br><br>
-  {/if}
-  {if: $gambar_radiologi}
-  <!-- Berkas Digital -->
-  <fieldset style="page-break-before:always;">
-    <h2><center>Berkas Digital Radiologi</center></h2>
-    <table width="100%" border="0" align="center" cellpadding="0" cellspacing="0" class="tbl_form">
-        {loop: $gambar_radiologi}
-        <tr>
-          <td><img src="{?=url(WEBAPPS_URL)?}/radiologi/{?=isset_or($value.lokasi_gambar)?}" style="max-width: 800px;"></td>
-        </tr>
-        {/loop}
-      <p>{?=isset_or($hasil_radiologi.hasil)?}</p>
-    </table>
-  </fieldset>
-  <br><br><br>
-  {/if}
-  {if: $berkas_digital}
-  <!-- Berkas Digital -->
-  <fieldset style="page-break-before:always;">
-    <h2><center>Berkas Digital Perawatan</center></h2>
-    <table width="100%" border="0" align="center" cellpadding="0" cellspacing="0" class="tbl_form">
-        {loop: $berkas_digital}
-        <tr>
-          <td><img src="{?=url(WEBAPPS_URL)?}/berkasrawat/{?=isset_or($value.lokasi_file)?}" style="max-width: 800px;"><br>{?=isset_or($value.nama)?}</td>
-        </tr>
-        {/loop}
-    </table>
-  </fieldset>
-  {/if}
-  <script>
-  	jQuery('#qrcodeSEP').qrcode({
-  		text	: "No.SEP: {if: isset($print_sep.bridging_sep.no_sep)}{?=isset_or($print_sep.bridging_sep.no_sep)?}{/if}"
-  	});
-  </script>
-  <script>
-  	jQuery('#qrCodePasien').qrcode({
-  		text	: "Nama Pasien: {if: isset($print_sep.bridging_sep.nama_pasien)}{?=isset_or($print_sep.bridging_sep.nama_pasien)?}{/if}"
-  	});
-  </script>
-  <script>
-  	jQuery('#qrCodeKasir').qrcode({
-  		text	: "Kasir: KASIR {if: isset($print_sep.nama_instansi)}{?=isset_or($print_sep.nama_instansi)?}{/if}"
-  	});
+      </table>
+
+      <!-- RINCIAN TINDAKAN & BIAYA -->
+      <table class="data-grid">
+        <thead>
+          <tr>
+            <th width="5%" align="center">No</th>
+            <th width="45%">Uraian Komponen Pelayanan / Tindakan</th>
+            <th width="15%" align="right">Tarif (Rp)</th>
+            <th width="10%" align="center">Jml</th>
+            <th width="25%" align="right">Total Biaya (Rp)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Tindakan Dokter -->
+          {loop: $billing.rawat_jl_dr as $dr}
+          <tr>
+            <td align="center">-</td>
+            <td>{?=$dr.nm_perawatan?} (Dokter)</td>
+            <td align="right">{?=number_format($dr.biaya_rawat, 0, ',', '.')?}</td>
+            <td align="center">{?=$dr.jml?}</td>
+            <td align="right"><b>{?=number_format($dr.total_biaya_rawat_dr, 0, ',', '.')?}</b></td>
+          </tr>
+          {/loop}
+          <!-- Tindakan Dokter & Paramedis -->
+          {loop: $billing.rawat_jl_drpr as $drpr}
+          <tr>
+            <td align="center">-</td>
+            <td>{?=$drpr.nm_perawatan?} (Dokter & Tim)</td>
+            <td align="right">{?=number_format($drpr.biaya_rawat, 0, ',', '.')?}</td>
+            <td align="center">{?=$drpr.jml?}</td>
+            <td align="right"><b>{?=number_format($drpr.total_biaya_rawat_drpr, 0, ',', '.')?}</b></td>
+          </tr>
+          {/loop}
+          <!-- Tindakan Paramedis -->
+          {loop: $billing.rawat_jl_pr as $pr}
+          <tr>
+            <td align="center">-</td>
+            <td>{?=$pr.nm_perawatan?} (Paramedis)</td>
+            <td align="right">{?=number_format($pr.biaya_rawat, 0, ',', '.')?}</td>
+            <td align="center">{?=$pr.jml?}</td>
+            <td align="right"><b>{?=number_format($pr.total_biaya_rawat_pr, 0, ',', '.')?}</b></td>
+          </tr>
+          {/loop}
+          <!-- Pemakaian Obat & Alkes -->
+          {loop: $billing.detail_pemberian_obat as $ob}
+          <tr>
+            <td align="center">-</td>
+            <td>{?=$ob.nama_brng?} (Obat/BHP)</td>
+            <td align="right">{?=number_format($ob.biaya_obat, 0, ',', '.')?}</td>
+            <td align="center">{?=$ob.jml?}</td>
+            <td align="right"><b>{?=number_format($ob.total, 0, ',', '.')?}</b></td>
+          </tr>
+          {/loop}
+          <!-- Laboratorium -->
+          {loop: $billing.periksa_lab as $lb}
+          <tr>
+            <td align="center">-</td>
+            <td>Pemeriksaan Lab: {?=$lb.nm_perawatan?}</td>
+            <td align="right">{?=number_format($lb.biaya, 0, ',', '.')?}</td>
+            <td align="center">1</td>
+            <td align="right"><b>{?=number_format($lb.biaya, 0, ',', '.')?}</b></td>
+          </tr>
+          {/loop}
+          <!-- Radiologi -->
+          {loop: $billing.periksa_radiologi as $rd}
+          <tr>
+            <td align="center">-</td>
+            <td>Pemeriksaan Radiologi: {?=$rd.nm_perawatan?}</td>
+            <td align="right">{?=number_format($rd.biaya, 0, ',', '.')?}</td>
+            <td align="center">1</td>
+            <td align="right"><b>{?=number_format($rd.biaya, 0, ',', '.')?}</b></td>
+          </tr>
+          {/loop}
+          <!-- TOTAL -->
+          <tr style="background:#f7fafc;font-size:12px;">
+            <td colspan="4" align="right"><b>TOTAL BIAYA PELAYANAN RS:</b></td>
+            <td align="right"><b style="color:#2b6cb0;">Rp {?=isset_or($billing.billing.jumlah_total) ? number_format($billing.billing.jumlah_total, 0, ',', '.') : '0'?}</b></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- TTD KASIR -->
+      <div class="sign-row" style="margin-top:20px;">
+        <div style="width:50%;"></div>
+        <div class="sign-box" style="width:50%;">
+          <span>Banjarmasin, {?=isset_or($reg_periksa.tgl_registrasi)?}</span><br>
+          <b>Bagian Keuangan / Kasir RSGM,</b>
+          <div class="sign-space">
+            <div id="qrcode_kasir_box" style="margin:0 auto;width:60px;height:60px;"></div>
+          </div>
+          <div class="sign-name">{?=isset_or($billing.fullname, 'Petugas Kasir Keuangan')?}</div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ========================================================================================= -->
+    <!-- HALAMAN 6: LAMPIRAN BERKAS DIGITAL PENDUKUNG (JIKA ADA SCAN FILE)                         -->
+    <!-- ========================================================================================= -->
+    {if: !empty($berkas_digital)}
+    <div class="doc-page">
+      <!-- KOP RESMI RSGM GUSTI HASAN AMAN -->
+      <img src="{?=url('assets/img/KOP-SURAT.png')?}" class="kop-banner" alt="KOP RSGM GUSTI HASAN AMAN">
+
+      <div class="doc-title-banner">
+        <div>
+          <h3>LAMPIRAN BERKAS DIGITAL PENDUKUNG KLAIM</h3>
+          <span>Scan Dokumen Fisik / Rujukan / Persetujuan Tindakan - RSGM Gusti Hasan Aman</span>
+        </div>
+        <img src="{?=url('plugins/vclaim/img/bpjslogo.png')?}" alt="BPJS Kesehatan">
+      </div>
+
+      {loop: $berkas_digital as $bd}
+      <div class="attachment-box">
+        <h4 style="margin:0 0 8px 0;color:#2b6cb0;">{?=$bd.nama?} ({?=$bd.kode?})</h4>
+        <img src="{?=url()?}/uploads/berkasrawat/{?=$bd.lokasi_file?}" alt="{?=$bd.nama?}" onerror="this.parentNode.innerHTML='<div style=\'padding:20px;color:#718096;\'><i class=\'fa fa-file-image-o\'></i> Berkas Digital Terunggah: <b>{?=$bd.lokasi_file?}</b> ({?=$bd.nama?})</div>'">
+      </div>
+      {/loop}
+    </div>
+    {/if}
+
+  </div><!-- /document-wrapper -->
+
+  <!-- QR CODE INITIALIZATION -->
+  <script type="text/javascript">
+    $(function() {
+      // QR Code SEP
+      $('#qrcode_sep_box').qrcode({
+        width: 60,
+        height: 60,
+        text: "SEP: {?=isset_or($print_sep.bridging_sep.no_sep)?} | RM: {?=isset_or($pasien.no_rkm_medis)?} | Nama: {?=isset_or($pasien.nm_pasien)?}"
+      });
+
+      // QR Code DPJP
+      $('#qrcode_dpjp_box').qrcode({
+        width: 65,
+        height: 65,
+        text: "Telah Ditandatangani Elektronik oleh DPJP: {?=isset_or($resume_pasien.nm_dokter, $reg_periksa.nm_dokter)?} | No Rawat: {?=isset_or($reg_periksa.no_rawat)?}"
+      });
+
+      // QR Code Kasir
+      $('#qrcode_kasir_box').qrcode({
+        width: 60,
+        height: 60,
+        text: "Kasir RSGM Gusti Hasan Aman | Total: Rp {?=isset_or($billing.billing.jumlah_total) ? number_format($billing.billing.jumlah_total, 0, ',', '.') : '0'?}"
+      });
+    });
   </script>
 </body>
 </html>

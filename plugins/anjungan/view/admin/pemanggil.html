@@ -20,14 +20,16 @@
         padding: 10px;
       }
       .panel-body .no_antrian {
-        font-size:90px;
-        font-weight:lighter;
+        font-size:80px;
+        font-weight:bold;
         padding:0px;
         margin: 0;
+        letter-spacing: 2px;
       }
       .panel-footer .no_loket {
-        font-size:40px;
+        font-size:32px;
         color: #000;
+        font-weight: 600;
         padding-top:0;
         padding-bottom:0;
       }
@@ -63,78 +65,175 @@
           right: 0px;
           bottom: 0px;
           height: 40px;
-          width: calc(100% - 0px);
+          width: 100%;
           font-size: 14px;
           color: #fff;
+          background: rgba(0,0,0,0.6);
+          line-height: 40px;
+          text-align: center;
       }
       footer a, footer a:hover {
-        color: #fff;
+        color: #58d0ff;
       }
     </style>
 </head>
 <body>
   <div class="container-fluid">
-  <div class="col-md-4">
-    <a href="{?=url(ADMIN.'/anjungan/pemanggil/?show=panggil_loket')?}">
-      <div class="panel border-success text-center">
-        <div class="panel-footer bg-transparent border-success">
-          <div class="no_loket">Konter <span class="get_Loket"><span></div>
-        </div>
-        <div class="panel-body text-success">
-          <div class="no_antrian">A<span class="antrian_Loket"><span></div>
-        </div>
+    <div class="row" style="margin-top: 15px;">
+      <!-- KARTU NAVIGASI LOKET 1 -->
+      <div class="col-md-4">
+        <a href="{?=url(ADMIN.'/anjungan/pemanggil/?show=panggil_loket&loket=1')?}">
+          <div class="panel {if: $show == 'panggil_loket' && (empty($_GET['loket']) || $_GET['loket'] == '1')}panel-primary{else}panel-default{/if} text-center" style="box-shadow: 0 4px 10px rgba(0,0,0,0.15); border-radius: 8px;">
+            <div class="panel-heading">
+              <div class="no_loket" style="color: inherit; font-size: 18px; font-weight: bold;">
+                <i class="fa fa-id-card"></i> {?=isset_or($nama_loket_1, 'Loket Pendaftaran 1')?} (KONTER 1)
+              </div>
+            </div>
+            <div class="panel-body text-primary">
+              <div class="no_antrian">A-<span class="antrian_Loket1">{?=isset_or($init_loket1_no, '000')?}</span></div>
+            </div>
+          </div>
+        </a>  
       </div>
-    </a>  
-  </div>
-  <div class="col-md-4">
-    <a href="{?=url(ADMIN.'/anjungan/pemanggil/?show=panggil_cs')?}">
-      <div class="panel border-success text-center">
-        <div class="panel-footer bg-transparent border-success">
-          <div class="no_loket">Konter <span class="get_CS"><span></div>
-        </div>
-        <div class="panel-body text-success">
-          <div class="no_antrian">B<span class="antrian_CS"><span></div>
-        </div>
+
+      <!-- KARTU NAVIGASI LOKET 2 / CUSTOMER SERVICE -->
+      <div class="col-md-4">
+        {if: $display_card2 == 'loket2'}
+        <a href="{?=url(ADMIN.'/anjungan/pemanggil/?show=panggil_loket&loket=2')?}">
+          <div class="panel {if: $show == 'panggil_loket' && (!empty($_GET['loket']) && $_GET['loket'] == '2')}panel-primary{else}panel-default{/if} text-center" style="box-shadow: 0 4px 10px rgba(0,0,0,0.15); border-radius: 8px;">
+            <div class="panel-heading">
+              <div class="no_loket" style="color: inherit; font-size: 18px; font-weight: bold;">
+                <i class="fa fa-id-card"></i> {?=isset_or($nama_loket_2, 'Loket Pendaftaran 2')?} (KONTER 2)
+              </div>
+            </div>
+            <div class="panel-body text-primary">
+              <div class="no_antrian">A-<span class="antrian_Loket2">{?=isset_or($init_card2_no, '000')?}</span></div>
+            </div>
+          </div>
+        </a>
+        {else}
+        <a href="{?=url(ADMIN.'/anjungan/pemanggil/?show=panggil_cs&loket=1')?}">
+          <div class="panel {if: $show == 'panggil_cs'}panel-success{else}panel-default{/if} text-center" style="box-shadow: 0 4px 10px rgba(0,0,0,0.15); border-radius: 8px;">
+            <div class="panel-heading">
+              <div class="no_loket" style="color: inherit; font-size: 18px; font-weight: bold;">
+                <i class="fa fa-headphones"></i> CUSTOMER SERVICE (KONTER 1)
+              </div>
+            </div>
+            <div class="panel-body text-success">
+              <div class="no_antrian">B-<span class="antrian_CS">{?=isset_or($init_card2_no, '000')?}</span></div>
+            </div>
+          </div>
+        </a>
+        {/if}
       </div>
-    </a>  
-  </div>
-  <div class="col-md-4">
-    <a href="{?=url(ADMIN.'/anjungan/pemanggil/?show=panggil_apotek')?}">
-      <div class="panel border-success text-center">
-        <div class="panel-footer bg-transparent border-success">
-          <div class="no_loket">Konter <span class="get_Apotek"><span></div>
-        </div>
-        <div class="panel-body text-success">
-          <div class="no_antrian">F<span class="antrian_Apotek"><span></div>
-        </div>
+
+      <!-- KARTU NAVIGASI FARMASI & APOTEK -->
+      <div class="col-md-4">
+        <a href="{?=url(ADMIN.'/anjungan/pemanggil/?show=panggil_apotek&loket=1')?}">
+          <div class="panel {if: $show == 'panggil_apotek'}panel-warning{else}panel-default{/if} text-center" style="box-shadow: 0 4px 10px rgba(0,0,0,0.15); border-radius: 8px;">
+            <div class="panel-heading">
+              <div class="no_loket" style="color: inherit; font-size: 18px; font-weight: bold;">
+                <i class="fa fa-medkit"></i> FARMASI & APOTEK (KONTER 1)
+              </div>
+            </div>
+            <div class="panel-body text-warning">
+              <div class="no_antrian">F-<span class="antrian_Apotek">{?=isset_or($init_apotek_no, '000')?}</span></div>
+            </div>
+          </div>
+        </a>  
       </div>
-    </a>  
-  </div>
+    </div>
+
   {if: $show}
   <div class="container text-center">
     <div class="row">
       <div class="card-deck">
           {loop: $loket}
           <div class="{if: isset($_GET['loket']) && $_GET['loket'] != $value}hidden{/if}">
-            <div class="col-xs-12 col-sm-6 col-md-4 col-lg-4 mb-5">
-              <div class="panel" style="color:#000;">
-                <div class="panel-heading" style="font-size:32px;">Loket {?=isset_or($value)?}</div>
-                <div class="panel-body">
-                  <h5 class="panel-title" style="font-size:72px;">{?=strtoupper($namaloket)?}{?=isset_or($antrian)?}</h5>
+            <div class="col-xs-12 col-sm-8 col-sm-offset-2 col-md-6 col-md-offset-3 mb-5">
+              <div class="panel panel-info" style="color:#000; box-shadow: 0 6px 20px rgba(0,0,0,0.2); border-radius: 12px; overflow: hidden;">
+                <div class="panel-heading" style="font-size:22px; font-weight:bold;">
+                  {if: $panggil_loket == 'panggil_cs'}<i class="fa fa-headphones"></i> Customer Service (B) - Konter {$value}{elseif: $panggil_loket == 'panggil_apotek'}<i class="fa fa-medkit"></i> Farmasi & Apotek (F) - Konter {$value}{else}<i class="fa fa-id-card"></i> {if: $value == 2}{?=isset_or($nama_loket_2, 'Loket Pendaftaran 2')?}{else}{?=isset_or($nama_loket_1, 'Loket Pendaftaran 1')?}{/if} (A) - Konter {$value}{/if}
                 </div>
-                <div class="panel-footer">
-                  <div class="btn-group btn-group-justified">
-                    <a href="#" class="btn btn-primary" style="font-size:32px;">{?=isset_or($noantrian)?}</a>
-                    <a href="#" class="btn btn-primary" style="font-size:32px;" onclick="panggil({?=isset_or($antrian)?})"><i class="fa fa-bullhorn"></i></a>
-                    <a href="{?=url(ADMIN.'/anjungan/pemanggil/?show='.$panggil_loket.'&loket='.$value)?}" class="btn btn-primary" style="font-size:32px;"><i class="fa fa-forward"></i></a>
+                <div class="panel-body" style="padding: 25px 15px;">
+                  <div style="font-size: 15px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Nomor Antrian Sedang Dipanggil</div>
+                  <h5 class="panel-title" id="display_num_{$value}" style="font-size:86px; font-weight:900; color:#0284c7; margin: 15px 0; letter-spacing: 2px;">
+                    {?=strtoupper($namaloket)?}-{?=sprintf("%03d", intval(isset_or($antrian, 0)))?}
+                  </h5>
+                </div>
+                <div class="panel-footer" style="background: #f8fafc; padding: 20px;">
+                  <!-- Audio Status Alert saat suara TV berbunyi -->
+                  <div id="calling_status_alert_{$value}" class="alert alert-success" style="display: none; padding: 10px 14px; margin-bottom: 12px; font-weight: bold; border-radius: 8px;">
+                    <i class="fa fa-bullhorn"></i> <span id="calling_status_text_{$value}">Sedang mengumumkan panggilan di TV...</span>
                   </div>
-                  <br>
+
+                  <!-- Action Buttons with clear separation: PANGGIL MANUAL vs AMBIL BERIKUTNYA / SKIP -->
+                  <div style="margin-bottom: 15px;">
+                    <!-- TOMBOL 1 (UTAMA): PANGGIL SUARA MANUAL KE TV & SPEAKER -->
+                    <button type="button" id="btnCall_{$value}" class="btn btn-success btn-lg btn-block" style="font-size: 20px; font-weight: bold; padding: 14px; box-shadow: 0 4px 12px rgba(40,167,69,0.35); border-radius: 8px;" onclick="panggilSuara('{?=str_replace('panggil_','',isset_or($panggil_loket,'loket'))?}', '{$value}')">
+                      <i class="fa fa-bullhorn"></i> PANGGIL SUARA {if: $panggil_loket == 'panggil_loket'}(LOKET {$value}){/if}
+                    </button>
+
+                    <!-- TOMBOL KEDUA: BERIKUTNYA/SKIP (TANPA SUARA) & PANGGIL ULANG -->
+                    <div class="row" style="margin-top: 10px;">
+                      <div class="col-xs-7" style="padding-right: 4px;">
+                        <button type="button" id="btnNext_{$value}" class="btn btn-primary btn-block" style="font-size: 14px; font-weight: bold; padding: 10px 6px; box-shadow: 0 3px 8px rgba(13,110,253,0.3); border-radius: 8px;" onclick="panggilNext('{?=str_replace('panggil_','',isset_or($panggil_loket,'loket'))?}', '{$value}', event, true)" title="Siapkan nomor berikutnya tanpa bersuara (bisa untuk skip antrian)">
+                          <i class="fa fa-step-forward"></i> BERIKUTNYA / SKIP
+                        </button>
+                      </div>
+                      <div class="col-xs-5" style="padding-left: 4px;">
+                        <button type="button" id="btnRecall_{$value}" class="btn btn-warning btn-block" style="font-size: 14px; font-weight: bold; padding: 10px 6px; box-shadow: 0 3px 8px rgba(243,156,18,0.3); border-radius: 8px;" onclick="panggilUlang('{?=str_replace('panggil_','',isset_or($panggil_loket,'loket'))?}', '{$value}')" title="Ulangi panggilan suara nomor saat ini">
+                          <i class="fa fa-volume-up"></i> Panggil Ulang
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Ringkasan Statistik Antrian Hari Ini -->
+                  <div style="background: #e2e8f0; border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; font-size: 13px; color: #334155;">
+                    <div class="row text-center">
+                      <div class="col-xs-4" style="border-right: 1px solid #cbd5e1; padding: 2px 4px;">
+                        <div style="font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 600;">Total Antrian</div>
+                        <strong id="display_total_{$value}" style="font-size: 18px; color: #0284c7;">{?=isset_or($noantrian, 0)?}</strong>
+                      </div>
+                      <div class="col-xs-4" style="border-right: 1px solid #cbd5e1; padding: 2px 4px;">
+                        <div style="font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 600;">Sisa Menunggu</div>
+                        <strong id="display_waiting_{$value}" style="font-size: 18px; color: #d97706;">{?=isset_or($waiting_count, 0)?}</strong>
+                      </div>
+                      <div class="col-xs-4" style="padding: 2px 4px;">
+                        <div style="font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 600;">Berikutnya</div>
+                        <strong id="display_next_waiting_{$value}" style="font-size: 18px; color: #16a34a;">{?=isset_or($next_waiting, '-')?}</strong>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- KOTAK DAFTAR NOMOR ANTRIAN YANG BELUM DIPANGGIL -->
+                  <div style="text-align: left; background: #fff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 12px; margin-bottom: 15px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                      <strong style="color: #334155; font-size: 12px;">
+                        <i class="fa fa-list-ol text-warning"></i> Nomor Belum Dipanggil (<span id="display_waiting_badge_{$value}">{?=count($waiting_numbers)?}</span>):
+                      </strong>
+                      <small class="text-muted" style="font-size: 11px;">Klik nomor untuk panggil langsung</small>
+                    </div>
+                    <div id="waiting_pills_container_{$value}" style="max-height: 90px; overflow-y: auto; display: flex; flex-wrap: wrap; gap: 6px; padding-top: 4px;">
+                      {if: !empty($waiting_numbers)}
+                        {loop: $waiting_numbers as $wn}
+                          <button type="button" class="btn btn-xs btn-default" onclick="directCallNumber('{$wn}', false, '{$value}')" style="font-weight: bold; border-color: #f59e0b; color: #b45309; background: #fffbeb; border-radius: 12px; padding: 3px 8px; font-size: 12px;" title="Klik untuk panggil nomor {$wn} ke Konter {$value}">
+                            <i class="fa fa-volume-up"></i> {$wn}
+                          </button>
+                        {/loop}
+                      {else}
+                        <span class="text-muted" style="font-size: 12px; font-style: italic;"><i class="fa fa-check-circle text-success"></i> Tidak ada antrian yang menunggu.</span>
+                      {/if}
+                    </div>
+                  </div>
+
                   <div class="col" id="form_simpan_no_rkm_medis_{?=isset_or($value)?}">
-                      <input type="hidden" name="noantrian" value="{?=isset_or($antrian)?}">
+                      <input type="hidden" name="noantrian" value="{?=isset_or($antrian, 0)?}">
                       <div class="input-group input-group-lg">
-                          <input type="text" class="form-control form-control-lg" name="no_rkm_medis_{?=isset_or($value)?}" placeholder="Input Nomor RM">
-                          <span class="input-group-btn"><!-- Append button addon using class input-group-lg -->
-                              <button class="btn btn-danger simpan_no_rkm_medis_{?=isset_or($value)?}">Simpan</button>
+                          <input type="text" class="form-control form-control-lg" name="no_rkm_medis_{?=isset_or($value)?}" placeholder="Input Nomor RM Pasien">
+                          <span class="input-group-btn">
+                              <button class="btn btn-primary simpan_no_rkm_medis_{?=isset_or($value)?}">Simpan RM</button>
                           </span>
                       </div>
                   </div>
@@ -146,78 +245,586 @@
       </div>
     </div>
   </div>
-  <div class="text-center" style="width: 300px;margin: 20px auto;">
-    <form action="">
-      <input type="hidden" name="t" value="{?=$_SESSION['token']?}">
-      <input type="hidden" name="show" value="{?=isset_or($panggil_loket)?}">
-      <input type="hidden" name="reset" value="{?=isset($_GET['loket'])?$_GET['loket']:'1'?}">
-      <div class="row">
-        <div class="col">
-            <div class="input-group input-group-lg">
-                <input type="text" class="form-control form-control-lg" name="antrian" placeholder="Input Nomor Antrian">
-                <span class="input-group-btn"><!-- Append button addon using class input-group-lg -->
-                    <button class="btn btn-danger" type="submit">Panggil</button>
-                </span>
-            </div>
+
+  <div class="text-center" style="max-width: 540px; margin: 15px auto 30px auto; padding: 18px 20px; background: #ffffff; border-radius: 12px; box-shadow: 0 3px 15px rgba(0,0,0,0.1);">
+    <label style="font-size: 15px; font-weight: bold; color: #1e293b; margin-bottom: 10px; display: block;">
+      <i class="fa fa-sliders text-primary"></i> Lompat / Sinkronkan Nomor Antrian:
+    </label>
+    <div class="input-group input-group-lg" style="margin-bottom: 10px;">
+        <span class="input-group-addon" style="font-weight: bold; background: #f1f5f9; color: #0284c7;">
+          {if: $panggil_loket == 'panggil_cs'}B-{elseif: $panggil_loket == 'panggil_apotek'}F-{else}A-{/if}
+        </span>
+        <input type="number" min="1" class="form-control" id="inputJumpAntrian" placeholder="Ketik nomor antrian (contoh: 10)">
+    </div>
+    <div class="row">
+      <div class="col-xs-6" style="padding-right: 5px;">
+        <button type="button" class="btn btn-primary btn-block" style="font-weight: bold; padding: 10px 4px;" onclick="jumpAntrian(true)" title="Ubah angka nomor antrian tanpa mengeluarkan suara (cocok saat reset/sinkronisasi)">
+          <i class="fa fa-refresh"></i> Sinkron Nomor (Tanpa Suara)
+        </button>
+      </div>
+      <div class="col-xs-6" style="padding-left: 5px;">
+        <button type="button" class="btn btn-success btn-block" style="font-weight: bold; padding: 10px 4px;" onclick="jumpAntrian(false)" title="Panggil suara nomor tertentu secara langsung">
+          <i class="fa fa-bullhorn"></i> Panggil Suara Nomor Ini
+        </button>
+      </div>
+    </div>
+    <small class="text-muted" style="display:block; margin-top: 10px;">
+      Gunakan <b>Sinkron Nomor (Tanpa Suara)</b> bila display ter-reset dan ingin langsung meloncat ke nomor tiket saat ini tanpa membunyikan speaker.
+    </small>
+  </div>
+
+  <!-- TABEL MONITORING & MANAJEMEN ANTRIAN HARI INI -->
+  <div class="container" style="max-width: 1100px; margin: 0 auto 30px auto;">
+    <div class="panel panel-default" style="box-shadow: 0 4px 18px rgba(0,0,0,0.08); border-radius: 12px; overflow: hidden; border: 1px solid #cbd5e1;">
+      <div class="panel-heading" style="background: linear-gradient(135deg, #1e293b 0%, #334155 100%); color: #fff; padding: 14px 20px;">
+        <div class="row" style="display: flex; align-items: center; flex-wrap: wrap;">
+          <div class="col-sm-6 text-left">
+            <h4 style="margin: 0; font-size: 17px; font-weight: bold; color: #f8fafc;">
+              <i class="fa fa-list-alt text-info"></i> Monitoring Antrian Hari Ini ({?=date('d/m/Y')?})
+            </h4>
+            <small style="color: #94a3b8; font-size: 12px;">Pantau status seluruh tiket dan panggil/lewati dengan satu klik</small>
+          </div>
+          <div class="col-sm-6 text-right">
+            <button type="button" class="btn btn-xs btn-default" onclick="loadAntrianList()" style="font-weight: bold; padding: 5px 12px; margin-right: 5px;">
+              <i class="fa fa-refresh"></i> Refresh Data
+            </button>
+            <span class="label label-info" id="badgeLastUpdated" style="font-size: 11px; padding: 5px 8px;">Otomatis Real-Time</span>
+          </div>
         </div>
       </div>
-    </form>
+
+      <div class="panel-body" style="padding: 18px 20px;">
+        <!-- Filter Tabs & Pencarian Cepat -->
+        <div class="row" style="margin-bottom: 15px;">
+          <div class="col-md-8 col-sm-12 text-left" style="margin-bottom: 10px;">
+            <div class="btn-group" role="group" id="filterStatusGroup">
+              <button type="button" class="btn btn-sm btn-primary active btn-filter-tab" data-filter="all" onclick="filterQueueStatus('all', this)">
+                Semua (<span id="count_all">0</span>)
+              </button>
+              <button type="button" class="btn btn-sm btn-default btn-filter-tab" data-filter="0" onclick="filterQueueStatus('0', this)">
+                <i class="fa fa-clock-o text-warning"></i> Menunggu (<span id="count_waiting">0</span>)
+              </button>
+              <button type="button" class="btn btn-sm btn-default btn-filter-tab" data-filter="1" onclick="filterQueueStatus('1', this)">
+                <i class="fa fa-bullhorn text-success"></i> Dipanggil (<span id="count_calling">0</span>)
+              </button>
+              <button type="button" class="btn btn-sm btn-default btn-filter-tab" data-filter="done" onclick="filterQueueStatus('done', this)">
+                <i class="fa fa-check text-info"></i> Selesai (<span id="count_done">0</span>)
+              </button>
+              <button type="button" class="btn btn-sm btn-default btn-filter-tab" data-filter="4" onclick="filterQueueStatus('4', this)">
+                <i class="fa fa-forward text-danger"></i> Dilewati / Skip (<span id="count_skipped">0</span>)
+              </button>
+            </div>
+          </div>
+          <div class="col-md-4 col-sm-12">
+            <div class="input-group input-group-sm">
+              <input type="text" id="searchQueueInput" class="form-control" placeholder="Cari No. Tiket / RM / Nama...">
+              <span class="input-group-addon" style="background: #f8fafc;"><i class="fa fa-search text-muted"></i></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tabel Antrian Hari Ini -->
+        <div class="table-responsive" style="max-height: 440px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px;">
+          <table class="table table-striped table-hover table-condensed" id="tableAntrianHariIni" style="margin-bottom: 0;">
+            <thead style="background: #f8fafc; color: #334155; position: sticky; top: 0; z-index: 2; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+              <tr>
+                <th style="width: 50px; text-align: center;">No</th>
+                <th style="width: 110px;">No. Tiket</th>
+                <th style="width: 90px; text-align: center;">Jam Ambil</th>
+                <th style="width: 110px; text-align: center;">Konter</th>
+                <th style="width: 130px; text-align: center;">Status</th>
+                <th>No. RM / Pasien</th>
+                <th style="width: 230px; text-align: center;">Aksi Petugas</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyAntrianList">
+              <tr>
+                <td colspan="7" class="text-center text-muted" style="padding: 25px;">
+                  <i class="fa fa-spinner fa-spin"></i> Memuat data antrian hari ini...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel-footer" style="background: #f8fafc; font-size: 12px; color: #475569; text-align: left; line-height: 1.6;">
+        <i class="fa fa-lightbulb-o text-warning" style="font-size: 14px;"></i> <b>Tips Operasional Petugas:</b>
+        <ul style="margin: 4px 0 0 18px; padding-left: 0;">
+          <li><b>Panggil Cepat:</b> Klik tombol <span class="label label-success" style="font-size: 10px;"><i class="fa fa-bullhorn"></i> Panggil</span> pada tabel atau kotak nomor di atas untuk langsung memanggil pasien tersebut ke konter Anda.</li>
+          <li><b>Lewati / Skip:</b> Jika nomor dipanggil tidak hadir, klik tombol <span class="label label-danger" style="font-size: 10px;"><i class="fa fa-forward"></i> Skip</span>. Nomor tersebut tidak akan hilang, melainkan tersimpan di tab <b>Dilewati / Skip</b> sehingga tetap dapat dipanggil jika pasien datang belakangan.</li>
+          <li><b>Ganti Konter / Panggilan:</b> Sistem otomatis menandai konter pemanggil aktif (<b>Konter {?=isset($_GET['loket']) && $_GET['loket'] != '' ? $_GET['loket'] : '1'?}</b>).</li>
+        </ul>
+      </div>
+    </div>
   </div>
   {/if}
 
-  <div class="container">
-  	<ul class="text-white">
-  		<li>Klik tombol <i class="fa fa-forward"></i> 1x untuk memanggil antrian selanjutnya</li>
-  		<li>Klik tombol <i class="fa fa-bullhorn"></i> 1x untuk memanggil ulang antrian</li>
-  		<li>Untuk menyesuaikan urutan, masukkan nomor urut pada kolom lompat dan klik tombol panggil 1x</li>
-  		<li>Angka di Sebelah Kiri Tombol Pemanggil Menunjukan Jumlah Nomor Antrian Yang Telah diambil Pasien</li>
-  	</ul>
+  <div class="container" style="margin-bottom: 60px;">
+    <div class="alert alert-info text-left" style="background: rgba(13, 37, 68, 0.85); color: #e2e8f0; border: 1px solid rgba(255,255,255,0.15);">
+      <h4 style="color: #38bdf8; margin-top: 0;"><i class="fa fa-info-circle"></i> Petunjuk Petugas Pemanggil Antrian:</h4>
+      <ul style="padding-left: 20px; line-height: 1.8;">
+        <li>Klik tombol <b class="text-primary"><i class="fa fa-step-forward"></i> BERIKUTNYA / SKIP (Biru)</b> untuk memajukan nomor antrian <b>100% tanpa suara</b>. Petugas dapat menekan tombol ini berkali-kali untuk menyinkronkan nomor atau melewati antrian kosong tanpa suara speaker.</li>
+        <li>Ketik nomor dan klik <b class="text-primary"><i class="fa fa-refresh"></i> Sinkron Nomor (Tanpa Suara)</b> jika ingin langsung meloncat ke nomor tiket tertentu (misal setelah display ter-reset) tanpa bersuara.</li>
+        <li>Klik tombol <b class="text-success"><i class="fa fa-bullhorn"></i> PANGGIL SUARA (Hijau)</b> ketika petugas sudah siap memanggil pasien ke konternya melalui pengeras suara TV.</li>
+        <li>Klik tombol <b class="text-warning"><i class="fa fa-volume-up"></i> Panggil Ulang (Kuning)</b> untuk mengulangi suara panggilan jika pasien belum datang.</li>
+      </ul>
+    </div>
   </div>
-  <div style="display: none;">{?=isset_or($powered)?}</div>
+
+  <footer>
+    Powered by <a href="https://mlite.id/" target="_blank">mLITE</a>
+  </footer>
+  <div style="display: none;">Powered by <a href="https://mlite.id/">mLITE</a></div>
+
   <script>
-  function panggil(noantrian) {
-    var loket = '';
-    {if: isset($_GET['loket']) && $_GET['loket'] !=''}
-  	var loket = "{?=$_GET['loket']?}";
-    {/if}
-    alert('Panggil ' + loket + ' - ' + noantrian);
-  	$.ajax({
-  		url: '{?=url()?}/anjungan/setpanggil',
-  		dataType: 'json',
-  		data: {
-  			noantrian: noantrian,
-  			type: '{?=str_replace("panggil_","",isset_or($_GET['show'], ''))?}',
-  			loket: loket,
-  		},
-  		success: function(data) {
-  			console.log(data);
-  		},
-  		error: function(xhr) {
-  			console.log(xhr.status);
-  		}
-  	});
+  var isCalling = false;
+  var curShow = '{?=isset_or($panggil_loket, "panggil_loket")?}';
+  var curLoket = '{?=isset($_GET['loket']) && $_GET['loket'] != '' ? $_GET['loket'] : '1'?}';
+  var curType = '{?=str_replace("panggil_","",isset_or($panggil_loket,"loket"))?}';
+  var currentFilterStatus = 'all';
+  var cachedAntrianList = [];
+
+  // Live real-time counter polling (sync with TV Display)
+  function refreshCallerCounters() {
+    $.ajax({
+      url: '{?=url()?}/anjungan/ajax?show=loket-display',
+      dataType: 'json',
+      cache: false,
+      success: function(data) {
+        if (!data) return;
+
+        if (data.loket1) {
+          $('.antrian_Loket1').text(data.loket1.antrian || '000');
+        }
+        if (data.card2) {
+          $('.antrian_Loket2').text(data.card2.antrian || '000');
+          if (data.card2.mode === 'cs') {
+            $('.antrian_CS').text(data.card2.antrian || '000');
+          }
+        }
+        if (data.loket) {
+          $('.antrian_Loket').text(data.loket.antrian || '000');
+          $('.get_Loket').text(data.loket.counter || '1');
+          if (curShow === 'panggil_loket') {
+            if (typeof data.loket.total !== 'undefined') $('[id^=display_total_]').text(data.loket.total);
+            if (typeof data.loket.waiting !== 'undefined') $('[id^=display_waiting_]').text(data.loket.waiting);
+          }
+        }
+        if (data.cs) {
+          $('.antrian_CS').text(data.cs.antrian || '000');
+          $('.get_CS').text(data.cs.counter || '1');
+          if (curShow === 'panggil_cs') {
+            if (typeof data.cs.total !== 'undefined') $('[id^=display_total_]').text(data.cs.total);
+            if (typeof data.cs.waiting !== 'undefined') $('[id^=display_waiting_]').text(data.cs.waiting);
+          }
+        }
+        if (data.apotek) {
+          $('.antrian_Apotek').text(data.apotek.antrian || '000');
+          $('.get_Apotek').text(data.apotek.counter || '1');
+          if (curShow === 'panggil_apotek') {
+            if (typeof data.apotek.total !== 'undefined') $('[id^=display_total_]').text(data.apotek.total);
+            if (typeof data.apotek.waiting !== 'undefined') $('[id^=display_waiting_]').text(data.apotek.waiting);
+          }
+        }
+
+        // Sinkronkan angka kartu tengah dengan nomor aktif saat ini jika tidak sedang request
+        if (!isCalling) {
+          if (curShow === 'panggil_loket') {
+            var activeInfo = (curLoket === '2') ? data.loket2 : data.loket1;
+            if (activeInfo && activeInfo.antrian) {
+              $('#display_num_' + curLoket).text('A-' + activeInfo.antrian);
+              $('input:hidden[name=noantrian]').val(activeInfo.raw_antrian);
+            }
+          } else if (curShow === 'panggil_cs') {
+            if (data.cs && data.cs.antrian) {
+              $('#display_num_' + curLoket).text('B-' + data.cs.antrian);
+              $('input:hidden[name=noantrian]').val(data.cs.raw_antrian);
+            }
+          } else if (curShow === 'panggil_apotek') {
+            if (data.apotek && data.apotek.antrian) {
+              $('#display_num_' + curLoket).text('F-' + data.apotek.antrian);
+              $('input:hidden[name=noantrian]').val(data.apotek.raw_antrian);
+            }
+          }
+        }
+      }
+    });
   }
+
+  // Load detailed queue list & summary (Real-Time Monitoring Table)
+  function loadAntrianList() {
+    $.ajax({
+      url: '{?=url()?}/anjungan/ajax?show=antrian-list&type=' + curType,
+      dataType: 'json',
+      cache: false,
+      success: function(res) {
+        if (!res || !res.summary) return;
+
+        var sm = res.summary;
+        // Update summary counter badges in filter tab
+        $('#count_all').text(sm.total || 0);
+        $('#count_waiting').text(sm.waiting || 0);
+        $('#count_calling').text(sm.calling || 0);
+        $('#count_done').text(sm.done || 0);
+        $('#count_skipped').text(sm.skipped || 0);
+
+        // Update card stats
+        $('#display_total_' + curLoket).text(sm.total || 0);
+        $('#display_waiting_' + curLoket).text(sm.waiting || 0);
+        $('#display_waiting_badge_' + curLoket).text(sm.waiting || 0);
+        $('#display_next_waiting_' + curLoket).text(sm.next_waiting || '-');
+
+        // Render waiting pills container
+        var pillsContainer = $('#waiting_pills_container_' + curLoket);
+        if (pillsContainer.length) {
+          if (sm.waiting_numbers && sm.waiting_numbers.length > 0) {
+            var pillHtml = '';
+            for (var i = 0; i < sm.waiting_numbers.length; i++) {
+              var wn = sm.waiting_numbers[i];
+              pillHtml += '<button type="button" class="btn btn-xs btn-default" onclick="directCallNumber(\'' + wn + '\', false, \'' + curLoket + '\')" style="font-weight: bold; border-color: #f59e0b; color: #b45309; background: #fffbeb; border-radius: 12px; padding: 3px 8px; font-size: 12px; margin-right: 4px; margin-bottom: 4px;" title="Klik untuk panggil nomor ' + wn + ' ke Konter ' + curLoket + '">';
+              pillHtml += '<i class="fa fa-volume-up"></i> ' + wn;
+              pillHtml += '</button>';
+            }
+            pillsContainer.html(pillHtml);
+          } else {
+            pillsContainer.html('<span class="text-muted" style="font-size: 12px; font-style: italic;"><i class="fa fa-check-circle text-success"></i> Tidak ada antrian yang menunggu.</span>');
+          }
+        }
+
+        // Cache data & render table
+        cachedAntrianList = res.data || [];
+        renderAntrianTable();
+
+        var now = new Date();
+        var timeStr = ('0' + now.getHours()).slice(-2) + ':' + ('0' + now.getMinutes()).slice(-2) + ':' + ('0' + now.getSeconds()).slice(-2);
+        $('#badgeLastUpdated').text('Update ' + timeStr);
+      }
+    });
+  }
+
+  // Render Table based on filter and search query
+  function renderAntrianTable() {
+    var tbody = $('#tbodyAntrianList');
+    if (!tbody.length) return;
+
+    var query = ($('#searchQueueInput').val() || '').toLowerCase().trim();
+    var filtered = [];
+
+    for (var i = 0; i < cachedAntrianList.length; i++) {
+      var item = cachedAntrianList[i];
+
+      // Filter by status tab
+      if (currentFilterStatus === '0' && item.status !== '0') continue;
+      if (currentFilterStatus === '1' && item.status !== '1') continue;
+      if (currentFilterStatus === 'done' && (item.status !== '2' && item.status !== '3')) continue;
+      if (currentFilterStatus === '4' && item.status !== '4') continue;
+
+      // Filter by search query
+      if (query !== '') {
+        var strFormatted = (item.formatted || '').toLowerCase();
+        var strNorm = (item.no_rkm_medis || '').toLowerCase();
+        var strNama = (item.nm_pasien || '').toLowerCase();
+        if (strFormatted.indexOf(query) === -1 && strNorm.indexOf(query) === -1 && strNama.indexOf(query) === -1) {
+          continue;
+        }
+      }
+
+      filtered.push(item);
+    }
+
+    if (filtered.length === 0) {
+      tbody.html('<tr><td colspan="7" class="text-center text-muted" style="padding: 25px;"><i class="fa fa-info-circle"></i> Tidak ada data antrian yang sesuai kriteria.</td></tr>');
+      return;
+    }
+
+    var html = '';
+    for (var j = 0; j < filtered.length; j++) {
+      var row = filtered[j];
+      var patientInfo = '-';
+      if (row.no_rkm_medis) {
+        patientInfo = '<b>' + row.no_rkm_medis + '</b>' + (row.nm_pasien ? (' - ' + row.nm_pasien) : '');
+      }
+
+      var actionButtons = '<div class="btn-group" role="group">';
+      actionButtons += '<button type="button" class="btn btn-xs btn-success" onclick="directCallNumber(\'' + row.formatted + '\', false, \'' + curLoket + '\')" title="Panggil suara nomor ini ke Konter ' + curLoket + '"><i class="fa fa-bullhorn"></i> Panggil</button>';
+      actionButtons += '<button type="button" class="btn btn-xs btn-primary" onclick="directCallNumber(\'' + row.formatted + '\', true, \'' + curLoket + '\')" title="Siapkan nomor di konter tanpa suara"><i class="fa fa-step-forward"></i> Siapkan</button>';
+      if (row.status === '0' || row.status === '1') {
+        actionButtons += '<button type="button" class="btn btn-xs btn-danger" onclick="skipQueueNumber(' + row.kd + ', \'' + row.formatted + '\')" title="Tandai nomor ini dilewati / skip"><i class="fa fa-forward"></i> Skip</button>';
+      }
+      actionButtons += '</div>';
+
+      html += '<tr>';
+      html += '<td class="text-center" style="vertical-align: middle;">' + (j + 1) + '</td>';
+      html += '<td style="vertical-align: middle;"><strong style="font-size: 15px; color: #0284c7;">' + row.formatted + '</strong></td>';
+      html += '<td class="text-center" style="vertical-align: middle;"><span class="badge" style="background: #e2e8f0; color: #334155; font-size: 11px;">' + row.start_time + '</span></td>';
+      html += '<td class="text-center" style="vertical-align: middle;">' + (row.loket_label || '-') + '</td>';
+      html += '<td class="text-center" style="vertical-align: middle;"><span class="label label-' + row.status_badge + '" style="font-size: 11px; padding: 4px 8px;">' + row.status_label + '</span></td>';
+      html += '<td style="vertical-align: middle;">' + patientInfo + '</td>';
+      html += '<td class="text-center" style="vertical-align: middle;">' + actionButtons + '</td>';
+      html += '</tr>';
+    }
+
+    tbody.html(html);
+  }
+
+  // Filter queue by status
+  function filterQueueStatus(status, el) {
+    currentFilterStatus = status;
+    $('#filterStatusGroup .btn-filter-tab').removeClass('btn-primary active').addClass('btn-default');
+    $(el).removeClass('btn-default').addClass('btn-primary active');
+    renderAntrianTable();
+  }
+
+  // Search input handler
+  $('#searchQueueInput').on('keyup', function() {
+    renderAntrianTable();
+  });
+
+  $(document).ready(function() {
+    refreshCallerCounters();
+    loadAntrianList();
+    setInterval(refreshCallerCounters, 2500);
+    setInterval(loadAntrianList, 3500);
+  });
+
+  // Direct Call from Table or Pill
+  function directCallNumber(formatted, silent, loket) {
+    if (isCalling) return;
+    var rawNo = parseInt(String(formatted).replace(/^[A-Za-z]-/, ''), 10);
+    if (!rawNo || rawNo <= 0) {
+      alert('Nomor antrian tidak valid!');
+      return;
+    }
+
+    isCalling = true;
+    var isSilent = silent ? 1 : 0;
+
+    if (!isSilent) {
+      $('#calling_status_text_' + loket).text('Sedang mengumumkan panggilan ' + formatted + ' di TV...');
+      $('#calling_status_alert_' + loket).fadeIn();
+    }
+
+    $.ajax({
+      url: '{?=url()?}/anjungan/setpanggil',
+      type: 'GET',
+      data: { noantrian: rawNo, type: curType, loket: loket, silent: isSilent },
+      dataType: 'json',
+      cache: false,
+      success: function(data) {
+        if (data && data.status) {
+          var letter = (curType === 'cs' ? 'B' : (curType === 'apotek' ? 'F' : 'A'));
+          $('#display_num_' + loket).text(letter + '-' + data.noantrian);
+          $('input:hidden[name=noantrian]').val(data.raw_noantrian);
+          refreshCallerCounters();
+          loadAntrianList();
+          if (typeof $.notify === 'function') {
+            if (isSilent) {
+              $.notify('Nomor ' + letter + '-' + data.noantrian + ' disiapkan (tanpa suara).', 'info');
+            } else {
+              $.notify('Suara memanggil antrian ' + letter + '-' + data.noantrian + ' di Konter ' + loket, 'success');
+            }
+          }
+        }
+      },
+      error: function(xhr) {
+        alert('Gagal memanggil antrian.');
+      },
+      complete: function() {
+        setTimeout(function() {
+          $('#calling_status_alert_' + loket).fadeOut();
+          isCalling = false;
+        }, 3000);
+      }
+    });
+  }
+
+  // Skip Queue Number
+  function skipQueueNumber(kd, formatted) {
+    if (!confirm('Tandai nomor antrian ' + formatted + ' sebagai Dilewati / Skip?')) {
+      return;
+    }
+    $.ajax({
+      url: '{?=url()?}/anjungan/setskip',
+      type: 'GET',
+      data: { kd: kd, noantrian: String(formatted).replace(/^[A-Za-z]-/, ''), type: curType },
+      dataType: 'json',
+      cache: false,
+      success: function(resp) {
+        if (resp && resp.status) {
+          if (typeof $.notify === 'function') {
+            $.notify('Nomor ' + formatted + ' berhasil ditandai dilewati (skip).', 'info');
+          }
+          loadAntrianList();
+          refreshCallerCounters();
+        } else {
+          alert('Gagal: ' + (resp.message || 'Terjadi kesalahan'));
+        }
+      },
+      error: function() {
+        alert('Gagal menghubungi server untuk melewati antrian.');
+      }
+    });
+  }
+
+  // 1. PANGGIL SUARA MANUAL KE TV & SPEAKER
+  function panggilSuara(type, loket) {
+    if (isCalling) return;
+    var currentNo = $('input:hidden[name=noantrian]').val() || '{?=isset_or($antrian, 0)?}';
+    if (!currentNo || parseInt(currentNo) <= 0) {
+      alert('Belum ada nomor antrian yang disiapkan. Silakan klik tombol "BERIKUTNYA / SKIP" atau pilih nomor antrian dari daftar di bawah.');
+      return;
+    }
+
+    isCalling = true;
+    var btn = $('#btnCall_' + loket);
+    var originalHtml = btn.html();
+    btn.html('<i class="fa fa-spinner fa-spin"></i> MEMANGGIL SUARA...').prop('disabled', true);
+
+    $('#calling_status_text_' + loket).text('Sedang mengumumkan panggilan di TV...');
+    $('#calling_status_alert_' + loket).fadeIn();
+
+    $.ajax({
+      url: '{?=url()?}/anjungan/setpanggil',
+      type: 'GET',
+      data: { noantrian: currentNo, type: type, loket: loket, silent: 0 },
+      dataType: 'json',
+      cache: false,
+      success: function(data) {
+        if (data && data.status) {
+          var letter = (type === 'cs' ? 'B' : (type === 'apotek' ? 'F' : 'A'));
+          refreshCallerCounters();
+          loadAntrianList();
+          if (typeof $.notify === 'function') {
+            $.notify('Suara memanggil antrian ' + letter + '-' + data.noantrian + ' di Konter ' + loket, 'success');
+          }
+        }
+      },
+      error: function(xhr) {
+        console.log('Error panggilSuara:', xhr.status);
+        alert('Gagal membunyikan panggilan. Pastikan layar TV Display aktif.');
+      },
+      complete: function() {
+        btn.html(originalHtml).prop('disabled', false);
+        setTimeout(function() {
+          $('#calling_status_alert_' + loket).fadeOut();
+          isCalling = false;
+        }, 3000);
+      }
+    });
+  }
+
+  // 2. AMBIL NOMOR BERIKUTNYA / LEWATI (SKIP) - 100% SENYAP / TANPA SUARA
+  function panggilNext(type, loket, event) {
+    if (event) {
+      if (event.preventDefault) event.preventDefault();
+      if (event.stopPropagation) event.stopPropagation();
+    }
+    if (isCalling) return;
+    isCalling = true;
+
+    var btn = $('#btnNext_' + loket);
+    var originalHtml = btn.html();
+    btn.html('<i class="fa fa-spinner fa-spin"></i> SKIP...').prop('disabled', true);
+
+    $.ajax({
+      url: '{?=url()?}/anjungan/setpanggilnext',
+      type: 'GET',
+      data: { type: type, loket: loket, silent: 1 },
+      dataType: 'json',
+      cache: false,
+      success: function(data) {
+        if (data && data.status) {
+          var letter = (type === 'cs' ? 'B' : (type === 'apotek' ? 'F' : 'A'));
+          $('#display_num_' + loket).text(letter + '-' + data.noantrian);
+          $('input:hidden[name=noantrian]').val(data.raw_noantrian);
+          refreshCallerCounters();
+          loadAntrianList();
+          if (typeof $.notify === 'function') {
+            $.notify('Nomor ' + letter + '-' + data.noantrian + ' disiapkan (tanpa suara). Klik PANGGIL SUARA untuk memanggil.', 'info');
+          }
+        }
+      },
+      error: function(xhr) {
+        console.log('Error panggilNext:', xhr.status);
+        alert('Gagal mengambil nomor antrian berikutnya.');
+      },
+      complete: function() {
+        btn.html(originalHtml).prop('disabled', false);
+        setTimeout(function() { isCalling = false; }, 250);
+      }
+    });
+  }
+
+  // 3. PANGGIL ULANG SUARA (MENGULANG NOMOR SAAT INI)
+  function panggilUlang(type, loket) {
+    panggilSuara(type, loket);
+  }
+
+  // 4. LOMPAT / SINKRON NOMOR KHUSUS (BISA PILIH DENGAN SUARA ATAU SENYAP)
+  function jumpAntrian(silent) {
+    var no = $('#inputJumpAntrian').val();
+    if (!no || parseInt(no) <= 0) {
+      alert('Silakan ketik nomor antrian terlebih dahulu!');
+      $('#inputJumpAntrian').focus();
+      return;
+    }
+    var type = '{?=str_replace("panggil_","",isset_or($panggil_loket,"loket"))?}';
+    var loket = '{?=isset($_GET['loket']) && $_GET['loket'] != '' ? $_GET['loket'] : '1'?}';
+    var isSilent = silent ? 1 : 0;
+
+    $.ajax({
+      url: '{?=url()?}/anjungan/setpanggil',
+      type: 'GET',
+      data: { noantrian: no, type: type, loket: loket, silent: isSilent },
+      dataType: 'json',
+      cache: false,
+      success: function(data) {
+        if (data && data.status) {
+          var letter = (type === 'cs' ? 'B' : (type === 'apotek' ? 'F' : 'A'));
+          $('#display_num_' + loket).text(letter + '-' + data.noantrian);
+          $('input:hidden[name=noantrian]').val(data.raw_noantrian);
+          refreshCallerCounters();
+          loadAntrianList();
+          $('#inputJumpAntrian').val('');
+          if (typeof $.notify === 'function') {
+            if (isSilent) {
+              $.notify('Berhasil sinkron ke nomor ' + letter + '-' + data.noantrian + ' (tanpa suara).', 'info');
+            } else {
+              $.notify('Suara memanggil antrian ' + letter + '-' + data.noantrian + ' di Konter ' + loket, 'success');
+            }
+          }
+        }
+      },
+      error: function(xhr) {
+        alert('Gagal mengatur nomor antrian.');
+      }
+    });
+  }
+
   {loop: $loket}
   $("#form_simpan_no_rkm_medis_{?=isset_or($value)?}").on("click", ".simpan_no_rkm_medis_{?=isset_or($value)?}", function(event){
     var noantrian = $('input:hidden[name=noantrian]').val();
     var no_rkm_medis = $('input:text[name=no_rkm_medis_{?=isset_or($value)?}]').val();
     var type = '{?=str_replace("panggil_","",$_GET['show'])?}';
-    alert(no_rkm_medis);
+    if (!no_rkm_medis) {
+      alert('Silakan masukkan nomor RM terlebih dahulu!');
+      return;
+    }
     $.ajax({
         url: '{?=url()?}/anjungan/simpannorm',
         dataType: 'json',
         data: { noantrian: noantrian, type: type, no_rkm_medis: no_rkm_medis },
-        success: function(xhr) {
-            console.log(xhr.status);
-            if(xhr.status == true) {
-              alert('Simpan nomor RM berhasil!!')
+        success: function(resp) {
+            if(resp && resp.status == true) {
+              alert('Simpan nomor RM berhasil!');
+              loadAntrianList();
+            } else {
+              alert('Simpan nomor RM: ' + (resp.message || 'Gagal'));
             }
         },
         error: function(xhr) {
-            console.log(xhr.status);
-            if(xhr.status == false) {
-              alert('Simpan nomor RM gagal!!')
-            }
+            alert('Koneksi gagal saat simpan nomor RM');
         }
     });
   });

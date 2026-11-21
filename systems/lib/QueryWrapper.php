@@ -90,7 +90,16 @@ class QueryWrapper
         static::$db = new \PDO($dsn, $user, $pass);
         static::$db->setAttribute(\PDO::ATTR_ERRMODE, static::$options['error_mode']);
         if (strpos($dsn, 'mysql') !== false) {
-            static::$db->exec("SET SESSION sql_mode = (SELECT REPLACE(REPLACE(@@sql_mode, 'NO_ZERO_DATE', ''), 'NO_ZERO_IN_DATE', ''))");
+            $stmt = static::$db->query("SELECT @@sql_mode");
+            if ($stmt) {
+                $modes = explode(',', $stmt->fetchColumn() ?: '');
+                $removeModes = ['ONLY_FULL_GROUP_BY', 'NO_ZERO_DATE', 'NO_ZERO_IN_DATE'];
+                $filteredModes = array_filter($modes, function($m) use ($removeModes) {
+                    return !in_array(trim($m), $removeModes) && trim($m) !== '';
+                });
+                $newSqlMode = implode(',', $filteredModes);
+                static::$db->exec("SET SESSION sql_mode = " . static::$db->quote($newSqlMode));
+            }
         }
     }
     

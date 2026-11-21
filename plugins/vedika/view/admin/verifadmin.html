@@ -1,0 +1,204 @@
+<div class="row">
+  <div class="col-md-5">
+    <h3 style="margin-top:0;">
+      <i class="fa fa-id-card text-primary"></i> Verifikasi Administrasi Klaim BPJS
+      <small style="display:block;margin-top:4px;color:#718096;">Pemeriksaan keabsahan SEP, nomor kartu kepesertaan, surat rujukan FKTP, dan kesesuaian identitas pasien</small>
+    </h3>
+  </div>
+  <div class="col-md-7 text-right">
+    <form class="form-inline" action="" method="GET">
+      <div class="form-group">
+        <label><i class="fa fa-calendar"></i> Tanggal:</label>
+        <input type="text" name="tgl_awal" class="form-control tanggal input-sm" style="width:110px;" value="{?=$tgl_awal?}" placeholder="YYYY-MM-DD">
+        <span> s/d </span>
+        <input type="text" name="tgl_akhir" class="form-control tanggal input-sm" style="width:110px;" value="{?=$tgl_akhir?}" placeholder="YYYY-MM-DD">
+      </div>
+      <div class="btn-group btn-group-sm" style="margin-left:6px;margin-right:6px;">
+        <button type="button" class="btn btn-default btn-quick-date" data-range="today" title="Set tanggal hari ini"><i class="fa fa-clock-o"></i> Hari Ini</button>
+        <button type="button" class="btn btn-default btn-quick-date" data-range="yesterday" title="Set tanggal kemarin">Kemarin</button>
+        <button type="button" class="btn btn-default btn-quick-date" data-range="this_month" title="Set awal sampai akhir bulan ini">Bulan Ini</button>
+      </div>
+      <input type="hidden" name="t" value="{?=$_SESSION['token']?}">
+      <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-filter"></i> Saring</button>
+    </form>
+  </div>
+</div>
+<hr style="margin-top:10px;margin-bottom:20px;">
+
+<div class="panel panel-default">
+  <div class="table-responsive">
+    <table class="table table-hover table-striped" style="margin-bottom:0;font-size:13px;">
+      <thead>
+        <tr class="active">
+          <th>No. Rawat / RM</th>
+          <th>Nama Pasien</th>
+          <th>Identitas (NIK / Noka)</th>
+          <th>No. SEP</th>
+          <th>No. Rujukan / Asal</th>
+          <th>Status Verif Admin</th>
+          <th>Catatan Verifikator</th>
+          <th class="text-center">Aksi Verifikasi</th>
+        </tr>
+      </thead>
+      <tbody>
+        {if: count($rows) > 0}
+        {loop: $rows}
+        <tr>
+          <td>
+            <b>{?=$value.no_rawat?}</b><br>
+            <span class="label label-default">RM: {?=$value.no_rkm_medis?}</span>
+          </td>
+          <td>
+            <b>{?=$value.nm_pasien?}</b><br>
+            <span class="text-primary">{?=$value.nm_poli?}</span>
+          </td>
+          <td>
+            NIK: {?=$value.no_ktp?:'-'?}<br>
+            BPJS: <b>{?=$value.no_peserta?:'-'?}</b>
+          </td>
+          <td>
+            {if: !empty($value.no_sep)}
+            <span class="label label-success">{?=$value.no_sep?}</span>
+            {else}
+            <span class="label label-danger">Belum Terbit</span>
+            {/if}
+          </td>
+          <td>
+            {?=$value.no_rujukan ?: '<span class="text-muted">Rujukan Internal / Kontrol</span>'?}
+          </td>
+          <td>
+            {if: $value.verif_admin_status == 'approved'}
+            <span class="label label-success"><i class="fa fa-check"></i> Disetujui</span>
+            {elseif: $value.verif_admin_status == 'need_revision'}
+            <span class="label label-warning"><i class="fa fa-refresh"></i> Perlu Revisi</span>
+            {elseif: $value.verif_admin_status == 'rejected'}
+            <span class="label label-danger"><i class="fa fa-times"></i> Ditolak</span>
+            {else}
+            <span class="label label-default"><i class="fa fa-clock-o"></i> Menunggu Verif</span>
+            {/if}
+          </td>
+          <td>
+            <small class="text-muted">{?=$value.verif_admin_notes ?: '-'?}</small><br>
+            {if: !empty($value.verif_admin_user)}
+            <small>Oleh: <b>{?=$value.verif_admin_user?}</b> ({?=$value.verif_admin_at?})</small>
+            {/if}
+          </td>
+          <td class="text-center" style="white-space:nowrap;">
+            <button type="button" class="btn btn-primary btn-xs btn-open-verif" 
+                    data-norawat="{?=$value.no_rawat?}" 
+                    data-sep="{?=$value.no_sep?}" 
+                    data-status="{?=$value.verif_admin_status?}" 
+                    data-notes="{?=$value.verif_admin_notes?}">
+              <i class="fa fa-check-square-o"></i> Verifikasi
+            </button>
+          </td>
+        </tr>
+        {/loop}
+        {else}
+        <tr>
+          <td colspan="8" class="text-center" style="padding:30px;">
+            <span class="text-muted">Tidak ada data pasien untuk verifikasi administrasi pada periode ini.</span>
+          </td>
+        </tr>
+        {/if}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- MODAL VERIFIKASI ADMIN -->
+<div class="modal fade" id="modalVerifAdmin" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <form action="{?=url([ADMIN, 'vedika', 'verifadmin'])?}" method="POST">
+        <input type="hidden" name="t" value="{?=$_SESSION['token']?}">
+        <input type="hidden" name="no_rawat" id="f_no_rawat">
+        <input type="hidden" name="no_sep" id="f_no_sep">
+        
+        <div class="modal-header bg-primary" style="color:#fff;">
+          <button type="button" class="close" data-dismiss="modal" style="color:#fff;">&times;</button>
+          <h4 class="modal-title"><i class="fa fa-check-square-o"></i> Form Verifikasi Kelayakan Administrasi</h4>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>No. Rawat:</label>
+            <input type="text" id="lbl_no_rawat" class="form-control" readonly>
+          </div>
+          <div class="form-group">
+            <label>No. SEP BPJS:</label>
+            <input type="text" id="lbl_no_sep" class="form-control" readonly>
+          </div>
+          <div class="form-group">
+            <label>Status Keputusan Verifikasi Administrasi:</label>
+            <select name="verif_status" id="f_status" class="form-control" required>
+              <option value="approved">Disetujui (Memenuhi Syarat Administrasi)</option>
+              <option value="need_revision">Perlu Revisi (Data Identitas/Rujukan Tidak Sesuai)</option>
+              <option value="rejected">Ditolak (Tidak Memenuhi Penjaminan BPJS)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Catatan Hasil Pemeriksaan Verifikator:</label>
+            <textarea name="verif_notes" id="f_notes" class="form-control" rows="3" placeholder="Masukkan catatan pemeriksaan rujukan, nomor kartu, atau dokumen tambahan..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Batal</button>
+          <button type="submit" name="save_verif_admin" class="btn btn-primary"><i class="fa fa-save"></i> Simpan Hasil Verifikasi</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  $(function() {
+    $('.tanggal').datetimepicker({
+      format: 'YYYY-MM-DD',
+      locale: 'id'
+    });
+
+    // Quick filter shortcut buttons (Hari Ini, Kemarin, Bulan Ini)
+    $('.btn-quick-date').on('click', function(e) {
+      e.preventDefault();
+      var range = $(this).data('range');
+      var now = new Date();
+      var pad = function(n) { return (n < 10 ? '0' : '') + n; };
+      var fmt = function(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
+
+      if (range === 'today') {
+        var str = fmt(now);
+        $('input[name="tgl_awal"]').val(str);
+        $('input[name="tgl_akhir"]').val(str);
+      } else if (range === 'yesterday') {
+        var yest = new Date(now);
+        yest.setDate(yest.getDate() - 1);
+        var str = fmt(yest);
+        $('input[name="tgl_awal"]').val(str);
+        $('input[name="tgl_akhir"]').val(str);
+      } else if (range === 'this_month') {
+        var firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+        var lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        $('input[name="tgl_awal"]').val(fmt(firstDay));
+        $('input[name="tgl_akhir"]').val(fmt(lastDay));
+      }
+      $(this).closest('form').submit();
+    });
+
+    $('.btn-open-verif').on('click', function() {
+      var nr = $(this).data('norawat');
+      var sep = $(this).data('sep');
+      var status = $(this).data('status') || 'approved';
+      var notes = $(this).data('notes') || '';
+
+      $('#f_no_rawat').val(nr);
+      $('#f_no_sep').val(sep);
+      $('#lbl_no_rawat').val(nr);
+      $('#lbl_no_sep').val(sep);
+      $('#f_status').val(status);
+      $('#f_notes').val(notes);
+
+      $('#modalVerifAdmin').modal('show');
+    });
+  });
+</script>
+

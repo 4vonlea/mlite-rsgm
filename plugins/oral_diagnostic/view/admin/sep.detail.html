@@ -305,5 +305,8 @@
 
 </div>
 <div class="modal-footer">
-    <button type="button" class="btn btn-primary" data-dismiss="modal">Tutup</button>
+    {if: !empty($sep.no_sep)}
+    <a href="{?=url([ADMIN, 'vclaim', 'cetaksep', $sep.no_sep])?}" target="_blank" class="btn btn-success"><i class="fa fa-print"></i> Cetak SEP</a>
+    {/if}
+    <button type="button" class="btn btn-default" data-dismiss="modal">Tutup</button>
 </div>

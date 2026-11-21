@@ -331,262 +331,796 @@ class Admin extends AdminModule
 
     public function getJadwalDokter()
     {
+        $this->_addHeaderFiles();
         $this->getCssCard();
-        $poli = $this->db('maping_poli_bpjs')->toArray();
-        return $this->draw('jadwaldokter.html',['poli'=>$poli]);
+        $poli = $this->db('maping_poli_bpjs')
+            ->select(['kd_poli_bpjs', 'nm_poli_bpjs'])
+            ->group('kd_poli_bpjs')
+            ->asc('nm_poli_bpjs')
+            ->toArray();
+        return $this->draw('jadwaldokter.html', [
+            'poli' => htmlspecialchars_array($poli),
+            'tgl_default' => date('Y-m-d')
+        ]);
     }
 
     public function postHfis() {
-        $kodepoli = $_POST['poli'];
-        // $_POST['tanggal'] = date('Y-m-d');
-        $tanggal = $_POST['tgl'];
+        header('Content-Type: application/json');
+        $kodepoli = $_POST['poli'] ?? '';
+        $tanggal = $_POST['tgl'] ?? date('Y-m-d');
+
+        if (empty($kodepoli)) {
+            echo json_encode(['status' => 'error', 'code' => 400, 'message' => 'Poliklinik BPJS belum dipilih.']);
+            exit();
+        }
+
+        if (empty($this->consid) || empty($this->secretkey) || empty($this->bpjsurl)) {
+            echo json_encode(['status' => 'error', 'code' => 500, 'message' => 'Kredensial BPJS Antrean (ConsID / SecretKey / URL) belum diatur di Pengaturan JKN Mobile.']);
+            exit();
+        }
+
         date_default_timezone_set('UTC');
         $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
         $key = $this->consid . $this->secretkey . $tStamp;
-        date_default_timezone_set($this->settings->get('settings.timezone'));
+        date_default_timezone_set($this->settings->get('settings.timezone') ?: 'Asia/Jakarta');
 
-        $url = $this->bpjsurl . 'jadwaldokter/kodepoli/'.$kodepoli.'/tanggal/'.$tanggal;
+        $url = $this->bpjsurl . 'jadwaldokter/kodepoli/' . $kodepoli . '/tanggal/' . $tanggal;
         $output = BpjsService::get($url, NULL, $this->consid, $this->secretkey, $this->user_key, $tStamp);
         $json = json_decode($output, true);
-        
-        if (isset($json['metadata']['code'])) {
-             $code = $json['metadata']['code'];
-             $message = $json['metadata']['message'];
-             
-             if ($code == '200' && isset($json['response'])) {
-                 $stringDecrypt = stringDecrypt($key, $json['response']);
-                 $decompress = '';
-                 if (!empty($stringDecrypt)) {
-                     $decompress = \LZCompressor\LZString::decompressFromEncodedURIComponent(($stringDecrypt));
-                 }
-                 $response = json_decode($decompress, true);
-             } else {
-                 $response = []; // Empty array if not found or error
-             }
-        } else {
-             $response = []; // Empty array if invalid response
+
+        $code = $json['metadata']['code'] ?? 500;
+        $message = $json['metadata']['message'] ?? ($output ?: 'Tidak ada balasan dari server BPJS');
+        $data = [];
+
+        if ($code == '200' && !empty($json['response'])) {
+            $stringDecrypt = stringDecrypt($key, $json['response']);
+            if (!empty($stringDecrypt)) {
+                $decompress = \LZCompressor\LZString::decompressFromEncodedURIComponent($stringDecrypt);
+                $data = json_decode($decompress, true);
+                if (!is_array($data)) {
+                    $data = [];
+                }
+            }
+
+            // Hitung kuota dan ambil daftar pasien yang sudah terdaftar di BPJS & SIMRS
+            if (is_array($data) && count($data) > 0) {
+                try {
+                    $mapPoli = $this->db('maping_poli_bpjs')->where('kd_poli_bpjs', $kodepoli)->toArray();
+                    $list_kd_poli_rs = array_values(array_filter(array_column($mapPoli, 'kd_poli_rs')));
+
+                    $day_num = date('w', strtotime($tanggal));
+                    $day_names = ['0' => 'AKHAD', '1' => 'SENIN', '2' => 'SELASA', '3' => 'RABU', '4' => 'KAMIS', '5' => 'JUMAT', '6' => 'SABTU'];
+                    $hari_nama = $day_names[(string)$day_num] ?? 'SENIN';
+
+                    // 1. Tarik antrean resmi yang sudah terdaftar di Server BPJS untuk tanggal tersebut
+                    $bpjs_antrean_by_dokter = [];
+                    try {
+                        $urlAntrean = $this->bpjsurl . 'antrean/pendaftaran/tanggal/' . $tanggal;
+                        $outAntrean = BpjsService::get($urlAntrean, NULL, $this->consid, $this->secretkey, $this->user_key, $tStamp);
+                        $jsonAntrean = json_decode($outAntrean, true);
+                        if (!empty($jsonAntrean['response'])) {
+                            $decAntrean = stringDecrypt($key, $jsonAntrean['response']);
+                            if (!empty($decAntrean)) {
+                                $decompAntrean = \LZCompressor\LZString::decompressFromEncodedURIComponent($decAntrean);
+                                $listAntrean = json_decode($decompAntrean, true);
+                                if (is_array($listAntrean)) {
+                                    foreach ($listAntrean as $ba) {
+                                        $st = strtolower($ba['status'] ?? '');
+                                        if ($st === 'batal' || $st === 'batal antrean' || $st === 'batal_antrean') {
+                                            continue;
+                                        }
+                                        $kd_dok = (string)($ba['kodedokter'] ?? '');
+                                        if ($kd_dok !== '') {
+                                            $bpjs_antrean_by_dokter[$kd_dok][] = $ba;
+                                            $kd_dok_trim = ltrim($kd_dok, '0');
+                                            if ($kd_dok_trim !== '' && $kd_dok_trim !== $kd_dok) {
+                                                $bpjs_antrean_by_dokter[$kd_dok_trim][] = $ba;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } catch (\Throwable $eAntrean) {
+                        error_log("postHfis fetch antrean BPJS error: " . $eAntrean->getMessage());
+                    }
+
+                    foreach ($data as &$item) {
+                        $kd_dokter_bpjs = (string)($item['kodedokter'] ?? '');
+                        $nm_dokter_hfis = $item['namadokter'] ?? '';
+
+                        // Pencarian mapping dokter dengan beberapa skema fallback
+                        $mapDokter = null;
+                        $kd_dokter_rs = null;
+
+                        // Skema 1: Kode BPJS persis
+                        if ($kd_dokter_bpjs !== '') {
+                            $mapDokter = $this->db('maping_dokter_dpjpvclaim')->where('kd_dokter_bpjs', $kd_dokter_bpjs)->oneArray();
+                        }
+                        // Skema 2: Kode BPJS tanpa leading zero
+                        if (!$mapDokter && $kd_dokter_bpjs !== '') {
+                            $kd_dok_trim = ltrim($kd_dokter_bpjs, '0');
+                            if ($kd_dok_trim !== '' && $kd_dok_trim !== $kd_dokter_bpjs) {
+                                $mapDokter = $this->db('maping_dokter_dpjpvclaim')->where('kd_dokter_bpjs', $kd_dok_trim)->oneArray();
+                            }
+                        }
+                        // Skema 3: Kode BPJS cocok dengan kd_dokter RS
+                        if (!$mapDokter && $kd_dokter_bpjs !== '') {
+                            $mapDokter = $this->db('maping_dokter_dpjpvclaim')->where('kd_dokter', $kd_dokter_bpjs)->oneArray();
+                        }
+                        // Skema 4: Pencocokan nama dokter jika kode belum terpetakan
+                        if (!$mapDokter && !empty($nm_dokter_hfis)) {
+                            $clean = preg_replace('/^(drg\.|dr\.|prof\.|drg\s+|dr\s+)/i', '', $nm_dokter_hfis);
+                            $clean = preg_replace('/,.*$/', '', $clean);
+                            $words = array_values(array_filter(preg_split('/[\s,\.]+/', $clean), function($w) {
+                                return strlen($w) >= 3 && !in_array(strtoupper($w), ['SP', 'KG', 'BM', 'PROS', 'PERIO', 'KGA', 'ORT', 'RAD', 'KES', 'MARS', 'DRG', 'DR']);
+                            }));
+                            if (!empty($words)) {
+                                $q = $this->db('maping_dokter_dpjpvclaim');
+                                foreach ($words as $w) {
+                                    $q->like('nm_dokter_bpjs', '%' . $w . '%');
+                                }
+                                $mapDokter = $q->oneArray();
+
+                                if (!$mapDokter) {
+                                    $q2 = $this->db('dokter');
+                                    foreach ($words as $w) {
+                                        $q2->like('nm_dokter', '%' . $w . '%');
+                                    }
+                                    $dRow = $q2->oneArray();
+                                    if ($dRow) {
+                                        $kd_dokter_rs = $dRow['kd_dokter'];
+                                    }
+                                }
+                            }
+                        }
+
+                        if ($mapDokter) {
+                            $kd_dokter_rs = $mapDokter['kd_dokter'];
+                        }
+
+                        $item['kd_dokter_rs'] = $kd_dokter_rs;
+                        $item['kd_poli_rs'] = !empty($list_kd_poli_rs) ? $list_kd_poli_rs[0] : '';
+                        $item['nm_dokter_rs'] = $mapDokter ? $mapDokter['nm_dokter_bpjs'] : ($nm_dokter_hfis ?: '');
+                        $item['is_mapped'] = !empty($kd_dokter_rs);
+
+                        // Cek apakah jadwal ada di tabel jadwal lokal SIMRS
+                        $item['jadwal_simrs'] = null;
+                        $item['is_sync_simrs'] = false;
+                        if ($kd_dokter_rs && !empty($list_kd_poli_rs)) {
+                            $js = $this->db('jadwal')
+                                ->where('kd_dokter', $kd_dokter_rs)
+                                ->where('hari_kerja', $hari_nama)
+                                ->in('kd_poli', $list_kd_poli_rs)
+                                ->oneArray();
+                            if ($js) {
+                                $item['jadwal_simrs'] = $js;
+                                $item['is_sync_simrs'] = true;
+                            }
+                        }
+
+                        $pasien_final = [];
+                        $tracked_rms = [];
+                        $tracked_bookings = [];
+
+                        // 1. Ambil dari server BPJS Antrean jika ada antrean terdaftar untuk dokter ini
+                        $candidates_bpjs = [];
+                        if (isset($bpjs_antrean_by_dokter[$kd_dokter_bpjs])) {
+                            $candidates_bpjs = array_merge($candidates_bpjs, $bpjs_antrean_by_dokter[$kd_dokter_bpjs]);
+                        }
+                        $kd_dok_trim = ltrim($kd_dokter_bpjs, '0');
+                        if ($kd_dok_trim !== '' && isset($bpjs_antrean_by_dokter[$kd_dok_trim])) {
+                            $candidates_bpjs = array_merge($candidates_bpjs, $bpjs_antrean_by_dokter[$kd_dok_trim]);
+                        }
+
+                        $unique_bpjs = [];
+                        foreach ($candidates_bpjs as $cb) {
+                            $kb = $cb['kodebooking'] ?? '';
+                            if ($kb !== '' && !isset($unique_bpjs[$kb])) {
+                                $unique_bpjs[$kb] = $cb;
+                            }
+                        }
+
+                        foreach ($unique_bpjs as $kb => $ba) {
+                            $norm = $ba['norekammedis'] ?? '';
+                            $noka = $ba['nokapst'] ?? '';
+                            $nik = $ba['nik'] ?? '';
+                            $pName = '';
+
+                            if (!empty($norm)) {
+                                $pRow = $this->db('pasien')->where('no_rkm_medis', $norm)->oneArray();
+                                if ($pRow) {
+                                    $pName = $pRow['nm_pasien'];
+                                }
+                            }
+                            if (empty($pName) && !empty($noka)) {
+                                $pRow = $this->db('pasien')->where('no_peserta', $noka)->oneArray();
+                                if ($pRow) {
+                                    $pName = $pRow['nm_pasien'];
+                                    if (empty($norm)) $norm = $pRow['no_rkm_medis'];
+                                }
+                            }
+                            if (empty($pName) && !empty($nik)) {
+                                $pRow = $this->db('pasien')->where('no_ktp', $nik)->oneArray();
+                                if ($pRow) {
+                                    $pName = $pRow['nm_pasien'];
+                                    if (empty($norm)) $norm = $pRow['no_rkm_medis'];
+                                }
+                            }
+                            if (empty($pName)) {
+                                $pName = !empty($ba['namapasien']) ? $ba['namapasien'] : ('Peserta BPJS (' . ($noka ?: ($norm ?: $kb)) . ')');
+                            }
+
+                            $no_reg = !empty($ba['noantrean']) ? $ba['noantrean'] : (!empty($ba['angkaantrean']) ? $ba['angkaantrean'] : $kb);
+                            $jam = !empty($ba['estimasidilayani']) ? $ba['estimasidilayani'] : (!empty($ba['jampraktek']) ? $ba['jampraktek'] : '-');
+
+                            $pasien_final[] = [
+                                'no_reg' => $no_reg,
+                                'no_rawat' => '-',
+                                'no_rkm_medis' => $norm ?: '-',
+                                'nm_pasien' => $pName,
+                                'png_jawab' => 'BPJS Kesehatan',
+                                'jam' => $jam,
+                                'status' => $ba['status'] ?? 'Terdaftar BPJS',
+                                'tipe' => 'Mobile JKN (BPJS)',
+                                'sumber' => !empty($ba['sumberdata']) ? $ba['sumberdata'] : 'Mobile JKN (BPJS)',
+                                'kodebooking' => $kb
+                            ];
+
+                            $tracked_bookings[$kb] = true;
+                            if (!empty($norm) && $norm !== '-') {
+                                $tracked_rms[$norm] = true;
+                            }
+                        }
+
+                        // 2. Ambil dari booking_registrasi SIMRS (booking online / antrol)
+                        if ($kd_dokter_rs) {
+                            $qBook = $this->db('booking_registrasi')
+                                ->leftJoin('pasien', 'pasien.no_rkm_medis = booking_registrasi.no_rkm_medis')
+                                ->leftJoin('penjab', 'penjab.kd_pj = booking_registrasi.kd_pj')
+                                ->select([
+                                    'no_reg' => 'booking_registrasi.no_reg',
+                                    'no_rawat' => "'-'",
+                                    'no_rkm_medis' => 'booking_registrasi.no_rkm_medis',
+                                    'nm_pasien' => 'pasien.nm_pasien',
+                                    'png_jawab' => 'penjab.png_jawab',
+                                    'jam' => 'booking_registrasi.jam_booking',
+                                    'status' => 'booking_registrasi.status',
+                                    'kd_poli' => 'booking_registrasi.kd_poli'
+                                ])
+                                ->where('booking_registrasi.tanggal_periksa', $tanggal)
+                                ->where('booking_registrasi.kd_dokter', $kd_dokter_rs)
+                                ->where('booking_registrasi.status', '!=', 'Batal');
+
+                            if (!empty($list_kd_poli_rs)) {
+                                $qBook->in('booking_registrasi.kd_poli', array_merge($list_kd_poli_rs, [$kodepoli]));
+                            }
+                            $pasien_booking = $qBook->asc('booking_registrasi.no_reg')->toArray();
+
+                            foreach ($pasien_booking as $pb) {
+                                $rm = $pb['no_rkm_medis'] ?? '';
+                                if (!empty($rm) && isset($tracked_rms[$rm])) {
+                                    continue;
+                                }
+
+                                $ref = $this->db('mlite_antrian_referensi')
+                                    ->where('no_rkm_medis', $rm)
+                                    ->where('tanggal_periksa', $tanggal)
+                                    ->oneArray();
+
+                                $kb = $ref['kodebooking'] ?? '';
+                                if (!empty($kb) && isset($tracked_bookings[$kb])) {
+                                    continue;
+                                }
+
+                                $pb['tipe'] = $ref ? 'Mobile JKN (BPJS)' : 'Booking Online';
+                                $pb['sumber'] = $ref ? 'Mobile JKN (BPJS)' : 'SIMRS Online';
+                                $pb['kodebooking'] = $kb;
+                                $pb['png_jawab'] = $pb['png_jawab'] ?: 'Umum / BPJS';
+                                $pb['nm_pasien'] = $pb['nm_pasien'] ?: ('Pasien RM ' . $rm);
+                                $pasien_final[] = $pb;
+
+                                if (!empty($rm)) $tracked_rms[$rm] = true;
+                                if (!empty($kb)) $tracked_bookings[$kb] = true;
+                            }
+                        }
+
+                        // 3. Ambil dari reg_periksa (pasien hari H / yang sudah datang registrasi)
+                        if ($kd_dokter_rs) {
+                            $qReg = $this->db('reg_periksa')
+                                ->leftJoin('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+                                ->leftJoin('penjab', 'penjab.kd_pj = reg_periksa.kd_pj')
+                                ->select([
+                                    'no_reg' => 'reg_periksa.no_reg',
+                                    'no_rawat' => 'reg_periksa.no_rawat',
+                                    'no_rkm_medis' => 'reg_periksa.no_rkm_medis',
+                                    'nm_pasien' => 'pasien.nm_pasien',
+                                    'png_jawab' => 'penjab.png_jawab',
+                                    'jam' => 'reg_periksa.jam_reg',
+                                    'status' => 'reg_periksa.stts'
+                                ])
+                                ->where('reg_periksa.tgl_registrasi', $tanggal)
+                                ->where('reg_periksa.kd_dokter', $kd_dokter_rs)
+                                ->where('reg_periksa.stts', '!=', 'Batal');
+
+                            if (!empty($list_kd_poli_rs)) {
+                                $qReg->in('reg_periksa.kd_poli', $list_kd_poli_rs);
+                            }
+                            $pasien_reg = $qReg->asc('reg_periksa.no_reg')->toArray();
+
+                            foreach ($pasien_reg as $pr) {
+                                $rm = $pr['no_rkm_medis'] ?? '';
+                                if (!empty($rm) && isset($tracked_rms[$rm])) {
+                                    foreach ($pasien_final as &$pf) {
+                                        if (($pf['no_rkm_medis'] ?? '') === $rm) {
+                                            $pf['no_rawat'] = $pr['no_rawat'];
+                                            $pf['no_reg'] = $pr['no_reg'];
+                                            $pf['jam'] = $pr['jam'];
+                                            $pf['status'] = $pr['status'];
+                                            $pf['tipe'] = 'Registrasi Hari H (Hadir)';
+                                            break;
+                                        }
+                                    }
+                                } else {
+                                    $pr['tipe'] = 'Registrasi Hari H';
+                                    $pr['sumber'] = 'Loket / Mandiri RS';
+                                    $pr['kodebooking'] = '';
+                                    $pr['png_jawab'] = $pr['png_jawab'] ?: 'Umum / BPJS';
+                                    $pr['nm_pasien'] = $pr['nm_pasien'] ?: ('Pasien RM ' . $rm);
+                                    $pasien_final[] = $pr;
+                                    if (!empty($rm)) $tracked_rms[$rm] = true;
+                                }
+                            }
+                        }
+
+                        $kapasitas = intval($item['kapasitaspasien'] ?? 0);
+                        $terdaftar = count($pasien_final);
+                        $sisa = max(0, $kapasitas - $terdaftar);
+
+                        $item['terdaftar'] = $terdaftar;
+                        $item['sisa_kuota'] = $sisa;
+                        $item['pasien_list'] = $pasien_final;
+                    }
+                } catch (\Throwable $e) {
+                    error_log("postHfis Error: " . $e->getMessage());
+                }
+            }
         }
-        
-        echo json_encode(htmlspecialchars_array($response));
+
+        $total_dokter = is_array($data) ? count($data) : 0;
+        $total_kapasitas = 0;
+        $total_terdaftar = 0;
+        $total_sisa = 0;
+
+        if (is_array($data)) {
+            foreach ($data as $d) {
+                $total_kapasitas += intval($d['kapasitaspasien'] ?? 0);
+                $total_terdaftar += intval($d['terdaftar'] ?? 0);
+                $total_sisa += intval($d['sisa_kuota'] ?? 0);
+            }
+        }
+
+        echo json_encode([
+            'status' => ($code == 200) ? 'success' : 'error',
+            'code' => $code,
+            'message' => $message,
+            'data' => $data,
+            'summary' => [
+                'total_dokter' => $total_dokter,
+                'total_kapasitas' => $total_kapasitas,
+                'total_terdaftar' => $total_terdaftar,
+                'total_sisa' => $total_sisa
+            ]
+        ]);
+        exit();
+    }
+
+    public function postSyncJadwalHfis()
+    {
+        header('Content-Type: application/json');
+        $kd_dokter = $_POST['kd_dokter'] ?? '';
+        $kd_poli = $_POST['kd_poli'] ?? '';
+        $hari = strtoupper(trim($_POST['hari'] ?? ''));
+        $jam_raw = trim($_POST['jam'] ?? '');
+        $kuota = intval($_POST['kuota'] ?? 0);
+
+        if (empty($kd_dokter) || empty($kd_poli) || empty($hari) || empty($jam_raw)) {
+            echo json_encode(['status' => 'error', 'message' => 'Data dokter, poli, hari, atau jam tidak lengkap.']);
+            exit();
+        }
+
+        $parts = explode('-', $jam_raw);
+        $jam_mulai = trim($parts[0] ?? '08:00:00');
+        $jam_selesai = trim($parts[1] ?? '14:00:00');
+        if (strlen($jam_mulai) === 5) $jam_mulai .= ':00';
+        if (strlen($jam_selesai) === 5) $jam_selesai .= ':00';
+
+        $check = $this->db('jadwal')
+            ->where('kd_dokter', $kd_dokter)
+            ->where('hari_kerja', $hari)
+            ->where('kd_poli', $kd_poli)
+            ->oneArray();
+
+        if ($check) {
+            $this->db('jadwal')
+                ->where('kd_dokter', $kd_dokter)
+                ->where('hari_kerja', $hari)
+                ->where('kd_poli', $kd_poli)
+                ->update([
+                    'jam_mulai' => $jam_mulai,
+                    'jam_selesai' => $jam_selesai,
+                    'kuota' => $kuota
+                ]);
+            $msg = "Jadwal dokter berhasil diperbarui di SIMRS.";
+        } else {
+            $this->db('jadwal')->save([
+                'kd_dokter' => $kd_dokter,
+                'hari_kerja' => $hari,
+                'jam_mulai' => $jam_mulai,
+                'jam_selesai' => $jam_selesai,
+                'kd_poli' => $kd_poli,
+                'kuota' => $kuota
+            ]);
+            $msg = "Jadwal dokter berhasil disalin ke jadwal SIMRS.";
+        }
+
+        echo json_encode(['status' => 'success', 'message' => $msg]);
         exit();
     }
 
     public function anyTaskID()
     {
-      $this->_addHeaderFiles();
-      $this->getCssCard();
-      $date = date('Y-m-d');
-      if(isset($_POST['periode_antrol']) && $_POST['periode_antrol'] !='')
-        $date = $_POST['periode_antrol'];
-      $exclude_taskid = str_replace(",","','", $this->settings->get('jkn_mobile.exclude_taskid'));
-      $query = $this->db()->pdo()->prepare("SELECT pasien.no_peserta,pasien.no_rkm_medis,pasien.no_ktp,pasien.no_tlp,reg_periksa.no_reg,reg_periksa.no_rawat,reg_periksa.tgl_registrasi,reg_periksa.kd_dokter,dokter.nm_dokter,reg_periksa.kd_poli,poliklinik.nm_poli,reg_periksa.stts_daftar,reg_periksa.no_rkm_medis
-      FROM reg_periksa INNER JOIN pasien ON reg_periksa.no_rkm_medis=pasien.no_rkm_medis INNER JOIN dokter ON reg_periksa.kd_dokter=dokter.kd_dokter INNER JOIN poliklinik ON reg_periksa.kd_poli=poliklinik.kd_poli WHERE reg_periksa.tgl_registrasi=? AND reg_periksa.kd_poli NOT IN (?)
-      ORDER BY concat(reg_periksa.tgl_registrasi,' ',reg_periksa.jam_reg)");
-      $query->execute([$date, $exclude_taskid]);
-      $query = $query->fetchAll(\PDO::FETCH_ASSOC);;
+      try {
+        $this->_addHeaderFiles();
+        $this->getCssCard();
+        $date = date('Y-m-d');
+        if(isset($_POST['periode_antrol']) && $_POST['periode_antrol'] !='')
+          $date = $_POST['periode_antrol'];
 
-      $rows = [];
-      foreach ($query as $q) {
-          $reg_periksa = $this->db('reg_periksa')->where('tgl_registrasi', $date)->where('no_rkm_medis', $q['no_rkm_medis'])->where('stts', '<>', 'Batal')->oneArray();
-          $reg_periksa2 = $this->db('reg_periksa')->where('tgl_registrasi', $date)->where('no_rkm_medis', $q['no_rkm_medis'])->where('stts', 'Batal')->oneArray();
-          $batal = '0000-00-00 00:00:00';
-          if($reg_periksa2) {
-            $batal = $q['tgl_registrasi'].' '.date('H:i:s');
-          }
-          $mlite_antrian_referensi = $this->db('mlite_antrian_referensi')->where('tanggal_periksa', $q['tgl_registrasi'])->where('nomor_kartu', $q['no_peserta'])->oneArray();
-          if(!$mlite_antrian_referensi) {
-              $mlite_antrian_referensi = $this->db('mlite_antrian_referensi')->where('tanggal_periksa', $q['tgl_registrasi'])->where('no_rkm_medis', $q['no_rkm_medis'])->oneArray();
-          }
-          $mutasi_berkas = $this->db('mutasi_berkas')->select('dikirim')->where('no_rawat', $reg_periksa['no_rawat'])->where('dikirim', '>', '1970-01-01 00:00:00')->oneArray();
-          $mutasi_berkas2 = $this->db('mutasi_berkas')->select('diterima')->where('no_rawat', $reg_periksa['no_rawat'])->where('diterima', '>', '1970-01-01 00:00:00')->oneArray();
-          $pemeriksaan_ralan = $this->db('pemeriksaan_ralan')->select(['datajam' => 'concat(tgl_perawatan," ",jam_rawat)'])->where('no_rawat', $reg_periksa['no_rawat'])->oneArray();
-          $resep_obat = $this->db('resep_obat')->select(['datajam' => 'concat(tgl_perawatan," ",jam)'])->where('no_rawat', $reg_periksa['no_rawat'])->oneArray();
-          $resep_obat2 = $this->db('resep_obat')->select(['datajam' => 'concat(tgl_peresepan," ",jam_peresepan)'])->where('no_rawat', $reg_periksa['no_rawat'])->where('concat(tgl_perawatan," ",jam)', '<>', 'concat(tgl_peresepan," ",jam_peresepan)')->oneArray();
+        $exclude_setting = $this->settings->get('jkn_mobile.exclude_taskid');
+        $exclude_list = array_values(array_filter(array_map('trim', explode(',', (string)$exclude_setting))));
+        if (!empty($exclude_list)) {
+            $placeholders = implode(',', array_fill(0, count($exclude_list), '?'));
+            $sql = "SELECT pasien.no_peserta,pasien.no_rkm_medis,pasien.no_ktp,pasien.no_tlp,pasien.nm_pasien,reg_periksa.no_reg,reg_periksa.no_rawat,reg_periksa.tgl_registrasi,reg_periksa.kd_dokter,dokter.nm_dokter,reg_periksa.kd_poli,poliklinik.nm_poli,reg_periksa.stts_daftar,reg_periksa.stts
+            FROM reg_periksa 
+            INNER JOIN pasien ON reg_periksa.no_rkm_medis=pasien.no_rkm_medis 
+            INNER JOIN dokter ON reg_periksa.kd_dokter=dokter.kd_dokter 
+            INNER JOIN poliklinik ON reg_periksa.kd_poli=poliklinik.kd_poli 
+            WHERE reg_periksa.tgl_registrasi=? AND reg_periksa.kd_poli NOT IN ($placeholders)
+            ORDER BY concat(reg_periksa.tgl_registrasi,' ',reg_periksa.jam_reg)";
+            $params = array_merge([$date], $exclude_list);
+        } else {
+            $sql = "SELECT pasien.no_peserta,pasien.no_rkm_medis,pasien.no_ktp,pasien.no_tlp,pasien.nm_pasien,reg_periksa.no_reg,reg_periksa.no_rawat,reg_periksa.tgl_registrasi,reg_periksa.kd_dokter,dokter.nm_dokter,reg_periksa.kd_poli,poliklinik.nm_poli,reg_periksa.stts_daftar,reg_periksa.stts
+            FROM reg_periksa 
+            INNER JOIN pasien ON reg_periksa.no_rkm_medis=pasien.no_rkm_medis 
+            INNER JOIN dokter ON reg_periksa.kd_dokter=dokter.kd_dokter 
+            INNER JOIN poliklinik ON reg_periksa.kd_poli=poliklinik.kd_poli 
+            WHERE reg_periksa.tgl_registrasi=?
+            ORDER BY concat(reg_periksa.tgl_registrasi,' ',reg_periksa.jam_reg)";
+            $params = [$date];
+        }
+        $stmt = $this->db()->pdo()->prepare($sql);
+        $stmt->execute($params);
+        $query = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
-          $mlite_antrian_loket = $this->db('mlite_antrian_loket')->where('postdate', $date)->where('type','Loket')->where('no_rkm_medis', $q['no_rkm_medis'])->oneArray();
-          $task1 = '';
-          $task2 = '';
-          if($mlite_antrian_loket) {
-            $task1 = $mlite_antrian_loket['postdate'].' '.$mlite_antrian_loket['start_time'];
-            $task2 = $mlite_antrian_loket['postdate'].' '.$mlite_antrian_loket['end_time'];
-          }
-          $q['nomor_referensi'] = isset_or($mlite_antrian_referensi['kodebooking'], '');
-          $q['status_kirim'] = isset_or($mlite_antrian_referensi['status_kirim'], '');
-          /*$q['task1'] = strtotime($task1) * 1000;
-          $q['task2'] = strtotime($task2) * 1000;
-          $q['task3'] = strtotime($mutasi_berkas['dikirim']) * 1000;
-          $q['task4'] = strtotime($mutasi_berkas2['diterima']) * 1000;
-          $q['task5'] = strtotime($pemeriksaan_ralan['datajam']) * 1000;
-          $q['task6'] = strtotime($resep_obat['datajam']) * 1000;
-          $q['task7'] = strtotime($resep_obat2['datajam']) * 1000;
-          $q['task99'] = $batal;*/
+        $rows = [];
+        foreach ($query as $q) {
+            $no_rawat = $q['no_rawat'] ?? '';
+            $batal = (($q['stts'] ?? '') == 'Batal') ? ($q['tgl_registrasi'].' '.date('H:i:s')) : '0000-00-00 00:00:00';
 
-          $taskid1['waktu'] = '';
-          $taskid2['waktu'] = '';
-          $taskid3['waktu'] = '';
-          $taskid4['waktu'] = '';
-          $taskid5['waktu'] = '';
-          $taskid6['waktu'] = '';
-          $taskid7['waktu'] = '';
-          $taskid99['waktu'] = '';
+            $mlite_antrian_referensi = null;
+            if (!empty($q['no_peserta'])) {
+                $mlite_antrian_referensi = $this->db('mlite_antrian_referensi')->where('tanggal_periksa', $q['tgl_registrasi'])->where('nomor_kartu', $q['no_peserta'])->oneArray();
+            }
+            if (!$mlite_antrian_referensi && !empty($q['no_rkm_medis'])) {
+                $mlite_antrian_referensi = $this->db('mlite_antrian_referensi')->where('tanggal_periksa', $q['tgl_registrasi'])->where('no_rkm_medis', $q['no_rkm_medis'])->oneArray();
+            }
 
-          if(!empty($q['nomor_referensi'])) {
-            $taskid1 = $this->db('mlite_antrian_referensi_taskid')->where('nomor_referensi', $q['nomor_referensi'])->where('taskid', '1')->oneArray();
-            $q['task1'] = date('Y-m-d H:i:s', isset_or($taskid1['waktu']) / 1000 );
+            $mutasi_berkas = !empty($no_rawat) ? $this->db('mutasi_berkas')->select('dikirim')->where('no_rawat', $no_rawat)->where('dikirim', '>', '1970-01-01 00:00:00')->oneArray() : null;
+            $mutasi_berkas2 = !empty($no_rawat) ? $this->db('mutasi_berkas')->select('diterima')->where('no_rawat', $no_rawat)->where('diterima', '>', '1970-01-01 00:00:00')->oneArray() : null;
+            $pemeriksaan_ralan = !empty($no_rawat) ? $this->db('pemeriksaan_ralan')->select(['datajam' => 'concat(tgl_perawatan," ",jam_rawat)'])->where('no_rawat', $no_rawat)->oneArray() : null;
+            $resep_obat = !empty($no_rawat) ? $this->db('resep_obat')->select(['datajam' => 'concat(tgl_perawatan," ",jam)'])->where('no_rawat', $no_rawat)->oneArray() : null;
+            $resep_obat2 = !empty($no_rawat) ? $this->db('resep_obat')->select(['datajam' => 'concat(tgl_peresepan," ",jam_peresepan)'])->where('no_rawat', $no_rawat)->where('concat(tgl_perawatan," ",jam)', '<>', 'concat(tgl_peresepan," ",jam_peresepan)')->oneArray() : null;
 
-            $taskid2 = $this->db('mlite_antrian_referensi_taskid')->where('nomor_referensi', $q['nomor_referensi'])->where('taskid', '2')->oneArray();
-            $q['task2'] = date('Y-m-d H:i:s', isset_or($taskid2['waktu']) / 1000 );
+            $mlite_antrian_loket = !empty($q['no_rkm_medis']) ? $this->db('mlite_antrian_loket')->where('postdate', $date)->where('type','Loket')->where('no_rkm_medis', $q['no_rkm_medis'])->oneArray() : null;
+            $task1 = '';
+            $task2 = '';
+            if(!empty($mlite_antrian_loket['start_time'])) {
+              $task1 = $mlite_antrian_loket['postdate'].' '.$mlite_antrian_loket['start_time'];
+            }
+            if(!empty($mlite_antrian_loket['end_time'])) {
+              $task2 = $mlite_antrian_loket['postdate'].' '.$mlite_antrian_loket['end_time'];
+            }
 
-            $taskid3 = $this->db('mlite_antrian_referensi_taskid')->where('nomor_referensi', $q['nomor_referensi'])->where('taskid', '3')->oneArray();
-            $q['task3'] = date('Y-m-d H:i:s', isset_or($taskid3['waktu']) / 1000 );
+            $q['nomor_referensi'] = $mlite_antrian_referensi['kodebooking'] ?? '';
+            $q['status_kirim'] = $mlite_antrian_referensi['status_kirim'] ?? '';
 
-            $taskid4 = $this->db('mlite_antrian_referensi_taskid')->where('nomor_referensi', $q['nomor_referensi'])->where('taskid', '4')->oneArray();
-            $q['task4'] = date('Y-m-d H:i:s', isset_or($taskid4['waktu']) / 1000 );
+            $q['task1'] = '';
+            $q['task2'] = '';
+            $q['task3'] = '';
+            $q['task4'] = '';
+            $q['task5'] = '';
+            $q['task6'] = '';
+            $q['task7'] = '';
+            $q['task99'] = '';
 
-            $taskid5 = $this->db('mlite_antrian_referensi_taskid')->where('nomor_referensi', $q['nomor_referensi'])->where('taskid', '5')->oneArray();
-            $q['task5'] = date('Y-m-d H:i:s', isset_or($taskid5['waktu']) / 1000 );
+            if(!empty($q['nomor_referensi'])) {
+              $taskid_records = $this->db('mlite_antrian_referensi_taskid')->where('nomor_referensi', $q['nomor_referensi'])->toArray();
+              $taskid_map = [];
+              foreach ($taskid_records as $tr) {
+                $taskid_map[$tr['taskid']] = $tr['waktu'];
+              }
+              if (!empty($taskid_map['1']) && is_numeric($taskid_map['1'])) {
+                $q['task1'] = date('Y-m-d H:i:s', (int)($taskid_map['1'] / 1000));
+              }
+              if (!empty($taskid_map['2']) && is_numeric($taskid_map['2'])) {
+                $q['task2'] = date('Y-m-d H:i:s', (int)($taskid_map['2'] / 1000));
+              }
+              if (!empty($taskid_map['3']) && is_numeric($taskid_map['3'])) {
+                $q['task3'] = date('Y-m-d H:i:s', (int)($taskid_map['3'] / 1000));
+              }
+              if (!empty($taskid_map['4']) && is_numeric($taskid_map['4'])) {
+                $q['task4'] = date('Y-m-d H:i:s', (int)($taskid_map['4'] / 1000));
+              }
+              if (!empty($taskid_map['5']) && is_numeric($taskid_map['5'])) {
+                $q['task5'] = date('Y-m-d H:i:s', (int)($taskid_map['5'] / 1000));
+              }
+              if (!empty($taskid_map['6']) && is_numeric($taskid_map['6'])) {
+                $q['task6'] = date('Y-m-d H:i:s', (int)($taskid_map['6'] / 1000));
+              }
+              if (!empty($taskid_map['7']) && is_numeric($taskid_map['7'])) {
+                $q['task7'] = date('Y-m-d H:i:s', (int)($taskid_map['7'] / 1000));
+              }
+              if (!empty($taskid_map['99']) && is_numeric($taskid_map['99'])) {
+                $q['task99'] = date('Y-m-d H:i:s', (int)($taskid_map['99'] / 1000));
+              }
+            }
 
-            $taskid6 = $this->db('mlite_antrian_referensi_taskid')->where('nomor_referensi', $q['nomor_referensi'])->where('taskid', '6')->oneArray();
-            $q['task6'] = date('Y-m-d H:i:s', isset_or($taskid6['waktu']) / 1000 );
+            if(empty($q['task4'])) {
+              $q['task4'] = !empty($mutasi_berkas2['diterima']) ? $mutasi_berkas2['diterima'] : '';
+            }
+            if(empty($q['task5'])) {
+              $q['task5'] = !empty($pemeriksaan_ralan['datajam']) ? $pemeriksaan_ralan['datajam'] : '';
+            }
+            if(empty($q['task3'])) {
+              if (!empty($mutasi_berkas['dikirim'])) {
+                $q['task3'] = $mutasi_berkas['dikirim'];
+              } elseif (!empty($q['task4'])) {
+                $q['task3'] = date('Y-m-d H:i:s', strtotime($q['task4']) - 300);
+              } elseif (!empty($q['task5'])) {
+                $q['task3'] = date('Y-m-d H:i:s', strtotime($q['task5']) - 600);
+              } else {
+                $q['task3'] = '';
+              }
+            }
+            if(empty($q['task4']) && !empty($q['task5'])) {
+              $q['task4'] = date('Y-m-d H:i:s', strtotime($q['task5']) - 300);
+            }
+            if(!empty($q['task3']) && !empty($q['task4']) && strtotime($q['task3']) >= strtotime($q['task4'])) {
+              $q['task3'] = date('Y-m-d H:i:s', strtotime($q['task4']) - 300);
+            }
 
-            $taskid7 = $this->db('mlite_antrian_referensi_taskid')->where('nomor_referensi', $q['nomor_referensi'])->where('taskid', '7')->oneArray();
-            $q['task7'] = date('Y-m-d H:i:s', isset_or($taskid7['waktu']) / 1000 );
-            
-            $taskid99 = $this->db('mlite_antrian_referensi_taskid')->where('nomor_referensi', $q['nomor_referensi'])->where('taskid', '99')->oneArray();
-            $q['task99'] = date('Y-m-d H:i:s', isset_or($taskid99['waktu']) / 1000 );
-          }
+            if(empty($q['task1']) || empty($q['task2'])) {
+              if(!empty($task1) && !empty($task2)) {
+                if(empty($q['task1'])) $q['task1'] = $task1;
+                if(empty($q['task2'])) $q['task2'] = $task2;
+              } elseif(!empty($q['task3'])) {
+                $t3_time = strtotime($q['task3']);
+                if(empty($q['task2'])) $q['task2'] = date('Y-m-d H:i:s', $t3_time - 180);
+                if(empty($q['task1'])) $q['task1'] = date('Y-m-d H:i:s', $t3_time - 600);
+              } else {
+                if(empty($q['task1'])) $q['task1'] = '';
+                if(empty($q['task2'])) $q['task2'] = '';
+              }
+            }
 
-          if($taskid1['waktu'] == '') {
-            $q['task1'] = $task1;
-          }
-          if($taskid2['waktu'] == '') {
-            $q['task2'] = $task2;
-          }
-          if($taskid3['waktu'] == '') {
-            $q['task3'] = isset_or($mutasi_berkas['dikirim']);
-          }
-          if($taskid4['waktu'] == '') {
-            $q['task4'] = isset_or($mutasi_berkas2['diterima']);
-          }
-          if($taskid5['waktu'] == '') {
-            $q['task5'] = isset_or($pemeriksaan_ralan['datajam']);
-          }
-          if($taskid6['waktu'] == '') {
-            $q['task6'] = isset_or($resep_obat2['datajam']);
-          }
-          if($taskid7['waktu'] == '') {
-            $q['task7'] = isset_or($resep_obat['datajam']);
-          }
-          if($taskid99['waktu'] == '') {
-            $q['task99'] = $batal;
-          }
-          $rows[] = $q;
+            if(empty($q['task6'])) {
+              $q['task6'] = !empty($resep_obat2['datajam']) ? $resep_obat2['datajam'] : '';
+            }
+            if(empty($q['task7'])) {
+              $q['task7'] = !empty($resep_obat['datajam']) ? $resep_obat['datajam'] : '';
+            }
+            if(empty($q['task99'])) {
+              $q['task99'] = $batal;
+            }
+            $rows[] = $q;
+        }
+
+        $taskid = $rows;
+        return $this->draw('taskid.html', ['taskid' => $taskid, 'date' => $date, 'tgl' => $date]);
+      } catch (\Throwable $e) {
+        error_log("anyTaskID Error: " . $e->getMessage() . " at " . $e->getFile() . ":" . $e->getLine());
+        $msg = htmlspecialchars($e->getMessage());
+        $file = htmlspecialchars($e->getFile() . ':' . $e->getLine());
+        return '<div class="row" style="margin-top:15px;"><div class="col-xs-12">' .
+               '<div class="panel panel-danger">' .
+               '<div class="panel-heading"><h3 class="panel-title"><i class="fa fa-exclamation-triangle"></i> Gagal Memuat Halaman Task ID JKN</h3></div>' .
+               '<div class="panel-body">' .
+               '<div class="alert alert-danger" style="margin-bottom:10px;"><strong>Error:</strong> ' . $msg . '</div>' .
+               '<p class="text-muted"><small>Lokasi: ' . $file . '</small></p>' .
+               '<a href="' . url([ADMIN, 'jkn_mobile', 'taskid']) . '" class="btn btn-default btn-sm"><i class="fa fa-refresh"></i> Muat Ulang</a>' .
+               '</div></div></div></div>';
       }
-
-      $taskid = $rows;
-      return $this->draw('taskid.html', ['taskid' => $taskid]);
     }
 
-    public function getTaskIDInput($no_rawat)
+    public function getTaskIDInput($no_rawat = '')
     {
-
-      $no_rawat = revertNorawat($no_rawat);
-      $pasien = $this->db('reg_periksa')
-        ->select([
-          'no_rawat' => 'no_rawat',
-          'no_rkm_medis' => 'reg_periksa.no_rkm_medis',
-          'nm_pasien' => 'nm_pasien',
-          'kd_pj' => 'reg_periksa.kd_pj',
-          'tgl_registrasi' => 'tgl_registrasi',
-          'jam_reg' => 'jam_reg'
-        ])
-        ->join('pasien', 'pasien.no_rkm_medis=reg_periksa.no_rkm_medis')
-        ->where('no_rawat', $no_rawat)
-        ->oneArray();
-      $mlite_antrian_referensi = $this->db('mlite_antrian_referensi')->where('no_rkm_medis', $pasien['no_rkm_medis'])->where('tanggal_periksa', $pasien['tgl_registrasi'])->oneArray();
-      $nomor_referensi = '';
-      $kode_booking = '';
-      if($mlite_antrian_referensi) {
-        $nomor_referensi = $mlite_antrian_referensi['nomor_referensi'];
-        $kode_booking = $mlite_antrian_referensi['kodebooking'];
-      }
-
-      $datetime_reg_periksa = $pasien['tgl_registrasi'].' '.$pasien['jam_reg'];
-
-      $taskid1 = $this->db('mlite_antrian_referensi_taskid')->where('nomor_referensi', $kode_booking)->where('taskid', '1')->oneArray();
-      $taskid['1'] = date('Y-m-d H:i:s', isset_or($taskid1['waktu'], strtotime($datetime_reg_periksa) * 1000) / 1000 );
-
-      $taskid2 = $this->db('mlite_antrian_referensi_taskid')->where('nomor_referensi', $kode_booking)->where('taskid', '2')->oneArray();
-      $taskid['2'] = date('Y-m-d H:i:s', isset_or($taskid2['waktu'], strtotime($datetime_reg_periksa) * 1000) / 1000 );
-
-      $taskid3 = $this->db('mlite_antrian_referensi_taskid')->where('nomor_referensi', $kode_booking)->where('taskid', '3')->oneArray();
-      $taskid['3'] = date('Y-m-d H:i:s', isset_or($taskid3['waktu'], strtotime($datetime_reg_periksa) * 1000) / 1000 );
-
-      $taskid4 = $this->db('mlite_antrian_referensi_taskid')->where('nomor_referensi', $kode_booking)->where('taskid', '4')->oneArray();
-      $taskid['4'] = date('Y-m-d H:i:s', isset_or($taskid4['waktu'], strtotime($datetime_reg_periksa) * 1000) / 1000 );
-
-      $taskid5 = $this->db('mlite_antrian_referensi_taskid')->where('nomor_referensi', $kode_booking)->where('taskid', '5')->oneArray();
-      $taskid['5'] = date('Y-m-d H:i:s', isset_or($taskid5['waktu'], strtotime($datetime_reg_periksa) * 1000) / 1000 );
-
-      $taskid6 = $this->db('mlite_antrian_referensi_taskid')->where('nomor_referensi', $kode_booking)->where('taskid', '6')->oneArray();
-      $taskid['6'] = date('Y-m-d H:i:s', isset_or($taskid6['waktu'], strtotime($datetime_reg_periksa) * 1000) / 1000 );
-
-      $taskid7 = $this->db('mlite_antrian_referensi_taskid')->where('nomor_referensi', $kode_booking)->where('taskid', '7')->oneArray();
-      $taskid['7'] = date('Y-m-d H:i:s', isset_or($taskid7['waktu'], strtotime($datetime_reg_periksa) * 1000) / 1000 );
-      
-      $taskid99 = $this->db('mlite_antrian_referensi_taskid')->where('nomor_referensi', $kode_booking)->where('taskid', '99')->oneArray();
-      $taskid['99'] = date('Y-m-d H:i:s', $taskid99['waktu'] / 1000 );
-      
-      $mlite_antrian_loket = $this->db('mlite_antrian_loket')->where('no_rkm_medis', $pasien['no_rkm_medis'])->where('postdate', $pasien['tgl_registrasi'])->oneArray();
-      $berkas_dikirim = $this->db('mutasi_berkas')->select('dikirim')->where('no_rawat', $pasien['no_rawat'])->where('dikirim', '>', '1970-01-01 00:00:00')->oneArray();
-      $berkas_diterima = $this->db('mutasi_berkas')->select('diterima')->where('no_rawat', $pasien['no_rawat'])->where('diterima', '>', '1970-01-01 00:00:00')->oneArray();
-      $pemeriksaan_ralan = $this->db('pemeriksaan_ralan')->select(['datajam' => 'concat(tgl_perawatan," ",jam_rawat)'])->where('no_rawat', $pasien['no_rawat'])->oneArray();
-      $resep_obat = $this->db('resep_obat')->select(['datajam' => 'concat(tgl_peresepan," ",jam_peresepan)', 'datajam2' => 'concat(tgl_perawatan," ",jam)', 'no_resep' => 'no_resep'])->where('no_rawat', $pasien['no_rawat'])->oneArray();
-
-      $jenisresep = 'Non racikan';
-      if($resep_obat) {
-        $resep_dokter_racikan = $this->db('resep_dokter_racikan')->where('no_resep', $resep_obat['no_resep'])->oneArray();
-        if(!empty($resep_dokter_racikan)) {
-          $jenisresep = 'Racikan';
+      try {
+        if (empty($no_rawat) && !empty($_GET['no_rawat'])) {
+          $no_rawat = $_GET['no_rawat'];
         }
-      }
 
-      if($taskid1['waktu'] == '') {
-        $taskid['1'] = isset_or($mlite_antrian_loket['postdate'], $pasien['tgl_registrasi']).' '.isset_or($mlite_antrian_loket['start_time'], $pasien['jam_reg']);
+        $isAjax = (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') || isset($_GET['modal']);
+
+        $no_rawat = trim((string)$no_rawat);
+        if (empty($no_rawat)) {
+          if ($isAjax) {
+            echo '<div class="modal-header"><button type="button" class="close" data-dismiss="modal">&times;</button><h4 class="modal-title text-warning"><i class="fa fa-info-circle"></i> Informasi Task ID</h4></div>' .
+                 '<div class="modal-body"><div class="alert alert-warning"><i class="fa fa-info-circle"></i> Nomor Rawat belum ditentukan atau pasien belum memiliki Nomor Rawat di SIMRS.</div></div>' .
+                 '<div class="modal-footer"><button type="button" class="btn btn-default" data-dismiss="modal">Tutup</button></div>';
+            exit();
+          } else {
+            $this->_addHeaderFiles();
+            return '<div class="row" style="margin-top:20px;"><div class="col-md-8 col-md-offset-2"><div class="panel panel-default"><div class="panel-heading"><h3 class="panel-title"><i class="fa fa-info-circle text-info"></i> Input Task ID</h3></div><div class="panel-body"><div class="alert alert-warning"><i class="fa fa-info-circle"></i> Nomor Rawat tidak valid atau belum ditentukan. Silakan pilih pasien dari tabel Booking Antrol atau Antrean SIMRS.</div><a href="' . url([ADMIN, 'jkn_mobile', 'bookingantrol']) . '" class="btn btn-primary"><i class="fa fa-arrow-left"></i> Kembali ke Booking Antrol</a> <a href="' . url([ADMIN, 'jkn_mobile', 'taskid']) . '" class="btn btn-default"><i class="fa fa-list"></i> Lihat Data Task ID</a></div></div></div></div>';
+          }
+        }
+
+        $no_rawat = revertNorawat($no_rawat);
+        $pasien = $this->db('reg_periksa')
+          ->select([
+            'no_rawat' => 'no_rawat',
+            'no_rkm_medis' => 'reg_periksa.no_rkm_medis',
+            'nm_pasien' => 'nm_pasien',
+            'kd_pj' => 'reg_periksa.kd_pj',
+            'tgl_registrasi' => 'tgl_registrasi',
+            'jam_reg' => 'jam_reg'
+          ])
+          ->join('pasien', 'pasien.no_rkm_medis=reg_periksa.no_rkm_medis')
+          ->where('no_rawat', $no_rawat)
+          ->oneArray();
+
+        if (!$pasien) {
+          if ($isAjax) {
+            echo '<div class="modal-header"><button type="button" class="close" data-dismiss="modal">&times;</button><h4 class="modal-title text-warning"><i class="fa fa-exclamation-triangle"></i> Pasien Tidak Ditemukan</h4></div>' .
+                 '<div class="modal-body"><div class="alert alert-warning"><i class="fa fa-exclamation-triangle"></i> Data pendaftaran SIMRS untuk No. Rawat <b>' . htmlspecialchars($no_rawat) . '</b> tidak ditemukan. Pastikan pasien sudah teregistrasi di SIMRS.</div></div>' .
+                 '<div class="modal-footer"><button type="button" class="btn btn-default" data-dismiss="modal">Tutup</button></div>';
+            exit();
+          } else {
+            $this->_addHeaderFiles();
+            return '<div class="row" style="margin-top:20px;"><div class="col-md-8 col-md-offset-2"><div class="panel panel-default"><div class="panel-heading"><h3 class="panel-title"><i class="fa fa-exclamation-triangle text-danger"></i> Pasien Tidak Ditemukan</h3></div><div class="panel-body"><div class="alert alert-warning"><i class="fa fa-exclamation-triangle"></i> Data pendaftaran SIMRS untuk No. Rawat <b>' . htmlspecialchars($no_rawat) . '</b> tidak ditemukan.</div><a href="' . url([ADMIN, 'jkn_mobile', 'bookingantrol']) . '" class="btn btn-primary"><i class="fa fa-arrow-left"></i> Kembali ke Booking Antrol</a> <a href="' . url([ADMIN, 'jkn_mobile', 'taskid']) . '" class="btn btn-default"><i class="fa fa-list"></i> Lihat Data Task ID</a></div></div></div></div>';
+          }
+        }
+
+        $mlite_antrian_referensi = null;
+        if (!empty($pasien['no_rkm_medis']) && !empty($pasien['tgl_registrasi'])) {
+          $mlite_antrian_referensi = $this->db('mlite_antrian_referensi')->where('no_rkm_medis', $pasien['no_rkm_medis'])->where('tanggal_periksa', $pasien['tgl_registrasi'])->oneArray();
+        }
+        $nomor_referensi = '';
+        $kode_booking = '';
+        if($mlite_antrian_referensi) {
+          $nomor_referensi = $mlite_antrian_referensi['nomor_referensi'] ?? '';
+          $kode_booking = $mlite_antrian_referensi['kodebooking'] ?? '';
+        }
+
+        $taskid_records = !empty($kode_booking) ? $this->db('mlite_antrian_referensi_taskid')->where('nomor_referensi', $kode_booking)->toArray() : [];
+        $taskid_map = [];
+        foreach ($taskid_records as $tr) {
+          $taskid_map[$tr['taskid']] = $tr['waktu'];
+        }
+
+        $taskid = [];
+        $taskid['1'] = (!empty($taskid_map['1']) && is_numeric($taskid_map['1'])) ? date('Y-m-d H:i:s', (int)($taskid_map['1'] / 1000)) : '';
+        $taskid['2'] = (!empty($taskid_map['2']) && is_numeric($taskid_map['2'])) ? date('Y-m-d H:i:s', (int)($taskid_map['2'] / 1000)) : '';
+        $taskid['3'] = (!empty($taskid_map['3']) && is_numeric($taskid_map['3'])) ? date('Y-m-d H:i:s', (int)($taskid_map['3'] / 1000)) : '';
+        $taskid['4'] = (!empty($taskid_map['4']) && is_numeric($taskid_map['4'])) ? date('Y-m-d H:i:s', (int)($taskid_map['4'] / 1000)) : '';
+        $taskid['5'] = (!empty($taskid_map['5']) && is_numeric($taskid_map['5'])) ? date('Y-m-d H:i:s', (int)($taskid_map['5'] / 1000)) : '';
+        $taskid['6'] = (!empty($taskid_map['6']) && is_numeric($taskid_map['6'])) ? date('Y-m-d H:i:s', (int)($taskid_map['6'] / 1000)) : '';
+        $taskid['7'] = (!empty($taskid_map['7']) && is_numeric($taskid_map['7'])) ? date('Y-m-d H:i:s', (int)($taskid_map['7'] / 1000)) : '';
+        $taskid['99'] = (!empty($taskid_map['99']) && is_numeric($taskid_map['99'])) ? date('Y-m-d H:i:s', (int)($taskid_map['99'] / 1000)) : '';
+
+        $mlite_antrian_loket = !empty($pasien['no_rkm_medis']) ? $this->db('mlite_antrian_loket')->where('no_rkm_medis', $pasien['no_rkm_medis'])->where('postdate', $pasien['tgl_registrasi'])->oneArray() : null;
+        $berkas_dikirim = !empty($pasien['no_rawat']) ? $this->db('mutasi_berkas')->select('dikirim')->where('no_rawat', $pasien['no_rawat'])->where('dikirim', '>', '1970-01-01 00:00:00')->oneArray() : null;
+        $berkas_diterima = !empty($pasien['no_rawat']) ? $this->db('mutasi_berkas')->select('diterima')->where('no_rawat', $pasien['no_rawat'])->where('diterima', '>', '1970-01-01 00:00:00')->oneArray() : null;
+        $pemeriksaan_ralan = !empty($pasien['no_rawat']) ? $this->db('pemeriksaan_ralan')->select(['datajam' => 'concat(tgl_perawatan," ",jam_rawat)'])->where('no_rawat', $pasien['no_rawat'])->oneArray() : null;
+        $resep_obat = !empty($pasien['no_rawat']) ? $this->db('resep_obat')->select(['datajam' => 'concat(tgl_peresepan," ",jam_peresepan)', 'datajam2' => 'concat(tgl_perawatan," ",jam)', 'no_resep' => 'no_resep'])->where('no_rawat', $pasien['no_rawat'])->oneArray() : null;
+
+        $jenisresep = 'Non racikan';
+        if($resep_obat && !empty($resep_obat['no_resep'])) {
+          $resep_dokter_racikan = $this->db('resep_dokter_racikan')->where('no_resep', $resep_obat['no_resep'])->oneArray();
+          if(!empty($resep_dokter_racikan)) {
+            $jenisresep = 'Racikan';
+          }
+        }
+
+        if(empty($taskid['4'])) {
+          $taskid['4'] = !empty($berkas_diterima['diterima']) ? $berkas_diterima['diterima'] : '';
+        }
+        if(empty($taskid['5'])) {
+          $taskid['5'] = !empty($pemeriksaan_ralan['datajam']) ? $pemeriksaan_ralan['datajam'] : '';
+        }
+        if(empty($taskid['3'])) {
+          if (!empty($berkas_dikirim['dikirim'])) {
+            $taskid['3'] = $berkas_dikirim['dikirim'];
+          } elseif (!empty($taskid['4'])) {
+            // Jika berkas sudah diterima di poli tapi RM belum klik kirim, otomatis 5 menit sebelum diterima
+            $taskid['3'] = date('Y-m-d H:i:s', strtotime($taskid['4']) - 300);
+          } elseif (!empty($taskid['5'])) {
+            // Jika dokter sudah mulai periksa, otomatis 10 menit sebelum periksa
+            $taskid['3'] = date('Y-m-d H:i:s', strtotime($taskid['5']) - 600);
+          } else {
+            $taskid['3'] = '';
+          }
+        }
+        if(empty($taskid['4']) && !empty($taskid['5'])) {
+          $taskid['4'] = date('Y-m-d H:i:s', strtotime($taskid['5']) - 300);
+        }
+        if(!empty($taskid['3']) && !empty($taskid['4']) && strtotime($taskid['3']) >= strtotime($taskid['4'])) {
+          $taskid['3'] = date('Y-m-d H:i:s', strtotime($taskid['4']) - 300);
+        }
+
+        if(empty($taskid['1']) || empty($taskid['2'])) {
+          if(!empty($mlite_antrian_loket['start_time']) && !empty($mlite_antrian_loket['end_time'])) {
+            if(empty($taskid['1'])) {
+              $taskid['1'] = $mlite_antrian_loket['postdate'].' '.$mlite_antrian_loket['start_time'];
+            }
+            if(empty($taskid['2'])) {
+              $taskid['2'] = $mlite_antrian_loket['postdate'].' '.$mlite_antrian_loket['end_time'];
+            }
+          } elseif(!empty($taskid['3'])) {
+            $t3_time = strtotime($taskid['3']);
+            if(empty($taskid['2'])) {
+              $taskid['2'] = date('Y-m-d H:i:s', $t3_time - 180);
+            }
+            if(empty($taskid['1'])) {
+              $taskid['1'] = date('Y-m-d H:i:s', $t3_time - 600);
+            }
+          } else {
+            if(empty($taskid['1'])) {
+              $taskid['1'] = '';
+            }
+            if(empty($taskid['2'])) {
+              $taskid['2'] = '';
+            }
+          }
+        }
+        if(empty($taskid['6'])) {
+          $taskid['6'] = !empty($resep_obat['datajam']) ? $resep_obat['datajam'] : '';
+        }
+        if(empty($taskid['7'])) {
+          $taskid['7'] = !empty($resep_obat['datajam2']) ? $resep_obat['datajam2'] : '';
+        }
+        if(empty($taskid['99'])) {
+          $taskid['99'] = '';
+        }
+        $status_antrol = !empty($nomor_referensi) ? $this->db('mlite_antrian_referensi')->where('nomor_referensi', $nomor_referensi)->where('status_kirim', 'Sudah')->oneArray() : null;
+        $status_kirim_antrol = 'Belum';
+        if($status_antrol && !empty($status_antrol['status_kirim'])) {
+          $status_kirim_antrol = $status_antrol['status_kirim'];
+        }
+
+        $isAjax = (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') || isset($_GET['modal']);
+        if (!$isAjax) {
+          $this->_addHeaderFiles();
+          $this->getCssCard();
+          return '<div class="row" style="margin-top:15px;"><div class="col-md-10 col-md-offset-1"><div class="panel panel-default" style="border-radius:6px; box-shadow:0 2px 8px rgba(0,0,0,0.08);"><div class="panel-body">' . 
+                 $this->draw('taskid.input.html', ['pasien' => $pasien, 'taskid' => $taskid, 'nomor_referensi' => $nomor_referensi, 'kode_booking' => $kode_booking, 'status_kirim_antrol' => $status_kirim_antrol]) . 
+                 '</div></div></div></div>';
+        }
+        echo $this->draw('taskid.input.html', ['pasien' => $pasien, 'taskid' => $taskid, 'nomor_referensi' => $nomor_referensi, 'kode_booking' => $kode_booking, 'status_kirim_antrol' => $status_kirim_antrol]);
+        exit();
+      } catch (\Throwable $e) {
+        error_log("getTaskIDInput error: " . $e->getMessage() . " at " . $e->getFile() . ":" . $e->getLine());
+        echo '<div class="modal-header"><button type="button" class="close" data-dismiss="modal">&times;</button><h4 class="modal-title text-danger">Error Memuat Task ID</h4></div><div class="modal-body"><div class="alert alert-danger">' . htmlspecialchars($e->getMessage()) . '</div><small>' . htmlspecialchars($e->getFile() . ':' . $e->getLine()) . '</small></div>';
+        exit();
       }
-      if($taskid2['waktu'] == '') {
-        $taskid['2'] = isset_or($mlite_antrian_loket['postdate'], $pasien['tgl_registrasi']).' '.isset_or($mlite_antrian_loket['end_time'], $pasien['jam_reg']);
-      }
-      if($taskid3['waktu'] == '') {
-        $taskid['3'] = isset_or($berkas_dikirim['dikirim'], '');
-      }
-      if($taskid4['waktu'] == '') {
-        $taskid['4'] = isset_or($berkas_diterima['diterima'], '');
-      }
-      if($taskid5['waktu'] == '') {
-        $taskid['5'] = isset_or($pemeriksaan_ralan['datajam'], '');
-      }
-      if($taskid6['waktu'] == '') {
-        $taskid['6'] = isset_or($resep_obat['datajam'], '');
-      }
-      if($taskid7['waktu'] == '') {
-        $taskid['7'] = isset_or($resep_obat['datajam2'], '');
-      }
-      if($taskid99['waktu'] == '') {
-        $taskid['99'] = '';
-      }
-      $status_antrol = $this->db('mlite_antrian_referensi')->where('nomor_referensi', $nomor_referensi)->where('status_kirim', 'Sudah')->oneArray();
-      $status_kirim_antrol = 'Belum';
-      if($status_antrol) {
-        $status_kirim_antrol = $status_antrol['status_kirim'];
-      }
-      echo $this->draw('taskid.input.html', ['pasien' => $pasien, 'taskid' => $taskid, 'nomor_referensi' => $nomor_referensi, 'kode_booking' => $kode_booking, 'status_kirim_antrol' => $status_kirim_antrol]);
-      exit();
     }
 
     public function postSaveTaskIDInput()
     {
-      $this->db('mlite_antrian_referensi_taskid')->where('nomor_referensi', $_POST['nomor_referensi'])->where('status','!=','Sudah')->delete();
+      $nomor_referensi = trim($_POST['nomor_referensi'] ?? '');
+      if (!empty($nomor_referensi)) {
+        $this->db('mlite_antrian_referensi_taskid')->where('nomor_referensi', $nomor_referensi)->where('status','!=','Sudah')->delete();
+      }
 
       if (!empty($_POST['taskid99'])) {
         $this->db('mlite_antrian_referensi_taskid')
@@ -699,11 +1233,22 @@ class Admin extends AdminModule
       }
 
 
-      redirect(url([ADMIN, 'jkn_mobile', 'taskid']));
+      $this->notify('success', 'Data Task ID berhasil disimpan');
+      $redirectUrl = !empty($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : url([ADMIN, 'jkn_mobile', 'taskid']);
+      redirect($redirectUrl);
     }
 
-    public function getKirimAntrian($no_rawat)
+    public function getKirimAntrian($no_rawat = '')
     {
+      if (empty($no_rawat) && !empty($_GET['no_rawat'])) {
+        $no_rawat = $_GET['no_rawat'];
+      }
+      $no_rawat = trim((string)$no_rawat);
+      if (empty($no_rawat)) {
+        header('Content-Type: application/json');
+        echo json_encode(['status' => 'error', 'message' => 'No. Rawat tidak valid atau kosong.']);
+        exit();
+      }
 
       $no_rawat = revertNorawat($no_rawat);
       $reg_periksa = $this->db('reg_periksa')->where('no_rawat', $no_rawat)
@@ -725,11 +1270,27 @@ class Admin extends AdminModule
       $maping_dokter_dpjpvclaim = $this->db('maping_dokter_dpjpvclaim')->where('kd_dokter', $reg_periksa['kd_dokter'])->oneArray();
       $maping_poli_bpjs = $this->db('maping_poli_bpjs')->where('kd_poli_rs', $reg_periksa['kd_poli'])->oneArray();
       $jadwaldokter = $this->db('jadwal')->where('kd_dokter', $reg_periksa['kd_dokter'])->where('kd_poli', $reg_periksa['kd_poli'])->where('hari_kerja', $hari)->oneArray();
+
+      $kd_dokter_bpjs = $maping_dokter_dpjpvclaim ? $maping_dokter_dpjpvclaim['kd_dokter_bpjs'] : '';
+      $nm_dokter_bpjs = $maping_dokter_dpjpvclaim ? $maping_dokter_dpjpvclaim['nm_dokter_bpjs'] : '';
+      $kd_poli_bpjs = $maping_poli_bpjs ? $maping_poli_bpjs['kd_poli_bpjs'] : '';
+      $nm_poli_bpjs = $maping_poli_bpjs ? $maping_poli_bpjs['nm_poli_bpjs'] : '';
+
+      $jam_mulai = ($jadwaldokter && !empty($jadwaldokter['jam_mulai'])) ? $jadwaldokter['jam_mulai'] : '08:00:00';
+      $jam_selesai = ($jadwaldokter && !empty($jadwaldokter['jam_selesai'])) ? $jadwaldokter['jam_selesai'] : '14:00:00';
+      $kuota = ($jadwaldokter && !empty($jadwaldokter['kuota'])) ? intval($jadwaldokter['kuota']) : 30;
+
       $no_urut_reg = substr($reg_periksa['no_reg'], 0, 3);
-      $minutes = $no_urut_reg * 10;
-      $cek_kuota['jam_mulai'] = date('H:i:s',strtotime('+'.$minutes.' minutes',strtotime($jadwaldokter['jam_mulai'])));
+      $minutes = intval($no_urut_reg) * 10;
+      $cek_kuota['jam_mulai'] = date('H:i:s',strtotime('+'.$minutes.' minutes',strtotime($jam_mulai)));
+      // Auto-heal setting kd_pj_bpjs jika di server masih strip (-)
+      if ($this->settings->get('jkn_mobile.kd_pj_bpjs') == '-' || $this->settings->get('jkn_mobile.kd_pj_bpjs') == '') {
+        $this->db('mlite_settings')->where('module', 'jkn_mobile')->where('field', 'kd_pj_bpjs')->save(['value' => 'BPJ']);
+      }
+
       $jenispasien = 'NON JKN';
-      if($reg_periksa['kd_pj'] == $this->settings->get('jkn_mobile.kd_pj_bpjs')) {
+      $bpj_codes = array_filter([$this->settings->get('jkn_mobile.kd_pj_bpjs'), $this->settings->get('manajemen.penjab_bpjs'), 'BPJ']);
+      if(in_array($reg_periksa['kd_pj'], $bpj_codes) || stripos($reg_periksa['kd_pj'], 'BPJ') !== false) {
         $jenispasien = 'JKN';
       }
       $pasienbaru = '1';
@@ -755,18 +1316,89 @@ class Admin extends AdminModule
         $nohp = '';
       }
 
-      $jeniskunjungan = 3;
-      $kodebooking = $this->settings->get('settings.ppk_bpjs').''.convertNorawat($reg_periksa['no_rawat']).''.$maping_poli_bpjs['kd_poli_bpjs'].''.$reg_periksa['no_reg'];
+      $jeniskunjungan = 1; // Default rujukan FKTP
       $nomorreferensi = $this->settings->get('settings.ppk_bpjs').''.convertNorawat($reg_periksa['no_rawat']).''.$reg_periksa['no_reg'];
 
       if($jenispasien == 'JKN') {
           $bridging_sep = $this->db('bridging_sep')->where('no_rawat', $reg_periksa['no_rawat'])->oneArray();
-          $nomorreferensi = $bridging_sep['no_rujukan'];
-          if(!$bridging_sep) {
+          if ($bridging_sep) {
+            // Tentukan jenis kunjungan & nomor referensi dari data SEP
+            if (!empty($bridging_sep['noskdp']) || $bridging_sep['tujuankunjungan'] == '1') {
+              $jeniskunjungan = 3; // Kontrol (SKDP)
+              $nomorreferensi = !empty($bridging_sep['noskdp']) ? $bridging_sep['noskdp'] : $bridging_sep['no_rujukan'];
+            } elseif ($bridging_sep['tujuankunjungan'] == '2') {
+              $jeniskunjungan = 2; // Rujukan Internal
+              $nomorreferensi = !empty($bridging_sep['noskdp']) ? $bridging_sep['noskdp'] : $bridging_sep['no_rujukan'];
+            } elseif ($bridging_sep['asal_rujukan'] == '2. Faskes 2(RS)') {
+              $jeniskunjungan = 4; // Rujukan Antar RS (Faskes 2)
+              $nomorreferensi = $bridging_sep['no_rujukan'];
+            } else {
+              $jeniskunjungan = 1; // Rujukan FKTP (Faskes 1)
+              $nomorreferensi = $bridging_sep['no_rujukan'];
+            }
+
+            if (empty($kd_dokter_bpjs)) {
+              $kd_dokter_bpjs = $bridging_sep['kddpjplayanan'] ?: $bridging_sep['kddpjp'];
+              $nm_dokter_bpjs = $bridging_sep['nmdpjplayanan'] ?: $bridging_sep['nmdpdjp'];
+            }
+            if (empty($kd_poli_bpjs)) {
+              $kd_poli_bpjs = $bridging_sep['kdpolitujuan'];
+              $nm_poli_bpjs = $bridging_sep['nmpolitujuan'];
+            }
+          } else {
             $bridging_sep_internal = $this->db('bridging_sep_internal')->where('no_rawat', $reg_periksa['no_rawat'])->oneArray();
-            $nomorreferensi = $bridging_sep_internal['no_rujukan'];
+            if ($bridging_sep_internal) {
+              if (!empty($bridging_sep_internal['noskdp']) || $bridging_sep_internal['tujuankunjungan'] == '1') {
+                $jeniskunjungan = 3;
+                $nomorreferensi = !empty($bridging_sep_internal['noskdp']) ? $bridging_sep_internal['noskdp'] : $bridging_sep_internal['no_rujukan'];
+              } elseif ($bridging_sep_internal['tujuankunjungan'] == '2') {
+                $jeniskunjungan = 2;
+                $nomorreferensi = !empty($bridging_sep_internal['noskdp']) ? $bridging_sep_internal['noskdp'] : $bridging_sep_internal['no_rujukan'];
+              } elseif ($bridging_sep_internal['asal_rujukan'] == '2. Faskes 2(RS)') {
+                $jeniskunjungan = 4;
+                $nomorreferensi = $bridging_sep_internal['no_rujukan'];
+              } else {
+                $jeniskunjungan = 1;
+                $nomorreferensi = $bridging_sep_internal['no_rujukan'];
+              }
+
+              if (empty($kd_dokter_bpjs)) {
+                $kd_dokter_bpjs = $bridging_sep_internal['kddpjplayanan'] ?: $bridging_sep_internal['kddpjp'];
+                $nm_dokter_bpjs = $bridging_sep_internal['nmdpjplayanan'] ?: $bridging_sep_internal['nmdpdjp'];
+              }
+              if (empty($kd_poli_bpjs)) {
+                $kd_poli_bpjs = $bridging_sep_internal['kdpolitujuan'];
+                $nm_poli_bpjs = $bridging_sep_internal['nmpolitujuan'];
+              }
+            }
+          }
+
+          if (empty($nomorreferensi)) {
+            $surat_pri = $this->db('bridging_surat_pri_bpjs')->where('no_rawat', $reg_periksa['no_rawat'])->oneArray();
+            if ($surat_pri && !empty($surat_pri['no_surat'])) {
+              $nomorreferensi = $surat_pri['no_surat'];
+              $jeniskunjungan = 3;
+            }
+          }
+
+          if (empty($nomorreferensi)) {
+            echo json_encode([
+              'status' => 'error',
+              'message' => 'Pasien BPJS/JKN ini belum memiliki SEP atau Nomor Rujukan. Silakan terbitkan SEP terlebih dahulu di menu Rawat Jalan (tombol BPJS) sebelum mengirim Antrol.'
+            ]);
+            exit();
           }
       }
+
+      if (empty($kd_dokter_bpjs) || empty($kd_poli_bpjs)) {
+        echo json_encode([
+          'status' => 'error',
+          'message' => 'Data mapping Dokter BPJS atau Poli BPJS belum tersedia. Silakan lengkapi Mapping Dokter/Poli di menu Bridging.'
+        ]);
+        exit();
+      }
+
+      $kodebooking = $this->settings->get('settings.ppk_bpjs').''.convertNorawat($reg_periksa['no_rawat']).''.$kd_poli_bpjs.''.$reg_periksa['no_reg'];
 
       $data = [
           'kodebooking' => $kodebooking,
@@ -774,35 +1406,39 @@ class Admin extends AdminModule
           'nomorkartu' => $nomorkartu,
           'nik' => $nik,
           'nohp' => $nohp,
-          'kodepoli' => $maping_poli_bpjs['kd_poli_bpjs'],
-          'namapoli' => $maping_poli_bpjs['nm_poli_bpjs'],
-          'pasienbaru' => $pasienbaru,
+          'kodepoli' => $kd_poli_bpjs,
+          'namapoli' => $nm_poli_bpjs,
+          'pasienbaru' => intval($pasienbaru),
           'norm' => $reg_periksa['no_rkm_medis'],
           'tanggalperiksa' => $reg_periksa['tgl_registrasi'],
-          'kodedokter' => $maping_dokter_dpjpvclaim['kd_dokter_bpjs'],
-          'namadokter' => $maping_dokter_dpjpvclaim['nm_dokter_bpjs'],
-          'jampraktek' => substr($jadwaldokter['jam_mulai'],0,5).'-'.substr($jadwaldokter['jam_selesai'],0,5),
-          'jeniskunjungan' => $jeniskunjungan,
+          'kodedokter' => intval($kd_dokter_bpjs),
+          'namadokter' => $nm_dokter_bpjs,
+          'jampraktek' => substr($jam_mulai,0,5).'-'.substr($jam_selesai,0,5),
+          'jeniskunjungan' => intval($jeniskunjungan),
           'nomorreferensi' => $nomorreferensi,
-          'nomorantrean' => $maping_poli_bpjs['kd_poli_bpjs'].'-'.$reg_periksa['no_reg'],
-          'angkaantrean' => $reg_periksa['no_reg'],
+          'nomorantrean' => $kd_poli_bpjs.'-'.$reg_periksa['no_reg'],
+          'angkaantrean' => intval(ltrim($reg_periksa['no_reg'],'0')),
           'estimasidilayani' => strtotime($reg_periksa['tgl_registrasi'].' '.$cek_kuota['jam_mulai']) * 1000,
-          'sisakuotajkn' => $jadwaldokter['kuota']-ltrim($reg_periksa['no_reg'],'0'),
-          'kuotajkn' => intval($jadwaldokter['kuota']),
-          'sisakuotanonjkn' => $jadwaldokter['kuota']-ltrim($reg_periksa['no_reg'],'0'),
-          'kuotanonjkn' => intval($jadwaldokter['kuota']),
+          'sisakuotajkn' => max(0, $kuota - intval(ltrim($reg_periksa['no_reg'],'0'))),
+          'kuotajkn' => $kuota,
+          'sisakuotanonjkn' => max(0, $kuota - intval(ltrim($reg_periksa['no_reg'],'0'))),
+          'kuotanonjkn' => $kuota,
           'keterangan' => 'Peserta harap 30 menit lebih awal guna pencatatan administrasi.'
       ];
       $data = json_encode($data);
       $url = $this->bpjsurl.'antrean/add';
       $output = BpjsService::post($url, $data, $this->consid, $this->secretkey, $this->user_key, NULL);
       $data = json_decode($output, true);
-      if($data['metadata']['code'] == 200 || $data['metadata']['code'] == 208) {
+      $code = isset($data['metadata']['code']) ? $data['metadata']['code'] : (isset($data['metaData']['code']) ? $data['metaData']['code'] : 500);
+      $msg = isset($data['metadata']['message']) ? $data['metadata']['message'] : (isset($data['metaData']['message']) ? $data['metaData']['message'] : 'Gagal mengirim antrean ke server BPJS.');
+
+      if($code == 200 || $code == 208) {
         $response = [
-            'nomor_referensi' =>  $nomorreferensi,
-            'kode_booking' => $kodebooking
+            'status' => 'success',
+            'nomor_referensi' => $nomorreferensi,
+            'kode_booking' => $kodebooking,
+            'message' => 'Antrean berhasil dikirim ke BPJS (' . $code . ': ' . $msg . ')'
         ];
-        echo json_encode(htmlspecialchars_array($response));
         $this->db('mlite_antrian_referensi')->save([
             'tanggal_periksa' => $reg_periksa['tgl_registrasi'],
             'no_rkm_medis' => $reg_periksa['no_rkm_medis'],
@@ -811,22 +1447,74 @@ class Admin extends AdminModule
             'kodebooking' => $kodebooking,
             'jenis_kunjungan' => $jeniskunjungan,
             'status_kirim' => 'Sudah',
-            'keterangan' => $data['metadata']['code'].': '.$data['metadata']['message']
+            'keterangan' => $code . ': ' . $msg
         ]);
+        echo json_encode(htmlspecialchars_array($response));
       } else {
-        echo $data['metadata']['code'].': '.$data['metadata']['message'];
+        echo json_encode([
+            'status' => 'error',
+            'code' => $code,
+            'message' => $code . ': ' . $msg
+        ]);
       }
       exit();
     }
 
-    public function getUpdateWaktu($nomor_referensi, $kode_booking, $versi)
+    private function _decodeBpjsResponse($output)
     {
+      $json = json_decode((string) $output, true);
+
+      if (!is_array($json)) {
+        $json = [];
+      }
+
+      if (!isset($json['metadata']) || !is_array($json['metadata'])) {
+        $json['metadata'] = [];
+      }
+
+      if (!isset($json['metadata']['code'])) {
+        $json['metadata']['code'] = '5000';
+      }
+
+      if (!isset($json['metadata']['message'])) {
+        $json['metadata']['message'] = 'Response BPJS kosong atau tidak valid.';
+      }
+
+      return $json;
+    }
+
+    public function getUpdateWaktu($nomor_referensi = '', $kode_booking = '', $versi = '')
+    {
+      $nomor_referensi = trim((string) $nomor_referensi);
+      $kode_booking = trim((string) $kode_booking);
+      $versi = strtolower(trim((string) $versi));
+
+      if ($nomor_referensi === '' || $kode_booking === '') {
+        $this->notify('failure', 'Nomor referensi/kode booking tidak ditemukan. Silakan kirim antrean terlebih dahulu.');
+        redirect(url([ADMIN, 'jkn_mobile', 'taskid']));
+      }
+
+      if (!in_array($versi, ['batal', 'v2', 'v3'], true)) {
+        $this->notify('failure', 'Versi update waktu tidak dikenali.');
+        redirect(url([ADMIN, 'jkn_mobile', 'taskid']));
+      }
 
       $mlite_antrian_referensi = $this->db('mlite_antrian_referensi')->where('nomor_referensi', $nomor_referensi)->where('kodebooking', $kode_booking)->oneArray();
+
+      if (!$mlite_antrian_referensi) {
+        $this->notify('failure', 'Data referensi antrean tidak ditemukan.');
+        redirect(url([ADMIN, 'jkn_mobile', 'taskid']));
+      }
+
       $reg_periksa = $this->db('reg_periksa')
         ->where('tgl_registrasi', $mlite_antrian_referensi['tanggal_periksa'])
         ->where('no_rkm_medis', $mlite_antrian_referensi['no_rkm_medis'])
         ->oneArray();
+
+      if (!$reg_periksa) {
+        $this->notify('failure', 'Data registrasi pasien tidak ditemukan.');
+        redirect(url([ADMIN, 'jkn_mobile', 'taskid']));
+      }
 
       $resep_obat = $this->db('resep_obat')->select(['datajam' => 'concat(tgl_peresepan," ",jam_peresepan)', 'no_resep' => 'no_resep'])->where('no_rawat', $reg_periksa['no_rawat'])->oneArray();
       $jenisresep = 'Non racikan';
@@ -835,6 +1523,32 @@ class Admin extends AdminModule
         if(!empty($resep_dokter_racikan)) {
           $jenisresep = 'Racikan';
         }
+      }
+
+      // Pastikan task 1-7 yang ada di SIMRS otomatis tersimpan di database jika belum ada
+      $task_resolved = $this->_resolveTaskTimes(
+          $reg_periksa['no_rawat'] ?? '',
+          $reg_periksa['no_rkm_medis'] ?? '',
+          $mlite_antrian_referensi['tanggal_periksa'],
+          $kode_booking,
+          $nomor_referensi,
+          []
+      );
+      foreach ($task_resolved as $tid => $rData) {
+          if (!empty($rData['waktu'])) {
+              $waktu_millis = is_numeric($rData['waktu']) ? (int)$rData['waktu'] : strtotime($rData['waktu']) * 1000;
+              $exist = $this->db('mlite_antrian_referensi_taskid')->where('nomor_referensi', $kode_booking)->where('taskid', $tid)->oneArray();
+              if (!$exist) {
+                  $this->db('mlite_antrian_referensi_taskid')->save([
+                      'tanggal_periksa' => $mlite_antrian_referensi['tanggal_periksa'],
+                      'nomor_referensi' => $kode_booking,
+                      'taskid' => (int)$tid,
+                      'waktu' => $waktu_millis,
+                      'status' => 'Belum',
+                      'keterangan' => $rData['source'] ?? ''
+                  ]);
+              }
+          }
       }
 
       $taskid1 = $this->db('mlite_antrian_referensi_taskid')->where('nomor_referensi', $kode_booking)->where('taskid', '1')->where('status','Belum')->oneArray();
@@ -858,10 +1572,10 @@ class Admin extends AdminModule
         echo '<br>';
         $url = $this->bpjsurl.'antrean/updatewaktu';
         $output1 = BpjsService::post($url, $data1, $this->consid, $this->secretkey, $this->user_key, NULL);
-        $json1 = json_decode($output1, true);
+        $json1 = $this->_decodeBpjsResponse($output1);
         echo 'Response:<br>';
         echo json_encode(htmlspecialchars_array($json1));
-        if(isset($json1['metadata']['code']) == 200){
+        if(($json1['metadata']['code'] ?? null) == 200){
           $this->db('mlite_antrian_referensi_taskid')
           ->where('nomor_referensi', $kode_booking)
           ->where('taskid', 99)
@@ -894,10 +1608,10 @@ class Admin extends AdminModule
         echo '<br>';
         $url = $this->bpjsurl.'antrean/updatewaktu';
         $output1 = BpjsService::post($url, $data1, $this->consid, $this->secretkey, $this->user_key, NULL);
-        $json1 = json_decode($output1, true);
+        $json1 = $this->_decodeBpjsResponse($output1);
         echo 'Response:<br>';
         echo json_encode(htmlspecialchars_array($json1));
-        if(isset($json1['metadata']['code']) == 200){
+        if(($json1['metadata']['code'] ?? null) == 200 || ($json1['metadata']['code'] ?? null) == 208){
           $this->db('mlite_antrian_referensi_taskid')
           ->where('nomor_referensi', $kode_booking)
           ->where('taskid', 1)
@@ -910,7 +1624,8 @@ class Admin extends AdminModule
           ->where('nomor_referensi', $kode_booking)
           ->where('taskid', 1)
           ->save([
-            'keterangan' => $json1['metadata']['code'].' : '.$json1['metadata']['message']
+            'status' => 'Gagal',
+            'keterangan' => ($json1['metadata']['code'] ?? '500').' : '.($json1['metadata']['message'] ?? 'Gagal')
           ]);
         }
         echo '<br>-------------------------------------<br><br>';
@@ -929,10 +1644,10 @@ class Admin extends AdminModule
         echo '<br>';
         $url = $this->bpjsurl.'antrean/updatewaktu';
         $output2 = BpjsService::post($url, $data2, $this->consid, $this->secretkey, $this->user_key, NULL);
-        $json2 = json_decode($output2, true);
+        $json2 = $this->_decodeBpjsResponse($output2);
         echo 'Response:<br>';
         echo json_encode(htmlspecialchars_array($json2));
-        if(isset($json2['metadata']['code']) == 200){
+        if(($json2['metadata']['code'] ?? null) == 200 || ($json2['metadata']['code'] ?? null) == 208){
           $this->db('mlite_antrian_referensi_taskid')
           ->where('nomor_referensi', $kode_booking)
           ->where('taskid', 2)
@@ -945,7 +1660,8 @@ class Admin extends AdminModule
           ->where('nomor_referensi', $kode_booking)
           ->where('taskid', 2)
           ->save([
-            'keterangan' => $json2['metadata']['code'].' : '.$json2['metadata']['message']
+            'status' => 'Gagal',
+            'keterangan' => ($json2['metadata']['code'] ?? '500').' : '.($json2['metadata']['message'] ?? 'Gagal')
           ]);
         }
         echo '<br>-------------------------------------<br><br>';
@@ -964,10 +1680,10 @@ class Admin extends AdminModule
         echo '<br>';
         $url = $this->bpjsurl.'antrean/updatewaktu';
         $output3 = BpjsService::post($url, $data3, $this->consid, $this->secretkey, $this->user_key, NULL);
-        $json3 = json_decode($output3, true);
+        $json3 = $this->_decodeBpjsResponse($output3);
         echo 'Response:<br>';
         echo json_encode(htmlspecialchars_array($json3));
-        if(isset($json3['metadata']['code']) == 200){
+        if(($json3['metadata']['code'] ?? null) == 200 || ($json3['metadata']['code'] ?? null) == 208){
           $this->db('mlite_antrian_referensi_taskid')
           ->where('nomor_referensi', $kode_booking)
           ->where('taskid', 3)
@@ -980,7 +1696,8 @@ class Admin extends AdminModule
           ->where('nomor_referensi', $kode_booking)
           ->where('taskid', 3)
           ->save([
-            'keterangan' => $json3['metadata']['code'].' : '.$json3['metadata']['message']
+            'status' => 'Gagal',
+            'keterangan' => ($json3['metadata']['code'] ?? '500').' : '.($json3['metadata']['message'] ?? 'Gagal')
           ]);
         }
         echo '<br>-------------------------------------<br><br>';
@@ -999,10 +1716,10 @@ class Admin extends AdminModule
         echo '<br>';
         $url = $this->bpjsurl.'antrean/updatewaktu';
         $output4 = BpjsService::post($url, $data4, $this->consid, $this->secretkey, $this->user_key, NULL);
-        $json4 = json_decode($output4, true);
+        $json4 = $this->_decodeBpjsResponse($output4);
         echo 'Response:<br>';
         echo json_encode(htmlspecialchars_array($json4));
-        if(isset($json4['metadata']['code']) == 200){
+        if(($json4['metadata']['code'] ?? null) == 200 || ($json4['metadata']['code'] ?? null) == 208){
           $this->db('mlite_antrian_referensi_taskid')
           ->where('nomor_referensi', $kode_booking)
           ->where('taskid', 4)
@@ -1015,7 +1732,8 @@ class Admin extends AdminModule
           ->where('nomor_referensi', $kode_booking)
           ->where('taskid', 4)
           ->save([
-            'keterangan' => $json4['metadata']['code'].' : '.$json4['metadata']['message']
+            'status' => 'Gagal',
+            'keterangan' => ($json4['metadata']['code'] ?? '500').' : '.($json4['metadata']['message'] ?? 'Gagal')
           ]);
         }
         echo '<br>-------------------------------------<br><br>';
@@ -1044,10 +1762,10 @@ class Admin extends AdminModule
         echo '<br>';
         $url = $this->bpjsurl.'antrean/updatewaktu';
         $output5 = BpjsService::post($url, $data5, $this->consid, $this->secretkey, $this->user_key, NULL);
-        $json5 = json_decode($output5, true);
+        $json5 = $this->_decodeBpjsResponse($output5);
         echo 'Response:<br>';
         echo json_encode(htmlspecialchars_array($json5));
-        if(isset($json5['metadata']['code']) == 200){
+        if(($json5['metadata']['code'] ?? null) == 200 || ($json5['metadata']['code'] ?? null) == 208){
           $this->db('mlite_antrian_referensi_taskid')
           ->where('nomor_referensi', $kode_booking)
           ->where('taskid', 5)
@@ -1060,7 +1778,8 @@ class Admin extends AdminModule
           ->where('nomor_referensi', $kode_booking)
           ->where('taskid', 5)
           ->save([
-            'keterangan' => $json5['metadata']['code'].' : '.$json5['metadata']['message']
+            'status' => 'Gagal',
+            'keterangan' => ($json5['metadata']['code'] ?? '500').' : '.($json5['metadata']['message'] ?? 'Gagal')
           ]);
         }
         echo '<br>-------------------------------------<br><br>';
@@ -1079,10 +1798,10 @@ class Admin extends AdminModule
         echo '<br>';
         $url = $this->bpjsurl.'antrean/updatewaktu';
         $output6 = BpjsService::post($url, $data6, $this->consid, $this->secretkey, $this->user_key, NULL);
-        $json6 = json_decode($output6, true);
+        $json6 = $this->_decodeBpjsResponse($output6);
         echo 'Response:<br>';
         echo json_encode(htmlspecialchars_array($json6));
-        if(isset($json6['metadata']['code']) == 200){
+        if(($json6['metadata']['code'] ?? null) == 200 || ($json6['metadata']['code'] ?? null) == 208){
           $this->db('mlite_antrian_referensi_taskid')
           ->where('nomor_referensi', $kode_booking)
           ->where('taskid', 6)
@@ -1095,7 +1814,8 @@ class Admin extends AdminModule
           ->where('nomor_referensi', $kode_booking)
           ->where('taskid', 6)
           ->save([
-            'keterangan' => $json6['metadata']['code'].' : '.$json6['metadata']['message']
+            'status' => 'Gagal',
+            'keterangan' => ($json6['metadata']['code'] ?? '500').' : '.($json6['metadata']['message'] ?? 'Gagal')
           ]);
         }
         echo '<br>-------------------------------------<br><br>';
@@ -1114,10 +1834,10 @@ class Admin extends AdminModule
         echo '<br>';
         $url = $this->bpjsurl.'antrean/updatewaktu';
         $output7 = BpjsService::post($url, $data7, $this->consid, $this->secretkey, $this->user_key, NULL);
-        $json7 = json_decode($output7, true);
+        $json7 = $this->_decodeBpjsResponse($output7);
         echo 'Response:<br>';
         echo json_encode(htmlspecialchars_array($json7));
-        if(isset($json7['metadata']['code']) == 200){
+        if(($json7['metadata']['code'] ?? null) == 200 || ($json7['metadata']['code'] ?? null) == 208){
           $this->db('mlite_antrian_referensi_taskid')
           ->where('nomor_referensi', $kode_booking)
           ->where('taskid', 7)
@@ -1130,7 +1850,8 @@ class Admin extends AdminModule
           ->where('nomor_referensi', $kode_booking)
           ->where('taskid', 7)
           ->save([
-            'keterangan' => $json7['metadata']['code'].' : '.$json7['metadata']['message']
+            'status' => 'Gagal',
+            'keterangan' => ($json7['metadata']['code'] ?? '500').' : '.($json7['metadata']['message'] ?? 'Gagal')
           ]);
         }
         echo '<br>-------------------------------------<br><br>';
@@ -1186,8 +1907,9 @@ class Admin extends AdminModule
         foreach ($query as $q) {
             $no_rawat = $this->db('reg_periksa')->select(['no_rawat' => 'reg_periksa.no_rawat'])->where('no_rkm_medis', $q['no_rkm_medis'])->where('tgl_registrasi', $date)->oneArray();
             $q['nm_pasien'] = $this->core->getPasienInfo('nm_pasien', $q['no_rkm_medis']);
-            $q['no_rawat'] = $no_rawat['no_rawat'];
-            $q['no_rawat_conv'] = convertNorawat($no_rawat['no_rawat']);
+            $rawat_num = $no_rawat['no_rawat'] ?? '';
+            $q['no_rawat'] = $rawat_num;
+            $q['no_rawat_conv'] = convertNorawat($rawat_num);
             $rows[] = $q;
         }
 
@@ -1518,11 +2240,1244 @@ class Admin extends AdminModule
 
     public function getBookingAntrol()
     {
-        $this->_addHeaderFiles();
-        return $this->draw('bookingantrol.html', ['row' => $this->db('mlite_antrian_referensi')->toArray()]);
+        return $this->anyBookingAntrol();
     }
 
-    public function getModalAntrol($noref)
+    public function anyBookingAntrol()
+    {
+        $this->_addHeaderFiles();
+
+        $tgl_awal = $_REQUEST['tgl_awal'] ?? date('Y-m-01');
+        $tgl_akhir = $_REQUEST['tgl_akhir'] ?? date('Y-m-d');
+        $status_filter = $_REQUEST['status'] ?? 'Semua';
+        $kd_poli_filter = $_REQUEST['kd_poli'] ?? 'Semua';
+        $keyword = trim($_REQUEST['keyword'] ?? '');
+        $periode_preset = $_REQUEST['preset'] ?? '';
+
+        if ($periode_preset === 'hari_ini') {
+            $tgl_awal = date('Y-m-d');
+            $tgl_akhir = date('Y-m-d');
+        } elseif ($periode_preset === 'besok') {
+            $tgl_awal = date('Y-m-d', strtotime('+1 day'));
+            $tgl_akhir = date('Y-m-d', strtotime('+1 day'));
+        } elseif ($periode_preset === 'minggu_ini') {
+            $tgl_awal = date('Y-m-d', strtotime('-7 days'));
+            $tgl_akhir = date('Y-m-d');
+        } elseif ($periode_preset === 'bulan_ini') {
+            $tgl_awal = date('Y-m-01');
+            $tgl_akhir = date('Y-m-t');
+        } elseif ($periode_preset === 'semua') {
+            $tgl_awal = '';
+            $tgl_akhir = '';
+        }
+
+        $poliklinik = $this->db('poliklinik')->where('status', '1')->asc('nm_poli')->toArray();
+
+        $where_ar = [];
+        $params_ar = [];
+
+        if (!empty($tgl_awal) && !empty($tgl_akhir)) {
+            $where_ar[] = "tanggal_periksa BETWEEN ? AND ?";
+            $params_ar[] = $tgl_awal;
+            $params_ar[] = $tgl_akhir;
+        } elseif (!empty($tgl_awal)) {
+            $where_ar[] = "tanggal_periksa >= ?";
+            $params_ar[] = $tgl_awal;
+        } elseif (!empty($tgl_akhir)) {
+            $where_ar[] = "tanggal_periksa <= ?";
+            $params_ar[] = $tgl_akhir;
+        }
+
+        $where_ar_sql = !empty($where_ar) ? "WHERE " . implode(" AND ", $where_ar) : "";
+
+        $sql = "SELECT 
+            ar.tanggal_periksa,
+            ar.kodebooking,
+            ar.nomor_kartu,
+            ar.nomor_referensi,
+            ar.jenis_kunjungan,
+            ar.status_kirim,
+            ar.keterangan as ar_keterangan,
+            ar.no_rkm_medis as ar_no_rkm_medis,
+            p.no_rkm_medis,
+            p.nm_pasien,
+            p.jk,
+            p.no_ktp,
+            p.no_tlp,
+            p.alamat,
+            br.no_reg,
+            br.jam_booking,
+            br.waktu_kunjungan,
+            br.status as booking_status,
+            COALESCE(br.kd_dokter, rp.kd_dokter) as kd_dokter,
+            d.nm_dokter,
+            COALESCE(br.kd_poli, rp.kd_poli) as kd_poli,
+            pl.nm_poli,
+            pj.png_jawab,
+            rp.no_rawat,
+            rp.stts as reg_status,
+            rp.jam_reg,
+            batal.tanggal_batal,
+            batal.keterangan as batal_keterangan
+        FROM (
+            SELECT 
+                kodebooking,
+                MAX(tanggal_periksa) as tanggal_periksa,
+                MAX(no_rkm_medis) as no_rkm_medis,
+                MAX(nomor_kartu) as nomor_kartu,
+                MAX(nomor_referensi) as nomor_referensi,
+                MAX(jenis_kunjungan) as jenis_kunjungan,
+                MAX(status_kirim) as status_kirim,
+                MAX(keterangan) as keterangan
+            FROM mlite_antrian_referensi
+            $where_ar_sql
+            GROUP BY kodebooking
+        ) ar
+        LEFT JOIN pasien p ON p.no_rkm_medis = ar.no_rkm_medis
+        LEFT JOIN booking_registrasi br ON br.no_rkm_medis = ar.no_rkm_medis AND br.tanggal_periksa = ar.tanggal_periksa
+        LEFT JOIN reg_periksa rp ON rp.no_rkm_medis = ar.no_rkm_medis AND rp.tgl_registrasi = ar.tanggal_periksa
+        LEFT JOIN dokter d ON d.kd_dokter = COALESCE(br.kd_dokter, rp.kd_dokter)
+        LEFT JOIN poliklinik pl ON pl.kd_poli = COALESCE(br.kd_poli, rp.kd_poli)
+        LEFT JOIN penjab pj ON pj.kd_pj = COALESCE(br.kd_pj, rp.kd_pj)
+        LEFT JOIN (
+            SELECT kodebooking, MAX(tanggal_batal) as tanggal_batal, MAX(keterangan) as keterangan 
+            FROM mlite_antrian_referensi_batal 
+            GROUP BY kodebooking
+        ) batal ON batal.kodebooking = ar.kodebooking
+        ORDER BY ar.tanggal_periksa DESC, br.no_reg ASC";
+
+        $stmt = $this->db()->pdo()->prepare($sql);
+        $stmt->execute($params_ar);
+        $raw_rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $all_refs = [];
+        $all_no_rawat = [];
+        $all_no_rm = [];
+        foreach ($raw_rows as $rr) {
+            if (!empty($rr['kodebooking'])) $all_refs[] = $rr['kodebooking'];
+            if (!empty($rr['nomor_referensi'])) $all_refs[] = $rr['nomor_referensi'];
+            if (!empty($rr['no_rawat'])) $all_no_rawat[] = $rr['no_rawat'];
+            $rm = $rr['no_rkm_medis'] ?: ($rr['ar_no_rkm_medis'] ?? '');
+            if (!empty($rm)) $all_no_rm[] = $rm;
+        }
+        $all_refs = array_values(array_unique(array_filter($all_refs)));
+        $all_no_rawat = array_values(array_unique(array_filter($all_no_rawat)));
+        $all_no_rm = array_values(array_unique(array_filter($all_no_rm)));
+
+        $task_map = [];
+        if (!empty($all_refs)) {
+            $chunks = array_chunk($all_refs, 500);
+            foreach ($chunks as $chunk) {
+                $in_placeholders = implode(',', array_fill(0, count($chunk), '?'));
+                $task_stmt = $this->db()->pdo()->prepare("SELECT nomor_referensi, taskid, waktu, status, keterangan FROM mlite_antrian_referensi_taskid WHERE nomor_referensi IN ($in_placeholders)");
+                $task_stmt->execute($chunk);
+                $task_results = $task_stmt->fetchAll(\PDO::FETCH_ASSOC);
+                foreach ($task_results as $tr) {
+                    $ref = $tr['nomor_referensi'];
+                    $tid = (string)$tr['taskid'];
+                    $task_map[$ref][$tid] = $tr;
+                }
+            }
+        }
+
+        // Cache batch data operasional SIMRS untuk mempercepat penghitungan task 1-7 tanpa N+1 query
+        $op_cache = [
+            'mutasi_berkas' => [],
+            'pemeriksaan_ralan' => [],
+            'resep_obat' => [],
+            'loket' => []
+        ];
+
+        if (!empty($all_no_rawat)) {
+            $chunks_nr = array_chunk($all_no_rawat, 500);
+            foreach ($chunks_nr as $cnr) {
+                $ph = implode(',', array_fill(0, count($cnr), '?'));
+                try {
+                    $mb_stmt = $this->db()->pdo()->prepare("SELECT no_rawat, dikirim, diterima FROM mutasi_berkas WHERE no_rawat IN ($ph)");
+                    $mb_stmt->execute($cnr);
+                    foreach ($mb_stmt->fetchAll(\PDO::FETCH_ASSOC) as $mb) {
+                        $op_cache['mutasi_berkas'][$mb['no_rawat']] = $mb;
+                    }
+                } catch (\Throwable $e) {}
+
+                try {
+                    $pr_stmt = $this->db()->pdo()->prepare("SELECT no_rawat, concat(tgl_perawatan,' ',jam_rawat) as datajam FROM pemeriksaan_ralan WHERE no_rawat IN ($ph)");
+                    $pr_stmt->execute($cnr);
+                    foreach ($pr_stmt->fetchAll(\PDO::FETCH_ASSOC) as $pr) {
+                        $op_cache['pemeriksaan_ralan'][$pr['no_rawat']] = $pr;
+                    }
+                } catch (\Throwable $e) {}
+
+                try {
+                    $ro_stmt = $this->db()->pdo()->prepare("SELECT no_rawat, concat(tgl_peresepan,' ',jam_peresepan) as datajam, concat(tgl_perawatan,' ',jam) as datajam2 FROM resep_obat WHERE no_rawat IN ($ph)");
+                    $ro_stmt->execute($cnr);
+                    foreach ($ro_stmt->fetchAll(\PDO::FETCH_ASSOC) as $ro) {
+                        $op_cache['resep_obat'][$ro['no_rawat']] = $ro;
+                    }
+                } catch (\Throwable $e) {}
+            }
+        }
+
+        if (!empty($all_no_rm)) {
+            $chunks_rm = array_chunk($all_no_rm, 500);
+            foreach ($chunks_rm as $crm) {
+                $ph = implode(',', array_fill(0, count($crm), '?'));
+                try {
+                    $lk_stmt = $this->db()->pdo()->prepare("SELECT no_rkm_medis, postdate, start_time, end_time FROM mlite_antrian_loket WHERE no_rkm_medis IN ($ph)");
+                    $lk_stmt->execute($crm);
+                    foreach ($lk_stmt->fetchAll(\PDO::FETCH_ASSOC) as $lk) {
+                        $key = $lk['no_rkm_medis'] . '_' . $lk['postdate'];
+                        $op_cache['loket'][$key] = $lk;
+                    }
+                } catch (\Throwable $e) {}
+            }
+        }
+
+        $rows = [];
+        $total_all = 0;
+        $total_belum = 0;
+        $total_terdaftar = 0;
+        $total_batal = 0;
+
+        foreach ($raw_rows as $row) {
+            $is_batal = ($row['status_kirim'] === 'Batal' || 
+                         $row['booking_status'] === 'Batal' || 
+                         $row['reg_status'] === 'Batal' || 
+                         !empty($row['tanggal_batal']));
+
+            $is_terdaftar = (!$is_batal && (!empty($row['no_rawat']) || $row['booking_status'] === 'Terdaftar'));
+
+            if ($is_batal) {
+                $status_label = 'Batal';
+                $status_class = 'danger';
+            } elseif ($is_terdaftar) {
+                $status_label = 'Terdaftar';
+                $status_class = 'success';
+            } else {
+                $status_label = 'Belum';
+                $status_class = 'warning';
+            }
+
+            $total_all++;
+            if ($status_label === 'Batal') $total_batal++;
+            elseif ($status_label === 'Terdaftar') $total_terdaftar++;
+            else $total_belum++;
+
+            if ($status_filter !== 'Semua' && $status_filter !== $status_label) {
+                continue;
+            }
+
+            if ($kd_poli_filter !== 'Semua' && $row['kd_poli'] !== $kd_poli_filter) {
+                continue;
+            }
+
+            if (!empty($keyword)) {
+                $haystack = strtolower(
+                    ($row['nm_pasien'] ?? '') . ' ' .
+                    ($row['no_rkm_medis'] ?? '') . ' ' .
+                    ($row['ar_no_rkm_medis'] ?? '') . ' ' .
+                    ($row['kodebooking'] ?? '') . ' ' .
+                    ($row['nomor_referensi'] ?? '') . ' ' .
+                    ($row['nomor_kartu'] ?? '') . ' ' .
+                    ($row['no_ktp'] ?? '') . ' ' .
+                    ($row['nm_dokter'] ?? '') . ' ' .
+                    ($row['nm_poli'] ?? '')
+                );
+                if (strpos($haystack, strtolower($keyword)) === false) {
+                    continue;
+                }
+            }
+
+            $kb = $row['kodebooking'];
+            $row['status_label'] = $status_label;
+            $row['status_class'] = $status_class;
+
+            // Hitung & selaraskan Task ID 1-7 (menggabungkan BPJS dan data operasional SIMRS seperti /admin/jkn_mobile/taskid)
+            $row_tasks = $this->_resolveTaskTimes(
+                $row['no_rawat'] ?? '',
+                $row['no_rkm_medis'] ?: $row['ar_no_rkm_medis'],
+                $row['tanggal_periksa'],
+                $kb,
+                $row['nomor_referensi'] ?? '',
+                $task_map,
+                $op_cache
+            );
+            $row['task_resolved'] = $row_tasks;
+
+            // Buat HTML Pill Task ID 1-7
+            $rawatParam = !empty($row['no_rawat']) ? convertNoRawat($row['no_rawat']) : '';
+            $pills_html = '<div class="task-strip">';
+            for ($i = 1; $i <= 7; $i++) {
+                $si = (string)$i;
+                $t = $row_tasks[$si];
+                $has_waktu = !empty($t['waktu']);
+                $jam = $has_waktu ? date('H:i:s', strtotime($t['waktu'])) : '';
+
+                if ($t['status'] === 'Sudah') {
+                    $cls = 'task-done';
+                    $title_t = "Task {$i}: Terkirim ke BPJS ({$jam})";
+                } elseif ($has_waktu) {
+                    $cls = 'task-simrs';
+                    $title_t = "Task {$i}: Selesai di SIMRS ({$jam}) - " . ($t['source'] ?: 'Tercatat');
+                } elseif ($t['status'] === 'Gagal') {
+                    $cls = 'task-fail';
+                    $title_t = "Task {$i}: Gagal Kirim";
+                } else {
+                    $cls = 'task-wait';
+                    $title_t = "Task {$i}: Belum Dilayani";
+                }
+
+                $onclickAttr = !empty($rawatParam) ? 'onclick="bukaModalTaskID(\'' . $rawatParam . '\')"' : 'onclick="bukaDetailAntrol(\'' . $kb . '\')"';
+                $pills_html .= '<span class="task-pill ' . $cls . '" data-toggle="tooltip" data-placement="top" title="' . htmlspecialchars($title_t, ENT_QUOTES, 'UTF-8') . '" ' . $onclickAttr . '>' . $i . '</span>';
+            }
+            $pills_html .= '</div>';
+            $row['task_pills_html'] = $pills_html;
+
+            $jk_map = [
+                '1' => 'Rujukan FKTP',
+                '2' => 'Rujukan Internal',
+                '3' => 'Kontrol (SKDP)',
+                '4' => 'Rujukan Antar RS'
+            ];
+            $row['jenis_kunjungan_label'] = $jk_map[$row['jenis_kunjungan']] ?? 'Rujukan';
+
+            $rows[] = $row;
+        }
+
+        if (isset($_GET['export']) && $_GET['export'] === 'csv') {
+            $this->_exportBookingAntrolCsv($rows, $tgl_awal, $tgl_akhir);
+            exit();
+        }
+
+        return $this->draw('bookingantrol.html', [
+            'rows' => $rows,
+            'poliklinik' => $poliklinik,
+            'tgl_awal' => $tgl_awal,
+            'tgl_akhir' => $tgl_akhir,
+            'status_filter' => $status_filter,
+            'kd_poli_filter' => $kd_poli_filter,
+            'keyword' => $keyword,
+            'preset' => $periode_preset,
+            'total_all' => $total_all,
+            'total_belum' => $total_belum,
+            'total_terdaftar' => $total_terdaftar,
+            'total_batal' => $total_batal,
+        ]);
+    }
+
+    public function getDetailBookingAntrol($kodebooking = '')
+    {
+        header('Content-Type: application/json');
+        $kodebooking = trim($kodebooking ?: ($_GET['kodebooking'] ?? $_POST['kodebooking'] ?? ''));
+
+        if (empty($kodebooking)) {
+            echo json_encode(['status' => 'error', 'message' => 'Kode booking tidak boleh kosong.']);
+            exit();
+        }
+
+        $sql = "SELECT 
+            ar.tanggal_periksa,
+            ar.kodebooking,
+            ar.nomor_kartu,
+            ar.nomor_referensi,
+            ar.jenis_kunjungan,
+            ar.status_kirim,
+            ar.keterangan as ar_keterangan,
+            ar.no_rkm_medis as ar_no_rkm_medis,
+            p.no_rkm_medis,
+            p.nm_pasien,
+            p.jk,
+            p.no_ktp,
+            p.no_tlp,
+            p.alamat,
+            p.tgl_lahir,
+            br.no_reg,
+            br.tanggal_booking,
+            br.jam_booking,
+            br.waktu_kunjungan,
+            br.status as booking_status,
+            COALESCE(br.kd_dokter, rp.kd_dokter) as kd_dokter,
+            d.nm_dokter,
+            COALESCE(br.kd_poli, rp.kd_poli) as kd_poli,
+            pl.nm_poli,
+            pj.png_jawab,
+            rp.no_rawat,
+            rp.stts as reg_status,
+            rp.jam_reg,
+            batal.tanggal_batal,
+            batal.keterangan as batal_keterangan
+        FROM (
+            SELECT 
+                kodebooking,
+                MAX(tanggal_periksa) as tanggal_periksa,
+                MAX(no_rkm_medis) as no_rkm_medis,
+                MAX(nomor_kartu) as nomor_kartu,
+                MAX(nomor_referensi) as nomor_referensi,
+                MAX(jenis_kunjungan) as jenis_kunjungan,
+                MAX(status_kirim) as status_kirim,
+                MAX(keterangan) as keterangan
+            FROM mlite_antrian_referensi
+            WHERE kodebooking = ?
+            GROUP BY kodebooking
+        ) ar
+        LEFT JOIN pasien p ON p.no_rkm_medis = ar.no_rkm_medis
+        LEFT JOIN booking_registrasi br ON br.no_rkm_medis = ar.no_rkm_medis AND br.tanggal_periksa = ar.tanggal_periksa
+        LEFT JOIN reg_periksa rp ON rp.no_rkm_medis = ar.no_rkm_medis AND rp.tgl_registrasi = ar.tanggal_periksa
+        LEFT JOIN dokter d ON d.kd_dokter = COALESCE(br.kd_dokter, rp.kd_dokter)
+        LEFT JOIN poliklinik pl ON pl.kd_poli = COALESCE(br.kd_poli, rp.kd_poli)
+        LEFT JOIN penjab pj ON pj.kd_pj = COALESCE(br.kd_pj, rp.kd_pj)
+        LEFT JOIN (
+            SELECT kodebooking, MAX(tanggal_batal) as tanggal_batal, MAX(keterangan) as keterangan 
+            FROM mlite_antrian_referensi_batal 
+            WHERE kodebooking = ?
+            GROUP BY kodebooking
+        ) batal ON batal.kodebooking = ar.kodebooking";
+
+        $stmt = $this->db()->pdo()->prepare($sql);
+        $stmt->execute([$kodebooking, $kodebooking]);
+        $detail = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        if (!$detail) {
+            echo json_encode(['status' => 'error', 'message' => 'Data booking tidak ditemukan di database.']);
+            exit();
+        }
+
+        $task_stmt = $this->db()->pdo()->prepare("SELECT taskid, waktu, status, keterangan FROM mlite_antrian_referensi_taskid WHERE nomor_referensi = ? OR nomor_referensi = ? ORDER BY taskid ASC");
+        $task_stmt->execute([$kodebooking, $detail['nomor_referensi'] ?? '']);
+        $task_list = $task_stmt->fetchAll(\PDO::FETCH_ASSOC);
+        $tasks_bpjs = [];
+        foreach ($task_list as $t) {
+            $tasks_bpjs[(string)$t['taskid']] = $t;
+        }
+
+        $resolved = $this->_resolveTaskTimes(
+            $detail['no_rawat'] ?? '',
+            $detail['no_rkm_medis'] ?: $detail['ar_no_rkm_medis'],
+            $detail['tanggal_periksa'],
+            $kodebooking,
+            $detail['nomor_referensi'] ?? '',
+            [$kodebooking => $tasks_bpjs]
+        );
+
+        $task_definitions = [
+            '1' => 'Mulai Tunggu Admisi / Check-in',
+            '2' => 'Mulai Dilayani Admisi',
+            '3' => 'Selesai Admisi / Tunggu Poli',
+            '4' => 'Dipanggil Masuk Poli',
+            '5' => 'Selesai Pelayanan Poli / Dokter',
+            '6' => 'Tunggu Farmasi / Resep Diterima',
+            '7' => 'Obat Diserahkan ke Pasien',
+            '99' => 'Pembatalan Antrean'
+        ];
+
+        $formatted_tasks = [];
+        foreach ($task_definitions as $id => $nama_task) {
+            $t = $resolved[$id] ?? null;
+            $waktu_raw = $t['waktu'] ?? '';
+            $status_t = $t['status'] ?? 'Belum';
+            $source_t = $t['source'] ?? '';
+            $ket_t = $t['keterangan'] ?? '';
+
+            // Jika status 'Sudah' tapi keterangannya berisi error penolakan BPJS, tampilkan sebagai 'Gagal'
+            if ($status_t === 'Sudah' && preg_match('/(tidak boleh|lebih besar|belum ada|gagal|error|201\s*:|400\s*:|500\s*:)/i', $ket_t)) {
+                $status_t = 'Gagal';
+            }
+
+            $formatted_tasks[] = [
+                'taskid' => $id,
+                'nama_task' => $nama_task,
+                'waktu' => !empty($waktu_raw) ? $waktu_raw : '-',
+                'status' => $status_t,
+                'keterangan' => !empty($source_t) ? $source_t . (!empty($ket_t) ? ' (' . $ket_t . ')' : '') : ($ket_t ?: '-')
+            ];
+        }
+
+        $jk_map = [
+            '1' => 'Rujukan FKTP (Faskes 1)',
+            '2' => 'Rujukan Internal',
+            '3' => 'Kontrol (SKDP)',
+            '4' => 'Rujukan Antar RS (Faskes 2)'
+        ];
+        $detail['jenis_kunjungan_label'] = $jk_map[$detail['jenis_kunjungan']] ?? 'Rujukan';
+
+        $is_batal = ($detail['status_kirim'] === 'Batal' || 
+                     $detail['booking_status'] === 'Batal' || 
+                     $detail['reg_status'] === 'Batal' || 
+                     !empty($detail['tanggal_batal']));
+        $is_terdaftar = (!$is_batal && (!empty($detail['no_rawat']) || $detail['booking_status'] === 'Terdaftar'));
+
+        if ($is_batal) {
+            $detail['status_final'] = 'Batal';
+        } elseif ($is_terdaftar) {
+            $detail['status_final'] = 'Terdaftar';
+        } else {
+            $detail['status_final'] = 'Belum';
+        }
+
+        echo json_encode([
+            'status' => 'success',
+            'data' => $detail,
+            'tasks' => $formatted_tasks
+        ]);
+        exit();
+    }
+
+    public function syncSingleBooking($kodebooking, $versi = 'v3')
+    {
+        $kodebooking = trim($kodebooking);
+        $versi = strtolower(trim($versi));
+        if (empty($kodebooking)) {
+            return ['status' => 'error', 'message' => 'Kode booking tidak boleh kosong.'];
+        }
+
+        if (empty($this->consid) || empty($this->secretkey) || empty($this->bpjsurl)) {
+            return ['status' => 'error', 'message' => 'Kredensial BPJS Antrean (ConsID / SecretKey / URL) belum diatur di Pengaturan JKN Mobile.'];
+        }
+
+        $antrol = $this->db('mlite_antrian_referensi')->where('kodebooking', $kodebooking)->oneArray();
+        if (!$antrol) {
+            $antrol = $this->db('mlite_antrian_referensi')->where('nomor_referensi', $kodebooking)->oneArray();
+        }
+
+        $no_rawat = '';
+        $no_rkm_medis = $antrol['no_rkm_medis'] ?? '';
+        $tgl_periksa = $antrol['tanggal_periksa'] ?? date('Y-m-d');
+
+        if (!empty($no_rkm_medis)) {
+            $reg = $this->db('reg_periksa')->where('no_rkm_medis', $no_rkm_medis)->where('tgl_registrasi', $tgl_periksa)->oneArray();
+            if ($reg) {
+                $no_rawat = $reg['no_rawat'];
+            }
+        }
+
+        if (empty($no_rawat) && !empty($no_rkm_medis)) {
+            $br = $this->db('booking_registrasi')->where('tanggal_periksa', $tgl_periksa)->where('no_rkm_medis', $no_rkm_medis)->oneArray();
+            if ($br) {
+                $reg = $this->db('reg_periksa')->where('no_rkm_medis', $no_rkm_medis)->where('tgl_registrasi', $tgl_periksa)->oneArray();
+                if ($reg) $no_rawat = $reg['no_rawat'];
+            }
+        }
+
+        // Ambil task yang sudah tercatat di database lokal
+        $task_stmt = $this->db()->pdo()->prepare("SELECT nomor_referensi, taskid, waktu, status, keterangan FROM mlite_antrian_referensi_taskid WHERE nomor_referensi = ?");
+        $task_stmt->execute([$kodebooking]);
+        $existing_tasks = [];
+        while ($r = $task_stmt->fetch(\PDO::FETCH_ASSOC)) {
+            $existing_tasks[(string)$r['taskid']] = $r;
+        }
+
+        // Resolve semua waktu dari operasional SIMRS (loket, berkas RM, periksa dokter, resep apotek)
+        $resolved = $this->_resolveTaskTimes(
+            $no_rawat,
+            $no_rkm_medis,
+            $tgl_periksa,
+            $kodebooking,
+            $antrol['nomor_referensi'] ?? '',
+            [$kodebooking => $existing_tasks]
+        );
+
+        // Pastikan waktu yang ditemukan di SIMRS tersimpan di database lokal
+        foreach ($resolved as $tid => $rData) {
+            if (!empty($rData['waktu'])) {
+                $waktu_millis = is_numeric($rData['waktu']) ? (int)$rData['waktu'] : strtotime($rData['waktu']) * 1000;
+                if (!isset($existing_tasks[$tid])) {
+                    $this->db('mlite_antrian_referensi_taskid')->save([
+                        'tanggal_periksa' => $tgl_periksa,
+                        'nomor_referensi' => $kodebooking,
+                        'taskid' => (int)$tid,
+                        'waktu' => $waktu_millis,
+                        'status' => 'Belum',
+                        'keterangan' => $rData['source'] ?? ''
+                    ]);
+                    $existing_tasks[$tid] = [
+                        'nomor_referensi' => $kodebooking,
+                        'taskid' => (int)$tid,
+                        'waktu' => $waktu_millis,
+                        'status' => 'Belum',
+                        'keterangan' => $rData['source'] ?? ''
+                    ];
+                }
+            }
+        }
+
+        // Tentukan jenis resep jika ada
+        $jenisresep = 'Non racikan';
+        if (!empty($no_rawat)) {
+            $resep = $this->db('resep_obat')->where('no_rawat', $no_rawat)->oneArray();
+            if ($resep) {
+                $racikan = $this->db('resep_dokter_racikan')->where('no_resep', $resep['no_resep'])->oneArray();
+                if ($racikan) $jenisresep = 'Racikan';
+            }
+        }
+
+        // Task yang akan dikirim:
+        // v2: 1, 2, 3, 4, 5
+        // v3: 1, 2, 3, 4, 5, 6, 7
+        $tasks_to_send = ($versi === 'v3') ? [1, 2, 3, 4, 5, 6, 7] : [1, 2, 3, 4, 5];
+
+        // Pengaman Kronologis: Pastikan waktu Task N >= Task (N-1) + 60s
+        $last_valid_millis = null;
+        foreach ($tasks_to_send as $tid) {
+            $stid = (string)$tid;
+            if (isset($existing_tasks[$stid]) && !empty($existing_tasks[$stid]['waktu'])) {
+                $cur_millis = is_numeric($existing_tasks[$stid]['waktu']) ? (int)$existing_tasks[$stid]['waktu'] : strtotime($existing_tasks[$stid]['waktu']) * 1000;
+                if ($last_valid_millis !== null && $cur_millis <= $last_valid_millis) {
+                    $cur_millis = $last_valid_millis + 60000; // geser 1 menit ke depan
+                    $existing_tasks[$stid]['waktu'] = $cur_millis;
+                    $this->db('mlite_antrian_referensi_taskid')
+                        ->where('nomor_referensi', $kodebooking)
+                        ->where('taskid', (int)$tid)
+                        ->save(['waktu' => $cur_millis]);
+                }
+                $last_valid_millis = $cur_millis;
+            }
+        }
+
+        $results = [];
+        $success_count = 0;
+        $fail_count = 0;
+        $skip_count = 0;
+
+        $url = $this->bpjsurl . 'antrean/updatewaktu';
+
+        // Helper Cascade Forward Waktu: dorong task-task sesudahnya jika <= waktu task saat ini
+        $cascadeForward = function($from_tid, $current_millis) use (&$existing_tasks, $kodebooking) {
+            $prev_m = $current_millis;
+            for ($k = $from_tid + 1; $k <= 7; $k++) {
+                $sk = (string)$k;
+                if (isset($existing_tasks[$sk]) && !empty($existing_tasks[$sk]['waktu'])) {
+                    $cur_k_millis = is_numeric($existing_tasks[$sk]['waktu']) ? (int)$existing_tasks[$sk]['waktu'] : strtotime($existing_tasks[$sk]['waktu']) * 1000;
+                    if ($cur_k_millis <= $prev_m) {
+                        $gap = ($k == 5) ? 300000 : (($k == 7) ? 180000 : 120000);
+                        $cur_k_millis = $prev_m + $gap;
+                        $existing_tasks[$sk]['waktu'] = $cur_k_millis;
+                        $this->db('mlite_antrian_referensi_taskid')
+                            ->where('nomor_referensi', $kodebooking)
+                            ->where('taskid', $k)
+                            ->save(['waktu' => $cur_k_millis]);
+                    }
+                    $prev_m = $cur_k_millis;
+                }
+            }
+        };
+
+        // Helper Kirim Task ke BPJS
+        $sendTaskBpjs = function($t_id, $m_millis) use ($url, $kodebooking, $versi, $jenisresep) {
+            $p = [
+                'kodebooking' => $kodebooking,
+                'taskid' => (int)$t_id,
+                'waktu' => (int)$m_millis
+            ];
+            if ($t_id == 5 && $versi === 'v3') {
+                $p['jenisresep'] = $jenisresep;
+            }
+            $payload_json = json_encode($p);
+            $out = BpjsService::post($url, $payload_json, $this->consid, $this->secretkey, $this->user_key, NULL);
+            return $this->_decodeBpjsResponse($out);
+        };
+
+        foreach ($tasks_to_send as $tid) {
+            $stid = (string)$tid;
+            $tData = $existing_tasks[$stid] ?? null;
+
+            if (!$tData || empty($tData['waktu'])) {
+                $results[] = [
+                    'taskid' => $tid,
+                    'status' => 'Dilewati',
+                    'message' => 'Waktu tahapan belum tercatat di SIMRS'
+                ];
+                $skip_count++;
+                // Berhenti mengirim task berikutnya jika tahapan saat ini belum ada
+                break;
+            }
+
+            $ket_local = trim($tData['keterangan'] ?? '');
+            $is_bogus_sudah = preg_match('/(tidak boleh|lebih besar|belum ada|gagal|error|201\s*:|400\s*:|500\s*:)/i', $ket_local);
+            $is_truly_sudah = (($tData['status'] ?? '') === 'Sudah') && !$is_bogus_sudah;
+
+            // Jika benar-benar sudah sukses terkirim ke BPJS sebelumnya, lewati
+            if ($is_truly_sudah) {
+                $results[] = [
+                    'taskid' => $tid,
+                    'status' => 'Sudah',
+                    'message' => 'Sudah tersinkron ke BPJS (' . ($ket_local ?: 'Sukses') . ')'
+                ];
+                $success_count++;
+                continue;
+            }
+
+            // Jika sebelumnya tercatat 'Sudah' palsu padahal keterangannya error, reset status lokal
+            if ($is_bogus_sudah && ($tData['status'] ?? '') === 'Sudah') {
+                $this->db('mlite_antrian_referensi_taskid')
+                    ->where('nomor_referensi', $kodebooking)
+                    ->where('taskid', $tid)
+                    ->save(['status' => 'Belum']);
+                $existing_tasks[$stid]['status'] = 'Belum';
+            }
+
+            $waktu_millis = is_numeric($tData['waktu']) ? (int)$tData['waktu'] : strtotime($tData['waktu']) * 1000;
+
+            // Kirim request ke BPJS
+            $res = $sendTaskBpjs($tid, $waktu_millis);
+            $code = $res['metadata']['code'] ?? 500;
+            $msg = $res['metadata']['message'] ?? 'Tidak ada balasan dari server BPJS';
+
+            // =========================================================================
+            // AUTO-HEALING ENGINE (Menangani ketidakselarasan waktu & kronologi BPJS)
+            // =========================================================================
+
+            // KASUS 1: Waktu Task sebelumnya di server BPJS lebih besar dari Task saat ini
+            // Contoh: "201 : Waktu TaskId=1 (2026-11-19 10:30:55 WIB) lebih besar dari pada TaskId=2 (2026-11-19 10:10:54 WIB)"
+            if (($code == 201 || $code == 400) && preg_match('/TaskId=(\d+)\s*\(([^)]+)\)\s*lebih besar/i', $msg, $m)) {
+                $ref_tid = (int)$m[1];
+                $ref_time_str = trim($m[2]);
+                $clean_time = trim(preg_replace('/\b(WIB|WITA|WIT)\b/i', '', $ref_time_str));
+                $bpjs_timestamp = strtotime($clean_time . ' +0700');
+
+                if ($bpjs_timestamp !== false && $bpjs_timestamp > 0) {
+                    $bpjs_millis = $bpjs_timestamp * 1000;
+                    $new_waktu_millis = ($bpjs_timestamp + 60) * 1000; // Majukan 1 menit setelah waktu BPJS
+
+                    // Selaraskan Task acuan BPJS di database lokal
+                    $this->db('mlite_antrian_referensi_taskid')
+                        ->where('nomor_referensi', $kodebooking)
+                        ->where('taskid', $ref_tid)
+                        ->save([
+                            'waktu' => $bpjs_millis,
+                            'status' => 'Sudah',
+                            'keterangan' => 'Sesuai Waktu Server BPJS'
+                        ]);
+                    if (isset($existing_tasks[(string)$ref_tid])) {
+                        $existing_tasks[(string)$ref_tid]['waktu'] = $bpjs_millis;
+                        $existing_tasks[(string)$ref_tid]['status'] = 'Sudah';
+                    }
+
+                    // Update waktu Task saat ini di database lokal
+                    $this->db('mlite_antrian_referensi_taskid')
+                        ->where('nomor_referensi', $kodebooking)
+                        ->where('taskid', $tid)
+                        ->save([
+                            'waktu' => $new_waktu_millis,
+                            'keterangan' => 'Diselaraskan setelah Task ' . $ref_tid . ' BPJS'
+                        ]);
+                    $existing_tasks[$stid]['waktu'] = $new_waktu_millis;
+
+                    // Cascade forward seluruh task berikutnya agar tidak ada bentrok waktu
+                    $cascadeForward($tid, $new_waktu_millis);
+
+                    // Retry kirim ulang task saat ini
+                    $retry_res = $sendTaskBpjs($tid, $new_waktu_millis);
+                    $retry_code = $retry_res['metadata']['code'] ?? 500;
+                    $retry_msg = $retry_res['metadata']['message'] ?? '';
+                    if ($retry_code == 200 || $retry_code == 208) {
+                        $code = $retry_code;
+                        $msg = $retry_msg . ' (Otomatis diselaraskan kronologis setelah Task ' . $ref_tid . ')';
+                        $res = $retry_res;
+                    }
+                }
+            }
+
+            // KASUS 2: Waktu tidak boleh kurang atau sama dengan waktu sebelumnya
+            // Contoh: "Waktu (2026-11-20 07:40:46 WIB) tidak boleh kurang atau sama dengan waktu sebelumnya"
+            if (($code == 201 || $code == 400) && preg_match('/Waktu\s*\(([^)]+)\)\s*tidak boleh kurang/i', $msg, $m2)) {
+                $ref_time_str = trim($m2[1]);
+                $clean_time = trim(preg_replace('/\b(WIB|WITA|WIT)\b/i', '', $ref_time_str));
+                $bpjs_timestamp = strtotime($clean_time . ' +0700');
+
+                if ($bpjs_timestamp !== false && $bpjs_timestamp > 0) {
+                    $new_waktu_millis = ($bpjs_timestamp + 120) * 1000; // Majukan 2 menit
+
+                    $this->db('mlite_antrian_referensi_taskid')
+                        ->where('nomor_referensi', $kodebooking)
+                        ->where('taskid', $tid)
+                        ->save([
+                            'waktu' => $new_waktu_millis,
+                            'keterangan' => 'Dimajukan otomatis (+2m) menghindari waktu kurang'
+                        ]);
+                    $existing_tasks[$stid]['waktu'] = $new_waktu_millis;
+
+                    // Cascade forward task sesudahnya
+                    $cascadeForward($tid, $new_waktu_millis);
+
+                    // Retry kirim
+                    $retry_res = $sendTaskBpjs($tid, $new_waktu_millis);
+                    $retry_code = $retry_res['metadata']['code'] ?? 500;
+                    $retry_msg = $retry_res['metadata']['message'] ?? '';
+                    if ($retry_code == 200 || $retry_code == 208) {
+                        $code = $retry_code;
+                        $msg = $retry_msg . ' (Otomatis diselaraskan kronologis)';
+                        $res = $retry_res;
+                    }
+                }
+            }
+
+            // KASUS 3: Task sebelumnya belum ada di server BPJS
+            // Contoh: "201 : Task=1 ada. TaskId=2 belum ada" atau "201 : TaskId=4 belum ada"
+            if (($code == 201 || $code == 400) && preg_match('/TaskId=(\d+)\s*belum ada/i', $msg, $m3)) {
+                $missing_tid = (int)$m3[1];
+                if ($missing_tid < $tid && isset($existing_tasks[(string)$missing_tid])) {
+                    $missing_st = (string)$missing_tid;
+                    $m_time = $existing_tasks[$missing_st]['waktu'] ?? 0;
+                    $m_time_millis = is_numeric($m_time) ? (int)$m_time : strtotime($m_time) * 1000;
+
+                    if ($m_time_millis <= 0 && $tid > 1) {
+                        $m_time_millis = $waktu_millis - 120000;
+                    }
+
+                    // Kirim missing task terlebih dahulu
+                    $m_res = $sendTaskBpjs($missing_tid, $m_time_millis);
+                    $m_code = $m_res['metadata']['code'] ?? 500;
+                    $m_msg = $m_res['metadata']['message'] ?? '';
+
+                    if ($m_code == 200 || $m_code == 208) {
+                        $this->db('mlite_antrian_referensi_taskid')
+                            ->where('nomor_referensi', $kodebooking)
+                            ->where('taskid', $missing_tid)
+                            ->save([
+                                'status' => 'Sudah',
+                                'keterangan' => $m_msg . ' (Tersinkron perbaikan otomatis)'
+                            ]);
+                        $existing_tasks[$missing_st]['status'] = 'Sudah';
+
+                        // Pastikan task saat ini waktunya lebih besar dari missing task
+                        if ($waktu_millis <= $m_time_millis) {
+                            $waktu_millis = $m_time_millis + 120000;
+                            $this->db('mlite_antrian_referensi_taskid')
+                                ->where('nomor_referensi', $kodebooking)
+                                ->where('taskid', $tid)
+                                ->save(['waktu' => $waktu_millis]);
+                            $existing_tasks[$stid]['waktu'] = $waktu_millis;
+                            $cascadeForward($tid, $waktu_millis);
+                        }
+
+                        // Retry kirim task saat ini
+                        $retry_res = $sendTaskBpjs($tid, $waktu_millis);
+                        $retry_code = $retry_res['metadata']['code'] ?? 500;
+                        $retry_msg = $retry_res['metadata']['message'] ?? '';
+                        if ($retry_code == 200 || $retry_code == 208) {
+                            $code = $retry_code;
+                            $msg = $retry_msg . ' (Terkirim setelah melengkapi Task ' . $missing_tid . ')';
+                            $res = $retry_res;
+                        }
+                    }
+                }
+            }
+
+            // BPJS code 200 = Sukses, 208 = Sudah pernah di-update / waktu sudah ada
+            if ($code == 200 || $code == 208) {
+                $this->db('mlite_antrian_referensi_taskid')
+                    ->where('nomor_referensi', $kodebooking)
+                    ->where('taskid', $tid)
+                    ->save([
+                        'status' => 'Sudah',
+                        'keterangan' => $msg
+                    ]);
+                $results[] = [
+                    'taskid' => $tid,
+                    'status' => 'Sudah',
+                    'code' => $code,
+                    'message' => $msg
+                ];
+                $success_count++;
+            } else {
+                $this->db('mlite_antrian_referensi_taskid')
+                    ->where('nomor_referensi', $kodebooking)
+                    ->where('taskid', $tid)
+                    ->save([
+                        'status' => 'Gagal',
+                        'keterangan' => $code . ' : ' . $msg
+                    ]);
+                $results[] = [
+                    'taskid' => $tid,
+                    'status' => 'Gagal',
+                    'code' => $code,
+                    'message' => $msg
+                ];
+                $fail_count++;
+                // Berhenti mengirim task berikutnya jika task saat ini gagal
+                break;
+            }
+        }
+
+        return [
+            'status' => 'success',
+            'kodebooking' => $kodebooking,
+            'message' => "Task ID: {$success_count} Berhasil, {$fail_count} Gagal, {$skip_count} Belum Selesai.",
+            'summary' => [
+                'success' => $success_count,
+                'failed' => $fail_count,
+                'skipped' => $skip_count
+            ],
+            'results' => $results
+        ];
+    }
+
+    public function postKirimTaskIDAjax()
+    {
+        header('Content-Type: application/json');
+        $kodebooking = trim($_POST['kodebooking'] ?? '');
+        $versi = strtolower(trim($_POST['versi'] ?? 'v2')); // 'v2' (task 1-5) or 'v3' (task 1-7)
+        $res = $this->syncSingleBooking($kodebooking, $versi);
+        echo json_encode($res);
+        exit();
+    }
+
+    public function getSyncTaskQueueAjax()
+    {
+        header('Content-Type: application/json');
+        $tanggal = trim($_GET['tanggal'] ?? date('Y-m-d'));
+        if (empty($tanggal)) {
+            $tanggal = date('Y-m-d');
+        }
+
+        $bookings = $this->db('mlite_antrian_referensi')
+            ->where('tanggal_periksa', $tanggal)
+            ->toArray();
+
+        if (empty($bookings)) {
+            echo json_encode([
+                'status' => 'success',
+                'total' => 0,
+                'queue' => [],
+                'message' => "Tidak ada data antrean pada tanggal {$tanggal}."
+            ]);
+            exit();
+        }
+
+        $task_stmt = $this->db()->pdo()->prepare("SELECT nomor_referensi, taskid, status, keterangan FROM mlite_antrian_referensi_taskid WHERE tanggal_periksa = ?");
+        $task_stmt->execute([$tanggal]);
+        $task_summary = [];
+        while ($row = $task_stmt->fetch(\PDO::FETCH_ASSOC)) {
+            $ref = $row['nomor_referensi'];
+            if (!isset($task_summary[$ref])) {
+                $task_summary[$ref] = ['total' => 0, 'sudah' => 0, 'belum' => 0];
+            }
+            $task_summary[$ref]['total']++;
+            $is_err = preg_match('/(tidak boleh|lebih besar|belum ada|gagal|error|201\s*:|400\s*:|500\s*:)/i', $row['keterangan'] ?? '');
+            if ($row['status'] === 'Sudah' && !$is_err) {
+                $task_summary[$ref]['sudah']++;
+            } else {
+                $task_summary[$ref]['belum']++;
+            }
+        }
+
+        // Cache nama pasien
+        $rm_list = array_filter(array_unique(array_column($bookings, 'no_rkm_medis')));
+        $pasien_map = [];
+        if (!empty($rm_list)) {
+            $in_clause = implode(',', array_fill(0, count($rm_list), '?'));
+            $p_stmt = $this->db()->pdo()->prepare("SELECT no_rkm_medis, nm_pasien FROM pasien WHERE no_rkm_medis IN ($in_clause)");
+            $p_stmt->execute(array_values($rm_list));
+            while ($p = $p_stmt->fetch(\PDO::FETCH_ASSOC)) {
+                $pasien_map[$p['no_rkm_medis']] = $p['nm_pasien'];
+            }
+        }
+
+        $queue = [];
+        foreach ($bookings as $b) {
+            $kb = $b['kodebooking'] ?: $b['nomor_referensi'];
+            if (empty($kb)) continue;
+
+            $status_b = $b['status'] ?? '';
+            if (stripos($status_b, 'Batal') !== false) {
+                continue;
+            }
+
+            $ts = $task_summary[$kb] ?? ($task_summary[$b['nomor_referensi']] ?? ['total' => 0, 'sudah' => 0, 'belum' => 0]);
+
+            // Jika sudah ada minimal 5 task dan tidak ada yang berstatus belum/gagal, lewati
+            if ($ts['total'] >= 5 && $ts['belum'] == 0 && $ts['sudah'] >= 5) {
+                continue;
+            }
+
+            $nm_pasien = $pasien_map[$b['no_rkm_medis']] ?? ($b['nomor_kartu'] ?: '-');
+
+            $queue[] = [
+                'kodebooking' => $kb,
+                'no_rkm_medis' => $b['no_rkm_medis'],
+                'nm_pasien' => $nm_pasien,
+                'tanggal_periksa' => $b['tanggal_periksa'],
+                'task_sudah' => $ts['sudah'],
+                'task_belum' => $ts['belum']
+            ];
+        }
+
+        echo json_encode([
+            'status' => 'success',
+            'total' => count($queue),
+            'queue' => $queue,
+            'message' => "Ditemukan " . count($queue) . " antrean yang perlu disinkronkan."
+        ]);
+        exit();
+    }
+
+    public function anyAutoSyncTaskID()
+    {
+        header('Content-Type: application/json');
+        $tanggal = trim($_REQUEST['tanggal'] ?? ($_REQUEST['tgl'] ?? date('Y-m-d')));
+        $versi = trim($_REQUEST['versi'] ?? 'v3');
+        $limit = isset($_REQUEST['limit']) ? (int)$_REQUEST['limit'] : 50;
+
+        $bookings = $this->db('mlite_antrian_referensi')
+            ->where('tanggal_periksa', $tanggal)
+            ->toArray();
+
+        $processed = 0;
+        $total_success_tasks = 0;
+        $total_failed_tasks = 0;
+        $results = [];
+
+        foreach ($bookings as $b) {
+            $kb = $b['kodebooking'] ?: $b['nomor_referensi'];
+            if (empty($kb)) continue;
+            if (stripos($b['status'] ?? '', 'Batal') !== false) continue;
+
+            $pending = $this->db('mlite_antrian_referensi_taskid')
+                ->where('nomor_referensi', $kb)
+                ->where('status', 'Belum')
+                ->count();
+            $count_total = $this->db('mlite_antrian_referensi_taskid')
+                ->where('nomor_referensi', $kb)
+                ->count();
+
+            if ($count_total >= 5 && $pending == 0) {
+                continue;
+            }
+
+            $res = $this->syncSingleBooking($kb, $versi);
+            $processed++;
+            $total_success_tasks += $res['summary']['success'] ?? 0;
+            $total_failed_tasks += $res['summary']['failed'] ?? 0;
+            $results[] = [
+                'kodebooking' => $kb,
+                'no_rkm_medis' => $b['no_rkm_medis'],
+                'summary' => $res['summary'] ?? []
+            ];
+
+            if ($processed >= $limit) {
+                break;
+            }
+        }
+
+        echo json_encode([
+            'status' => 'success',
+            'tanggal' => $tanggal,
+            'processed_patients' => $processed,
+            'total_success_tasks' => $total_success_tasks,
+            'total_failed_tasks' => $total_failed_tasks,
+            'details' => $results
+        ]);
+        exit();
+    }
+
+    private function _exportBookingAntrolCsv($rows, $tgl_awal, $tgl_akhir)
+    {
+        $filename = "booking_antrol_" . ($tgl_awal ?: 'all') . "_sd_" . ($tgl_akhir ?: 'all') . ".csv";
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+
+        $output = fopen('php://output', 'w');
+        fputs($output, "\xEF\xBB\xBF");
+
+        fputcsv($output, [
+            'No',
+            'Tanggal Periksa',
+            'Kode Booking',
+            'No. RM',
+            'Nama Pasien',
+            'No. Kartu BPJS',
+            'NIK / KTP',
+            'No. Telepon',
+            'No. Rujukan',
+            'Jenis Kunjungan',
+            'Poliklinik',
+            'Dokter DPJP',
+            'No. Antrean',
+            'Jam Kunjungan',
+            'No. Rawat',
+            'Status Booking'
+        ]);
+
+        $no = 1;
+        foreach ($rows as $r) {
+            fputcsv($output, [
+                $no++,
+                $r['tanggal_periksa'],
+                $r['kodebooking'],
+                $r['no_rkm_medis'] ?: $r['ar_no_rkm_medis'],
+                $r['nm_pasien'] ?: '-',
+                $r['nomor_kartu'] ?: '-',
+                $r['no_ktp'] ?: '-',
+                $r['no_tlp'] ?: '-',
+                $r['nomor_referensi'] ?: '-',
+                $r['jenis_kunjungan_label'],
+                $r['nm_poli'] ?: '-',
+                $r['nm_dokter'] ?: '-',
+                $r['no_reg'] ?: '-',
+                $r['waktu_kunjungan'] ?: $r['jam_booking'] ?: '-',
+                $r['no_rawat'] ?: '-',
+                $r['status_label']
+            ]);
+        }
+        fclose($output);
+        exit();
+    }
+
+    /**
+     * Hitung dan selaraskan waktu Task ID 1-7 serta 99
+     * Menggabungkan data dari BPJS (mlite_antrian_referensi_taskid) dan rekaman operasional SIMRS
+     * (mlite_antrian_loket, mutasi_berkas, pemeriksaan_ralan, resep_obat, dll.)
+     */
+    private function _resolveTaskTimes($no_rawat, $no_rkm_medis, $tanggal_periksa, $kodebooking, $nomor_referensi, $task_map, $op_cache = null)
+    {
+        $tasks = [
+            '1' => ['waktu' => '', 'status' => 'Belum', 'source' => '', 'keterangan' => ''],
+            '2' => ['waktu' => '', 'status' => 'Belum', 'source' => '', 'keterangan' => ''],
+            '3' => ['waktu' => '', 'status' => 'Belum', 'source' => '', 'keterangan' => ''],
+            '4' => ['waktu' => '', 'status' => 'Belum', 'source' => '', 'keterangan' => ''],
+            '5' => ['waktu' => '', 'status' => 'Belum', 'source' => '', 'keterangan' => ''],
+            '6' => ['waktu' => '', 'status' => 'Belum', 'source' => '', 'keterangan' => ''],
+            '7' => ['waktu' => '', 'status' => 'Belum', 'source' => '', 'keterangan' => ''],
+            '99' => ['waktu' => '', 'status' => 'Belum', 'source' => '', 'keterangan' => '']
+        ];
+
+        // 1. Ambil dari database task BPJS jika sudah tercatat
+        $bpjs_records = $task_map[$kodebooking] ?? ($task_map[$nomor_referensi] ?? []);
+        foreach ($bpjs_records as $tid => $data) {
+            $tid_str = (string)$tid;
+            if (isset($tasks[$tid_str])) {
+                $waktu_str = '';
+                if (!empty($data['waktu'])) {
+                    if (is_numeric($data['waktu'])) {
+                        $waktu_str = date('Y-m-d H:i:s', (int)($data['waktu'] / 1000));
+                    } else {
+                        $waktu_str = $data['waktu'];
+                    }
+                }
+                $tasks[$tid_str]['waktu'] = $waktu_str;
+                $tasks[$tid_str]['status'] = $data['status'] ?? 'Belum';
+                $tasks[$tid_str]['source'] = 'Tersimpan / BPJS';
+                $tasks[$tid_str]['keterangan'] = $data['keterangan'] ?? '';
+            }
+        }
+
+        // 2. Ambil dari rekaman operasional SIMRS (seperti di /admin/jkn_mobile/taskid dan getTaskIDInput)
+        if (!empty($no_rawat)) {
+            // Berkas RM (mutasi_berkas) -> Task 3 & 4
+            $berkas = null;
+            if ($op_cache !== null && isset($op_cache['mutasi_berkas'][$no_rawat])) {
+                $berkas = $op_cache['mutasi_berkas'][$no_rawat];
+            } else {
+                $berkas = $this->db('mutasi_berkas')->select(['dikirim', 'diterima'])->where('no_rawat', $no_rawat)->oneArray();
+            }
+            $berkas_dikirim = (!empty($berkas['dikirim']) && $berkas['dikirim'] > '1970-01-01 00:00:00') ? $berkas['dikirim'] : '';
+            $berkas_diterima = (!empty($berkas['diterima']) && $berkas['diterima'] > '1970-01-01 00:00:00') ? $berkas['diterima'] : '';
+
+            // Pemeriksaan Ralan (pemeriksaan_ralan) -> Task 5
+            $pemeriksaan = null;
+            if ($op_cache !== null && isset($op_cache['pemeriksaan_ralan'][$no_rawat])) {
+                $pemeriksaan = $op_cache['pemeriksaan_ralan'][$no_rawat];
+            } else {
+                $pemeriksaan = $this->db('pemeriksaan_ralan')->select(['datajam' => 'concat(tgl_perawatan," ",jam_rawat)'])->where('no_rawat', $no_rawat)->oneArray();
+            }
+            $jam_periksa = !empty($pemeriksaan['datajam']) ? $pemeriksaan['datajam'] : '';
+
+            // Resep Obat (resep_obat) -> Task 6 & 7
+            $resep = null;
+            if ($op_cache !== null && isset($op_cache['resep_obat'][$no_rawat])) {
+                $resep = $op_cache['resep_obat'][$no_rawat];
+            } else {
+                $resep = $this->db('resep_obat')->select(['datajam' => 'concat(tgl_peresepan," ",jam_peresepan)', 'datajam2' => 'concat(tgl_perawatan," ",jam)'])->where('no_rawat', $no_rawat)->oneArray();
+            }
+            $jam_resep = !empty($resep['datajam']) ? $resep['datajam'] : '';
+            $jam_obat_selesai = (!empty($resep['datajam2']) && $resep['datajam2'] > '1970-01-01 00:00:00') ? $resep['datajam2'] : '';
+
+            // Antrean Loket -> Task 1 & 2
+            $loket = null;
+            if (!empty($no_rkm_medis) && !empty($tanggal_periksa)) {
+                $loket_key = $no_rkm_medis . '_' . $tanggal_periksa;
+                if ($op_cache !== null && isset($op_cache['loket'][$loket_key])) {
+                    $loket = $op_cache['loket'][$loket_key];
+                } else {
+                    $loket = $this->db('mlite_antrian_loket')->where('no_rkm_medis', $no_rkm_medis)->where('postdate', $tanggal_periksa)->oneArray();
+                }
+            }
+
+            // Task 5: Selesai Pelayanan Poli
+            if (empty($tasks['5']['waktu']) && !empty($jam_periksa)) {
+                $tasks['5']['waktu'] = $jam_periksa;
+                $tasks['5']['source'] = 'Pemeriksaan Poli';
+            }
+
+            // Task 4: Dipanggil Masuk Poli
+            if (empty($tasks['4']['waktu'])) {
+                if (!empty($berkas_diterima)) {
+                    $tasks['4']['waktu'] = $berkas_diterima;
+                    $tasks['4']['source'] = 'Berkas Diterima Poli';
+                } elseif (!empty($tasks['5']['waktu'])) {
+                    $tasks['4']['waktu'] = date('Y-m-d H:i:s', strtotime($tasks['5']['waktu']) - 300);
+                    $tasks['4']['source'] = 'Estimasi Masuk Poli';
+                }
+            }
+
+            // Task 3: Selesai Admisi / Tunggu Poli
+            if (empty($tasks['3']['waktu'])) {
+                if (!empty($berkas_dikirim)) {
+                    $tasks['3']['waktu'] = $berkas_dikirim;
+                    $tasks['3']['source'] = 'Berkas Dikirim RM';
+                } elseif (!empty($tasks['4']['waktu'])) {
+                    $tasks['3']['waktu'] = date('Y-m-d H:i:s', strtotime($tasks['4']['waktu']) - 300);
+                    $tasks['3']['source'] = 'Estimasi Tunggu Poli';
+                } elseif (!empty($tasks['5']['waktu'])) {
+                    $tasks['3']['waktu'] = date('Y-m-d H:i:s', strtotime($tasks['5']['waktu']) - 600);
+                    $tasks['3']['source'] = 'Estimasi Tunggu Poli';
+                }
+            }
+
+            // Koreksi jika Task 3 >= Task 4
+            if (!empty($tasks['3']['waktu']) && !empty($tasks['4']['waktu']) && strtotime($tasks['3']['waktu']) >= strtotime($tasks['4']['waktu'])) {
+                $tasks['3']['waktu'] = date('Y-m-d H:i:s', strtotime($tasks['4']['waktu']) - 300);
+            }
+
+            // Task 1 & 2: Mulai & Selesai Admisi Loket
+            if (empty($tasks['1']['waktu']) || empty($tasks['2']['waktu'])) {
+                if (!empty($loket['start_time']) && !empty($loket['end_time'])) {
+                    if (empty($tasks['1']['waktu'])) {
+                        $tasks['1']['waktu'] = $loket['postdate'] . ' ' . $loket['start_time'];
+                        $tasks['1']['source'] = 'Loket Mulai';
+                    }
+                    if (empty($tasks['2']['waktu'])) {
+                        $tasks['2']['waktu'] = $loket['postdate'] . ' ' . $loket['end_time'];
+                        $tasks['2']['source'] = 'Loket Selesai';
+                    }
+                } elseif (!empty($tasks['3']['waktu'])) {
+                    $t3_time = strtotime($tasks['3']['waktu']);
+                    if (empty($tasks['2']['waktu'])) {
+                        $tasks['2']['waktu'] = date('Y-m-d H:i:s', $t3_time - 180);
+                        $tasks['2']['source'] = 'Estimasi Dilayani Admisi';
+                    }
+                    if (empty($tasks['1']['waktu'])) {
+                        $tasks['1']['waktu'] = date('Y-m-d H:i:s', $t3_time - 600);
+                        $tasks['1']['source'] = 'Estimasi Tunggu Admisi';
+                    }
+                }
+            }
+
+            // Task 6 & 7: Farmasi
+            if (empty($tasks['6']['waktu']) && !empty($jam_resep)) {
+                $tasks['6']['waktu'] = $jam_resep;
+                $tasks['6']['source'] = 'Resep Diterima Farmasi';
+            }
+            if (empty($tasks['7']['waktu']) && !empty($jam_obat_selesai)) {
+                $tasks['7']['waktu'] = $jam_obat_selesai;
+                $tasks['7']['source'] = 'Obat Diserahkan Farmasi';
+            }
+        }
+
+        return $tasks;
+    }
+
+    public function getModalAntrol($noref = '')
     {
         $this->tpl->set('noref',$noref);
         echo $this->tpl->draw(MODULES . '/jkn_mobile/view/admin/batalantrol.html', true);
@@ -1612,7 +3567,17 @@ class Admin extends AdminModule
                 }
             }
         }
-        //exit();
+
+        if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+            header('Content-Type: application/json');
+            $is_success = (strpos($notif, 'Berhasil') !== false);
+            echo json_encode([
+                'status' => $is_success ? 'success' : 'error',
+                'message' => strip_tags($notif)
+            ]);
+            exit();
+        }
+
         return $this->draw('hapusantrol.html', ['row' => $this->db('mlite_antrian_referensi')->toArray(), 'notif' => $notif]);
     }
 

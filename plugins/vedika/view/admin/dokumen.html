@@ -1,0 +1,137 @@
+<div class="row">
+  <div class="col-md-5">
+    <h3 style="margin-top:0;">
+      <i class="fa fa-file-pdf-o text-danger"></i> Manajemen Dokumen Klaim Digital
+      <small style="display:block;margin-top:4px;color:#718096;">Pengelolaan, kompilasi otomatis PDF berkas klaim, dan penyimpanan arsip dokumen digital per episode pasien</small>
+    </h3>
+  </div>
+  <div class="col-md-7 text-right">
+    <form class="form-inline" action="" method="GET">
+      <div class="form-group">
+        <label><i class="fa fa-calendar"></i> Tanggal:</label>
+        <input type="text" name="tgl_awal" class="form-control tanggal input-sm" style="width:110px;" value="{?=$tgl_awal?}" placeholder="YYYY-MM-DD">
+        <span> s/d </span>
+        <input type="text" name="tgl_akhir" class="form-control tanggal input-sm" style="width:110px;" value="{?=$tgl_akhir?}" placeholder="YYYY-MM-DD">
+      </div>
+      <div class="btn-group btn-group-sm" style="margin-left:6px;margin-right:6px;">
+        <button type="button" class="btn btn-default btn-quick-date" data-range="today" title="Set tanggal hari ini"><i class="fa fa-clock-o"></i> Hari Ini</button>
+        <button type="button" class="btn btn-default btn-quick-date" data-range="yesterday" title="Set tanggal kemarin">Kemarin</button>
+        <button type="button" class="btn btn-default btn-quick-date" data-range="this_month" title="Set awal sampai akhir bulan ini">Bulan Ini</button>
+      </div>
+      <div class="form-group">
+        <input type="text" name="search" class="form-control input-sm" value="{?=$search?}" placeholder="Cari Pasien">
+      </div>
+      <input type="hidden" name="t" value="{?=$_SESSION['token']?}">
+      <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-filter"></i> Saring</button>
+    </form>
+  </div>
+</div>
+<hr style="margin-top:10px;margin-bottom:20px;">
+
+<div class="panel panel-default">
+  <div class="table-responsive">
+    <table class="table table-hover table-striped" style="margin-bottom:0;font-size:13px;">
+      <thead>
+        <tr class="active">
+          <th>No. Rawat / RM</th>
+          <th>Nama Pasien</th>
+          <th>Tgl Pelayanan / Poli</th>
+          <th>No. SEP</th>
+          <th>Dokumen Digital Terunggah</th>
+          <th class="text-center">Kompilasi & Unduh Berkas</th>
+        </tr>
+      </thead>
+      <tbody>
+        {if: !empty($rows)}
+        {loop: $rows as $row}
+        <tr>
+          <td>
+            <b>{?=$row.no_rawat?}</b><br>
+            <span class="label label-default">RM: {?=$row.no_rkm_medis?}</span>
+          </td>
+          <td>
+            <b>{?=$row.nm_pasien?}</b>
+          </td>
+          <td>
+            {?=$row.tgl_registrasi?}<br>
+            <span class="text-primary">{?=$row.nm_poli?}</span>
+          </td>
+          <td>
+            {if: !empty($row.no_sep)}
+            <span class="label label-success">{?=$row.no_sep?}</span>
+            {else}
+            <span class="label label-danger">Belum Terbit</span>
+            {/if}
+          </td>
+          <td>
+            {if: !empty($row.berkas)}
+              {loop: $row.berkas as $b}
+              <div style="margin-bottom:2px;">
+                <i class="fa fa-paperclip text-muted"></i> <b>{?=$b.nama?}</b>
+                <a href="{?=WEBAPPS_URL.'/berkasrawat/'.$b.lokasi_file?}" target="_blank" class="btn btn-default btn-xs"><i class="fa fa-eye"></i></a>
+              </div>
+              {/loop}
+            {else}
+              <span class="text-muted"><i class="fa fa-info-circle"></i> Hanya dokumen elektronik sistem (SEP, Resume, Billing)</span>
+            {/if}
+            <div style="margin-top:4px;">
+              <a href="{?=url([ADMIN, 'vedika', 'berkasperawatan', convertNorawat($row.no_rawat)])?}" target="_blank" class="btn btn-default btn-xs">
+                <i class="fa fa-upload"></i> Upload Berkas Scan
+              </a>
+            </div>
+          </td>
+          <td class="text-center" style="white-space:nowrap;">
+            <a href="{?=url([ADMIN, 'vedika', 'pdf', convertNorawat($row.no_rawat)])?}" target="_blank" class="btn btn-danger btn-xs" title="Preview / Cetak PDF Bundle Klaim">
+              <i class="fa fa-file-pdf-o"></i> Unduh Bundle PDF Klaim
+            </a>
+          </td>
+        </tr>
+        {/loop}
+        {else}
+        <tr>
+          <td colspan="6" class="text-center" style="padding:30px;">
+            <span class="text-muted">Tidak ada data dokumen klaim pada filter ini.</span>
+          </td>
+        </tr>
+        {/if}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  $(function() {
+    $('.tanggal').datetimepicker({
+      format: 'YYYY-MM-DD',
+      locale: 'id'
+    });
+
+    // Quick filter shortcut buttons (Hari Ini, Kemarin, Bulan Ini)
+    $('.btn-quick-date').on('click', function(e) {
+      e.preventDefault();
+      var range = $(this).data('range');
+      var now = new Date();
+      var pad = function(n) { return (n < 10 ? '0' : '') + n; };
+      var fmt = function(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
+
+      if (range === 'today') {
+        var str = fmt(now);
+        $('input[name="tgl_awal"]').val(str);
+        $('input[name="tgl_akhir"]').val(str);
+      } else if (range === 'yesterday') {
+        var yest = new Date(now);
+        yest.setDate(yest.getDate() - 1);
+        var str = fmt(yest);
+        $('input[name="tgl_awal"]').val(str);
+        $('input[name="tgl_akhir"]').val(str);
+      } else if (range === 'this_month') {
+        var firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+        var lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        $('input[name="tgl_awal"]').val(fmt(firstDay));
+        $('input[name="tgl_akhir"]').val(fmt(lastDay));
+      }
+      $(this).closest('form').submit();
+    });
+  });
+</script>
+

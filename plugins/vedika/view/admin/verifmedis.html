@@ -1,0 +1,232 @@
+<div class="row">
+  <div class="col-md-5">
+    <h3 style="margin-top:0;">
+      <i class="fa fa-user-md text-success"></i> Verifikasi Medis & Klinis Internal Klaim
+      <small style="display:block;margin-top:4px;color:#718096;">Pemeriksaan kesesuaian diagnosis, resume medis, odontogram dental (RSGM), dan pencegahan upcoding koding</small>
+    </h3>
+  </div>
+  <div class="col-md-7 text-right">
+    <form class="form-inline" action="" method="GET">
+      <div class="form-group">
+        <label><i class="fa fa-calendar"></i> Tanggal:</label>
+        <input type="text" name="tgl_awal" class="form-control tanggal input-sm" style="width:110px;" value="{?=$tgl_awal?}" placeholder="YYYY-MM-DD">
+        <span> s/d </span>
+        <input type="text" name="tgl_akhir" class="form-control tanggal input-sm" style="width:110px;" value="{?=$tgl_akhir?}" placeholder="YYYY-MM-DD">
+      </div>
+      <div class="btn-group btn-group-sm" style="margin-left:6px;margin-right:6px;">
+        <button type="button" class="btn btn-default btn-quick-date" data-range="today" title="Set tanggal hari ini"><i class="fa fa-clock-o"></i> Hari Ini</button>
+        <button type="button" class="btn btn-default btn-quick-date" data-range="yesterday" title="Set tanggal kemarin">Kemarin</button>
+        <button type="button" class="btn btn-default btn-quick-date" data-range="this_month" title="Set awal sampai akhir bulan ini">Bulan Ini</button>
+      </div>
+      <input type="hidden" name="t" value="{?=$_SESSION['token']?}">
+      <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-filter"></i> Saring</button>
+    </form>
+  </div>
+</div>
+<hr style="margin-top:10px;margin-bottom:20px;">
+
+<div class="panel panel-default">
+  <div class="table-responsive">
+    <table class="table table-hover table-striped" style="margin-bottom:0;font-size:13px;">
+      <thead>
+        <tr class="active">
+          <th>No. Rawat / RM</th>
+          <th>Nama Pasien</th>
+          <th>Dokter DPJP / Poli</th>
+          <th>Resume & DPJP</th>
+          <th>Koding Medis</th>
+          <th>Odontogram Dental</th>
+          <th>Status Verif Medis</th>
+          <th>Catatan Klinis</th>
+          <th class="text-center">Aksi</th>
+        </tr>
+      </thead>
+      <tbody>
+        {if: count($rows) > 0}
+        {loop: $rows}
+        <tr>
+          <td>
+            <b>{?=$value.no_rawat?}</b><br>
+            <span class="label label-default">RM: {?=$value.no_rkm_medis?}</span>
+          </td>
+          <td>
+            <b>{?=$value.nm_pasien?}</b><br>
+            <small class="text-muted">SEP: {?=$value.no_sep?:'-'?}</small>
+          </td>
+          <td>
+            <b>{?=$value.nm_dokter?}</b><br>
+            <span class="text-primary">{?=$value.nm_poli?}</span>
+          </td>
+          <td>
+            <a href="{?=url([ADMIN, 'vedika', 'resume', convertNorawat($value.no_rawat)])?}" class="btn btn-default btn-xs btn-open-modal-action">
+              <i class="fa fa-file-text-o"></i> Lihat Resume
+            </a>
+          </td>
+          <td>
+            <span class="label label-primary">{?=$value.jml_diag?} ICD-10</span>
+            <span class="label label-info">{?=$value.jml_proc?} ICD-9</span>
+          </td>
+          <td>
+            {if: $value.jml_odonto > 0}
+            <span class="label label-success"><i class="fa fa-check"></i> {?=$value.jml_odonto?} Elemen</span>
+            {else}
+            <span class="label label-default">Tidak Ada</span>
+            {/if}
+          </td>
+          <td>
+            {if: $value.verif_medis_status == 'approved'}
+            <span class="label label-success"><i class="fa fa-check"></i> Disetujui</span>
+            {elseif: $value.verif_medis_status == 'need_revision'}
+            <span class="label label-warning"><i class="fa fa-refresh"></i> Klarifikasi DPJP</span>
+            {elseif: $value.verif_medis_status == 'rejected'}
+            <span class="label label-danger"><i class="fa fa-times"></i> Tidak Layak</span>
+            {else}
+            <span class="label label-default"><i class="fa fa-clock-o"></i> Belum Diperiksa</span>
+            {/if}
+          </td>
+          <td>
+            <small class="text-muted">{?=$value.verif_medis_notes ?: '-'?}</small><br>
+            {if: !empty($value.verif_medis_user)}
+            <small>Oleh: <b>{?=$value.verif_medis_user?}</b> ({?=$value.verif_medis_at?})</small>
+            {/if}
+          </td>
+          <td class="text-center" style="white-space:nowrap;">
+            <button type="button" class="btn btn-success btn-xs btn-open-verifmedis" 
+                    data-norawat="{?=$value.no_rawat?}" 
+                    data-sep="{?=$value.no_sep?}" 
+                    data-status="{?=$value.verif_medis_status?}" 
+                    data-notes="{?=$value.verif_medis_notes?}">
+              <i class="fa fa-stethoscope"></i> Verifikasi Medis
+            </button>
+          </td>
+        </tr>
+        {/loop}
+        {else}
+        <tr>
+          <td colspan="9" class="text-center" style="padding:30px;">
+            <span class="text-muted">Tidak ada data pasien untuk verifikasi medis pada periode ini.</span>
+          </td>
+        </tr>
+        {/if}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- MODAL VERIFIKASI MEDIS -->
+<div class="modal fade" id="modalVerifMedis" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <form action="{?=url([ADMIN, 'vedika', 'verifmedis'])?}" method="POST">
+        <input type="hidden" name="t" value="{?=$_SESSION['token']?}">
+        <input type="hidden" name="no_rawat" id="fm_no_rawat">
+        <input type="hidden" name="no_sep" id="fm_no_sep">
+        
+        <div class="modal-header bg-success" style="color:#fff;">
+          <button type="button" class="close" data-dismiss="modal" style="color:#fff;">&times;</button>
+          <h4 class="modal-title"><i class="fa fa-user-md"></i> Verifikasi Kelayakan Medis & Koding Casemix</h4>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-info" style="font-size:12px;">
+            <i class="fa fa-shield"></i> <b>Kepatuhan Anti-Upcoding:</b> Seluruh pengodean ICD-10 & ICD-9-CM harus bersumber secara akurat dari rekam medis klinis nyata DPJP. Dilarang menambah atau memodifikasi kode untuk tujuan meningkatkan tarif klaim.
+          </div>
+          <div class="form-group">
+            <label>No. Rawat:</label>
+            <input type="text" id="lbl_m_norawat" class="form-control" readonly>
+          </div>
+          <div class="form-group">
+            <label>Keputusan Verifikator Medis Internal:</label>
+            <select name="verif_status" id="fm_status" class="form-control" required>
+              <option value="approved">Disetujui (Klinis, Koding, & Resume Sesuai Panduan)</option>
+              <option value="need_revision">Klarifikasi DPJP (Ada Inkonsistensi Diagnosa/Tindakan)</option>
+              <option value="rejected">Ditolak (Tidak Memenuhi Indikasi Medis JKN)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Catatan Klinis / Penjelasan Verifikasi:</label>
+            <textarea name="verif_notes" id="fm_notes" class="form-control" rows="3" placeholder="Tuliskan catatan telaah klinis, kesesuaian odontogram dental, atau catatan untuk DPJP..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Batal</button>
+          <button type="submit" name="save_verif_medis" class="btn btn-success"><i class="fa fa-save"></i> Simpan Verifikasi Medis</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL AKSI CEPAT (RESUME) -->
+<div class="modal fade" id="modalAction" tabindex="-1" role="dialog" style="z-index:1060;">
+  <div class="modal-dialog modal-lg" role="document" style="width:85%;">
+    <div class="modal-content">
+      <div class="modal-body text-center" style="padding:40px;">
+        <i class="fa fa-spinner fa-spin fa-2x"></i>
+        <p style="margin-top:10px;">Memuat resume medis...</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  $(function() {
+    $('.tanggal').datetimepicker({
+      format: 'YYYY-MM-DD',
+      locale: 'id'
+    });
+
+    // Quick filter shortcut buttons (Hari Ini, Kemarin, Bulan Ini)
+    $('.btn-quick-date').on('click', function(e) {
+      e.preventDefault();
+      var range = $(this).data('range');
+      var now = new Date();
+      var pad = function(n) { return (n < 10 ? '0' : '') + n; };
+      var fmt = function(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
+
+      if (range === 'today') {
+        var str = fmt(now);
+        $('input[name="tgl_awal"]').val(str);
+        $('input[name="tgl_akhir"]').val(str);
+      } else if (range === 'yesterday') {
+        var yest = new Date(now);
+        yest.setDate(yest.getDate() - 1);
+        var str = fmt(yest);
+        $('input[name="tgl_awal"]').val(str);
+        $('input[name="tgl_akhir"]').val(str);
+      } else if (range === 'this_month') {
+        var firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+        var lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        $('input[name="tgl_awal"]').val(fmt(firstDay));
+        $('input[name="tgl_akhir"]').val(fmt(lastDay));
+      }
+      $(this).closest('form').submit();
+    });
+
+    // Handler Buka Modal Aksi (Resume)
+    $(document).on('click', '.btn-open-modal-action', function(e) {
+      e.preventDefault();
+      var url = $(this).attr('href');
+      var modal = $('#modalAction');
+      var modalContent = modal.find('.modal-content');
+      modalContent.html('<div class="modal-body text-center" style="padding:40px;"><i class="fa fa-spinner fa-spin fa-2x"></i><p style="margin-top:10px;">Memuat resume medis...</p></div>');
+      modal.modal('show');
+      modalContent.load(url);
+    });
+
+    $('.btn-open-verifmedis').on('click', function() {
+      var nr = $(this).data('norawat');
+      var sep = $(this).data('sep');
+      var status = $(this).data('status') || 'approved';
+      var notes = $(this).data('notes') || '';
+
+      $('#fm_no_rawat').val(nr);
+      $('#fm_no_sep').val(sep);
+      $('#lbl_m_norawat').val(nr);
+      $('#fm_status').val(status);
+      $('#fm_notes').val(notes);
+
+      $('#modalVerifMedis').modal('show');
+    });
+  });
+</script>
+

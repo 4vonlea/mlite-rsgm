@@ -1,46 +1,979 @@
-<div class="row">
-    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <h3 class="panel-title">Data Booking Antrian Online</h3>
-            </div>
-            <div class="panel-body">
-                <div class="table-responsive no-margin">
-                  <table class="table table-striped no-margin display no-wrap" width="100%">
-                    <thead>
-                      <tr>
-                        <th>Tanggal Periksa</th>
-                        <th>Nomor Kartu</th>
-                        <th>Nomor Rujukan</th>
-                        <th>Kode Booking</th>
-                        <th class="text-right">Aksi</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {loop: $row}
-                      <tr>
-                        <td>{?=isset_or($value.tanggal_periksa)?}</td>
-                        <td>{?=isset_or($value.nomor_kartu)?}</td>
-                        <td>{?=isset_or($value.nomor_referensi)?}</td>
-                        <td>{?=isset_or($value.kodebooking)?}</td>
-                        <td class="text-right">
-                          <a href="{?=url([ADMIN, 'jkn_mobile', 'modalantrol', $value.kodebooking])?}" class="btn btn-xs btn-danger" data-toggle="modal" data-target="#riwayatModal">
-                            <i class="fa fa-close"></i> <span class="hidden-xs">Batal</span>
-                          </a>
-                        </td>
-                      </tr>
-                      {/loop}
-                    </tbody>
-                  </table>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-<div class="modal fade" id="riwayatModal" tabindex="-1" role="dialog">
-  <div class="modal-dialog" role="document">
-      <div class="modal-content">
-          ...
+<style>
+  .kpi-card {
+    border-radius: 8px;
+    padding: 15px 18px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    background: #fff;
+    border-left: 4px solid #cbd5e1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .kpi-card.kpi-blue { border-left-color: #0284c7; }
+  .kpi-card.kpi-yellow { border-left-color: #eab308; }
+  .kpi-card.kpi-green { border-left-color: #22c55e; }
+  .kpi-card.kpi-red { border-left-color: #ef4444; }
+  .kpi-title { font-size: 12px; font-weight: 600; text-transform: uppercase; color: #64748b; margin-bottom: 4px; }
+  .kpi-value { font-size: 26px; font-weight: 700; color: #1e293b; line-height: 1; }
+  .kpi-icon { font-size: 32px; opacity: 0.3; }
+
+  .task-strip {
+    display: inline-flex;
+    gap: 3px;
+    align-items: center;
+  }
+  .task-pill {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    line-height: 20px;
+    text-align: center;
+    border-radius: 50%;
+    font-size: 10px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  .task-pill.task-done { background: #16a34a; color: #fff; box-shadow: 0 1px 2px rgba(22,163,74,0.3); }
+  .task-pill.task-simrs { background: #0284c7; color: #fff; box-shadow: 0 1px 2px rgba(2,132,199,0.3); }
+  .task-pill.task-wait { background: #e2e8f0; color: #94a3b8; }
+  .task-pill.task-fail { background: #dc2626; color: #fff; }
+
+  .copy-btn {
+    cursor: pointer;
+    color: #0284c7;
+    margin-left: 4px;
+    font-size: 11px;
+  }
+  .copy-btn:hover { color: #0369a1; }
+
+  .table-booking th {
+    background: #f8fafc;
+    color: #334155;
+    font-size: 12px;
+    font-weight: 600;
+    vertical-align: middle !important;
+  }
+  .table-booking td {
+    vertical-align: middle !important;
+    font-size: 12px;
+  }
+</style>
+
+<!-- Header & Title -->
+<div class="row" style="margin-bottom: 15px;">
+  <div class="col-xs-12">
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 10px;">
+      <div>
+        <h3 style="margin: 0 0 5px 0; font-weight: 700; color: #1e293b;">
+          <i class="fa fa-calendar-check-o text-primary"></i> Data Booking Antrian Online (Mobile JKN & BPJS)
+        </h3>
+        <p class="text-muted" style="margin: 0; font-size: 13px;">
+          Monitoring pendaftaran antrean faskes dari aplikasi Mobile JKN, status kedatangan / check-in pasien di SIMRS, dan rekam Task ID 1-7 BPJS.
+        </p>
       </div>
+      <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+        <button type="button" class="btn btn-warning btn-sm" onclick="bukaModalSyncMassal()" title="Sinkronkan seluruh Task ID antrean pasien hari ini ke server BPJS Antrean secara otomatis">
+          <i class="fa fa-refresh"></i> ⚡ Sinkronkan Semua Task ID Hari Ini
+        </button>
+        <a href="{?=url([ADMIN, 'jkn_mobile', 'bookingantrol'])?}&export=csv{if: !empty($tgl_awal)}&tgl_awal={?=$tgl_awal?}{/if}{if: !empty($tgl_akhir)}&tgl_akhir={?=$tgl_akhir?}{/if}{if: $status_filter != 'Semua'}&status={?=$status_filter?}{/if}{if: $kd_poli_filter != 'Semua'}&kd_poli={?=$kd_poli_filter?}{/if}" 
+           class="btn btn-success btn-sm" title="Unduh Data yang Sedang Difilter ke Format CSV/Excel">
+          <i class="fa fa-file-excel-o"></i> Unduh Excel / CSV
+        </a>
+      </div>
+    </div>
   </div>
 </div>
+
+<!-- KPI Summary Cards -->
+<div class="row">
+  <div class="col-xs-6 col-sm-3">
+    <div class="kpi-card kpi-blue">
+      <div>
+        <div class="kpi-title">Total Booking</div>
+        <div class="kpi-value">{?=$total_all?}</div>
+      </div>
+      <i class="fa fa-calendar kpi-icon text-primary"></i>
+    </div>
+  </div>
+  <div class="col-xs-6 col-sm-3">
+    <div class="kpi-card kpi-yellow">
+      <div>
+        <div class="kpi-title">Menunggu Check-In</div>
+        <div class="kpi-value">{?=$total_belum?}</div>
+      </div>
+      <i class="fa fa-clock-o kpi-icon text-warning"></i>
+    </div>
+  </div>
+  <div class="col-xs-6 col-sm-3">
+    <div class="kpi-card kpi-green">
+      <div>
+        <div class="kpi-title">Sudah Hadir / Terdaftar</div>
+        <div class="kpi-value">{?=$total_terdaftar?}</div>
+      </div>
+      <i class="fa fa-check-circle kpi-icon text-success"></i>
+    </div>
+  </div>
+  <div class="col-xs-6 col-sm-3">
+    <div class="kpi-card kpi-red">
+      <div>
+        <div class="kpi-title">Dibatalkan</div>
+        <div class="kpi-value">{?=$total_batal?}</div>
+      </div>
+      <i class="fa fa-times-circle kpi-icon text-danger"></i>
+    </div>
+  </div>
+</div>
+
+<!-- Filter Panel -->
+<div class="panel panel-default" style="border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); margin-bottom: 20px;">
+  <div class="panel-heading" style="background:#f8fafc; font-weight:600;">
+    <i class="fa fa-filter text-primary"></i> Filter & Pencarian Antrean Online
+  </div>
+  <div class="panel-body">
+    <form method="GET" action="{?=url([ADMIN, 'jkn_mobile', 'bookingantrol'])?}" id="formFilterAntrol">
+      <input type="hidden" name="t" value="{?=isset_or($_GET['t'])?}">
+
+      <div class="row">
+        <div class="col-md-3 col-sm-6">
+          <div class="form-group">
+            <label style="font-size:12px;"><strong>Dari Tanggal:</strong></label>
+            <input type="date" name="tgl_awal" id="filter_tgl_awal" class="form-control input-sm" value="{?=$tgl_awal?}">
+          </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+          <div class="form-group">
+            <label style="font-size:12px;"><strong>Sampai Tanggal:</strong></label>
+            <input type="date" name="tgl_akhir" id="filter_tgl_akhir" class="form-control input-sm" value="{?=$tgl_akhir?}">
+          </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+          <div class="form-group">
+            <label style="font-size:12px;"><strong>Poliklinik:</strong></label>
+            <select name="kd_poli" class="form-control input-sm">
+              <option value="Semua">-- Semua Poliklinik --</option>
+              {loop: $poliklinik}
+              <option value="{?=$value.kd_poli?}" {?=($kd_poli_filter == $value['kd_poli'] ? 'selected' : '')?}>
+                {?=$value.nm_poli?}
+              </option>
+              {/loop}
+            </select>
+          </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+          <div class="form-group">
+            <label style="font-size:12px;"><strong>Status Booking:</strong></label>
+            <select name="status" class="form-control input-sm">
+              <option value="Semua" {?=($status_filter == 'Semua' ? 'selected' : '')?}>-- Semua Status --</option>
+              <option value="Belum" {?=($status_filter == 'Belum' ? 'selected' : '')?}>Menunggu Check-In</option>
+              <option value="Terdaftar" {?=($status_filter == 'Terdaftar' ? 'selected' : '')?}>Sudah Hadir / Terdaftar</option>
+              <option value="Batal" {?=($status_filter == 'Batal' ? 'selected' : '')?}>Dibatalkan</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6 col-sm-12">
+          <div class="form-group" style="margin-bottom:10px;">
+            <label style="font-size:12px;"><strong>Pencarian Cepat:</strong></label>
+            <input type="text" name="keyword" class="form-control input-sm" 
+                   placeholder="Cari Nama Pasien, No RM, NIK, No Kartu, No Rujukan, atau Kode Booking..." 
+                   value="{?=$keyword?}">
+          </div>
+        </div>
+        <div class="col-md-6 col-sm-12 text-right" style="padding-top:23px;">
+          <div class="btn-group btn-group-sm" style="margin-right: 5px;">
+            <a href="{?=url([ADMIN, 'jkn_mobile', 'bookingantrol'])?}&preset=hari_ini" class="btn btn-default {?=($preset == 'hari_ini' ? 'active' : '')?}">Hari Ini</a>
+            <a href="{?=url([ADMIN, 'jkn_mobile', 'bookingantrol'])?}&preset=besok" class="btn btn-default {?=($preset == 'besok' ? 'active' : '')?}">Besok</a>
+            <a href="{?=url([ADMIN, 'jkn_mobile', 'bookingantrol'])?}&preset=minggu_ini" class="btn btn-default {?=($preset == 'minggu_ini' ? 'active' : '')?}">7 Hari</a>
+            <a href="{?=url([ADMIN, 'jkn_mobile', 'bookingantrol'])?}&preset=bulan_ini" class="btn btn-default {?=($preset == 'bulan_ini' ? 'active' : '')?}">Bulan Ini</a>
+            <a href="{?=url([ADMIN, 'jkn_mobile', 'bookingantrol'])?}&preset=semua" class="btn btn-default {?=($preset == 'semua' ? 'active' : '')?}">Semua</a>
+          </div>
+          <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-filter"></i> Terapkan Filter</button>
+          <a href="{?=url([ADMIN, 'jkn_mobile', 'bookingantrol'])?}" class="btn btn-default btn-sm" title="Reset Filter"><i class="fa fa-refresh"></i></a>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Main Table Panel -->
+<div class="panel panel-default" style="border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">
+  <div class="panel-heading" style="background:#f8fafc; font-weight:600; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+    <div>
+      <i class="fa fa-list text-primary"></i> Daftar Antrean Booking Online (Total: {?=count($rows)?} Data)
+    </div>
+    <div style="font-size: 11px; font-weight:normal; color: #64748b; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+      <span><span class="task-pill task-done" style="width:13px;height:13px;line-height:13px;font-size:8px;">✓</span> Terkirim ke BPJS</span>
+      <span><span class="task-pill task-simrs" style="width:13px;height:13px;line-height:13px;font-size:8px;">✓</span> Tercatat di SIMRS</span>
+      <span><span class="task-pill task-wait" style="width:13px;height:13px;line-height:13px;font-size:8px;">-</span> Belum</span>
+    </div>
+  </div>
+  <div class="panel-body" style="padding: 10px 15px;">
+    <div class="table-responsive">
+      <table class="table table-bordered table-hover table-striped table-booking" id="tabelAntrolCustom" style="width:100%; margin-bottom:0;">
+        <thead>
+          <tr>
+            <th style="width: 3%; text-align: center;">No</th>
+            <th style="width: 11%;">Tgl & Jam</th>
+            <th style="width: 20%;">Pasien</th>
+            <th style="width: 17%;">Poli & Dokter</th>
+            <th style="width: 15%;">Bridging Antrol</th>
+            <th style="width: 11%; text-align: center;">Task ID (1-7)</th>
+            <th style="width: 11%; text-align: center;">Status</th>
+            <th style="width: 12%; text-align: center;">Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          {if: empty($rows)}
+          <tr>
+            <td colspan="8" class="text-center text-muted" style="padding: 40px 15px;">
+              <i class="fa fa-inbox fa-3x" style="color: #cbd5e1; margin-bottom: 10px;"></i>
+              <p style="font-size: 14px; margin-bottom: 0;">Tidak ditemukan data booking antrean online pada rentang filter ini.</p>
+            </td>
+          </tr>
+          {else}
+          {loop: $rows}
+          <tr>
+            <!-- No -->
+            <td style="text-align: center; vertical-align: middle;">{?=$key + 1?}</td>
+
+            <!-- Tgl & Jam -->
+            <td style="vertical-align: middle;">
+              <strong>{?=date('d M Y', strtotime($value.tanggal_periksa))?}</strong><br>
+              <small class="text-muted"><i class="fa fa-clock-o"></i> {?=($value.waktu_kunjungan ?: ($value.jam_booking ?: '-'))?}</small>
+            </td>
+
+            <!-- Pasien -->
+            <td style="vertical-align: middle;">
+              <div style="font-weight: 600; color: #0f172a;">
+                {?=($value.nm_pasien ?: '<span class="text-muted">(Nama tidak terdaftar)</span>')?}
+                {if: $value.jk == 'L'}
+                  <span class="label label-primary" style="font-size:9px; padding:1px 4px;">L</span>
+                {elseif: $value.jk == 'P'}
+                  <span class="label label-danger" style="font-size:9px; padding:1px 4px;">P</span>
+                {/if}
+              </div>
+              <div style="font-size: 11px; margin-top: 2px;">
+                <span class="text-muted">RM:</span> <code>{?=($value.no_rkm_medis ?: $value.ar_no_rkm_medis)?}</code>
+                <span class="text-muted" style="margin-left:5px;">BPJS:</span> <span class="text-info">{?=($value.nomor_kartu ?: '-')?}</span>
+              </div>
+              {if: !empty($value.no_tlp)}
+              <div style="font-size: 11px; margin-top: 2px;">
+                <a href="https://wa.me/{?=preg_replace('/^0/', '62', preg_replace('/[^0-9]/', '', $value.no_tlp))?}" 
+                   target="_blank" class="btn btn-xs btn-default" style="color: #16a34a; border-color: #bbf7d0; padding: 0 4px; font-size: 10px;">
+                  <i class="fa fa-whatsapp"></i> {?=$value.no_tlp?}
+                </a>
+              </div>
+              {/if}
+            </td>
+
+            <!-- Poli & Dokter -->
+            <td style="vertical-align: middle;">
+              <strong>{?=($value.nm_poli ?: '<span class="text-muted">-</span>')?}</strong><br>
+              <small class="text-muted">{?=($value.nm_dokter ?: '-')?}</small>
+              {if: !empty($value.no_reg)}
+              <div style="margin-top: 3px;">
+                <span class="label label-info" style="font-size: 10px; font-weight: 600;">
+                  <i class="fa fa-tag"></i> Antrean #{?=$value.no_reg?}
+                </span>
+              </div>
+              {/if}
+            </td>
+
+            <!-- Bridging Antrol -->
+            <td style="vertical-align: middle;">
+              <div>
+                <strong>{?=$value.kodebooking?}</strong>
+                <i class="fa fa-copy copy-btn" title="Salin Kode Booking" onclick="salinTeks('{?=$value.kodebooking?}')"></i>
+              </div>
+              <div style="font-size: 11px; color: #64748b; margin-top: 2px;">
+                <span title="Nomor Rujukan BPJS"><i class="fa fa-file-text-o"></i> {?=($value.nomor_referensi ?: '-')?}</span>
+              </div>
+              <div style="margin-top: 3px;">
+                <span class="label label-default" style="font-size: 9px;">{?=$value.jenis_kunjungan_label?}</span>
+              </div>
+            </td>
+
+            <!-- Task ID (1-7) -->
+            <td style="text-align: center; vertical-align: middle;">
+              {?=$value.task_pills_html?}
+            </td>
+
+            <!-- Status -->
+            <td style="text-align: center; vertical-align: middle;">
+              {if: $value.status_label == 'Batal'}
+                <span class="label label-danger" style="font-size: 11px; padding: 3px 6px;">
+                  <i class="fa fa-times-circle"></i> Batal
+                </span>
+                {if: !empty($value.batal_keterangan)}
+                <div style="font-size: 10px; color: #dc2626; margin-top: 2px;" title="{?=$value.batal_keterangan?}">
+                  {?=substr($value.batal_keterangan, 0, 20)?}...
+                </div>
+                {/if}
+              {elseif: $value.status_label == 'Terdaftar'}
+                <span class="label label-success" style="font-size: 11px; padding: 3px 6px;">
+                  <i class="fa fa-check-circle"></i> Hadir / Terdaftar
+                </span>
+                {if: !empty($value.no_rawat)}
+                <div style="font-size: 10px; margin-top: 2px;">
+                  <code>{?=$value.no_rawat?}</code>
+                </div>
+                {/if}
+              {else}
+                <span class="label label-warning" style="font-size: 11px; padding: 3px 6px;">
+                  <i class="fa fa-clock-o"></i> Menunggu
+                </span>
+              {/if}
+            </td>
+
+            <!-- Aksi -->
+            <td style="text-align: center; vertical-align: middle;">
+              <div class="btn-group btn-group-xs">
+                <!-- Detail Button -->
+                <button type="button" class="btn btn-default" title="Lihat Detail Lengkap" 
+                        onclick="bukaDetailAntrol('{?=$value.kodebooking?}')">
+                  <i class="fa fa-eye text-primary"></i>
+                </button>
+
+                <!-- Input Task ID jika ada No Rawat -->
+                {if: !empty($value.no_rawat)}
+                <button type="button" class="btn btn-default" title="Input & Sinkronkan Task ID ke BPJS" 
+                        onclick="bukaModalTaskID('{?=convertNoRawat($value.no_rawat)?}')">
+                  <i class="fa fa-tasks text-success"></i>
+                </button>
+                {else}
+                <button type="button" class="btn btn-default" disabled title="Pasien belum check-in / belum memiliki No. Rawat SIMRS">
+                  <i class="fa fa-tasks text-muted"></i>
+                </button>
+                {/if}
+
+                <!-- Batal Button (jika belum batal) -->
+                {if: $value.status_label != 'Batal'}
+                <button type="button" class="btn btn-danger" title="Batalkan Antrean (SIMRS & BPJS)" 
+                        onclick="konfirmasiBatal('{?=$value.kodebooking?}', '{?=addslashes($value.nm_pasien)?}', '{?=$value.tanggal_periksa?}')">
+                  <i class="fa fa-times"></i>
+                </button>
+                {/if}
+              </div>
+            </td>
+          </tr>
+          {/loop}
+          {/if}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Detail Booking Antrol -->
+<div class="modal fade" id="modalDetailBooking" tabindex="-1" role="dialog" aria-labelledby="modalDetailTitle" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content" style="border-radius: 6px;">
+      <div class="modal-header" style="background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="font-size:24px;">&times;</button>
+        <h4 class="modal-title" id="modalDetailTitle" style="font-weight: 700; color: #1e293b;">
+          <i class="fa fa-id-card-o text-primary"></i> Detail Booking Antrean Online
+        </h4>
+      </div>
+      <div class="modal-body" style="padding: 20px;" id="modalDetailContent">
+        <div class="text-center" style="padding: 30px;">
+          <i class="fa fa-spinner fa-spin fa-3x text-primary"></i>
+          <p style="margin-top: 10px; color: #64748b;">Memuat data detail booking...</p>
+        </div>
+      </div>
+      <div class="modal-footer" style="background: #f8fafc; border-top: 1px solid #e2e8f0;">
+        <button type="button" class="btn btn-default" data-dismiss="modal"><i class="fa fa-times"></i> Tutup</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Konfirmasi Batal Antrol -->
+<div class="modal fade" id="modalBatalAntrolDialog" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content" style="border-radius: 6px;">
+      <div class="modal-header" style="background: #fef2f2; border-bottom: 1px solid #fee2e2;">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">&times;</button>
+        <h4 class="modal-title" style="font-weight: 700; color: #991b1b;">
+          <i class="fa fa-exclamation-triangle text-danger"></i> Batalkan Antrean Online BPJS
+        </h4>
+      </div>
+      <form id="formBatalAntrol" onsubmit="event.preventDefault(); submitBatalAntrol();">
+        <div class="modal-body" style="padding: 20px;">
+          <div class="alert alert-warning" style="font-size: 12px; line-height: 1.5;">
+            <i class="fa fa-info-circle"></i> <b>Perhatian:</b> Pembatalan ini akan langsung membatalkan antrean di server <b>BPJS Antrean Faskes (Mobile JKN)</b> dan menandai status booking di basis data SIMRS menjadi <b>Batal</b>.
+          </div>
+
+          <div class="form-group">
+            <label>Kode Booking BPJS:</label>
+            <input type="text" name="kodebooking" id="batal_kodebooking" class="form-control" readonly>
+          </div>
+
+          <div class="form-group">
+            <label>Nama Pasien & Tanggal Periksa:</label>
+            <input type="text" id="batal_pasien_info" class="form-control" readonly>
+          </div>
+
+          <div class="form-group">
+            <label>Alasan Pembatalan: <span class="text-danger">*</span></label>
+            <textarea name="keterangan" id="batal_keterangan" class="form-control" rows="3" 
+                      placeholder="Tuliskan alasan pembatalan (misal: Pasien berhalangan hadir / salah tanggal)..." required></textarea>
+          </div>
+
+          <div id="batalAlertArea"></div>
+        </div>
+        <div class="modal-footer" style="background: #f8fafc;">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Tutup</button>
+          <button type="submit" class="btn btn-danger" id="btnSubmitBatal">
+            <i class="fa fa-times"></i> Ya, Batalkan Antrean
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Task ID Input & Sinkronisasi -->
+<div class="modal fade" id="modalTaskIDDialog" tabindex="-1" role="dialog" aria-labelledby="modalTaskIDTitle" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content" id="modalTaskIDContent" style="border-radius: 6px;">
+      <!-- Konten dimuat via AJAX dari taskidinput -->
+    </div>
+  </div>
+</div>
+
+<!-- Modal Sinkronisasi Massal Task ID -->
+<div class="modal fade" id="modalSyncMassal" tabindex="-1" role="dialog" data-backdrop="static">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content" style="border-radius: 8px; overflow: hidden;">
+      <div class="modal-header" style="background: #1e293b; color: #fff; padding: 15px 20px;">
+        <button type="button" class="close" data-dismiss="modal" style="color: #fff; opacity: 0.8;" id="btnCloseSyncX">&times;</button>
+        <h4 class="modal-title" style="font-weight: 700; display:flex; align-items:center; gap:8px;">
+          <i class="fa fa-cloud-upload text-warning"></i> Sinkronisasi Massal Task ID BPJS Antrean
+        </h4>
+      </div>
+      <div class="modal-body" style="padding: 20px;">
+        <!-- Option Controls -->
+        <div class="well well-sm" style="background:#f8fafc; border:1px solid #e2e8f0; margin-bottom:15px;" id="syncOptionsPanel">
+          <div class="row">
+            <div class="col-sm-5">
+              <label style="font-size:12px;"><strong>Tanggal Antrean yang Disinkronkan:</strong></label>
+              <input type="date" id="syncTanggalInput" class="form-control input-sm" value="{?=$tgl_awal ?: date('Y-m-d')?}">
+            </div>
+            <div class="col-sm-4">
+              <label style="font-size:12px;"><strong>Versi Pengiriman:</strong></label>
+              <select id="syncVersiInput" class="form-control input-sm">
+                <option value="v3" selected>Task 1-7 (Lengkap Termasuk Farmasi)</option>
+                <option value="v2">Task 1-5 (Pelayanan Poli Rawat Jalan)</option>
+              </select>
+            </div>
+            <div class="col-sm-3" style="padding-top:22px;">
+              <button type="button" class="btn btn-primary btn-sm btn-block" id="btnStartBulkSync" onclick="mulaiProsesSyncMassal()">
+                <i class="fa fa-play"></i> Mulai Sinkronisasi
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Progress Area -->
+        <div id="syncProgressArea" style="display:none; margin-bottom:15px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+            <span style="font-size:12px; font-weight:600; color:#334155;" id="syncProgressStatusText">Menyiapkan antrean...</span>
+            <span style="font-size:12px; font-weight:700; color:#0284c7;" id="syncProgressPercent">0%</span>
+          </div>
+          <div class="progress" style="height:18px; margin-bottom:12px; border-radius:4px;">
+            <div id="syncProgressBar" class="progress-bar progress-bar-striped active" role="progressbar" style="width: 0%; font-size:11px; line-height:18px;">
+              0%
+            </div>
+          </div>
+
+          <!-- Counter Cards -->
+          <div class="row" style="margin-bottom:12px;">
+            <div class="col-xs-3 text-center">
+              <div style="background:#f1f5f9; padding:8px; border-radius:4px; border:1px solid #e2e8f0;">
+                <div style="font-size:10px; color:#64748b; font-weight:bold; text-transform:uppercase;">Total Antrean</div>
+                <div style="font-size:18px; font-weight:bold; color:#1e293b;" id="syncBadgeTotal">0</div>
+              </div>
+            </div>
+            <div class="col-xs-3 text-center">
+              <div style="background:#f0fdf4; padding:8px; border-radius:4px; border:1px solid #bbf7d0;">
+                <div style="font-size:10px; color:#166534; font-weight:bold; text-transform:uppercase;">Task Berhasil</div>
+                <div style="font-size:18px; font-weight:bold; color:#15803d;" id="syncBadgeSuccess">0</div>
+              </div>
+            </div>
+            <div class="col-xs-3 text-center">
+              <div style="background:#eff6ff; padding:8px; border-radius:4px; border:1px solid #bfdbfe;">
+                <div style="font-size:10px; color:#1e40af; font-weight:bold; text-transform:uppercase;">Dilewati</div>
+                <div style="font-size:18px; font-weight:bold; color:#2563eb;" id="syncBadgeSkipped">0</div>
+              </div>
+            </div>
+            <div class="col-xs-3 text-center">
+              <div style="background:#fef2f2; padding:8px; border-radius:4px; border:1px solid #fecaca;">
+                <div style="font-size:10px; color:#991b1b; font-weight:bold; text-transform:uppercase;">Gagal</div>
+                <div style="font-size:18px; font-weight:bold; color:#dc2626;" id="syncBadgeFailed">0</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Terminal Log Box -->
+        <label style="font-size:12px; color:#475569;"><strong>Log Aktivitas Sinkronisasi:</strong></label>
+        <div id="syncLogTerminal" style="background:#0f172a; color:#f8fafc; font-family:Consolas, Monaco, monospace; font-size:11px; padding:12px; border-radius:6px; height:200px; overflow-y:auto; line-height:1.6; border:1px solid #334155;">
+          <span style="color:#94a3b8;">Klik tombol "Mulai Sinkronisasi" untuk menjalankan proses sinkronisasi massal seluruh Task ID antrean...</span>
+        </div>
+      </div>
+      <div class="modal-footer" style="background:#f8fafc; display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <a href="{?=url(['jknmobile', 'antrian', 'updatewaktu'])?}" target="_blank" class="btn btn-info btn-xs" title="Buka Background Auto-Sync Engine di Tab Terpisah">
+            <i class="fa fa-external-link"></i> Buka Background Auto-Sync Tab
+          </a>
+        </div>
+        <div>
+          <button type="button" class="btn btn-default btn-sm" data-dismiss="modal" id="btnCloseSyncFooter">Tutup</button>
+          <button type="button" class="btn btn-success btn-sm" id="btnReloadAfterSync" style="display:none;" onclick="location.reload();">
+            <i class="fa fa-refresh"></i> Selesai &amp; Perbarui Tampilan
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+$(document).ready(function() {
+  $('[data-toggle="tooltip"]').tooltip();
+
+  // Inisialisasi DataTable kustom jika ada baris
+  if ($('#tabelAntrolCustom tbody tr').length > 0 && !$('#tabelAntrolCustom tbody td[colspan]').length) {
+    $('#tabelAntrolCustom').DataTable({
+      "pageLength": 25,
+      "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Semua"]],
+      "language": {
+        "search": "Cari di tabel:",
+        "lengthMenu": "Tampilkan _MENU_ data per halaman",
+        "zeroRecords": "Tidak ada data yang cocok",
+        "info": "Menampilkan _START_ sampai _END_ dari total _TOTAL_ antrean",
+        "infoEmpty": "Tidak ada data tersedia",
+        "infoFiltered": "(disaring dari _MAX_ total data)",
+        "paginate": {
+          "first": "Awal",
+          "last": "Akhir",
+          "next": "Berikutnya",
+          "previous": "Sebelumnya"
+        }
+      },
+      "order": [[1, "desc"]]
+    });
+  }
+});
+
+// Salin teks ke clipboard
+function salinTeks(text) {
+  if (!text) return;
+  navigator.clipboard.writeText(text).then(function() {
+    alert('Kode Booking ' + text + ' berhasil disalin ke clipboard!');
+  }).catch(function() {
+    prompt('Salin Kode Booking berikut:', text);
+  });
+}
+
+// Buka Modal Detail Booking
+function bukaDetailAntrol(kodebooking) {
+  $('#modalDetailTitle').html('<i class="fa fa-id-card-o text-primary"></i> Detail Booking: <code>' + kodebooking + '</code>');
+  $('#modalDetailContent').html('<div class="text-center" style="padding:30px;"><i class="fa fa-spinner fa-spin fa-3x text-primary"></i><p style="margin-top:10px; color:#64748b;">Memuat data detail booking...</p></div>');
+  $('#modalDetailBooking').modal('show');
+
+  var url = "{?=url([ADMIN, 'jkn_mobile', 'detailbookingantrol'])?}&kodebooking=" + encodeURIComponent(kodebooking);
+  $.getJSON(url, function(res) {
+    if (res.status === 'success') {
+      var d = res.data;
+      var tasks = res.tasks || [];
+
+      var badgeStatus = '';
+      if (d.status_final === 'Batal') {
+        badgeStatus = '<span class="label label-danger"><i class="fa fa-times-circle"></i> Batal</span>';
+      } else if (d.status_final === 'Terdaftar') {
+        badgeStatus = '<span class="label label-success"><i class="fa fa-check-circle"></i> Hadir / Terdaftar</span>';
+      } else {
+        badgeStatus = '<span class="label label-warning"><i class="fa fa-clock-o"></i> Menunggu Check-In</span>';
+      }
+
+      var html = '<div class="row">' +
+        '<div class="col-md-6">' +
+          '<div class="panel panel-default" style="border-radius:4px; margin-bottom:15px;">' +
+            '<div class="panel-heading" style="background:#f8fafc; font-weight:600;"><i class="fa fa-user text-primary"></i> Informasi Pasien</div>' +
+            '<div class="panel-body" style="padding:10px 15px; font-size:12px;">' +
+              '<table class="table table-condensed" style="margin-bottom:0;">' +
+                '<tr><td style="width:35%;" class="text-muted">Nama Pasien</td><td>: <b>' + (d.nm_pasien || '-') + '</b> (' + (d.jk || '-') + ')</td></tr>' +
+                '<tr><td class="text-muted">No. Rekam Medis</td><td>: <code>' + (d.no_rkm_medis || d.ar_no_rkm_medis || '-') + '</code></td></tr>' +
+                '<tr><td class="text-muted">No. Kartu BPJS</td><td>: <span class="text-info"><b>' + (d.nomor_kartu || '-') + '</b></span></td></tr>' +
+                '<tr><td class="text-muted">NIK (No. KTP)</td><td>: ' + (d.no_ktp || '-') + '</td></tr>' +
+                '<tr><td class="text-muted">No. Telepon / HP</td><td>: ' + (d.no_tlp || '-') + '</td></tr>' +
+                '<tr><td class="text-muted">Alamat</td><td>: ' + (d.alamat || '-') + '</td></tr>' +
+              '</table>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+
+        '<div class="col-md-6">' +
+          '<div class="panel panel-default" style="border-radius:4px; margin-bottom:15px;">' +
+            '<div class="panel-heading" style="background:#f8fafc; font-weight:600;"><i class="fa fa-hospital-o text-primary"></i> Data Pelayanan & Rujukan</div>' +
+            '<div class="panel-body" style="padding:10px 15px; font-size:12px;">' +
+              '<table class="table table-condensed" style="margin-bottom:0;">' +
+                '<tr><td style="width:35%;" class="text-muted">Tanggal Periksa</td><td>: <b>' + (d.tanggal_periksa || '-') + '</b></td></tr>' +
+                '<tr><td class="text-muted">Poliklinik Tujuan</td><td>: <b>' + (d.nm_poli || '-') + '</b></td></tr>' +
+                '<tr><td class="text-muted">Dokter DPJP</td><td>: ' + (d.nm_dokter || '-') + '</td></tr>' +
+                '<tr><td class="text-muted">No. Antrean Poli</td><td>: <span class="label label-info">#' + (d.no_reg || '-') + '</span></td></tr>' +
+                '<tr><td class="text-muted">No. Rujukan BPJS</td><td>: <code>' + (d.nomor_referensi || '-') + '</code></td></tr>' +
+                '<tr><td class="text-muted">Jenis Kunjungan</td><td>: <span class="label label-default">' + (d.jenis_kunjungan_label || '-') + '</span></td></tr>' +
+                '<tr><td class="text-muted">Status Booking</td><td>: ' + badgeStatus + '</td></tr>' +
+                '<tr><td class="text-muted">No. Rawat SIMRS</td><td>: ' + (d.no_rawat ? '<code>' + d.no_rawat + '</code>' : '<span class="text-muted">Belum terdaftar</span>') + '</td></tr>' +
+              '</table>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+
+      // Tabel Task ID
+      var btnKirimDisabled = (d.status_final === 'Batal') ? 'disabled' : '';
+      html += '<div class="panel panel-default" style="border-radius:4px; margin-bottom:0;">' +
+        '<div class="panel-heading" style="background:#f8fafc; font-weight:600; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">' +
+          '<div><i class="fa fa-clock-o text-success"></i> Riwayat & Status Task ID BPJS Antrean</div>' +
+          '<div class="btn-group btn-group-xs" id="taskActionBtns">' +
+            '<button type="button" class="btn btn-success btn-xs" ' + btnKirimDisabled + ' onclick="kirimTaskIDModal(\'' + d.kodebooking + '\', \'v2\')" id="btnKirimV2" title="Kirim/Sinkronkan Task 1 s/d 5 (Admisi hingga Selesai Pelayanan Dokter Poli)">' +
+              '<i class="fa fa-paper-plane"></i> Kirim Task 1-5 (Poli) ke BPJS' +
+            '</button>' +
+            '<button type="button" class="btn btn-primary btn-xs" ' + btnKirimDisabled + ' onclick="kirimTaskIDModal(\'' + d.kodebooking + '\', \'v3\')" id="btnKirimV3" title="Kirim/Sinkronkan Task 1 s/d 7 (Lengkap Termasuk Farmasi/Obat)">' +
+              '<i class="fa fa-send"></i> Kirim Task 1-7 (Lengkap)' +
+            '</button>' +
+          '</div>' +
+        '</div>' +
+        '<div id="taskAlertArea" style="padding:0 15px; margin-top:10px;"></div>' +
+        '<div class="panel-body" style="padding:0;">' +
+          '<div class="table-responsive">' +
+            '<table class="table table-bordered table-striped" style="margin-bottom:0; font-size:12px;">' +
+              '<thead>' +
+                '<tr style="background:#f1f5f9;">' +
+                  '<th style="width:8%; text-align:center;">Task</th>' +
+                  '<th style="width:40%;">Deskripsi Tahapan BPJS</th>' +
+                  '<th style="width:22%; text-align:center;">Waktu / Timestamp</th>' +
+                  '<th style="width:15%; text-align:center;">Status Kirim</th>' +
+                  '<th>Keterangan Respon</th>' +
+                '</tr>' +
+              '</thead>' +
+              '<tbody>';
+
+      tasks.forEach(function(t) {
+        var badgeT = (t.status === 'Sudah')
+          ? '<span class="label label-success"><i class="fa fa-check"></i> Sudah</span>'
+          : ((t.status === 'Gagal') ? '<span class="label label-danger"><i class="fa fa-times"></i> Gagal</span>' : '<span class="label label-default">Belum</span>');
+
+        html += '<tr>' +
+          '<td style="text-align:center; vertical-align:middle;"><b>Task ' + t.taskid + '</b></td>' +
+          '<td style="vertical-align:middle;">' + t.nama_task + '</td>' +
+          '<td style="text-align:center; vertical-align:middle;"><code>' + t.waktu + '</code></td>' +
+          '<td style="text-align:center; vertical-align:middle;">' + badgeT + '</td>' +
+          '<td style="vertical-align:middle; font-size:11px; color:#64748b;">' + t.keterangan + '</td>' +
+        '</tr>';
+      });
+
+      html += '</tbody></table></div></div></div>';
+      $('#modalDetailContent').html(html);
+    } else {
+      $('#modalDetailContent').html('<div class="alert alert-danger"><i class="fa fa-exclamation-triangle"></i> ' + (res.message || 'Gagal memuat detail data.') + '</div>');
+    }
+  }).fail(function() {
+    $('#modalDetailContent').html('<div class="alert alert-danger"><i class="fa fa-plug"></i> Gagal terhubung ke server SIMRS.</div>');
+  });
+}
+
+// Buka Modal Konfirmasi Batal Antrol
+function konfirmasiBatal(kodebooking, namaPasien, tglPeriksa) {
+  $('#batal_kodebooking').val(kodebooking);
+  $('#batal_pasien_info').val(namaPasien + ' (' + tglPeriksa + ')');
+  $('#batal_keterangan').val('');
+  $('#batalAlertArea').html('');
+  $('#btnSubmitBatal').prop('disabled', false).html('<i class="fa fa-times"></i> Ya, Batalkan Antrean');
+  $('#modalBatalAntrolDialog').modal('show');
+}
+
+// Submit Pembatalan Antrol via AJAX
+function submitBatalAntrol() {
+  var kb = $('#batal_kodebooking').val();
+  var ket = $('#batal_keterangan').val();
+  var btn = $('#btnSubmitBatal');
+  var alertArea = $('#batalAlertArea');
+
+  if (!ket.trim()) {
+    alert('Silakan tuliskan alasan pembatalan!');
+    $('#batal_keterangan').focus();
+    return;
+  }
+
+  btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Menghubungi BPJS...');
+  alertArea.html('<div class="alert alert-info" style="margin-top:10px;"><i class="fa fa-spinner fa-spin"></i> Sedang memproses pembatalan ke BPJS & SIMRS...</div>');
+
+  var url = "{?=url([ADMIN, 'jkn_mobile', 'hapusantrol'])?}";
+  $.ajax({
+    url: url,
+    method: 'POST',
+    data: {
+      kodebooking: kb,
+      keterangan: ket
+    },
+    dataType: 'json',
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest'
+    },
+    success: function(res) {
+      if (res.status === 'success') {
+        alertArea.html('<div class="alert alert-success" style="margin-top:10px;"><i class="fa fa-check-circle"></i> ' + res.message + '</div>');
+        setTimeout(function() {
+          $('#modalBatalAntrolDialog').modal('hide');
+          location.reload();
+        }, 1200);
+      } else {
+        btn.prop('disabled', false).html('<i class="fa fa-times"></i> Ya, Batalkan Antrean');
+        alertArea.html('<div class="alert alert-danger" style="margin-top:10px;"><i class="fa fa-exclamation-triangle"></i> ' + (res.message || 'Gagal membatalkan antrean.') + '</div>');
+      }
+    },
+    error: function(xhr) {
+      btn.prop('disabled', false).html('<i class="fa fa-times"></i> Ya, Batalkan Antrean');
+      alertArea.html('<div class="alert alert-danger" style="margin-top:10px;"><i class="fa fa-plug"></i> Gagal menghubungi server SIMRS. Silakan coba kembali.</div>');
+    }
+  });
+}
+
+// Buka Modal Input & Sinkronisasi Task ID BPJS
+function bukaModalTaskID(noRawat) {
+  if (!noRawat) {
+    alert('Pasien belum terdaftar atau belum memiliki No. Rawat di SIMRS.');
+    return;
+  }
+  $('#modalTaskIDContent').html(
+    '<div class="modal-body text-center" style="padding: 40px;">' +
+      '<i class="fa fa-spinner fa-spin fa-2x text-primary"></i>' +
+      '<p style="margin-top:10px; color:#64748b;">Memuat formulir Task ID...</p>' +
+    '</div>'
+  );
+  $('#modalTaskIDDialog').modal('show');
+
+  var url = "{?=url([ADMIN, 'jkn_mobile', 'taskidinput'])?}&no_rawat=" + encodeURIComponent(noRawat) + "&modal=1";
+  $.get(url, function(html) {
+    $('#modalTaskIDContent').html(html);
+  }).fail(function() {
+    $('#modalTaskIDContent').html(
+      '<div class="modal-header"><button type="button" class="close" data-dismiss="modal">&times;</button><h4 class="modal-title text-danger"><i class="fa fa-exclamation-triangle"></i> Terjadi Kesalahan</h4></div>' +
+      '<div class="modal-body"><div class="alert alert-danger">Gagal memuat form Task ID. Pastikan server aktif.</div></div>' +
+      '<div class="modal-footer"><button type="button" class="btn btn-default" data-dismiss="modal">Tutup</button></div>'
+    );
+  });
+}
+
+// Kirim/Sinkronkan Task ID langsung dari Modal Detail Booking via AJAX
+function kirimTaskIDModal(kodebooking, versi) {
+  var btnV2 = $('#btnKirimV2');
+  var btnV3 = $('#btnKirimV3');
+  var alertArea = $('#taskAlertArea');
+
+  btnV2.prop('disabled', true);
+  btnV3.prop('disabled', true);
+  var activeBtn = (versi === 'v3') ? btnV3 : btnV2;
+  var origHtml = activeBtn.html();
+  activeBtn.html('<i class="fa fa-spinner fa-spin"></i> Menghubungi BPJS...');
+
+  alertArea.html('<div class="alert alert-info" style="margin-bottom:10px; font-size:12px; padding:8px 12px;"><i class="fa fa-spinner fa-spin"></i> Sedang mengirim data waktu Task ID ke server BPJS Antrean...</div>');
+
+  var url = "{?=url([ADMIN, 'jkn_mobile', 'kirimtaskidajax'])?}";
+  $.ajax({
+    url: url,
+    method: 'POST',
+    data: {
+      kodebooking: kodebooking,
+      versi: versi
+    },
+    dataType: 'json',
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest'
+    },
+    success: function(res) {
+      btnV2.prop('disabled', false);
+      btnV3.prop('disabled', false);
+      activeBtn.html(origHtml);
+
+      if (res.status === 'success') {
+        var msg = res.message;
+        var alertCls = (res.summary && res.summary.failed > 0) ? 'alert-warning' : 'alert-success';
+        var detailsHtml = '<ul style="margin:5px 0 0 15px; padding:0; font-size:11px;">';
+        if (res.results) {
+          res.results.forEach(function(r) {
+            var icon = (r.status === 'Sudah') ? '<i class="fa fa-check text-success"></i>' : ((r.status === 'Gagal') ? '<i class="fa fa-times text-danger"></i>' : '<i class="fa fa-clock-o text-muted"></i>');
+            detailsHtml += '<li><b>Task ' + r.taskid + '</b>: ' + icon + ' ' + (r.message || r.status) + '</li>';
+          });
+        }
+        detailsHtml += '</ul>';
+
+        alertArea.html('<div class="alert ' + alertCls + '" style="margin-bottom:10px; font-size:12px; padding:8px 12px;">' +
+          '<strong><i class="fa fa-check-circle"></i> ' + msg + '</strong>' + detailsHtml +
+        '</div>');
+
+        // Refresh rincian modal setelah jeda 1.2 detik agar status langsung terbarui
+        setTimeout(function() {
+          bukaDetailAntrol(kodebooking);
+        }, 1200);
+      } else {
+        alertArea.html('<div class="alert alert-danger" style="margin-bottom:10px; font-size:12px; padding:8px 12px;"><i class="fa fa-exclamation-triangle"></i> ' + (res.message || 'Gagal mengirim Task ID ke BPJS.') + '</div>');
+      }
+    },
+    error: function(xhr) {
+      btnV2.prop('disabled', false);
+      btnV3.prop('disabled', false);
+      activeBtn.html(origHtml);
+      alertArea.html('<div class="alert alert-danger" style="margin-bottom:10px; font-size:12px; padding:8px 12px;"><i class="fa fa-plug"></i> Gagal menghubungi server SIMRS. Pastikan koneksi server aktif.</div>');
+    }
+  });
+}
+
+// Buka Modal Sinkronisasi Massal
+function bukaModalSyncMassal() {
+  var tglAwal = $('#filter_tgl_awal').val() || new Date().toISOString().split('T')[0];
+  $('#syncTanggalInput').val(tglAwal);
+  $('#syncProgressArea').hide();
+  $('#syncOptionsPanel').show();
+  $('#btnStartBulkSync').prop('disabled', false).html('<i class="fa fa-play"></i> Mulai Sinkronisasi');
+  $('#btnCloseSyncX').show();
+  $('#btnCloseSyncFooter').show();
+  $('#btnReloadAfterSync').hide();
+  $('#syncLogTerminal').html('<span style="color:#94a3b8;">Klik tombol "Mulai Sinkronisasi" untuk menjalankan proses sinkronisasi massal seluruh Task ID antrean...</span>');
+  $('#modalSyncMassal').modal('show');
+}
+
+// Menjalankan proses sinkronisasi secara batch chunked
+function mulaiProsesSyncMassal() {
+  var tanggal = $('#syncTanggalInput').val();
+  var versi = $('#syncVersiInput').val();
+
+  if (!tanggal) {
+    alert('Silakan pilih tanggal antrean terlebih dahulu.');
+    return;
+  }
+
+  var logBox = $('#syncLogTerminal');
+  function addLog(msg, color) {
+    var c = color || '#f8fafc';
+    var time = new Date().toTimeString().split(' ')[0];
+    logBox.append('<div style="color:' + c + ';">[' + time + '] ' + msg + '</div>');
+    logBox.scrollTop(logBox[0].scrollHeight);
+  }
+
+  $('#btnStartBulkSync').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Memuat Antrean...');
+  $('#syncProgressArea').show();
+  $('#syncProgressStatusText').text('Mengambil daftar antrean yang perlu disinkronkan...');
+  $('#syncProgressBar').css('width', '0%').text('0%');
+  $('#syncProgressPercent').text('0%');
+
+  $('#syncBadgeTotal').text('0');
+  $('#syncBadgeSuccess').text('0');
+  $('#syncBadgeSkipped').text('0');
+  $('#syncBadgeFailed').text('0');
+
+  logBox.html('');
+  addLog('Mengambil daftar antrean tanggal ' + tanggal + ' dari server...', '#38bdf8');
+
+  var urlQueue = "{?=url([ADMIN, 'jkn_mobile', 'synctaskqueueajax'])?}&tanggal=" + encodeURIComponent(tanggal);
+
+  $.getJSON(urlQueue, function(res) {
+    if (res.status !== 'success') {
+      addLog('Gagal memuat antrean: ' + (res.message || 'Error tidak diketahui'), '#ef4444');
+      $('#btnStartBulkSync').prop('disabled', false).html('<i class="fa fa-play"></i> Mulai Sinkronisasi');
+      return;
+    }
+
+    var queue = res.queue || [];
+    var total = queue.length;
+    $('#syncBadgeTotal').text(total);
+
+    if (total === 0) {
+      addLog('Semua antrean tanggal ' + tanggal + ' sudah tersinkronkan lengkap ke BPJS! (0 antrean tertunda)', '#4ade80');
+      $('#syncProgressBar').css('width', '100%').text('100% Selesai').removeClass('active');
+      $('#syncProgressPercent').text('100%');
+      $('#syncProgressStatusText').text('Selesai! Seluruh antrean sudah tersinkronkan.');
+      $('#btnStartBulkSync').prop('disabled', false).html('<i class="fa fa-check"></i> Sudah Lengkap');
+      return;
+    }
+
+    addLog('Ditemukan ' + total + ' antrean yang akan disinkronkan ke BPJS Antrean (' + (versi === 'v3' ? 'Task 1-7' : 'Task 1-5') + ').', '#facc15');
+
+    var currentIdx = 0;
+    var totalSuccessTasks = 0;
+    var totalSkippedTasks = 0;
+    var totalFailedTasks = 0;
+
+    function processNext() {
+      if (currentIdx >= total) {
+        // Selesai seluruhnya
+        $('#syncProgressBar').css('width', '100%').text('100% Selesai').removeClass('active').addClass('progress-bar-success');
+        $('#syncProgressPercent').text('100%');
+        $('#syncProgressStatusText').html('<b class="text-success"><i class="fa fa-check-circle"></i> Sinkronisasi Massal Selesai!</b>');
+        addLog('=== PROSES SINKRONISASI SELESAI ===', '#38bdf8');
+        addLog('Hasil Akhir: ' + totalSuccessTasks + ' Task Berhasil, ' + totalSkippedTasks + ' Dilewati, ' + totalFailedTasks + ' Gagal.', '#4ade80');
+        $('#btnStartBulkSync').html('<i class="fa fa-check"></i> Selesai');
+        $('#btnReloadAfterSync').show();
+        return;
+      }
+
+      var item = queue[currentIdx];
+      var patientNum = currentIdx + 1;
+      var pct = Math.round((currentIdx / total) * 100);
+      $('#syncProgressBar').css('width', pct + '%').text(pct + '%');
+      $('#syncProgressPercent').text(pct + '%');
+      $('#syncProgressStatusText').text('Memproses ' + patientNum + ' dari ' + total + ': ' + item.nm_pasien + ' (' + item.kodebooking + ')');
+
+      var sendUrl = "{?=url([ADMIN, 'jkn_mobile', 'kirimtaskidajax'])?}";
+      $.ajax({
+        url: sendUrl,
+        method: 'POST',
+        data: {
+          kodebooking: item.kodebooking,
+          versi: versi
+        },
+        dataType: 'json',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        success: function(resp) {
+          var s = resp.summary ? resp.summary.success : 0;
+          var f = resp.summary ? resp.summary.failed : 0;
+          var sk = resp.summary ? resp.summary.skipped : 0;
+
+          totalSuccessTasks += s;
+          totalFailedTasks += f;
+          totalSkippedTasks += sk;
+
+          $('#syncBadgeSuccess').text(totalSuccessTasks);
+          $('#syncBadgeSkipped').text(totalSkippedTasks);
+          $('#syncBadgeFailed').text(totalFailedTasks);
+
+          var logColor = (f > 0) ? '#f87171' : ((s > 0) ? '#4ade80' : '#94a3b8');
+          addLog('[' + patientNum + '/' + total + '] ' + item.kodebooking + ' - ' + item.nm_pasien + ': ' + (resp.message || 'Selesai'), logColor);
+
+          currentIdx++;
+          setTimeout(processNext, 250);
+        },
+        error: function() {
+          totalFailedTasks++;
+          $('#syncBadgeFailed').text(totalFailedTasks);
+          addLog('[' + patientNum + '/' + total + '] ' + item.kodebooking + ' - ' + item.nm_pasien + ': Gagal menghubungi SIMRS/BPJS', '#ef4444');
+          currentIdx++;
+          setTimeout(processNext, 250);
+        }
+      });
+    }
+
+    processNext();
+  }).fail(function() {
+    addLog('Gagal menghubungi endpoint antrean SIMRS.', '#ef4444');
+    $('#btnStartBulkSync').prop('disabled', false).html('<i class="fa fa-play"></i> Coba Lagi');
+  });
+}
+</script>

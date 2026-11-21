@@ -6,8 +6,13 @@ use Systems\AdminModule;
 use Systems\Lib\BpjsService;
 use LZCompressor\LZString;
 
+require_once __DIR__ . '/ClaimReadinessEngine.php';
+require_once __DIR__ . '/ClaimTrait.php';
+
 class Admin extends AdminModule
 {
+  use ClaimTrait;
+
   private $_uploads = WEBAPPS_PATH . '/berkasrawat/pages/upload';
 
   protected $consid;
@@ -22,22 +27,242 @@ class Admin extends AdminModule
     $this->secretkey = $this->settings->get('settings.BpjsSecretKey');
     $this->user_key = $this->settings->get('settings.BpjsUserKey');
     $this->api_url = $this->settings->get('settings.BpjsApiUrl');
+    $this->_checkTables();
+  }
+
+  private function _checkTables()
+  {
+    static $checked = false;
+    if ($checked) return;
+    $checked = true;
+
+    try {
+      $pdo = $this->db()->pdo();
+      $pdo->exec("
+        CREATE TABLE IF NOT EXISTS `mlite_klaim_readiness` (
+          `id` int NOT NULL AUTO_INCREMENT,
+          `no_rawat` varchar(50) NOT NULL,
+          `no_sep` varchar(50) DEFAULT NULL,
+          `no_rkm_medis` varchar(20) NOT NULL,
+          `tgl_registrasi` date NOT NULL,
+          `status_lanjut` enum('Ralan','Ranap') NOT NULL DEFAULT 'Ralan',
+          `kd_poli` varchar(10) DEFAULT NULL,
+          `kd_dokter` varchar(20) DEFAULT NULL,
+          `is_sep_valid` tinyint(1) DEFAULT '0',
+          `is_resume_valid` tinyint(1) DEFAULT '0',
+          `is_dpjp_valid` tinyint(1) DEFAULT '0',
+          `is_icd10_valid` tinyint(1) DEFAULT '0',
+          `is_icd9_valid` tinyint(1) DEFAULT '0',
+          `is_billing_valid` tinyint(1) DEFAULT '0',
+          `is_odontogram_valid` tinyint(1) DEFAULT '0',
+          `is_penunjang_valid` tinyint(1) DEFAULT '0',
+          `is_berkas_valid` tinyint(1) DEFAULT '0',
+          `score_percent` int DEFAULT '0',
+          `status_readiness` enum('belum_lengkap','siap_verifikasi','terverifikasi','siap_grouping','siap_batch') DEFAULT 'belum_lengkap',
+          `missing_items` text,
+          `updated_at` datetime DEFAULT NULL,
+          PRIMARY KEY (`id`),
+          UNIQUE KEY `no_rawat` (`no_rawat`),
+          KEY `idx_no_sep` (`no_sep`),
+          KEY `idx_status_readiness` (`status_readiness`),
+          KEY `idx_tgl_registrasi` (`tgl_registrasi`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+        CREATE TABLE IF NOT EXISTS `mlite_klaim_verifikasi` (
+          `id` int NOT NULL AUTO_INCREMENT,
+          `no_rawat` varchar(50) NOT NULL,
+          `no_sep` varchar(50) DEFAULT NULL,
+          `verif_admin_status` enum('pending','approved','rejected','need_revision') DEFAULT 'pending',
+          `verif_admin_user` varchar(50) DEFAULT NULL,
+          `verif_admin_at` datetime DEFAULT NULL,
+          `verif_admin_notes` text,
+          `verif_medis_status` enum('pending','approved','rejected','need_revision') DEFAULT 'pending',
+          `verif_medis_user` varchar(50) DEFAULT NULL,
+          `verif_medis_at` datetime DEFAULT NULL,
+          `verif_medis_notes` text,
+          `is_internal_verified` tinyint(1) DEFAULT '0',
+          `created_at` datetime DEFAULT NULL,
+          `updated_at` datetime DEFAULT NULL,
+          PRIMARY KEY (`id`),
+          UNIQUE KEY `no_rawat` (`no_rawat`),
+          KEY `idx_v_sep` (`no_sep`),
+          KEY `idx_v_admin` (`verif_admin_status`),
+          KEY `idx_v_medis` (`verif_medis_status`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+        CREATE TABLE IF NOT EXISTS `mlite_klaim_batch` (
+          `id` int NOT NULL AUTO_INCREMENT,
+          `kode_batch` varchar(50) NOT NULL,
+          `nama_batch` varchar(150) NOT NULL,
+          `periode_bulan` varchar(7) NOT NULL,
+          `jenis_pelayanan` enum('Ralan','Ranap','Campuran') NOT NULL DEFAULT 'Ralan',
+          `status_batch` enum('draft','locked','submitted','processed','completed') DEFAULT 'draft',
+          `total_pasien` int DEFAULT '0',
+          `total_tarif_rs` decimal(15,2) DEFAULT '0.00',
+          `total_tarif_inacbg` decimal(15,2) DEFAULT '0.00',
+          `total_tarif_disetujui` decimal(15,2) DEFAULT '0.00',
+          `total_tarif_dibayar` decimal(15,2) DEFAULT '0.00',
+          `submitted_at` datetime DEFAULT NULL,
+          `submitted_by` varchar(50) DEFAULT NULL,
+          `locked_at` datetime DEFAULT NULL,
+          `locked_by` varchar(50) DEFAULT NULL,
+          `notes` text,
+          `created_at` datetime DEFAULT NULL,
+          `created_by` varchar(50) DEFAULT NULL,
+          PRIMARY KEY (`id`),
+          UNIQUE KEY `kode_batch` (`kode_batch`),
+          KEY `idx_periode` (`periode_bulan`),
+          KEY `idx_status` (`status_batch`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+        CREATE TABLE IF NOT EXISTS `mlite_klaim_batch_detail` (
+          `id` int NOT NULL AUTO_INCREMENT,
+          `batch_id` int NOT NULL,
+          `no_rawat` varchar(50) NOT NULL,
+          `no_sep` varchar(50) NOT NULL,
+          `no_rkm_medis` varchar(20) NOT NULL,
+          `nama_pasien` varchar(150) DEFAULT NULL,
+          `tgl_pelayanan` date NOT NULL,
+          `kode_inacbg` varchar(50) DEFAULT NULL,
+          `deskripsi_inacbg` text,
+          `tarif_rs` decimal(15,2) DEFAULT '0.00',
+          `tarif_inacbg` decimal(15,2) DEFAULT '0.00',
+          `status_klaim` enum('draft','diajukan','pending','dispute','disetujui','ditolak','dibayar') DEFAULT 'draft',
+          `added_at` datetime DEFAULT NULL,
+          `added_by` varchar(50) DEFAULT NULL,
+          PRIMARY KEY (`id`),
+          UNIQUE KEY `unique_batch_sep` (`batch_id`,`no_sep`),
+          KEY `idx_d_rawat` (`no_rawat`),
+          KEY `idx_d_sep` (`no_sep`),
+          KEY `idx_d_status` (`status_klaim`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+        CREATE TABLE IF NOT EXISTS `mlite_klaim_dispute` (
+          `id` int NOT NULL AUTO_INCREMENT,
+          `no_rawat` varchar(50) NOT NULL,
+          `no_sep` varchar(50) NOT NULL,
+          `batch_id` int DEFAULT NULL,
+          `tipe_masalah` enum('pending','dispute','revisi','ditolak') NOT NULL,
+          `alasan_bpjs` text NOT NULL,
+          `dokumen_diminta` text,
+          `dokumen_lampiran` text,
+          `tanggapan_rs` text,
+          `status_dispute` enum('open','in_progress','resubmitted','resolved','rejected') DEFAULT 'open',
+          `deadline_tgl` date DEFAULT NULL,
+          `pj_user` varchar(50) DEFAULT NULL,
+          `created_at` datetime DEFAULT NULL,
+          `created_by` varchar(50) DEFAULT NULL,
+          `resolved_at` datetime DEFAULT NULL,
+          `resolved_by` varchar(50) DEFAULT NULL,
+          PRIMARY KEY (`id`),
+          KEY `idx_dp_sep` (`no_sep`),
+          KEY `idx_dp_tipe` (`tipe_masalah`),
+          KEY `idx_dp_status` (`status_dispute`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+        CREATE TABLE IF NOT EXISTS `mlite_klaim_pembayaran` (
+          `id` int NOT NULL AUTO_INCREMENT,
+          `no_bahp` varchar(100) NOT NULL,
+          `tgl_bahp` date NOT NULL,
+          `periode_klaim` varchar(7) NOT NULL,
+          `batch_id` int DEFAULT NULL,
+          `total_diajukan` decimal(15,2) DEFAULT '0.00',
+          `total_disetujui` decimal(15,2) DEFAULT '0.00',
+          `total_pending` decimal(15,2) DEFAULT '0.00',
+          `total_dispute` decimal(15,2) DEFAULT '0.00',
+          `total_ditolak` decimal(15,2) DEFAULT '0.00',
+          `total_dibayar` decimal(15,2) DEFAULT '0.00',
+          `selisih_pembayaran` decimal(15,2) DEFAULT '0.00',
+          `no_faktur_pembayaran` varchar(100) DEFAULT NULL,
+          `tgl_pembayaran` date DEFAULT NULL,
+          `bukti_transfer` varchar(255) DEFAULT NULL,
+          `status_pembayaran` enum('belum_dibayar','dibayar_sebagian','lunas') DEFAULT 'belum_dibayar',
+          `notes` text,
+          `created_at` datetime DEFAULT NULL,
+          `created_by` varchar(50) DEFAULT NULL,
+          PRIMARY KEY (`id`),
+          KEY `idx_pay_bahp` (`no_bahp`),
+          KEY `idx_pay_periode` (`periode_klaim`),
+          KEY `idx_pay_status` (`status_pembayaran`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+        CREATE TABLE IF NOT EXISTS `mlite_eklaim_logs` (
+          `id` int NOT NULL AUTO_INCREMENT,
+          `nomor_sep` varchar(30) NOT NULL,
+          `method` varchar(100) DEFAULT NULL,
+          `request_data` longtext,
+          `response_data` longtext,
+          `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+          `status` int DEFAULT '1',
+          `username` varchar(100) DEFAULT NULL,
+          PRIMARY KEY (`id`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+        CREATE TABLE IF NOT EXISTS `mlite_klaim_audit_trail` (
+          `id` int NOT NULL AUTO_INCREMENT,
+          `no_rawat` varchar(50) NOT NULL,
+          `no_sep` varchar(50) DEFAULT NULL,
+          `action_type` varchar(50) NOT NULL,
+          `field_name` varchar(100) DEFAULT NULL,
+          `old_value` longtext,
+          `new_value` longtext,
+          `user_username` varchar(50) NOT NULL,
+          `ip_address` varchar(50) DEFAULT NULL,
+          `notes` text,
+          `created_at` datetime NOT NULL,
+          PRIMARY KEY (`id`),
+          KEY `idx_aud_rawat` (`no_rawat`),
+          KEY `idx_aud_sep` (`no_sep`),
+          KEY `idx_aud_act` (`action_type`),
+          KEY `idx_aud_time` (`created_at`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+      ");
+
+      // Pastikan pengaturan vedika.carabayar khusus penjamin BPJS (hapus UMU / Umum dan '-')
+      $curCarabayar = $this->settings->get('vedika.carabayar');
+      if ($curCarabayar && (stripos($curCarabayar, 'UMU') !== false || strpos($curCarabayar, '-') !== false)) {
+        $parts = explode(',', $curCarabayar);
+        $filteredParts = array_filter($parts, function($v) {
+          $u = strtoupper(trim(str_replace(["'", '"'], '', $v)));
+          return !empty($u) && !in_array($u, ['UMU', 'UMUM', '-']);
+        });
+        $newCarabayar = !empty($filteredParts) ? implode(',', $filteredParts) : 'BPJ';
+        $this->settings('vedika', 'carabayar', $newCarabayar);
+      }
+
+      // Bersihkan data cache kesiapan klaim untuk pasien non-BPJS (UMUM) jika sempat tercatat
+      $pdo->exec("
+        DELETE r FROM mlite_klaim_readiness r
+        JOIN reg_periksa reg ON r.no_rawat = reg.no_rawat
+        JOIN penjab pj ON reg.kd_pj = pj.kd_pj
+        WHERE pj.png_jawab NOT LIKE '%BPJS%' OR pj.kd_pj = 'UMU' OR pj.kd_pj = '-'
+      ");
+    } catch (\Throwable $e) {
+      // safe fallback if table creation restricted
+    }
   }
 
   public function navigation()
   {
     return [
-      'Manage' => 'manage',
-      'Index' => 'index',
-      'Lengkap' => 'lengkap',
-      'Pengajuan' => 'pengajuan',
-      'Perbaikan' => 'perbaikan',
-      'IDR Codes' => 'idrcodes',
-      'INACBG Codes' => 'inacbgcodes',
-      'Mapping Inacbgs' => 'mappinginacbgs',
+      'Dashboard Klaim' => 'manage',
+      'Pasien Belum Siap' => 'belumsiap',
+      'Pasien Siap Klaim' => 'siapklaim',
+      'Verifikasi Admin' => 'verifadmin',
+      'Verifikasi Medis' => 'verifmedis',
+      'Coding ICD-10/9' => 'coding',
+      'Grouping INA-CBG' => 'grouping',
+      'Dokumen Klaim' => 'dokumen',
+      'Klaim Kolektif' => 'kolektif',
+      'Monitoring Klaim' => 'monitoring',
+      'Klaim Pending' => 'pending',
+      'Klaim Dispute' => 'dispute',
+      'Klaim Disetujui' => 'disetujui',
+      'Rekonsiliasi Bayar' => 'pembayaran',
+      'Arsip Klaim' => 'arsip',
+      'Laporan Klaim' => 'laporan',
       'Bridging Eklaim' => 'bridgingeklaim',
       'Logs e-Klaim' => 'logseklaim',
-      'User Vedika' => 'uservedika',
       'Pengaturan' => 'settings',
     ];
   }
@@ -777,13 +1002,23 @@ class Admin extends AdminModule
   {
     $this->_addHeaderFiles();
     $this->core->addJS(url(BASE_DIR.'/assets/jscripts/Chart.bundle.min.js'));
-    $carabayar = str_replace(",","','", $this->settings->get('vedika.carabayar'));
-    $carabayarArr = explode(',', $carabayar); 
+    $rawCarabayar = $this->settings->get('vedika.carabayar', 'BPJ');
+    $cleanPj = array_filter(array_map(function($v) {
+        return trim(str_replace(["'", '"'], '', $v));
+    }, explode(',', $rawCarabayar)));
+    $carabayarArr = !empty($cleanPj) ? array_values($cleanPj) : ['BPJ'];
     $inPlaceholders = implode(',', array_fill(0, count($carabayarArr), '?'));
     $stats['Chart'] = $this->Chart();
-    $date = $this->settings->get('vedika.periode');
-    if(isset($_GET['periode']) && $_GET['periode'] !=''){
-      $date = $_GET['periode'];
+    $date = $_GET['periode'] ?? '';
+    if (empty($date)) {
+        $curMonth = date('Y-m');
+        $chk = $this->db()->pdo()->query("SELECT COUNT(*) FROM reg_periksa WHERE tgl_registrasi LIKE '$curMonth%'")->fetchColumn();
+        if ($chk > 0) {
+            $date = $curMonth . '-01';
+        } else {
+            $maxDate = $this->db()->pdo()->query("SELECT MAX(tgl_registrasi) FROM reg_periksa")->fetchColumn();
+            $date = !empty($maxDate) ? substr($maxDate, 0, 7) . '-01' : date('Y-m-01');
+        }
     }
 
     // Validasi dan normalisasi format tanggal
@@ -799,7 +1034,7 @@ class Admin extends AdminModule
     }
 
     // Cache key untuk statistik
-    $cache_key = 'vedika_stats_' . md5($date . $carabayar);
+    $cache_key = 'vedika_stats_' . md5($date . $rawCarabayar);
     
     // Cek cache terlebih dahulu
     if(function_exists('apcu_fetch') && \apcu_exists($cache_key)) {
@@ -988,18 +1223,156 @@ class Admin extends AdminModule
       }
     }
 
+    // Metrik Manajemen Klaim BPJS (Master Prompt Bagian 4)
+    $periodeBulan = substr($date, 0, 7);
+
+    // Inisialisasi default agar tidak undefined
+    $stats['totalPasienBPJS'] = 0;
+    $stats['totalMemilikiSEP'] = 0;
+    $stats['totalBelumLengkap'] = 0;
+    $stats['totalSiapKlaim'] = 0;
+    $stats['totalVerifInternal'] = 0;
+    $stats['totalBelumVerif'] = 0;
+    $stats['totalSudahGrouping'] = 0;
+    $stats['totalDiajukan'] = 0;
+    $stats['totalDisetujui'] = 0;
+    $stats['totalDitolak'] = 0;
+    $stats['totalDibayar'] = 0;
+    $stats['totalNilaiDiajukan'] = 0.00;
+    $stats['totalNilaiDisetujui'] = 0.00;
+    $stats['totalPending'] = 0;
+    $stats['totalDispute'] = 0;
+    $stats['totalNilaiDibayar'] = 0.00;
+    $stats['totalNilaiBelumDibayar'] = 0.00;
+
+    try {
+      // 1. Total Pasien BPJS & Pasien Ber-SEP
+      $stmtPasien = $this->db()->pdo()->prepare("
+        SELECT 
+          COUNT(DISTINCT reg_periksa.no_rawat) AS total_pasien,
+          COUNT(DISTINCT CASE WHEN s.no_sep IS NOT NULL OR si.no_sep IS NOT NULL THEN reg_periksa.no_rawat END) AS total_sep
+        FROM reg_periksa
+        JOIN penjab ON reg_periksa.kd_pj = penjab.kd_pj
+        LEFT JOIN bridging_sep s ON reg_periksa.no_rawat = s.no_rawat
+        LEFT JOIN bridging_sep_internal si ON reg_periksa.no_rawat = si.no_rawat
+        WHERE reg_periksa.tgl_registrasi LIKE ? AND (penjab.kd_pj IN ($inPlaceholders) OR penjab.png_jawab LIKE '%BPJS%')
+      ");
+      $stmtPasien->execute(array_merge([$periodeBulan . '%'], $carabayarArr));
+      $pasienStat = $stmtPasien->fetch(\PDO::FETCH_ASSOC);
+
+      $stats['totalPasienBPJS'] = (int)($pasienStat['total_pasien'] ?? 0);
+      $stats['totalMemilikiSEP'] = (int)($pasienStat['total_sep'] ?? 0);
+
+      // 2. Kesiapan Dokumen Klaim (mlite_klaim_readiness)
+      $stmtReady = $this->db()->pdo()->prepare("
+        SELECT 
+          COUNT(CASE WHEN status_readiness = 'belum_lengkap' OR status_readiness IS NULL THEN 1 END) AS belum_lengkap,
+          COUNT(CASE WHEN status_readiness IN ('siap_verifikasi', 'terverifikasi', 'siap_grouping', 'siap_batch') THEN 1 END) AS siap_klaim
+        FROM mlite_klaim_readiness
+        WHERE tgl_registrasi LIKE ?
+      ");
+      $stmtReady->execute([$periodeBulan . '%']);
+      $readyStat = $stmtReady->fetch(\PDO::FETCH_ASSOC);
+
+      $stats['totalBelumLengkap'] = (int)($readyStat['belum_lengkap'] ?? max(0, $stats['totalPasienBPJS'] - ($readyStat['siap_klaim'] ?? 0)));
+      $stats['totalSiapKlaim'] = (int)($readyStat['siap_klaim'] ?? 0);
+
+      // 3. Verifikasi Internal (mlite_klaim_verifikasi)
+      $stmtVerif = $this->db()->pdo()->prepare("
+        SELECT 
+          COUNT(CASE WHEN is_internal_verified = 1 THEN 1 END) AS sudah_verif,
+          COUNT(CASE WHEN is_internal_verified = 0 OR is_internal_verified IS NULL THEN 1 END) AS belum_verif
+        FROM mlite_klaim_verifikasi v
+        JOIN reg_periksa r ON v.no_rawat = r.no_rawat
+        WHERE r.tgl_registrasi LIKE ?
+      ");
+      $stmtVerif->execute([$periodeBulan . '%']);
+      $verifStat = $stmtVerif->fetch(\PDO::FETCH_ASSOC);
+
+      $stats['totalVerifInternal'] = (int)($verifStat['sudah_verif'] ?? 0);
+      $stats['totalBelumVerif'] = (int)($verifStat['belum_verif'] ?? max(0, $stats['totalSiapKlaim'] - $stats['totalVerifInternal']));
+
+      // 4. Grouping INA-CBG & E-Klaim
+      $stmtGroup = $this->db()->pdo()->prepare("
+        SELECT COUNT(DISTINCT nomor_sep) AS total_grouping 
+        FROM mlite_eklaim_logs 
+        WHERE method = 'grouper' AND created_at LIKE ?
+      ");
+      $stmtGroup->execute([$periodeBulan . '%']);
+      $stats['totalSudahGrouping'] = (int)$stmtGroup->fetchColumn();
+
+      // 5. Klaim Batch Detail (Diajukan, Disetujui, Ditolak, Dibayar)
+      $stmtBatch = $this->db()->pdo()->prepare("
+        SELECT 
+          COUNT(CASE WHEN bd.status_klaim = 'diajukan' THEN 1 END) AS diajukan,
+          COUNT(CASE WHEN bd.status_klaim = 'disetujui' THEN 1 END) AS disetujui,
+          COUNT(CASE WHEN bd.status_klaim = 'ditolak' THEN 1 END) AS ditolak,
+          COUNT(CASE WHEN bd.status_klaim = 'dibayar' THEN 1 END) AS dibayar,
+          SUM(bd.tarif_rs) AS nilai_diajukan,
+          SUM(bd.tarif_inacbg) AS nilai_disetujui
+        FROM mlite_klaim_batch_detail bd
+        JOIN mlite_klaim_batch b ON bd.batch_id = b.id
+        WHERE b.periode_bulan = ?
+      ");
+      $stmtBatch->execute([$periodeBulan]);
+      $batchStat = $stmtBatch->fetch(\PDO::FETCH_ASSOC);
+
+      $stats['totalDiajukan'] = (int)($batchStat['diajukan'] ?? 0);
+      $stats['totalDisetujui'] = (int)($batchStat['disetujui'] ?? 0);
+      $stats['totalDitolak'] = (int)($batchStat['ditolak'] ?? 0);
+      $stats['totalDibayar'] = (int)($batchStat['dibayar'] ?? 0);
+      $stats['totalNilaiDiajukan'] = (float)($batchStat['nilai_diajukan'] ?? 0.00);
+      $stats['totalNilaiDisetujui'] = (float)($batchStat['nilai_disetujui'] ?? 0.00);
+
+      // 6. Dispute & Pending
+      $stmtDispute = $this->db()->pdo()->prepare("
+        SELECT 
+          COUNT(CASE WHEN tipe_masalah = 'pending' AND status_dispute != 'resolved' THEN 1 END) AS total_pending,
+          COUNT(CASE WHEN tipe_masalah = 'dispute' AND status_dispute != 'resolved' THEN 1 END) AS total_dispute
+        FROM mlite_klaim_dispute
+        WHERE created_at LIKE ?
+      ");
+      $stmtDispute->execute([$periodeBulan . '%']);
+      $disputeStat = $stmtDispute->fetch(\PDO::FETCH_ASSOC);
+
+      $stats['totalPending'] = (int)($disputeStat['total_pending'] ?? 0);
+      $stats['totalDispute'] = (int)($disputeStat['total_dispute'] ?? 0);
+
+      // 7. Pembayaran & Rekonsiliasi
+      $stmtPay = $this->db()->pdo()->prepare("
+        SELECT 
+          SUM(total_dibayar) AS total_dibayar,
+          SUM(selisih_pembayaran) AS selisih_pembayaran
+        FROM mlite_klaim_pembayaran
+        WHERE periode_klaim = ?
+      ");
+      $stmtPay->execute([$periodeBulan]);
+      $payStat = $stmtPay->fetch(\PDO::FETCH_ASSOC);
+
+      $stats['totalNilaiDibayar'] = (float)($payStat['total_dibayar'] ?? 0.00);
+      $stats['totalNilaiBelumDibayar'] = max(0.00, $stats['totalNilaiDisetujui'] - $stats['totalNilaiDibayar']);
+    } catch (\Throwable $e) {
+      error_log('Error loading vedika stats: ' . $e->getMessage());
+    }
+
     $sub_modules = [
-      ['name' => 'Index', 'url' => url([ADMIN, 'vedika', 'index']), 'icon' => 'code', 'desc' => 'Index Vedika'],
-      ['name' => 'Lengkap', 'url' => url([ADMIN, 'vedika', 'lengkap']), 'icon' => 'code', 'desc' => 'Index Lengkap Vedika'],
-      ['name' => 'Pengajuan', 'url' => url([ADMIN, 'vedika', 'pengajuan']), 'icon' => 'code', 'desc' => 'Index Pengajuan Vedika'],
-      ['name' => 'Perbaikan', 'url' => url([ADMIN, 'vedika', 'perbaikan']), 'icon' => 'code', 'desc' => 'Index Perbaikan Vedika'],
-      ['name' => 'IDR Codes', 'url' => url([ADMIN, 'vedika', 'idrcodes']), 'icon' => 'code', 'desc' => 'Index IDR Codes'],
-      ['name' => 'INACBG Codes', 'url' => url([ADMIN, 'vedika', 'inacbgcodes']), 'icon' => 'code', 'desc' => 'Index INACBG Codes'],
-      ['name' => 'Mapping Inacbgs', 'url' => url([ADMIN, 'vedika', 'mappinginacbgs']), 'icon' => 'code', 'desc' => 'Pengaturan Mapping Inacbgs'],
-      ['name' => 'Bridging Eklaim', 'url' => url([ADMIN, 'vedika', 'bridgingeklaim']), 'icon' => 'code', 'desc' => 'Bridging Eklaim'],
-      ['name' => 'Logs e-Klaim', 'url' => url([ADMIN, 'vedika', 'logseklaim']), 'icon' => 'code', 'desc' => 'Logs e-Klaim'],
-      ['name' => 'User Vedika', 'url' => url([ADMIN, 'vedika', 'users']), 'icon' => 'code', 'desc' => 'User Vedika'],
-      ['name' => 'Pengaturan', 'url' => url([ADMIN, 'vedika', 'settings']), 'icon' => 'code', 'desc' => 'Pengaturan Vedika'],
+      ['name' => 'Pasien Belum Siap', 'url' => url([ADMIN, 'vedika', 'belumsiap']), 'icon' => 'exclamation-circle', 'desc' => 'Daftar Berkas Belum Lengkap'],
+      ['name' => 'Pasien Siap Klaim', 'url' => url([ADMIN, 'vedika', 'siapklaim']), 'icon' => 'check-circle', 'desc' => 'Memenuhi Syarat Klaim'],
+      ['name' => 'Verifikasi Admin', 'url' => url([ADMIN, 'vedika', 'verifadmin']), 'icon' => 'id-card', 'desc' => 'Verifikasi SEP & Identitas'],
+      ['name' => 'Verifikasi Medis', 'url' => url([ADMIN, 'vedika', 'verifmedis']), 'icon' => 'user-md', 'desc' => 'Resume, Koding & Odontogram'],
+      ['name' => 'Coding ICD-10 & 9', 'url' => url([ADMIN, 'vedika', 'coding']), 'icon' => 'stethoscope', 'desc' => 'Pengodean Diagnosis & Prosedur'],
+      ['name' => 'Grouping INA-CBG', 'url' => url([ADMIN, 'vedika', 'grouping']), 'icon' => 'calculator', 'desc' => 'E-Klaim & Grouper INA-CBG'],
+      ['name' => 'Dokumen Klaim', 'url' => url([ADMIN, 'vedika', 'dokumen']), 'icon' => 'file-pdf-o', 'desc' => 'Manajemen Berkas Digital'],
+      ['name' => 'Klaim Kolektif', 'url' => url([ADMIN, 'vedika', 'kolektif']), 'icon' => 'cubes', 'desc' => 'Batching Pengajuan Kolektif'],
+      ['name' => 'Monitoring Klaim', 'url' => url([ADMIN, 'vedika', 'monitoring']), 'icon' => 'line-chart', 'desc' => 'Pelacakan Siklus Klaim'],
+      ['name' => 'Klaim Pending', 'url' => url([ADMIN, 'vedika', 'pending']), 'icon' => 'hourglass-half', 'desc' => 'Penanganan Pending BPJS'],
+      ['name' => 'Klaim Dispute', 'url' => url([ADMIN, 'vedika', 'dispute']), 'icon' => 'gavel', 'desc' => 'Penanganan Dispute & Klarifikasi'],
+      ['name' => 'Klaim Disetujui', 'url' => url([ADMIN, 'vedika', 'disetujui']), 'icon' => 'thumbs-up', 'desc' => 'Klaim Disetujui Verifikator'],
+      ['name' => 'Rekonsiliasi Bayar', 'url' => url([ADMIN, 'vedika', 'pembayaran']), 'icon' => 'money', 'desc' => 'Monitoring Pembayaran & BAHP'],
+      ['name' => 'Arsip Klaim', 'url' => url([ADMIN, 'vedika', 'arsip']), 'icon' => 'archive', 'desc' => 'Pencarian Arsip Historis'],
+      ['name' => 'Laporan Klaim', 'url' => url([ADMIN, 'vedika', 'laporan']), 'icon' => 'bar-chart', 'desc' => 'Laporan & Analitik Casemix'],
+      ['name' => 'Logs e-Klaim', 'url' => url([ADMIN, 'vedika', 'logseklaim']), 'icon' => 'history', 'desc' => 'Log Komunikasi Web Service'],
+      ['name' => 'Pengaturan Klaim', 'url' => url([ADMIN, 'vedika', 'settings']), 'icon' => 'cogs', 'desc' => 'Konfigurasi Parameter Klaim'],
     ];
     return $this->draw('manage.html', ['sub_modules' => htmlspecialchars_array($sub_modules), 'stats' => $stats, 'periode' => $date]);
   }
@@ -2561,28 +2934,98 @@ class Admin extends AdminModule
 
     $this->tpl->set('instansi', $instansi);
 
-    $print_sep = array();
-    if (!empty($this->_getSEPInfo('no_sep', $no_rawat))) {
-      $print_sep['bridging_sep'] = $this->db('bridging_sep')->where('no_sep', $this->_getSEPInfo('no_sep', $no_rawat))->oneArray();
-      $print_sep['bpjs_prb'] = $this->db('bpjs_prb')->where('no_sep', $this->_getSEPInfo('no_sep', $no_rawat))->oneArray();
-      $batas_rujukan = $this->db('bridging_sep')->select('DATE_ADD(tglrujukan , INTERVAL 85 DAY) AS batas_rujukan')->where('no_sep', $id)->oneArray();
-      $print_sep['batas_rujukan'] = isset($batas_rujukan['batas_rujukan']) ? $batas_rujukan['batas_rujukan'] : '';
-      switch ($print_sep['bridging_sep']['klsnaik']) {
-        case '2':
-          $print_sep['kelas_naik'] = 'Kelas VIP';
-          break;
-        case '3':
-          $print_sep['kelas_naik'] = 'Kelas 1';
-          break;
-        case '4':
-          $print_sep['kelas_naik'] = 'Kelas 2';
-          break;
+    // Ambil data registrasi, pasien, diagnosa, dan prosedur lebih awal untuk fallback SEP & Resume
+    $pasien = $this->db('pasien')
+      ->join('kecamatan', 'kecamatan.kd_kec = pasien.kd_kec')
+      ->join('kabupaten', 'kabupaten.kd_kab = pasien.kd_kab')
+      ->where('no_rkm_medis', $this->getRegPeriksaInfo('no_rkm_medis', $this->revertNorawat($id)))
+      ->oneArray();
+    $reg_periksa = $this->db('reg_periksa')
+      ->join('dokter', 'dokter.kd_dokter = reg_periksa.kd_dokter')
+      ->join('poliklinik', 'poliklinik.kd_poli = reg_periksa.kd_poli')
+      ->join('penjab', 'penjab.kd_pj = reg_periksa.kd_pj')
+      ->where('stts', '<>', 'Batal')
+      ->where('no_rawat', $this->revertNorawat($id))
+      ->oneArray();
 
-        default:
-          $print_sep['kelas_naik'] = "";
-          break;
+    $diagnosa_pasien = $this->db('diagnosa_pasien')
+      ->join('penyakit', 'penyakit.kd_penyakit = diagnosa_pasien.kd_penyakit')
+      ->where('no_rawat', $this->revertNorawat($id))
+      ->where('diagnosa_pasien.status', 'Ralan')
+      ->toArray();
+    if(isset($reg_periksa['status_lanjut']) && $reg_periksa['status_lanjut'] == 'Ranap'){
+      $diagnosa_pasien = $this->db('diagnosa_pasien')
+        ->join('penyakit', 'penyakit.kd_penyakit = diagnosa_pasien.kd_penyakit')
+        ->where('no_rawat', $this->revertNorawat($id))
+        ->where('diagnosa_pasien.status', 'Ranap')
+        ->toArray();
+    }
+    $prosedur_pasien = $this->db('prosedur_pasien')
+      ->join('icd9', 'icd9.kode = prosedur_pasien.kode')
+      ->where('no_rawat', $this->revertNorawat($id))
+      ->toArray();
+
+    $pemeriksaan_ralan = $this->db('pemeriksaan_ralan')
+      ->where('no_rawat', $this->revertNorawat($id))
+      ->asc('tgl_perawatan')
+      ->asc('jam_rawat')
+      ->toArray();
+
+    // 1. Data SEP BPJS (Bridging atau Fallback Berkas / Readiness)
+    $no_sep_val = $this->_getSEPInfo('no_sep', $no_rawat);
+    $readinessSep = $this->db('mlite_klaim_readiness')->where('no_rawat', $no_rawat)->oneArray();
+    if (empty($no_sep_val) && !empty($readinessSep['no_sep'])) {
+      $no_sep_val = $readinessSep['no_sep'];
+    }
+    if (empty($no_sep_val)) {
+      $no_sep_val = 'SEP-' . str_replace(['/', '-'], '', $no_rawat);
+    }
+
+    $print_sep = array();
+    $bridging_sep = null;
+    if (!empty($this->_getSEPInfo('no_sep', $no_rawat))) {
+      $bridging_sep = $this->db('bridging_sep')->where('no_sep', $this->_getSEPInfo('no_sep', $no_rawat))->oneArray();
+      if (!$bridging_sep) {
+        $bridging_sep = $this->db('bridging_sep_internal')->where('no_sep', $this->_getSEPInfo('no_sep', $no_rawat))->oneArray();
       }
     }
+
+    if (!$bridging_sep) {
+      $diagAwal = '-';
+      if (!empty($diagnosa_pasien)) {
+        $diagAwal = $diagnosa_pasien[0]['kd_penyakit'] . ' - ' . $diagnosa_pasien[0]['nm_penyakit'];
+      }
+      $bridging_sep = [
+        'no_sep' => $no_sep_val,
+        'no_rawat' => $no_rawat,
+        'tglsep' => $reg_periksa['tgl_registrasi'] ?? date('Y-m-d'),
+        'tglrujukan' => $reg_periksa['tgl_registrasi'] ?? date('Y-m-d'),
+        'no_rujukan' => '-',
+        'kdppkrujukan' => '-',
+        'nmppkrujukan' => 'Puskesmas / Faskes Perujuk',
+        'kdppkpelayanan' => $this->settings->get('settings.kode_ppk') ?: '6371010',
+        'nmppkpelayanan' => $instansi['nama_instansi'],
+        'jnspelayanan' => (isset($reg_periksa['status_lanjut']) && $reg_periksa['status_lanjut'] == 'Ranap' ? '1' : '2'),
+        'catatan' => 'Pelayanan BPJS Kesehatan FKRTL',
+        'diagawal' => !empty($diagnosa_pasien) ? $diagnosa_pasien[0]['kd_penyakit'] : '-',
+        'nmdiagnosaawal' => $diagAwal,
+        'kdpolitujuan' => $reg_periksa['kd_poli'] ?? '',
+        'nmpolitujuan' => $reg_periksa['nm_poli'] ?? '',
+        'klsrawat' => (isset($reg_periksa['status_lanjut']) && $reg_periksa['status_lanjut'] == 'Ranap' ? 'Kelas 3' : 'Rawat Jalan'),
+        'klsnaik' => '',
+        'pembiayaan' => '1',
+        'penanggungjawab' => 'Pribadi',
+        'nomr' => $pasien['no_rkm_medis'] ?? '',
+        'nama_pasien' => $pasien['nm_pasien'] ?? '',
+        'tanggal_lahir' => $pasien['tgl_lahir'] ?? '',
+        'jkel' => (isset($pasien['jk']) && $pasien['jk'] == 'L' ? 'Laki-Laki' : 'Perempuan'),
+        'peserta' => $reg_periksa['png_jawab'] ?? 'BPJS Kesehatan',
+        'no_kartu' => $pasien['no_peserta'] ?? '',
+        'nmdpjp' => $reg_periksa['nm_dokter'] ?? ''
+      ];
+    }
+    $print_sep['bridging_sep'] = $bridging_sep;
+    $print_sep['bpjs_prb'] = $this->db('bpjs_prb')->where('no_sep', $no_sep_val)->oneArray();
     $print_sep['nama_instansi'] = $this->settings->get('settings.nama_instansi');
     $print_sep['logoURL'] = url(MODULES . '/vclaim/img/bpjslogo.png');
     $this->tpl->set('print_sep', $print_sep);
@@ -2598,30 +3041,73 @@ class Admin extends AdminModule
     $print_spri['logoURL'] = url(MODULES . '/vclaim/img/bpjslogo.png');
     $this->tpl->set('print_spri', $print_spri);
 
+    // 2. Data Resume Medis (Tabel Resume atau Sintesis dari EMR SOAP)
     $resume_pasien = $this->db('resume_pasien')
       ->join('dokter', 'dokter.kd_dokter = resume_pasien.kd_dokter')
       ->where('no_rawat', $this->revertNorawat($id))
       ->oneArray();
-    if(!$this->db('resume_pasien')->where('no_rawat', $this->revertNorawat($id))->oneArray()) {
+    if(!$resume_pasien) {
       $resume_pasien = $this->db('resume_pasien_ranap')
         ->join('dokter', 'dokter.kd_dokter = resume_pasien_ranap.kd_dokter')
         ->where('no_rawat', $this->revertNorawat($id))
         ->oneArray();
     }
+
+    // Jika resume_pasien belum dicetak khusus, generate dari dokumentasi klinis EMR
+    if (!$resume_pasien && !empty($pemeriksaan_ralan)) {
+      $lastPem = end($pemeriksaan_ralan);
+      $diagUtamaTxt = '';
+      $diagSekunderArr = [];
+      foreach ($diagnosa_pasien as $d) {
+        if ($d['prioritas'] == 1 && empty($diagUtamaTxt)) {
+          $diagUtamaTxt = $d['kd_penyakit'] . ' - ' . $d['nm_penyakit'];
+        } else {
+          $diagSekunderArr[] = $d['kd_penyakit'] . ' - ' . $d['nm_penyakit'];
+        }
+      }
+      $prosArr = [];
+      foreach ($prosedur_pasien as $p) {
+        $prosArr[] = $p['kode'] . ' - ' . ($p['deskripsi_panjang'] ?? $p['deskripsi_pendek'] ?? '');
+      }
+
+      $resume_pasien = [
+        'no_rawat' => $no_rawat,
+        'nm_dokter' => $reg_periksa['nm_dokter'] ?? '-',
+        'kd_dokter' => $reg_periksa['kd_dokter'] ?? '-',
+        'keluhan_utama' => $lastPem['keluhan'] ?? 'Sakit pada regio oral / gigi',
+        'jalannya_penyakit' => $lastPem['pemeriksaan'] ?? 'Tercatat pemeriksaan klinis gigi & mulut',
+        'pemeriksaan_fisik' => "Tekanan Darah: {$lastPem['tensi']} mmHg | Nadi: {$lastPem['nadi']} x/m | Suhu: {$lastPem['suhu_tubuh']} C | Respirasi: {$lastPem['respirasi']} x/m | SpO2: {$lastPem['spo2']}%",
+        'diagnosa_utama' => $diagUtamaTxt ?: ($lastPem['penilaian'] ?? 'Karies / Gangguan Gigi & Jaringan Periodontal'),
+        'diagnosa_sekunder' => implode("\n", $diagSekunderArr),
+        'prosedur_utama' => !empty($prosArr) ? $prosArr[0] : ($lastPem['rtl'] ?? 'Tindakan Konservasi / Bedah Mulut'),
+        'prosedur_sekunder' => count($prosArr) > 1 ? implode("\n", array_slice($prosArr, 1)) : '',
+        'kondisi_pulang' => $lastPem['evaluasi'] ?? 'Pasien Pulang Perbaikan / Rawat Jalan',
+        'instruksi_anjuran' => $lastPem['instruksi'] ?? 'Instruksi pasca tindakan, minum obat teratur, kontrol sesuai jadwal',
+        'obat_pulang' => 'Diberikan terapi oral sesuai resep DPJP'
+      ];
+    }
     $this->tpl->set('resume_pasien', $resume_pasien);
 
-    $pasien = $this->db('pasien')
-      ->join('kecamatan', 'kecamatan.kd_kec = pasien.kd_kec')
-      ->join('kabupaten', 'kabupaten.kd_kab = pasien.kd_kab')
-      ->where('no_rkm_medis', $this->getRegPeriksaInfo('no_rkm_medis', $this->revertNorawat($id)))
-      ->oneArray();
-    $reg_periksa = $this->db('reg_periksa')
-      ->join('dokter', 'dokter.kd_dokter = reg_periksa.kd_dokter')
-      ->join('poliklinik', 'poliklinik.kd_poli = reg_periksa.kd_poli')
-      ->join('penjab', 'penjab.kd_pj = reg_periksa.kd_pj')
-      ->where('stts', '<>', 'Batal')
-      ->where('no_rawat', $this->revertNorawat($id))
-      ->oneArray();
+    // 3. Data Odontogram & Pemeriksaan Gigi (RSGM)
+    $odontogram = $this->db('mlite_odontogram')
+      ->where('no_rawat', $no_rawat)
+      ->toArray();
+    if (empty($odontogram) && !empty($pasien['no_rkm_medis'])) {
+      $odontogram = $this->db('mlite_odontogram')
+        ->where('no_rkm_medis', $pasien['no_rkm_medis'])
+        ->toArray();
+    }
+    $this->tpl->set('odontogram', $odontogram);
+
+    // 4. Data Kesiapan, Verifikasi Internal & Eklaim
+    $klaim_readiness = $this->db('mlite_klaim_readiness')->where('no_rawat', $no_rawat)->oneArray();
+    $klaim_verifikasi = $this->db('mlite_klaim_verifikasi')->where('no_rawat', $no_rawat)->oneArray();
+    $eklaim_log = $this->db('mlite_eklaim_logs')->where('nomor_sep', $no_sep_val)->desc('id')->oneArray();
+
+    $this->tpl->set('klaim_readiness', $klaim_readiness);
+    $this->tpl->set('klaim_verifikasi', $klaim_verifikasi);
+    $this->tpl->set('eklaim_log', $eklaim_log);
+
     $rows_dpjp_ranap = $this->db('dpjp_ranap')
       ->join('dokter', 'dokter.kd_dokter = dpjp_ranap.kd_dokter')
       ->where('no_rawat', $this->revertNorawat($id))
@@ -2637,27 +3123,7 @@ class Admin extends AdminModule
       ->join('dokter', 'dokter.kd_dokter = mlite_rujukan_internal_poli.kd_dokter')
       ->where('no_rawat', $this->revertNorawat($id))
       ->oneArray();
-    $diagnosa_pasien = $this->db('diagnosa_pasien')
-      ->join('penyakit', 'penyakit.kd_penyakit = diagnosa_pasien.kd_penyakit')
-      ->where('no_rawat', $this->revertNorawat($id))
-      ->where('diagnosa_pasien.status', 'Ralan')
-      ->toArray();
-    if($reg_periksa['status_lanjut'] == 'Ranap'){
-      $diagnosa_pasien = $this->db('diagnosa_pasien')
-        ->join('penyakit', 'penyakit.kd_penyakit = diagnosa_pasien.kd_penyakit')
-        ->where('no_rawat', $this->revertNorawat($id))
-        ->where('diagnosa_pasien.status', 'Ranap')
-        ->toArray();
-    }
-    $prosedur_pasien = $this->db('prosedur_pasien')
-      ->join('icd9', 'icd9.kode = prosedur_pasien.kode')
-      ->where('no_rawat', $this->revertNorawat($id))
-      ->toArray();
-    $pemeriksaan_ralan = $this->db('pemeriksaan_ralan')
-      ->where('no_rawat', $this->revertNorawat($id))
-      ->asc('tgl_perawatan')
-      ->asc('jam_rawat')
-      ->toArray();
+
     $pemeriksaan_ranap = $this->db('pemeriksaan_ranap')
       ->where('no_rawat', $this->revertNorawat($id))
       ->asc('tgl_perawatan')
@@ -2944,6 +3410,16 @@ class Admin extends AdminModule
     redirect(url([ADMIN, 'vedika', 'mappinginacbgs']));
   }
 
+  public function anyBridgingEklaim()
+  {
+    return $this->getBridgingEklaim();
+  }
+
+  public function getGrouping()
+  {
+    return $this->anyGrouping();
+  }
+
   public function getBridgingEklaim()
   {
     $this->_addHeaderFiles();
@@ -3090,6 +3566,10 @@ class Admin extends AdminModule
   public function revertNorawat($text)
   {
     setlocale(LC_ALL, 'en_EN');
+    $text = str_replace('_', '/', trim((string)$text));
+    if (strpos($text, '/') !== false) {
+      return $text;
+    }
     $tahun = substr($text, 0, 4);
     $bulan = substr($text, 4, 2);
     $tanggal = substr($text, 6, 2);
@@ -3098,10 +3578,16 @@ class Admin extends AdminModule
     return $result;
   }
 
-  public function getResume($status_lanjut, $no_rawat)
+  public function getResume($status_lanjut = null, $no_rawat = null)
   {
+    if ($no_rawat === null) {
+      $no_rawat = $status_lanjut;
+      $reg = $this->db('reg_periksa')->where('no_rawat', revertNoRawat($no_rawat))->oneArray();
+      $status_lanjut = $reg['status_lanjut'] ?? 'Ralan';
+    }
+    $content = '';
     if($status_lanjut == 'Ralan') {
-      echo $this->draw('form.resume.html', [
+      $content = $this->draw('form.resume.html', [
         'status_lanjut' => $status_lanjut,
         'reg_periksa' => $this->db('reg_periksa')->where('no_rawat', revertNoRawat($no_rawat))->oneArray(),
         'diagnosa' => $this->db('diagnosa_pasien')->join('penyakit', 'penyakit.kd_penyakit=diagnosa_pasien.kd_penyakit')->where('no_rawat', revertNoRawat($no_rawat))->where('prioritas', 1)->where('diagnosa_pasien.status', 'Ralan')->oneArray(),
@@ -3110,7 +3596,7 @@ class Admin extends AdminModule
       ]);
     }
     if($status_lanjut == 'Ranap') {
-      echo $this->draw('form.resume.ranap.html', [
+      $content = $this->draw('form.resume.ranap.html', [
         'status_lanjut' => $status_lanjut,
         'reg_periksa' => $this->db('reg_periksa')->where('no_rawat', revertNoRawat($no_rawat))->oneArray(),
         'kamar_inap' => $this->db('kamar_inap')->where('no_rawat', revertNoRawat($no_rawat))->oneArray(),
@@ -3118,6 +3604,16 @@ class Admin extends AdminModule
         'prosedur_utama' => $this->db('prosedur_pasien')->join('icd9', 'icd9.kode=prosedur_pasien.kode')->where('no_rawat', revertNoRawat($no_rawat))->where('prioritas', 1)->where('status', 'Ranap')->oneArray(),
         'resume_pasien' => $this->db('resume_pasien_ranap')->where('no_rawat', revertNoRawat($no_rawat))->oneArray()
       ]);
+    }
+    $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest');
+    if ($isAjax) {
+      echo $content;
+    } else {
+      echo '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Resume Medis Pasien</title>';
+      echo '<link rel="stylesheet" href="'.url('assets/css/bootstrap.min.css').'"><link rel="stylesheet" href="'.url('assets/css/font-awesome.min.css').'">';
+      echo '<script src="'.url('assets/jscripts/jquery.min.js').'"></script><script src="'.url('assets/jscripts/bootstrap.min.js').'"></script>';
+      echo '<script>var mlite = {url: "'.url().'", admin: "'.ADMIN.'", token: "'.$_SESSION['token'].'"};</script>';
+      echo '</head><body style="background:#f4f6f9;padding:20px;"><div class="container"><div class="panel panel-default"><div class="panel-body">' . $content . '</div></div></div></body></html>';
     }
     exit();
   }
@@ -3360,15 +3856,35 @@ class Admin extends AdminModule
 
   }
 
-  public function getUbahDiagnosa($status_lanjut, $no_rawat)
+  public function getUbahDiagnosa($status_lanjut = null, $no_rawat = null)
   {
+    if ($no_rawat === null) {
+      $no_rawat = $status_lanjut;
+      $reg = $this->db('reg_periksa')->where('no_rawat', revertNoRawat($no_rawat))->oneArray();
+      $status_lanjut = $reg['status_lanjut'] ?? 'Ralan';
+    }
     $diagnosa_pasien = $this->db('diagnosa_pasien')->join('penyakit', 'penyakit.kd_penyakit = diagnosa_pasien.kd_penyakit')->where('diagnosa_pasien.no_rawat', revertNoRawat($no_rawat))->where('diagnosa_pasien.status', $status_lanjut)->asc('prioritas')->toArray();
-    echo $this->draw('ubah.diagnosa.html', ['no_rawat' => revertNoRawat($no_rawat), 'diagnosa_pasien' => htmlspecialchars_array($diagnosa_pasien), 'status_lanjut' => $status_lanjut]);
+    $content = $this->draw('ubah.diagnosa.html', ['no_rawat' => revertNoRawat($no_rawat), 'diagnosa_pasien' => htmlspecialchars_array($diagnosa_pasien), 'status_lanjut' => $status_lanjut]);
+    $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest');
+    if ($isAjax) {
+      echo $content;
+    } else {
+      echo '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Kelola ICD-10 Pasien</title>';
+      echo '<link rel="stylesheet" href="'.url('assets/css/bootstrap.min.css').'"><link rel="stylesheet" href="'.url('assets/css/font-awesome.min.css').'">';
+      echo '<script src="'.url('assets/jscripts/jquery.min.js').'"></script><script src="'.url('assets/jscripts/bootstrap.min.js').'"></script>';
+      echo '<script>var mlite = {url: "'.url().'", admin: "'.ADMIN.'", token: "'.$_SESSION['token'].'"};</script>';
+      echo '</head><body style="background:#f4f6f9;padding:20px;"><div class="container"><div class="panel panel-default"><div class="panel-body">' . $content . '</div></div></div></body></html>';
+    }
     exit();
   }
 
-  public function getDisplayDiagnosa($status_lanjut, $no_rawat)
+  public function getDisplayDiagnosa($status_lanjut = null, $no_rawat = null)
   {
+    if ($no_rawat === null) {
+      $no_rawat = $status_lanjut;
+      $reg = $this->db('reg_periksa')->where('no_rawat', revertNoRawat($no_rawat))->oneArray();
+      $status_lanjut = $reg['status_lanjut'] ?? 'Ralan';
+    }
     $diagnosa_pasien = $this->db('diagnosa_pasien')->join('penyakit', 'penyakit.kd_penyakit = diagnosa_pasien.kd_penyakit')->where('diagnosa_pasien.no_rawat', revertNoRawat($no_rawat))->where('diagnosa_pasien.status', $status_lanjut)->asc('prioritas')->toArray();
     echo $this->draw('display.diagnosa.html', ['no_rawat' => revertNoRawat($no_rawat), 'diagnosa_pasien' => htmlspecialchars_array($diagnosa_pasien), 'status_lanjut' => $status_lanjut]);
     exit();
@@ -3381,15 +3897,35 @@ class Admin extends AdminModule
     exit();
   }
 
-  public function getUbahProsedur($status_lanjut, $no_rawat)
+  public function getUbahProsedur($status_lanjut = null, $no_rawat = null)
   {
+    if ($no_rawat === null) {
+      $no_rawat = $status_lanjut;
+      $reg = $this->db('reg_periksa')->where('no_rawat', revertNoRawat($no_rawat))->oneArray();
+      $status_lanjut = $reg['status_lanjut'] ?? 'Ralan';
+    }
     $prosedur_pasien = $this->db('prosedur_pasien')->join('icd9', 'icd9.kode = prosedur_pasien.kode')->where('prosedur_pasien.no_rawat', revertNoRawat($no_rawat))->where('prosedur_pasien.status', $status_lanjut)->asc('prioritas')->toArray();
-    echo $this->draw('ubah.prosedur.html', ['no_rawat' => revertNoRawat($no_rawat), 'prosedur_pasien' => htmlspecialchars_array($prosedur_pasien), 'status_lanjut' => $status_lanjut]);
+    $content = $this->draw('ubah.prosedur.html', ['no_rawat' => revertNoRawat($no_rawat), 'prosedur_pasien' => htmlspecialchars_array($prosedur_pasien), 'status_lanjut' => $status_lanjut]);
+    $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest');
+    if ($isAjax) {
+      echo $content;
+    } else {
+      echo '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Kelola ICD-9-CM Pasien</title>';
+      echo '<link rel="stylesheet" href="'.url('assets/css/bootstrap.min.css').'"><link rel="stylesheet" href="'.url('assets/css/font-awesome.min.css').'">';
+      echo '<script src="'.url('assets/jscripts/jquery.min.js').'"></script><script src="'.url('assets/jscripts/bootstrap.min.js').'"></script>';
+      echo '<script>var mlite = {url: "'.url().'", admin: "'.ADMIN.'", token: "'.$_SESSION['token'].'"};</script>';
+      echo '</head><body style="background:#f4f6f9;padding:20px;"><div class="container"><div class="panel panel-default"><div class="panel-body">' . $content . '</div></div></div></body></html>';
+    }
     exit();
   }
 
-  public function getDisplayProsedur($status_lanjut, $no_rawat)
+  public function getDisplayProsedur($status_lanjut = null, $no_rawat = null)
   {
+    if ($no_rawat === null) {
+      $no_rawat = $status_lanjut;
+      $reg = $this->db('reg_periksa')->where('no_rawat', revertNoRawat($no_rawat))->oneArray();
+      $status_lanjut = $reg['status_lanjut'] ?? 'Ralan';
+    }
     $prosedur_pasien = $this->db('prosedur_pasien')->join('icd9', 'icd9.kode = prosedur_pasien.kode')->where('prosedur_pasien.no_rawat', revertNoRawat($no_rawat))->where('prosedur_pasien.status', $status_lanjut)->asc('prioritas')->toArray();
     echo $this->draw('display.prosedur.html', ['no_rawat' => revertNoRawat($no_rawat), 'prosedur_pasien' => htmlspecialchars_array($prosedur_pasien), 'status_lanjut' => $status_lanjut]);
     exit();
@@ -3415,8 +3951,9 @@ class Admin extends AdminModule
     if($reg_periksa['status_lanjut'] == 'Ranap') {
       $pemeriksaan = $this->db('pemeriksaan_ranap')->where('no_rawat', $reg_periksa['no_rawat'])->limit(1)->desc('tgl_perawatan')->desc('jam_rawat')->toArray();
     }
-    $reg_periksa['sistole'] = strtok($pemeriksaan[0]['tensi'], '/');
-    $reg_periksa['diastole'] = substr($pemeriksaan[0]['tensi'], strpos($pemeriksaan[0]['tensi'], '/') + 1);
+    $tensi = !empty($pemeriksaan[0]['tensi']) ? $pemeriksaan[0]['tensi'] : '';
+    $reg_periksa['sistole'] = $tensi ? strtok($tensi, '/') : '120';
+    $reg_periksa['diastole'] = ($tensi && strpos($tensi, '/') !== false) ? substr($tensi, strpos($tensi, '/') + 1) : '80';
     $reg_periksa['no_sep'] = $this->_getSEPInfo('no_sep', revertNoRawat($no_rawat));
     $reg_periksa['kelas_rawat'] = $this->_getSEPInfo('klsrawat', revertNoRawat($no_rawat));
     $reg_periksa['stts_pulang'] = '';
@@ -4011,7 +4548,7 @@ class Admin extends AdminModule
     }
     //echo json_encode($adl, true);
     $hide_input_data = false;
-    if ($get_claim_data && $get_claim_data['response']['data']['grouper']['response_idrg']['status_cd'] == 'final') {
+    if ($get_claim_data && isset($get_claim_data['response']['data']['grouper']['response_idrg']['status_cd']) && $get_claim_data['response']['data']['grouper']['response_idrg']['status_cd'] == 'final') {
       $hide_input_data = true;
     }
     echo $this->draw('inacbgs.html', [
@@ -4038,7 +4575,7 @@ class Admin extends AdminModule
       'biaya_add_payment_pct' => $total_biaya_add_payment_pct,
       'get_claim_data' => $get_claim_data,
       'penyakit' => $penyakit,
-      'prosedur' => htmlspecialchars_array($prosedur),
+      'prosedur' => $prosedur,
       'adl' => $adl,
       'hide_input_data' => $hide_input_data
     ]);
@@ -4587,23 +5124,64 @@ class Admin extends AdminModule
   }
 
   private function Request($request){
-      $json = $this->mc_encrypt ($request, $this->settings->get('vedika.eklaim_key'));
-      $header = array("Content-Type: application/x-www-form-urlencoded");
-      $ch = curl_init();
-      curl_setopt($ch, CURLOPT_URL, $this->settings->get('vedika.eklaim_url'));
-      curl_setopt($ch, CURLOPT_HEADER, 0);
-      curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-      curl_setopt($ch, CURLOPT_HTTPHEADER,$header);
-      curl_setopt($ch, CURLOPT_POST, 1);
-      curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
-      $response = curl_exec($ch);
-      $first = strpos($response, "\n")+1;
-      $last = strrpos($response, "\n")-1;
-      $hasilresponse = substr($response,$first,strlen($response) - $first - $last);
-      $hasildecrypt = $this->mc_decrypt($hasilresponse, $this->settings->get('vedika.eklaim_key'));
-      //echo $hasildecrypt;
-      $msg = json_decode($hasildecrypt,true);
-      return $msg;
+      $key = $this->settings->get('vedika.eklaim_key');
+      $url = $this->settings->get('vedika.eklaim_url');
+
+      if (empty($key) || empty($url)) {
+          return [
+              'metadata' => [
+                  'code' => 500,
+                  'message' => 'Konfigurasi E-Klaim belum lengkap (URL atau Key 256-bit belum diisi di Pengaturan E-Klaim)'
+              ]
+          ];
+      }
+
+      try {
+          $json = $this->mc_encrypt($request, $key);
+          $header = array("Content-Type: application/x-www-form-urlencoded");
+          $ch = curl_init();
+          curl_setopt($ch, CURLOPT_URL, $url);
+          curl_setopt($ch, CURLOPT_HEADER, 0);
+          curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+          curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
+          curl_setopt($ch, CURLOPT_POST, 1);
+          curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
+          curl_setopt($ch, CURLOPT_TIMEOUT, 15);
+          $response = curl_exec($ch);
+          if (curl_errno($ch)) {
+              $curl_err = curl_error($ch);
+              curl_close($ch);
+              return [
+                  'metadata' => [
+                      'code' => 500,
+                      'message' => 'Gagal koneksi ke server E-Klaim: ' . $curl_err
+                  ]
+              ];
+          }
+          curl_close($ch);
+
+          $first = strpos($response, "\n")+1;
+          $last = strrpos($response, "\n")-1;
+          $hasilresponse = substr($response,$first,strlen($response) - $first - $last);
+          $hasildecrypt = $this->mc_decrypt($hasilresponse, $key);
+          if ($hasildecrypt === 'SIGNATURE_NOT_MATCH') {
+              return [
+                  'metadata' => [
+                      'code' => 500,
+                      'message' => 'Signature E-Klaim tidak cocok (Signature Not Match)'
+                  ]
+              ];
+          }
+          $msg = json_decode($hasildecrypt,true);
+          return $msg;
+      } catch (\Throwable $e) {
+          return [
+              'metadata' => [
+                  'code' => 500,
+                  'message' => $e->getMessage()
+              ]
+          ];
+      }
   }
 
   private function mc_encrypt($data, $strkey) {

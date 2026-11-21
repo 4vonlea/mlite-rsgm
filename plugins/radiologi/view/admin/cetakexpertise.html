@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <title>Expertise Radiologi - {$pasien.nm_pasien}</title>
+  <meta charset="UTF-8">
+  <style>
+    body, table, td, th, div, p {
+      font-family: Arial, Helvetica, sans-serif;
+    }
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #ffffff;
+      color: #111827;
+      font-size: 13.5px;
+      line-height: 1.55;
+    }
+    .sheet {
+      width: 740px;
+      max-width: 100%;
+      margin: 0 auto;
+      background: #ffffff;
+    }
+    .kop-img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    .meta-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      margin-bottom: 10px;
+    }
+    .meta-table td {
+      border: none;
+      padding: 2px 4px;
+      vertical-align: top;
+      font-size: 13.5px;
+    }
+    .meta-label {
+      width: 165px;
+    }
+    .meta-sep {
+      width: 16px;
+      text-align: center;
+    }
+    .divider {
+      border: 0;
+      border-top: 1.5px solid #222222;
+      margin: 10px 0 18px 0;
+    }
+    .expertise-body {
+      min-height: 220px;
+      font-size: 13.5px;
+      color: #111827;
+    }
+    .expertise-item {
+      margin-bottom: 14px;
+    }
+    .expertise-empty {
+      color: #6b7280;
+      font-style: italic;
+      padding: 16px 0;
+    }
+    .signature-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 34px;
+    }
+    .signature-table td {
+      border: none;
+      vertical-align: top;
+      font-size: 13.5px;
+    }
+    .signature-box {
+      width: 240px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div id="expertise-sheet" class="sheet">
+    <img class="kop-img" src="{$kopSrc}" alt="Kop Surat RSGM" />
+
+    <table class="meta-table">
+      <tr>
+        <td class="meta-label">Nama</td>
+        <td class="meta-sep">:</td>
+        <td>{$pasien.nm_pasien}</td>
+      </tr>
+      <tr>
+        <td class="meta-label">Umur</td>
+        <td class="meta-sep">:</td>
+        <td>{$pasien.umur}</td>
+      </tr>
+      <tr>
+        <td class="meta-label">Pemeriksaan</td>
+        <td class="meta-sep">:</td>
+        <td>{$nama_pemeriksaan}</td>
+      </tr>
+      <tr>
+        <td class="meta-label">Tanggal</td>
+        <td class="meta-sep">:</td>
+        <td>{$tanggal_pemeriksaan_indo}</td>
+      </tr>
+      <tr>
+        <td class="meta-label">Nomor Rekam Medis</td>
+        <td class="meta-sep">:</td>
+        <td>{$pasien.no_rkm_medis}</td>
+      </tr>
+    </table>
+
+    <hr class="divider" />
+
+    <div class="expertise-body">
+      {if: $hasil_radiologi}
+        {loop: $hasil_radiologi}
+        <div class="expertise-item">
+          {if: !empty($value.nm_perawatan) && count($hasil_radiologi) > 1}
+          <div style="font-weight: bold; text-decoration: underline; margin-bottom: 6px;">{$value.nm_perawatan}</div>
+          {/if}
+          {?=$value.formatted_html?}
+        </div>
+        {/loop}
+      {else}
+        <div class="expertise-empty">(Belum ada hasil bacaan / expertise radiologi yang diinputkan.)</div>
+      {/if}
+    </div>
+
+    <table class="signature-table">
+      <tr>
+        <td>&nbsp;</td>
+        <td class="signature-box">
+          <div>Salam Sejawat,</div>
+          {if: $signature}
+            <div style="margin: 8px 0;">
+              <img src="{$qrCode}" width="88px" />
+            </div>
+            <div style="font-size: 10px; color: #2e7d32; margin-bottom: 4px;">
+              <i>Ditandatangani secara elektronik oleh:</i>
+            </div>
+            <div>{$signature.signer_name}</div>
+          {else}
+            <br><br><br><br>
+            <div>{$nama_dokter_ttd}</div>
+          {/if}
+        </td>
+      </tr>
+    </table>
+  </div>
+</body>
+</html>

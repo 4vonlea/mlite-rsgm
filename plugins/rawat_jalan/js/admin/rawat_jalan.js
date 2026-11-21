@@ -305,71 +305,40 @@ $("#form").on("click","#hapus", function(event){
 });
 
 
-$("#display").on("click", ".sep", function(event){
+$(document).on("click", ".sep", function(event){
   var baseURL = mlite.url + '/' + mlite.admin;
   event.preventDefault();
 
+  var no_peserta = ($(this).attr("data-no_peserta") || '').trim();
+
+  // 1. Validasi nomor kartu peserta SEBELUM menutup tabel display
+  if (!no_peserta || no_peserta === '-' || no_peserta === '') {
+    alert('Nomor kartu BPJS pasien kosong atau belum terisi di data rekam medis!');
+    return false;
+  }
+
+  // 2. Batalkan request VClaim sebelumnya jika masih berjalan (cegah race condition)
+  if (window.currentVclaimXHR && typeof window.currentVclaimXHR.abort === 'function') {
+    try { window.currentVclaimXHR.abort(); } catch(e) {}
+  }
+
+  // 3. Reset form SEP terlebih dahulu agar data pasien sebelumnya bersih total
+  if (typeof window.resetFormSep === 'function') {
+    window.resetFormSep();
+  }
+
   var d = new Date();
-  var curr_date = d.getFullYear() + "-" + (d.getMonth()+1) + "-" + d.getDate();
+  var pad = function(n) { return (n < 10 ? '0' : '') + n; };
+  var curr_date = d.getFullYear() + "-" + pad(d.getMonth()+1) + "-" + pad(d.getDate());
 
   var no_rawat = $(this).attr("data-no_rawat");
   var no_rkm_medis = $(this).attr("data-no_rkm_medis");
   var nm_pasien = $(this).attr("data-nm_pasien");
   var tgl_registrasi = $(this).attr("data-tgl_registrasi");
-  var no_peserta = $(this).attr("data-no_peserta");
+  var kd_dokter = $(this).attr("data-kd_dokter") || '';
+  var nm_dokter = $(this).attr("data-nm_dokter") || '';
 
-  var url = baseURL + '/vclaim/bynokartu/' + no_peserta + '/' + curr_date + '?t=' + mlite.token;
-
-  $.get(url,function(data) {
-    var data = JSON.parse(data);
-    var json_obj = [data];
-    if(!json_obj[0]) {
-      alert('Koneksi ke server BPJS terputus. Silahkan ulangi lagi!');
-    } else if(json_obj[0].metaData.code == 200) {
-      $('.nama_peserta').text(json_obj[0].response.peserta.nama);
-      $('#no_kartu_peserta').text(json_obj[0].response.peserta.noKartu);
-      $('#no_mr_peserta').text(no_rkm_medis);
-      $('#nik_peserta').text(json_obj[0].response.peserta.nik);
-      $('#prov_umum_peserta').text(json_obj[0].response.peserta.provUmum.nmProvider);
-      $('#tgl_lahir_peserta').text(json_obj[0].response.peserta.tglLahir);
-      $('#status_peserta').text(json_obj[0].response.peserta.statusPeserta.keterangan);
-      $('#jenis_peserta').text(json_obj[0].response.peserta.jenisPeserta.keterangan);
-      $('.prolainis_peserta').text(json_obj[0].response.peserta.informasi.prolanisPRB);
-
-      var jenis_kelamin = 'Laki-Laki';
-      if(json_obj[0].response.peserta.sex == 'P') {
-        var jenis_kelamin = 'Perempuan';
-      }
-
-      $('input:text[name=sep_jenis_kelamin_nama]').val(jenis_kelamin);
-      $('input:text[name=sep_jenis_kelamin_kode]').val(json_obj[0].response.peserta.sex);
-      $('input:text[name=sep_tanggal_lahir]').val(json_obj[0].response.peserta.tglLahir);
-      $('input:text[name=sep_jenis_peserta]').val(json_obj[0].response.peserta.jenisPeserta.keterangan);
-      $('input:text[name=sep_no_kartu]').val(json_obj[0].response.peserta.noKartu);
-      $('input:text[name=sep_norm]').val(json_obj[0].response.peserta.mr.noMR);
-      $('input:text[name=sep_eksekutif_kode]').val("0");
-      $('input:text[name=sep_eksekutif_nama]').val("Tidak");
-      $('input:text[name=sep_kunjungan_kode]').val("0");
-      $('input:text[name=sep_kunjungan_nama]').val("Normal");
-      $('input:text[name=sep_cob_kode]').val("0");
-      $('input:text[name=sep_cob_nama]').val("Tidak");
-      $('input:text[name=sep_katarak_kode]').val("0");
-      $('input:text[name=sep_katarak_nama]').val("Tidak");
-      $('input:text[name=sep_status_kecelakaan_kode]').val("0");
-      $('input:text[name=sep_status_kecelakaan_nama]').val("Tidak");
-      $('input:text[name=sep_penjamin_kecelakaan_kode]').val("0");
-      $('input:text[name=sep_penjamin_kecelakaan_nama]').val("Tidak");
-      $('input:text[name=sep_suplesi_kode]').val("0");
-      $('input:text[name=sep_suplesi_nama]').val("Tidak");
-      $('input:text[name=sep_kelas_kode]').val(json_obj[0].response.peserta.hakKelas.kode);
-      $('input:text[name=sep_kelas_nama]').val(json_obj[0].response.peserta.hakKelas.keterangan);
-      $('input:text[name=sep_nomor_telepon]').val(json_obj[0].response.peserta.mr.noTelepon);
-
-    } else {
-      alert(json_obj[0].metaData.message);
-    }
-  });
-
+  // 4. Set data identitas registrasi
   $('input:text[name=sep_no_rawat]').val(no_rawat);
   $('input:text[name=no_rkm_medis]').val(no_rkm_medis);
   $('input:text[name=nm_pasien]').val(nm_pasien);
@@ -377,6 +346,18 @@ $("#display").on("click", ".sep", function(event){
   $('input:text[name=nomor_asuransi]').val(no_peserta);
   $('input:text[name=no_kartu_pcare]').val(no_peserta);
   $('input:text[name=no_kartu_rs]').val(no_peserta);
+  $('input:text[name=sep_no_kartu]').val(no_peserta);
+  $('input:text[name=sep_norm]').val(no_rkm_medis);
+  if (nm_dokter && nm_dokter.trim() !== '') {
+    $('#sep_dpjp_yang_melayani_nama').val(nm_dokter);
+    $('#sep_dpjp_pelayanan_nama').val(nm_dokter);
+  }
+  if (kd_dokter && kd_dokter.trim() !== '') {
+    $('#sep_dpjp_yang_melayani_kode').val(kd_dokter);
+    $('#sep_dpjp_pelayanan_kode').val(kd_dokter);
+  }
+
+  // 5. Tampilkan form SEP
   $("#display").hide();
   $("#form_rincian").hide();
   $("#form").hide();
@@ -385,6 +366,98 @@ $("#display").on("click", ".sep", function(event){
   $("#form_kontrol").hide();
   $("#form_sep").show();
   $("#bukaform").hide();
+
+  // 6. Tampilkan animasi loading overlay
+  if (typeof window.showVclaimLoading === 'function') {
+    window.showVclaimLoading('Memeriksa Kartu Peserta...', 'Menghubungkan ke BPJS VClaim...');
+  }
+
+  var url = baseURL + '/vclaim/bynokartu/' + encodeURIComponent(no_peserta) + '/' + curr_date + '?t=' + mlite.token;
+
+  window.currentVclaimXHR = $.get(url, function(data) {
+    try {
+      var json_obj = [typeof data === 'string' ? JSON.parse(data) : data];
+      if(!json_obj[0]) {
+        alert('Koneksi ke server BPJS terputus. Silahkan ulangi lagi!');
+        if (typeof window.hideVclaimLoading === 'function') {
+          window.hideVclaimLoading();
+        }
+      } else if(json_obj[0].metaData && json_obj[0].metaData.code == 200) {
+        $('.nama_peserta').text(json_obj[0].response.peserta.nama);
+        $('#no_kartu_peserta').text(json_obj[0].response.peserta.noKartu);
+        $('#no_mr_peserta').text(no_rkm_medis);
+        $('#nik_peserta').text(json_obj[0].response.peserta.nik);
+        $('#prov_umum_peserta').text(json_obj[0].response.peserta.provUmum ? json_obj[0].response.peserta.provUmum.nmProvider : '');
+        $('#tgl_lahir_peserta').text(json_obj[0].response.peserta.tglLahir);
+        $('#status_peserta').text(json_obj[0].response.peserta.statusPeserta ? json_obj[0].response.peserta.statusPeserta.keterangan : '');
+        $('#jenis_peserta').text(json_obj[0].response.peserta.jenisPeserta ? json_obj[0].response.peserta.jenisPeserta.keterangan : '');
+        $('.prolainis_peserta').text((json_obj[0].response.peserta.informasi && json_obj[0].response.peserta.informasi.prolanisPRB) ? json_obj[0].response.peserta.informasi.prolanisPRB : '');
+
+        var jenis_kelamin = 'Laki-Laki';
+        if(json_obj[0].response.peserta.sex == 'P') {
+          jenis_kelamin = 'Perempuan';
+        }
+
+        $('input:text[name=sep_jenis_kelamin_nama]').val(jenis_kelamin);
+        $('input:text[name=sep_jenis_kelamin_kode]').val(json_obj[0].response.peserta.sex);
+        $('input:text[name=sep_tanggal_lahir]').val(json_obj[0].response.peserta.tglLahir);
+        $('input:text[name=sep_jenis_peserta]').val(json_obj[0].response.peserta.jenisPeserta ? json_obj[0].response.peserta.jenisPeserta.keterangan : '');
+        $('input:text[name=sep_no_kartu]').val(json_obj[0].response.peserta.noKartu);
+        $('input:text[name=sep_norm]').val((json_obj[0].response.peserta.mr && json_obj[0].response.peserta.mr.noMR) ? json_obj[0].response.peserta.mr.noMR : no_rkm_medis);
+        $('input:text[name=sep_eksekutif_kode]').val("0");
+        $('input:text[name=sep_eksekutif_nama]').val("Tidak");
+        $('input:text[name=sep_kunjungan_kode]').val("0");
+        $('input:text[name=sep_kunjungan_nama]').val("Normal");
+        $('input:text[name=sep_cob_kode]').val("0");
+        $('input:text[name=sep_cob_nama]').val("Tidak");
+        $('input:text[name=sep_katarak_kode]').val("0");
+        $('input:text[name=sep_katarak_nama]').val("Tidak");
+        $('input:text[name=sep_status_kecelakaan_kode]').val("0");
+        $('input:text[name=sep_status_kecelakaan_nama]').val("Tidak");
+        $('input:text[name=sep_penjamin_kecelakaan_kode]').val("0");
+        $('input:text[name=sep_penjamin_kecelakaan_nama]').val("Tidak");
+        $('input:text[name=sep_suplesi_kode]').val("0");
+        $('input:text[name=sep_suplesi_nama]').val("Tidak");
+        if (json_obj[0].response.peserta.hakKelas) {
+          $('input:text[name=sep_kelas_kode]').val(json_obj[0].response.peserta.hakKelas.kode);
+          $('input:text[name=sep_kelas_nama]').val(json_obj[0].response.peserta.hakKelas.keterangan);
+        }
+        if (json_obj[0].response.peserta.mr && json_obj[0].response.peserta.mr.noTelepon) {
+          $('input:text[name=sep_nomor_telepon]').val(json_obj[0].response.peserta.mr.noTelepon);
+        }
+
+        // Lanjutkan auto-fetch rujukan & DPJP dengan loading state
+        if (typeof window.vclaimAutoFetchRujukan === 'function') {
+          window.vclaimAutoFetchRujukan(no_peserta, no_rawat, nm_dokter, function() {
+            if (typeof window.hideVclaimLoading === 'function') {
+              window.hideVclaimLoading();
+            }
+          }, kd_dokter);
+        } else {
+          if (typeof window.hideVclaimLoading === 'function') {
+            window.hideVclaimLoading();
+          }
+        }
+      } else {
+        alert(json_obj[0].metaData ? json_obj[0].metaData.message : 'Respon BPJS tidak valid');
+        if (typeof window.hideVclaimLoading === 'function') {
+          window.hideVclaimLoading();
+        }
+      }
+    } catch(err) {
+      alert('Terjadi kesalahan memproses data peserta dari BPJS.');
+      if (typeof window.hideVclaimLoading === 'function') {
+        window.hideVclaimLoading();
+      }
+    }
+  }).fail(function(xhr, status, error) {
+    if (status !== 'abort') {
+      alert('Gagal menghubungi server BPJS VClaim.');
+      if (typeof window.hideVclaimLoading === 'function') {
+        window.hideVclaimLoading();
+      }
+    }
+  });
 });
 
 
@@ -905,17 +978,59 @@ $("#layanan").on("click", ".pilih_layanan", function(event){
 // ketika tombol panggil ditekan
 $("#display").on("click",".panggil", function(event){
   event.preventDefault();
+  var btn = $(this);
+  var baseURL = mlite.url + '/' + mlite.admin;
+  var nm_pasien = btn.attr("data-nm_pasien") || '';
+  var nm_poli = btn.attr("data-nm_poli") || '';
+  var no_reg = btn.attr("data-no_reg") || '';
+  var no_rawat = btn.attr("data-no_rawat") || '';
+  var no_rkm_medis = btn.attr("data-no_rkm_medis") || '';
+  var kd_poli = btn.attr("data-kd_poli") || '';
+  var kd_dokter = btn.attr("data-kd_dokter") || '';
 
-  var nm_pasien 	= $(this).attr("data-nm_pasien");
-  var nm_poli = $(this).attr("data-nm_poli");
-  var no_reg = $(this).attr("data-no_reg");
-  function play (){
-    responsiveVoice.speak(
-      nm_pasien + ", nomor antrian " + no_reg + ", ke " + nm_poli ,"Indonesian Male", {pitch: 1,rate: 0.8,volume: 2}
-    );
+  btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i><span class="hidden-xs hidden-sm"> Memanggil...</span>');
+
+  // Kirim event panggilan ke server (update state TV Display & Task ID BPJS)
+  $.ajax({
+    url: baseURL + '/rawat_jalan/panggilpasien?t=' + mlite.token,
+    type: 'POST',
+    data: {
+      no_rawat: no_rawat,
+      no_rkm_medis: no_rkm_medis,
+      kd_poli: kd_poli,
+      kd_dokter: kd_dokter,
+      no_reg: no_reg,
+      nm_pasien: nm_pasien,
+      nm_poli: nm_poli
+    },
+    dataType: 'json',
+    complete: function() {
+      setTimeout(function() {
+        btn.prop('disabled', false).html('<i class="fa fa-bullhorn"></i><span class="hidden-xs hidden-sm"> Dipanggil</span>');
+      }, 1500);
+    }
+  });
+
+  // Sintesis Suara Pemanggilan Pasien
+  function speakPatient() {
+    var textToSpeak = nm_pasien + ", nomor antrean " + no_reg + ", silakan menuju " + nm_poli;
+    if (typeof responsiveVoice !== 'undefined' && responsiveVoice.voiceSupport()) {
+      try {
+        responsiveVoice.speak(nm_pasien + ", nomor antrian " + no_reg + ", ke " + nm_poli, "Indonesian Male", {pitch: 1, rate: 0.85, volume: 2});
+        return;
+      } catch (e) {}
+    }
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      var utterance = new SpeechSynthesisUtterance(textToSpeak);
+      utterance.lang = 'id-ID';
+      utterance.rate = 0.85;
+      utterance.pitch = 1.0;
+      window.speechSynthesis.speak(utterance);
+    }
   }
-  play();
 
+  speakPatient();
 });
 // akhir kode panggil
 

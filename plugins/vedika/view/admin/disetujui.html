@@ -1,0 +1,90 @@
+<div class="row">
+  <div class="col-md-8">
+    <h3 style="margin-top:0;">
+      <i class="fa fa-thumbs-up text-success"></i> Daftar Klaim Disetujui BPJS Kesehatan
+      <small style="display:block;margin-top:4px;color:#718096;">Daftar klaim yang telah diverifikasi dan disetujui untuk penerbitan Formulir Pengajuan Klaim (FPK) dan BAHP</small>
+    </h3>
+  </div>
+  <div class="col-md-4 text-right">
+    <form class="form-inline" action="" method="GET">
+      <input type="text" name="periode" class="form-control tanggal input-sm" value="{?=$periode?}" placeholder="YYYY-MM">
+      <input type="hidden" name="t" value="{?=$_SESSION['token']?}">
+      <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-filter"></i> Filter</button>
+    </form>
+  </div>
+</div>
+<hr style="margin-top:10px;margin-bottom:20px;">
+
+<div class="panel panel-default">
+  <div class="table-responsive">
+    <table class="table table-hover table-striped" style="margin-bottom:0;font-size:13px;">
+      <thead>
+        <tr class="active">
+          <th>Batch Pengajuan</th>
+          <th>No. Rawat / RM</th>
+          <th>Nama Pasien</th>
+          <th>No. SEP</th>
+          <th>Kode & Deskripsi INA-CBG</th>
+          <th>Tarif RS</th>
+          <th>Tarif Disetujui INA-CBG</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {if: count($rows) > 0}
+        {loop: $rows}
+        <tr>
+          <td>
+            <b>{?=$value.kode_batch?}</b><br>
+            <small class="text-muted">{?=$value.periode_bulan?}</small>
+          </td>
+          <td>
+            <b>{?=$value.no_rawat?}</b><br>
+            <span class="label label-default">RM: {?=$value.no_rkm_medis?}</span>
+          </td>
+          <td>
+            <b>{?=$value.nama_pasien?}</b>
+          </td>
+          <td>
+            <span class="label label-success">{?=$value.no_sep?}</span>
+          </td>
+          <td>
+            <b>{?=$value.kode_inacbg?:'-'?}</b><br>
+            <small class="text-muted">{?=$value.deskripsi_inacbg?:'-'?}</small>
+          </td>
+          <td>
+            Rp {?=number_format($value.tarif_rs, 0, ',', '.')?}
+          </td>
+          <td>
+            <b class="text-success">Rp {?=number_format($value.tarif_inacbg, 0, ',', '.')?}</b>
+          </td>
+          <td>
+            {if: $value.status_klaim == 'dibayar'}
+            <span class="label label-primary"><i class="fa fa-check-circle"></i> Sudah Dibayar</span>
+            {else}
+            <span class="label label-success"><i class="fa fa-check"></i> Siap Rekonsiliasi BAHP</span>
+            {/if}
+          </td>
+        </tr>
+        {/loop}
+        {else}
+        <tr>
+          <td colspan="8" class="text-center" style="padding:30px;">
+            <span class="text-muted">Tidak ada klaim disetujui pada periode ini.</span>
+          </td>
+        </tr>
+        {/if}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  $(function() {
+    $('.tanggal').datetimepicker({
+      format: 'YYYY-MM',
+      locale: 'id'
+    });
+  });
+</script>
+

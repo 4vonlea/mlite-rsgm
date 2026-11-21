@@ -1,5 +1,6 @@
 <div class="row">
     <form action="{?=url(ADMIN.'/anjungan/saveSettings')?}" method="POST">
+        <input type="hidden" name="t" value="{?=$_SESSION['token']?}">
         <div class="col-md-6">
             <div class="panel panel-default">
                 <div class="panel-heading">
@@ -7,32 +8,63 @@
                 </div>
             	  <div class="panel-body">
                     <div class="form-group">
-                        <label>Tampilkan Poli</label>
-                        <select name="anjungan[display_poli][]" class="form-control" multiple>
+                        <label>Tampilkan Poli (Display TV Poliklinik)</label>
+                        <select name="anjungan[display_poli][]" class="form-control" multiple style="height: 140px;">
                           {loop: $settings.poliklinik}
                             <option value="{?=isset_or($value.kd_poli)?}" {?=isset_or($value.attr)?}>{?=isset_or($value.nm_poli)?}</option>
                           {/loop}
                         </select>
+                        <small class="text-muted"><i class="fa fa-info-circle"></i> Tahan tombol <b>Ctrl</b> sambil klik untuk memilih beberapa poli sekaligus.</small>
                     </div>
                     <div class="form-group">
-                        <label>Cara Bayar</label>
-                        <select name="anjungan[carabayar][]" class="form-control" multiple>
+                        <label>Cara Bayar (Filter APM Mandiri)</label>
+                        <select name="anjungan[carabayar][]" class="form-control" multiple style="height: 120px;">
                           {loop: $settings.penjab}
                             <option value="{?=isset_or($value.kd_pj)?}" {?=isset_or($value.attr)?}>{?=isset_or($value.png_jawab)?}</option>
                           {/loop}
                         </select>
+                        <small class="text-muted"><i class="fa fa-info-circle"></i> Tahan tombol <b>Ctrl</b> sambil klik untuk memilih beberapa cara bayar.</small>
+                    </div>
+                    <div class="panel panel-info" style="border-radius: 6px; margin-top: 15px;">
+                        <div class="panel-heading" style="font-weight: bold;">
+                            <i class="fa fa-sliders"></i> Konfigurasi Multi-Loket Pendaftaran & Layar TV
+                        </div>
+                        <div class="panel-body">
+                            <div class="form-group">
+                                <label>Mode Loket Pendaftaran yang Aktif:</label>
+                                <select name="anjungan[antrian_loket]" class="form-control">
+                                    <option value="1,2" {if: isset_or($settings.anjungan.antrian_loket) == '1,2'}selected{/if}>2 Loket Aktif (Konter 1 & Konter 2 Melayani Antrian Pendaftaran A)</option>
+                                    <option value="1" {if: isset_or($settings.anjungan.antrian_loket) == '1'}selected{/if}>1 Loket Saja (Hanya Konter 1)</option>
+                                    <option value="1,2,3" {if: isset_or($settings.anjungan.antrian_loket) == '1,2,3'}selected{/if}>3 Loket Aktif (Konter 1, 2, & 3)</option>
+                                </select>
+                                <small class="text-muted"><i class="fa fa-info-circle"></i> Pilih apakah pendaftaran dilayani oleh 1 loket atau 2 loket sekaligus secara paralel.</small>
+                            </div>
+                            <div class="form-group">
+                                <label>Mode Kartu 2 pada TV Display Antrian:</label>
+                                <select name="anjungan[display_card2]" class="form-control">
+                                    <option value="loket2" {if: isset_or($settings.anjungan.display_card2, 'loket2') == 'loket2'}selected{/if}>Loket Pendaftaran 2 (A) - [Customer Service difungsikan jadi Loket 2]</option>
+                                    <option value="cs" {if: isset_or($settings.anjungan.display_card2) == 'cs'}selected{/if}>Customer Service / Pengaduan (B)</option>
+                                </select>
+                                <small class="text-muted"><i class="fa fa-info-circle"></i> Pilih <b>Loket Pendaftaran 2</b> agar kolom kedua di TV Display menampilkan Loket 2 (A), atau <b>Customer Service</b> jika tetap ingin menampilkan antrian CS (B).</small>
+                            </div>
+                            <div class="form-group">
+                                <label>Nama / Label Loket 1:</label>
+                                <input type="text" name="anjungan[nama_loket_1]" class="form-control" value="{?=isset_or($settings.anjungan.nama_loket_1, 'Loket Pendaftaran 1')?}" />
+                            </div>
+                            <div class="form-group">
+                                <label>Nama / Label Loket 2:</label>
+                                <input type="text" name="anjungan[nama_loket_2]" class="form-control" value="{?=isset_or($settings.anjungan.nama_loket_2, 'Loket Pendaftaran 2')?}" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Antrian Customer Service (Konter)</label>
+                        <input type="text" name="anjungan[antrian_cs]" class="form-control" value="{?=isset_or($settings.anjungan.antrian_cs, '1')?}" />
                     </div>
                     <div class="form-group">
-                        <label>Antrian Loket</label>
-                        <input type="text" name="anjungan[antrian_loket]" class="form-control" value="{?=isset_or($settings.anjungan.antrian_loket)?}" />
-                    </div>
-                    <div class="form-group">
-                        <label>Antrian CS</label>
-                        <input type="text" name="anjungan[antrian_cs]" class="form-control" value="{?=isset_or($settings.anjungan.antrian_cs)?}" />
-                    </div>
-                    <div class="form-group">
-                        <label>Antrian Apotek</label>
-                        <input type="text" name="anjungan[antrian_apotek]" class="form-control" value="{?=isset_or($settings.anjungan.antrian_apotek)?}" />
+                        <label>Antrian Apotek / Farmasi (Konter)</label>
+                        <input type="text" name="anjungan[antrian_apotek]" class="form-control" value="{?=isset_or($settings.anjungan.antrian_apotek, '1')?}" />
                     </div>
                     <div class="form-group">
                         <label>Running Text Anjungan</label>
@@ -62,7 +94,7 @@
                         <label>ID Vidio Youtube</label>
                         <input type="text" name="anjungan[vidio]" class="form-control" value="{?=isset_or($settings.anjungan.vidio)?}" />
                     </div>
-                    <input type="submit" name="save" class="btn btn-primary" value="Simpan" />
+                    <button type="submit" name="save" class="btn btn-primary"><i class="fa fa-save"></i> Simpan</button>
                     <div class="btn-group pull-right" role="group" aria-label="Basic example">
                       <a href="{?=url([ADMIN,'anjungan','resetanjunganloket'])?}" target="_blank" class="btn btn-danger" data-confirm="Yakin ingin mereset antrian anjungan Loket? Mereset antrian anjungan Loket juga akan menghapus data Task ID 1 dan 2 di tanggal hari ini!">Reset Loket</a>
                       <a href="{?=url([ADMIN,'anjungan','resetanjungancs'])?}" target="_blank" class="btn btn-info" data-confirm="Yakin ingin mereset antrian anjungan CS? Mereset antrian anjungan CS juga akan menghapus data Task ID 1 dan 2 di tanggal hari ini!">Reset CS</a>
@@ -73,3 +105,4 @@
         </div>
     </form>
 </div>
+<div style="display: none;">Powered by <a href="https://mlite.id/">mLITE</a></div>

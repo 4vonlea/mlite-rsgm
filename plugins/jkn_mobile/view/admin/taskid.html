@@ -10,12 +10,12 @@
               <div class="panel-heading">
                   <div class="btn-group pull-right" style="margin-top:-8px;">
                     <span class="btn btn-sm dropdown-toggle" data-toggle="dropdown">
-                      <i class="fa fa-calendar"></i><span class="hidden-xs"> Periode Antrol</span>
+                      <i class="fa fa-calendar"></i><span class="hidden-xs"> {?=isset_or($tgl, isset_or($date, date('Y-m-d')))?}</span>
                     </span>
                     <ul class="dropdown-menu dropdown-menu-right">
                       <form class="" action="{?=url([ADMIN,'jkn_mobile','taskid'])?}" method="POST">
                       <li style="padding-left:5px;padding-right:5px;">
-                        <input type="text" id="periode_antrol" class="form-control periode_antrol" name="periode_antrol" required>
+                        <input type="text" id="periode_antrol" class="form-control periode_antrol" name="periode_antrol" value="{?=isset_or($tgl, isset_or($date, date('Y-m-d')))?}" required>
                       </li>
                       <li style="padding-left:5px;padding-right:5px;margin-top:5px;">
                         <input type="submit" name="" class="btn btn-primary btn-block" value="Submit">
@@ -85,7 +85,7 @@
 <script type="text/javascript">
     $(function () {
         $('.periode_antrol').datetimepicker({
-            defaultDate: "{?=date('Y-m-d')?}",
+            defaultDate: "{?=isset_or($tgl, isset_or($date, date('Y-m-d')))?}",
             format: 'YYYY-MM-DD',
             locale: 'id'
         });

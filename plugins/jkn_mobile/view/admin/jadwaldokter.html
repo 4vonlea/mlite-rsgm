@@ -1,72 +1,530 @@
-<div class="row">
-    <div class="col-md-6">
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <h3 class="panel-title">
-                    Lihat Jadwal HFIS
-                </h3>
-            </div>
-            <div class="panel-body">
-                <div class="form-group">
-                    <label for="poli">Poli</label>
-                    <!-- <input type="text" name="poli" id="poli" class="form-control"> -->
-                    <select name="poli" id="poli" class="form-control">
-                        {loop: $poli}
-                        <option value="{?=isset_or($value.kd_poli_bpjs)?}">{?=isset_or($value.nm_poli_bpjs)?}</option>
-                        {/loop}
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="tanggal">tanggal</label>
-                    <input type="date" name="tanggal" id="tanggal" class="form-control">
-                </div>
-                <div class="form-group">
-                    <button type="button" class="btn btn-primary" onclick="cekHfis()" id="cek">Cek</button>
-                </div>
-            </div>
-        </div>
+<style>
+  .kpi-card {
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    background: #fff;
+    border-left: 4px solid #cbd5e1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .kpi-card.kpi-blue { border-left-color: #0284c7; }
+  .kpi-card.kpi-purple { border-left-color: #8b5cf6; }
+  .kpi-card.kpi-yellow { border-left-color: #eab308; }
+  .kpi-card.kpi-green { border-left-color: #22c55e; }
+  .kpi-title { font-size: 11px; font-weight: 600; text-transform: uppercase; color: #64748b; margin-bottom: 4px; }
+  .kpi-value { font-size: 24px; font-weight: 700; color: #1e293b; line-height: 1; }
+  .kpi-icon { font-size: 30px; opacity: 0.3; }
+
+  .table-jadwal th {
+    background: #f8fafc;
+    color: #334155;
+    font-size: 12px;
+    font-weight: 600;
+    vertical-align: middle !important;
+  }
+  .table-jadwal td {
+    vertical-align: middle !important;
+    font-size: 12px;
+  }
+
+  .btn-quick-tgl {
+    font-size: 11px;
+    padding: 3px 8px;
+  }
+</style>
+
+<!-- Header & Quick Navigation -->
+<div class="row" style="margin-bottom: 15px;">
+  <div class="col-xs-12">
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 10px;">
+      <div>
+        <h3 style="margin: 0 0 5px 0; font-weight: 700; color: #1e293b;">
+          <i class="fa fa-calendar-check-o text-primary"></i> Jadwal Dokter HFIS (BPJS Kesehatan & Mobile JKN)
+        </h3>
+        <p class="text-muted" style="margin: 0; font-size: 13px;">
+          Pemeriksaan jadwal praktek dokter resmi dari server BPJS Antrean Faskes (HFIS), kalkulasi kuota pendaftaran, dan integrasi data pasien terdaftar di SIMRS.
+        </p>
+      </div>
+      <div class="btn-group btn-group-sm">
+        <a href="{?=url([ADMIN, 'jkn_mobile', 'bookingantrol'])?}" class="btn btn-default">
+          <i class="fa fa-list text-primary"></i> Data Booking Antrol
+        </a>
+        <a href="{?=url([ADMIN, 'jkn_mobile', 'taskid'])?}" class="btn btn-default">
+          <i class="fa fa-tasks text-success"></i> Monitoring Task ID
+        </a>
+        <a href="{?=url([ADMIN, 'jkn_mobile', 'mappingdokter'])?}" class="btn btn-default">
+          <i class="fa fa-user-md text-info"></i> Mapping Dokter
+        </a>
+      </div>
     </div>
-    <div class="col-md-6">
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <h3 class="panel-title">
-                    Tampil Jadwal HFIS
-                </h3>
-            </div>
-            <div class="panel-body">
-                <div id="tampil"></div>
-            </div>
-        </div>
-    </div>
+  </div>
 </div>
+
+<!-- KPI Summary Cards (Muncul setelah data ditarik) -->
+<div class="row" id="kpiSummaryRow" style="display: none;">
+  <div class="col-xs-12 col-sm-6 col-md-3">
+    <div class="kpi-card kpi-blue">
+      <div>
+        <div class="kpi-title">Dokter Praktek BPJS</div>
+        <div class="kpi-value" id="kpiTotalDokter">0</div>
+      </div>
+      <div class="kpi-icon text-primary"><i class="fa fa-user-md"></i></div>
+    </div>
+  </div>
+  <div class="col-xs-12 col-sm-6 col-md-3">
+    <div class="kpi-card kpi-purple">
+      <div>
+        <div class="kpi-title">Total Kapasitas Kuota</div>
+        <div class="kpi-value" id="kpiTotalKapasitas">0</div>
+      </div>
+      <div class="kpi-icon text-info" style="color:#8b5cf6;"><i class="fa fa-ticket"></i></div>
+    </div>
+  </div>
+  <div class="col-xs-12 col-sm-6 col-md-3">
+    <div class="kpi-card kpi-yellow">
+      <div>
+        <div class="kpi-title">Pasien Terdaftar (SIMRS)</div>
+        <div class="kpi-value text-warning" id="kpiTotalTerdaftar">0</div>
+      </div>
+      <div class="kpi-icon text-warning"><i class="fa fa-users"></i></div>
+    </div>
+  </div>
+  <div class="col-xs-12 col-sm-6 col-md-3">
+    <div class="kpi-card kpi-green">
+      <div>
+        <div class="kpi-title">Sisa Kuota Tersedia</div>
+        <div class="kpi-value text-success" id="kpiTotalSisa">0</div>
+      </div>
+      <div class="kpi-icon text-success"><i class="fa fa-check-circle"></i></div>
+    </div>
+  </div>
+</div>
+
+<!-- Form & Main Table Content -->
+<div class="row">
+  <!-- Panel Kiri: Form Cari -->
+  <div class="col-md-4">
+    <div class="panel panel-default" style="border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">
+      <div class="panel-heading" style="background:#f8fafc; font-weight:600;">
+        <i class="fa fa-search text-primary"></i> Cari & Tarik Jadwal BPJS HFIS
+      </div>
+      <div class="panel-body">
+        <form id="formCekHfis" onsubmit="event.preventDefault(); cekHfis();">
+          <div class="form-group">
+            <label for="poli"><strong>Pilih Poliklinik BPJS:</strong> <span class="text-danger">*</span></label>
+            <select name="poli" id="poli" class="form-control" style="width:100%;" required>
+              <option value="">-- Pilih Poliklinik BPJS --</option>
+              {loop: $poli}
+              <option value="{?=isset_or($value.kd_poli_bpjs)?}">
+                {?=isset_or($value.kd_poli_bpjs)?} - {?=isset_or($value.nm_poli_bpjs)?}
+              </option>
+              {/loop}
+            </select>
+            <span class="help-block" style="font-size:11px; margin-bottom:0; color:#888;">
+              Daftar poliklinik terdaftar di <code>maping_poli_bpjs</code>.
+            </span>
+          </div>
+
+          <div class="form-group">
+            <label for="tanggal"><strong>Tanggal Praktek:</strong> <span class="text-danger">*</span></label>
+            <input type="date" name="tanggal" id="tanggal" class="form-control" value="{?=$tgl_default?}" required>
+            <div style="margin-top: 6px; display: flex; gap: 5px;">
+              <button type="button" class="btn btn-default btn-xs btn-quick-tgl" onclick="setTanggalQuick(0)">Hari Ini</button>
+              <button type="button" class="btn btn-default btn-xs btn-quick-tgl" onclick="setTanggalQuick(1)">Besok</button>
+              <button type="button" class="btn btn-default btn-xs btn-quick-tgl" onclick="setTanggalQuick(2)">Lusa</button>
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-top: 20px; margin-bottom: 0;">
+            <button type="submit" class="btn btn-primary btn-block" id="btnCek" style="font-weight: 600;">
+              <i class="fa fa-cloud-download"></i> Tarik & Periksa Jadwal dari BPJS
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Info Box -->
+    <div class="alert alert-info" style="font-size: 12px; line-height: 1.6; border-radius: 6px;">
+      <strong><i class="fa fa-info-circle"></i> Integrasi HFIS & SIMRS:</strong>
+      <p style="margin: 4px 0 0 0;">
+        Halaman ini menembak API BPJS Antrean Faskes pada endpoint <code>jadwaldokter/kodepoli/.../tanggal/...</code>. Sistem secara otomatis menghitung pasien yang mendaftar di SIMRS dan menyajikan sisa kuota yang akurat.
+      </p>
+    </div>
+  </div>
+
+  <!-- Panel Kanan: Tabel Hasil Jadwal -->
+  <div class="col-md-8">
+    <div class="panel panel-default" style="border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">
+      <div class="panel-heading" style="background:#f8fafc; font-weight:600; display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <i class="fa fa-calendar-check-o text-success"></i> Hasil Jadwal, Sisa Kuota & Pasien Terdaftar
+        </div>
+        <div id="statusPoliBadge"></div>
+      </div>
+      <div class="panel-body" style="padding: 15px;">
+        <div id="notifArea"></div>
+        <div id="tampil">
+          <div class="text-center text-muted" style="padding: 50px 20px;">
+            <i class="fa fa-calendar-o" style="font-size:50px; color:#cbd5e1; margin-bottom:15px;"></i>
+            <h4 style="color:#64748b; font-weight:600; margin-bottom:5px;">Belum Ada Jadwal Ditampilkan</h4>
+            <p style="font-size:13px; max-width:400px; margin:0 auto; color:#94a3b8;">
+              Silakan pilih poliklinik dan tanggal di panel sebelah kiri, kemudian klik <b>"Tarik & Periksa Jadwal dari BPJS"</b>.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Daftar Pasien Terdaftar -->
+<div class="modal fade" id="modalPasienHfis" tabindex="-1" role="dialog" aria-labelledby="modalPasienTitle" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content" style="border-radius:6px;">
+      <div class="modal-header" style="background:#f8fafc; border-bottom:1px solid #e2e8f0;">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="font-size:24px;">&times;</button>
+        <h4 class="modal-title" id="modalPasienTitle" style="font-weight:700; color:#1e293b;">
+          <i class="fa fa-users text-primary"></i> Daftar Pasien Terdaftar di SIMRS
+        </h4>
+      </div>
+      <div class="modal-body" style="padding:20px;">
+        <div id="modalSummaryStrip" style="margin-bottom:15px;"></div>
+        <div id="modalPasienContent"></div>
+      </div>
+      <div class="modal-footer" style="background:#f8fafc;">
+        <button type="button" class="btn btn-default" data-dismiss="modal"><i class="fa fa-times"></i> Tutup</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
-    function cekHfis() {
-        var cek = document.getElementById('cek')
-        cek.classList.remove('btn-primary')
-        var poli = document.getElementById('poli').value
-        var tgl = document.getElementById('tanggal').value
+var currentHfisData = [];
+var currentPoliCode = '';
+var currentTanggal = '';
 
-        console.log(tgl);
-        const xhttp = new XMLHttpRequest();
+function setTanggalQuick(offsetDays) {
+  var d = new Date();
+  d.setDate(d.getDate() + offsetDays);
+  var yyyy = d.getFullYear();
+  var mm = String(d.getMonth() + 1).padStart(2, '0');
+  var dd = String(d.getDate()).padStart(2, '0');
+  var formatted = yyyy + '-' + mm + '-' + dd;
+  $('#tanggal').val(formatted);
 
-        xhttp.onload = function() {
-            respawn = JSON.parse(this.responseText)
-            var output = ''
-            respawn.forEach(element => {
-                output += '<div class="card">Nama Dokter : '+element.namadokter+'</div>'
-                output += '<div class="card">Hari : '+element.namahari+'</div>'
-                output += '<div class="card">Jam : '+element.jadwal+'</div>'
-                output += '<div class="card">Max Pasien : '+element.kapasitaspasien+'</div>'
-                output += '<br>'
-                
-            });
-            document.getElementById('tampil').innerHTML = output
-            cek.classList.add('btn-primary')
+  if ($('#poli').val()) {
+    cekHfis();
+  }
+}
+
+function cekHfis() {
+  var btn = $('#btnCek');
+  var poli = $('#poli').val();
+  var tgl = $('#tanggal').val();
+  var tampil = $('#tampil');
+  var notifArea = $('#notifArea');
+  notifArea.html('');
+
+  if (!poli) {
+    alert('Silakan pilih Poliklinik BPJS terlebih dahulu!');
+    $('#poli').focus();
+    return;
+  }
+  if (!tgl) {
+    alert('Silakan tentukan Tanggal terlebih dahulu!');
+    $('#tanggal').focus();
+    return;
+  }
+
+  currentPoliCode = poli;
+  currentTanggal = tgl;
+
+  btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Menghubungi BPJS...');
+  tampil.html(
+    '<div class="text-center" style="padding: 50px 20px;">' +
+      '<i class="fa fa-spinner fa-spin fa-3x text-primary"></i>' +
+      '<h4 style="margin-top:15px; color:#1e293b; font-weight:600;">Menarik Jadwal Dokter dari BPJS HFIS...</h4>' +
+      '<p class="text-muted" style="font-size:13px;">Sedang mengunduh jadwal resmi, mendekripsi data, dan menghitung kuota terdaftar di SIMRS.</p>' +
+    '</div>'
+  );
+
+  var url = "{?=url([ADMIN, 'jkn_mobile', 'hfis'])?}";
+  $.ajax({
+    url: url,
+    method: 'POST',
+    data: {
+      poli: poli,
+      tgl: tgl
+    },
+    dataType: 'json',
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest'
+    },
+    success: function(res) {
+      btn.prop('disabled', false).html('<i class="fa fa-cloud-download"></i> Tarik & Periksa Jadwal dari BPJS');
+
+      if (res.status === 'success' && res.code == 200) {
+        currentHfisData = res.data || [];
+
+        // Update KPI Summary
+        if (res.summary) {
+          $('#kpiTotalDokter').text(res.summary.total_dokter || 0);
+          $('#kpiTotalKapasitas').text(res.summary.total_kapasitas || 0);
+          $('#kpiTotalTerdaftar').text(res.summary.total_terdaftar || 0);
+          $('#kpiTotalSisa').text(res.summary.total_sisa || 0);
+          $('#kpiSummaryRow').slideDown();
         }
 
-        // Send a request
-        xhttp.open("POST", "{?=url(ADMIN.'/jkn_mobile/hfis/')?}");
-        xhttp.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-        xhttp.send("poli="+poli+"&tgl="+tgl);
+        var html = '<div class="alert alert-success" style="margin-bottom:15px; border-radius:4px; font-size:12px;">' +
+          '<i class="fa fa-check-circle"></i> <b>Koneksi Sukses (Code 200 - OK):</b> Berhasil memuat data jadwal dokter dari server BPJS Kesehatan untuk tanggal <b>' + tgl + '</b>.' +
+        '</div>';
+
+        if (Array.isArray(res.data) && res.data.length > 0) {
+          html += '<div class="table-responsive">' +
+            '<table class="table table-bordered table-striped table-hover table-jadwal" style="margin-bottom:0;">' +
+              '<thead>' +
+                '<tr>' +
+                  '<th style="width:4%; text-align:center;">No</th>' +
+                  '<th style="width:28%;">Dokter DPJP</th>' +
+                  '<th style="text-align:center; width:10%;">Hari</th>' +
+                  '<th style="text-align:center; width:15%;">Jam Praktek</th>' +
+                  '<th style="text-align:center; width:11%;">Kuota BPJS</th>' +
+                  '<th style="text-align:center; width:14%;">Terdaftar</th>' +
+                  '<th style="text-align:center; width:10%;">Sisa Kuota</th>' +
+                  '<th style="text-align:center; width:8%;">Aksi</th>' +
+                '</tr>' +
+              '</thead>' +
+              '<tbody>';
+
+          res.data.forEach(function(item, idx) {
+            var sisa = item.sisa_kuota !== undefined ? item.sisa_kuota : (parseInt(item.kapasitaspasien || 0) - parseInt(item.terdaftar || 0));
+            var sisaBadge = '';
+
+            if (item.libur == 1) {
+              sisaBadge = '<span class="label label-warning" style="font-size:11px; padding:3px 6px;">Libur</span>';
+            } else if (sisa <= 0) {
+              sisaBadge = '<span class="label label-danger" style="font-size:11px; padding:3px 6px;"><i class="fa fa-ban"></i> Penuh</span>';
+            } else {
+              sisaBadge = '<span class="label label-success" style="font-size:11px; padding:3px 6px;"><i class="fa fa-check"></i> Sisa ' + sisa + '</span>';
+            }
+
+            var pasienCount = item.terdaftar || 0;
+            var pasienBtn = '';
+            if (pasienCount > 0) {
+              pasienBtn = '<button type="button" class="btn btn-xs btn-info" onclick="bukaModalPasien(' + idx + ')" title="Klik untuk melihat daftar pasien">' +
+                '<i class="fa fa-users"></i> ' + pasienCount + ' Pasien' +
+              '</button>';
+            } else {
+              pasienBtn = '<span class="text-muted" style="font-size:11px;">0 Pasien</span>';
+            }
+
+            // Info Mapping & Sync SIMRS
+            var dokterInfo = '<b>' + (item.namadokter || '-') + '</b>' +
+              '<div style="font-size:11px; color:#64748b; margin-top:2px;">Kode BPJS: <code>' + (item.kodedokter || '-') + '</code></div>';
+            
+            if (item.is_mapped) {
+              dokterInfo += '<div style="font-size:11px; color:#0284c7; margin-top:2px;"><i class="fa fa-check text-success"></i> SIMRS: ' + item.nm_dokter_rs + '</div>';
+            } else {
+              dokterInfo += '<div style="font-size:10px; color:#dc2626; margin-top:2px;"><i class="fa fa-exclamation-triangle"></i> Belum dimapping di SIMRS</div>';
+            }
+
+            // Action / Sync Button
+            var aksiBtn = '';
+            if (item.is_mapped && !item.is_sync_simrs) {
+              aksiBtn = '<button type="button" class="btn btn-xs btn-default" style="color:#0284c7; border-color:#bae6fd;" ' +
+                'onclick="syncJadwalSimrs(\'' + item.kd_dokter_rs + '\', \'' + item.kd_poli_rs + '\', \'' + item.namahari + '\', \'' + item.jadwal + '\', ' + (item.kapasitaspasien || 0) + ', this)" ' +
+                'title="Salin jadwal BPJS ini ke tabel jadwal SIMRS">' +
+                '<i class="fa fa-download"></i> Salin' +
+              '</button>';
+            } else if (item.is_sync_simrs) {
+              aksiBtn = '<span class="text-success" title="Jadwal sudah tersinkron di SIMRS" style="font-size:11px;"><i class="fa fa-check-circle"></i> Sinkron</span>';
+            } else {
+              aksiBtn = '-';
+            }
+
+            html += '<tr>' +
+              '<td style="text-align:center;">' + (idx + 1) + '</td>' +
+              '<td>' + dokterInfo + '</td>' +
+              '<td style="text-align:center;"><span class="label label-default" style="font-size:10px;">' + (item.namahari || '-') + '</span></td>' +
+              '<td style="text-align:center;"><code>' + (item.jadwal || '-') + '</code></td>' +
+              '<td style="text-align:center; font-weight:600;">' + (item.kapasitaspasien || 0) + '</td>' +
+              '<td style="text-align:center;">' + pasienBtn + '</td>' +
+              '<td style="text-align:center;">' + sisaBadge + '</td>' +
+              '<td style="text-align:center;">' + aksiBtn + '</td>' +
+            '</tr>';
+          });
+
+          html += '</tbody></table></div>';
+        } else {
+          html += '<div class="alert alert-warning" style="margin-bottom:0;">' +
+            '<i class="fa fa-info-circle"></i> Tidak ada dokter yang terjadwal pada poliklinik dan tanggal ini.' +
+          '</div>';
+        }
+
+        tampil.html(html);
+      } else {
+        $('#kpiSummaryRow').slideUp();
+        var alertClass = (res.code == 201) ? 'alert-warning' : 'alert-danger';
+        var iconClass = (res.code == 201) ? 'fa-info-circle' : 'fa-exclamation-triangle';
+        var msgText = res.message || 'Data jadwal dokter tidak ditemukan.';
+
+        if (res.code == 201) {
+          msgText += '<br><small>Catatan: Kemungkinan hari tersebut adalah hari libur, atau dokter terkait belum didaftarkan jadwalnya di portal HFIS BPJS.</small>';
+        }
+
+        tampil.html(
+          '<div class="alert ' + alertClass + '" style="margin-bottom:0; border-radius:4px;">' +
+            '<h4 style="margin-top:0; font-size:14px; font-weight:700;"><i class="fa ' + iconClass + '"></i> Respon Server BPJS (Kode ' + (res.code || 'Error') + ')</h4>' +
+            '<p style="margin-bottom:0;">' + msgText + '</p>' +
+          '</div>'
+        );
+      }
+    },
+    error: function(xhr) {
+      btn.prop('disabled', false).html('<i class="fa fa-cloud-download"></i> Tarik & Periksa Jadwal dari BPJS');
+      $('#kpiSummaryRow').slideUp();
+      tampil.html(
+        '<div class="alert alert-danger" style="margin-bottom:0; border-radius:4px;">' +
+          '<h4 style="margin-top:0; font-size:14px; font-weight:700;"><i class="fa fa-plug"></i> Gagal Menghubungi Server BPJS</h4>' +
+          '<p style="margin-bottom:0;">Terjadi kesalahan koneksi atau server SIMRS tidak dapat terhubung ke BPJS Antrean. Pastikan koneksi internet aktif dan kredensial BPJS di menu Pengaturan sudah benar.</p>' +
+        '</div>'
+      );
     }
+  });
+}
+
+function bukaModalPasien(index) {
+  var item = currentHfisData[index];
+  if (!item) return;
+
+  var namaDokter = item.namadokter || '-';
+  var list = item.pasien_list || [];
+
+  var countJkn = 0;
+  var countOnline = 0;
+  var countLoket = 0;
+  list.forEach(function(p) {
+    if (p.tipe === 'Mobile JKN (BPJS)' || (p.sumber && p.sumber.indexOf('Mobile JKN') !== -1)) {
+      countJkn++;
+    } else if (p.tipe === 'Booking Online') {
+      countOnline++;
+    } else {
+      countLoket++;
+    }
+  });
+
+  $('#modalSummaryStrip').html(
+    '<div style="background:#f8fafc; padding:12px 14px; border-radius:6px; border:1px solid #e2e8f0; border-left:4px solid #0284c7; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">' +
+      '<div>' +
+        '<div style="font-weight:700; color:#0f172a; font-size:14px;">' + namaDokter + '</div>' +
+        '<div style="font-size:12px; color:#64748b; margin-top:2px;">Poli: <b>' + (item.namapoli || item.kodepoli) + '</b> | Tanggal: <b>' + currentTanggal + '</b></div>' +
+      '</div>' +
+      '<div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">' +
+        '<span class="label label-success" style="font-size:11px; padding:4px 8px;"><i class="fa fa-mobile"></i> Mobile JKN: ' + countJkn + '</span> ' +
+        '<span class="label label-info" style="font-size:11px; padding:4px 8px;"><i class="fa fa-calendar-check-o"></i> SIMRS Online: ' + countOnline + '</span> ' +
+        '<span class="label label-primary" style="font-size:11px; padding:4px 8px;"><i class="fa fa-hospital-o"></i> Loket: ' + countLoket + '</span> ' +
+        '<span class="label label-default" style="font-size:11px; padding:4px 8px;">Kapasitas: ' + (item.kapasitaspasien || 0) + '</span>' +
+      '</div>' +
+    '</div>'
+  );
+
+  var html = '';
+  if (list.length > 0) {
+    html = '<div class="table-responsive">' +
+      '<table class="table table-bordered table-striped table-hover" style="font-size:12px; margin-bottom:0;">' +
+        '<thead>' +
+          '<tr style="background:#f8fafc;">' +
+            '<th style="width:12%; text-align:center;">No. Antre / Booking</th>' +
+            '<th style="width:12%;">No. RM</th>' +
+            '<th style="width:26%;">Nama Pasien</th>' +
+            '<th style="width:15%;">Penjamin / Bayar</th>' +
+            '<th style="width:11%; text-align:center;">Jam / Estimasi</th>' +
+            '<th style="width:13%; text-align:center;">Jalur Daftar</th>' +
+            '<th style="width:11%; text-align:center;">Status</th>' +
+          '</tr>' +
+        '</thead>' +
+        '<tbody>';
+
+    list.forEach(function(p) {
+      var badgeStatus = '<span class="label label-warning">' + (p.status || 'Belum') + '</span>';
+      if (p.status === 'Sudah' || p.status === 'Terdaftar' || p.status === 'Terdaftar BPJS') {
+        badgeStatus = '<span class="label label-success">' + p.status + '</span>';
+      }
+
+      var badgeTipe = '<span class="label label-default" style="font-size:10px;"><i class="fa fa-hospital-o"></i> Loket Hari H</span>';
+      if (p.tipe === 'Mobile JKN (BPJS)' || (p.sumber && p.sumber.indexOf('Mobile JKN') !== -1)) {
+        badgeTipe = '<span class="label label-success" style="font-size:10px;"><i class="fa fa-mobile"></i> Mobile JKN</span>';
+      } else if (p.tipe === 'Booking Online') {
+        badgeTipe = '<span class="label label-info" style="font-size:10px;"><i class="fa fa-calendar-check-o"></i> Online SIMRS</span>';
+      } else if (p.tipe === 'Registrasi Hari H (Hadir)') {
+        badgeTipe = '<span class="label label-primary" style="font-size:10px;"><i class="fa fa-check-circle"></i> Hadir di Loket</span>';
+      }
+
+      var bookingInfo = '';
+      if (p.kodebooking) {
+        bookingInfo = '<div style="font-size:10px; color:#0284c7; font-family:monospace; margin-top:2px;" title="Kode Booking"><i class="fa fa-ticket"></i> ' + p.kodebooking + '</div>';
+      }
+
+      html += '<tr>' +
+        '<td style="text-align:center;"><b>' + (p.no_reg || '-') + '</b>' + bookingInfo + '</td>' +
+        '<td><code>' + (p.no_rkm_medis || '-') + '</code></td>' +
+        '<td><b>' + (p.nm_pasien || '-') + '</b></td>' +
+        '<td>' + (p.png_jawab || '-') + '</td>' +
+        '<td style="text-align:center;">' + (p.jam || '-') + '</td>' +
+        '<td style="text-align:center;">' + badgeTipe + '</td>' +
+        '<td style="text-align:center;">' + badgeStatus + '</td>' +
+      '</tr>';
+    });
+
+    html += '</tbody></table></div>';
+  } else {
+    html = '<div class="alert alert-info text-center" style="margin-bottom:0;"><i class="fa fa-info-circle"></i> Belum ada pasien yang mendaftar atau booking untuk dokter ini pada tanggal ' + currentTanggal + '.</div>';
+  }
+
+  $('#modalPasienContent').html(html);
+  $('#modalPasienHfis').modal('show');
+}
+
+function syncJadwalSimrs(kdDokter, kdPoli, hari, jam, kuota, btnEl) {
+  var $btn = $(btnEl);
+  if (!confirm('Salin jadwal ini ke tabel jadwal dokter SIMRS?\nHari: ' + hari + '\nJam: ' + jam + '\nKuota: ' + kuota)) {
+    return;
+  }
+
+  $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Menyalin...');
+
+  var url = "{?=url([ADMIN, 'jkn_mobile', 'syncjadwalhfis'])?}";
+  $.ajax({
+    url: url,
+    method: 'POST',
+    data: {
+      kd_dokter: kdDokter,
+      kd_poli: kdPoli,
+      hari: hari,
+      jam: jam,
+      kuota: kuota
+    },
+    dataType: 'json',
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest'
+    },
+    success: function(res) {
+      if (res.status === 'success') {
+        $btn.parent().html('<span class="text-success" style="font-size:11px;"><i class="fa fa-check-circle"></i> Tersinkron</span>');
+        alert(res.message);
+      } else {
+        $btn.prop('disabled', false).html('<i class="fa fa-download"></i> Salin');
+        alert(res.message || 'Gagal menyalin jadwal ke SIMRS.');
+      }
+    },
+    error: function() {
+      $btn.prop('disabled', false).html('<i class="fa fa-download"></i> Salin');
+      alert('Terjadi kesalahan koneksi ke server SIMRS.');
+    }
+  });
+}
 </script>

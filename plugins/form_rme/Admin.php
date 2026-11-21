@@ -8,13 +8,16 @@ class Admin extends AdminModule
 
     public function init()
     {
-        $this->core->addCSS(url([ADMIN, 'form_rme', 'css']));
+        $uri = $_SERVER['REQUEST_URI'] ?? '';
+        $urlSeg = function_exists('parseURL') ? parseURL(2) : null;
+        $isRmeRoute = ($urlSeg === 'form_rme' || $urlSeg === 'update_bmt' || strpos($uri, 'form_rme') !== false || strpos($uri, 'update_bmt') !== false);
+        if ($isRmeRoute) {
+            $this->core->addCSS(url([ADMIN, 'form_rme', 'css']));
+            $this->core->addJS(url([ADMIN, 'form_rme', 'js']), 'footer');
+        }
         $this->core->addJS(url('assets/jscripts/qrcode.js'), 'footer');
         $this->core->addJS(url('assets/jscripts/jquery.qrcode.js'), 'footer');
         $this->core->addJS(url('plugins/esignature/assets/signature_pad.min.js'), 'footer');
-        if (strpos($_SERVER['REQUEST_URI'] ?? '', 'form_rme') !== false) {
-            $this->core->addJS(url([ADMIN, 'form_rme', 'js']), 'footer');
-        }
         \Systems\Lib\Event::add("rsgmgha.dropdown_menu", function ($row) {
             $this->renderDropdownMenu($row);
         });

@@ -1,0 +1,709 @@
+<div class="row">
+  <div class="col-md-5">
+    <h3 style="margin-top:0;">
+      <i class="fa fa-exclamation-circle text-danger"></i> Daftar Pasien Belum Siap Klaim
+      <small style="display:block;margin-top:4px;color:#718096;">Identifikasi otomatis berkas klinis & administrasi yang belum memenuhi syarat klaim BPJS</small>
+    </h3>
+  </div>
+  <div class="col-md-7 text-right">
+    <button type="button" class="btn btn-info btn-sync-all-sep" title="Tarik nomor SEP untuk semua pasien yang belum terbit langsung dari BPJS Kesehatan"><i class="fa fa-cloud-download"></i> Tarik SEP Massal dari BPJS</button>
+    <a href="{?=url([ADMIN, 'vedika', 'auditperiode', '?tgl_awal=' . $tgl_awal . '&tgl_akhir=' . $tgl_akhir . '&from=belumsiap'])?}" class="btn btn-warning" style="margin-left:5px;" onclick="return confirm('Jalankan audit kesiapan berkas & data klinis pasien BPJS untuk periode/rentang tanggal ini?');"><i class="fa fa-refresh"></i> Audit Massal Tanggal Ini</a>
+    <a href="{?=url([ADMIN, 'vedika', 'siapklaim', '?tgl_awal=' . $tgl_awal . '&tgl_akhir=' . $tgl_akhir])?}" class="btn btn-success" style="margin-left:5px;"><i class="fa fa-check-circle"></i> Pasien Siap Klaim &raquo;</a>
+  </div>
+</div>
+<hr style="margin-top:10px;margin-bottom:20px;">
+
+<!-- FILTER BAR -->
+<div class="panel panel-default">
+  <div class="panel-body">
+    <form class="form-inline" action="" method="GET">
+      <div class="form-group">
+        <label><i class="fa fa-calendar"></i> Tanggal:</label>
+        <input type="text" name="tgl_awal" class="form-control tanggal input-sm" style="width:110px;" value="{?=$tgl_awal?}" placeholder="YYYY-MM-DD">
+        <span> s/d </span>
+        <input type="text" name="tgl_akhir" class="form-control tanggal input-sm" style="width:110px;" value="{?=$tgl_akhir?}" placeholder="YYYY-MM-DD">
+      </div>
+      <div class="btn-group btn-group-sm" style="margin-left:6px;margin-right:6px;">
+        <button type="button" class="btn btn-default btn-quick-date" data-range="today" title="Set tanggal hari ini"><i class="fa fa-clock-o"></i> Hari Ini</button>
+        <button type="button" class="btn btn-default btn-quick-date" data-range="yesterday" title="Set tanggal kemarin">Kemarin</button>
+        <button type="button" class="btn btn-default btn-quick-date" data-range="this_month" title="Set awal sampai akhir bulan ini">Bulan Ini</button>
+      </div>
+      <div class="form-group" style="margin-left:5px;">
+        <label>Pelayanan:</label>
+        <select name="status_lanjut" class="form-control input-sm">
+          <option value="">Semua (Ralan & Ranap)</option>
+          <option value="Ralan" {if: $status_lanjut == 'Ralan'}selected{/if}>Rawat Jalan</option>
+          <option value="Ranap" {if: $status_lanjut == 'Ranap'}selected{/if}>Rawat Inap</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin-left:5px;">
+        <label>Poli:</label>
+        <select name="kd_poli" class="form-control input-sm" style="max-width:180px;">
+          <option value="">Semua Poliklinik</option>
+          {loop: $polis}
+          <option value="{?=$value.kd_poli?}" {if: $kd_poli == $value.kd_poli}selected{/if}>{?=$value.nm_poli?}</option>
+          {/loop}
+        </select>
+      </div>
+      <div class="form-group" style="margin-left:5px;">
+        <input type="text" name="search" class="form-control input-sm" style="width:130px;" value="{?=$search?}" placeholder="Cari Pasien">
+      </div>
+      <div class="form-group" style="margin-left:5px;">
+        <select name="order" class="form-control input-sm" title="Urutan Tanggal">
+          <option value="DESC" {if: $order == 'DESC'}selected{/if}>Terkini (DESC)</option>
+          <option value="ASC" {if: $order == 'ASC'}selected{/if}>Terlama (ASC)</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin-left:5px;">
+        <select name="limit" class="form-control input-sm" title="Jumlah Data Ditampilkan">
+          <option value="100" {if: $limit == 100}selected{/if}>100 Data</option>
+          <option value="250" {if: $limit == 250}selected{/if}>250 Data</option>
+          <option value="500" {if: $limit == 500}selected{/if}>500 Data</option>
+          <option value="1000" {if: $limit == 1000}selected{/if}>1000 Data</option>
+          <option value="all" {if: $limit == 0}selected{/if}>Semua Data</option>
+        </select>
+      </div>
+      <input type="hidden" name="t" value="{?=$_SESSION['token']?}">
+      <button type="submit" class="btn btn-primary btn-sm" style="margin-left:5px;"><i class="fa fa-filter"></i> Saring</button>
+    </form>
+  </div>
+</div>
+
+<!-- TABEL PASIEN BELUM SIAP KLAIM -->
+<div class="panel panel-default">
+  <div class="panel-heading" style="padding:10px 15px;">
+    <div class="row">
+      <div class="col-md-7">
+        <h3 class="panel-title" style="line-height:28px;">
+          <b>Ditemukan {?=number_format($total_all)?} Pasien Belum Memenuhi Persyaratan Klaim</b>
+          {if: $total_all > $total}
+          <span class="badge" style="background:#e53e3e;margin-left:5px;">Menampilkan {?=$total?} data ({if: $order == 'DESC'}terkini{else}terlama{/if})</span>
+          {/if}
+        </h3>
+      </div>
+      <div class="col-md-5 text-right">
+        {if: $total_pages > 1}
+        <small style="color:#718096;margin-right:10px;">Halaman <b>{?=$page?}</b> dari <b>{?=$total_pages?}</b></small>
+        <div class="btn-group btn-group-xs">
+          <a href="?page={?=$page - 1?}&{?=$query_string?}" class="btn btn-default {if: $page <= 1}disabled{/if}"><i class="fa fa-chevron-left"></i></a>
+          <a href="?page={?=$page + 1?}&{?=$query_string?}" class="btn btn-default {if: $page >= $total_pages}disabled{/if}"><i class="fa fa-chevron-right"></i></a>
+        </div>
+        {/if}
+      </div>
+    </div>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover table-striped" style="margin-bottom:0;font-size:13px;">
+      <thead>
+        <tr class="active">
+          <th>No. Rawat / RM</th>
+          <th>Nama Pasien</th>
+          <th>Tgl Reg / Poli</th>
+          <th>Dokter DPJP</th>
+          <th>No. SEP</th>
+          <th>Kesiapan</th>
+          <th>Item Belum Lengkap</th>
+          <th class="text-center">Tindakan Cepat</th>
+        </tr>
+      </thead>
+      <tbody>
+        {if: count($rows) > 0}
+        {loop: $rows}
+        <tr class="row-patient" data-norawat="{?=$value.no_rawat?}" data-needs-audit="{?=$value.needs_client_audit ? '1' : '0'?}">
+          <td>
+            <b>{?=$value.no_rawat?}</b><br>
+            <span class="label label-default">RM: {?=$value.no_rkm_medis?}</span>
+          </td>
+          <td>
+            <b>{?=$value.nm_pasien?}</b><br>
+            <small class="text-muted">Kartu: {?=$value.no_peserta ?: '-'?}</small>
+          </td>
+          <td>
+            {?=$value.tgl_registrasi?}<br>
+            <span class="text-primary">{?=$value.nm_poli?}</span> ({?=$value.status_lanjut?})
+          </td>
+          <td>{?=$value.nm_dokter?}</td>
+          <td class="col-sep">
+            {if: !empty($value.no_sep) && $value.no_sep != '-'}
+            <span class="label label-success">{?=$value.no_sep?}</span>
+            {else}
+            <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;">
+              <span class="label label-danger label-sep-status"><i class="fa fa-times"></i> Belum Terbit</span>
+              <button type="button" class="btn btn-xs btn-primary btn-tarik-sep" data-norawat="{?=$value.no_rawat?}" data-nopeserta="{?=$value.no_peserta?}" title="Tarik nomor SEP otomatis dari server BPJS Kesehatan">
+                <i class="fa fa-cloud-download"></i> Tarik SEP
+              </button>
+            </div>
+            {/if}
+          </td>
+          <td class="col-readiness">
+            <div class="progress" style="margin-bottom:2px;height:14px;width:70px;background-color:#e2e8f0;">
+              <div class="progress-bar {if: $value.score_percent >= 80}progress-bar-success{elseif: $value.score_percent >= 50}progress-bar-warning{else}progress-bar-danger{/if}" style="width:{?=$value.score_percent?}%;"></div>
+            </div>
+            <small><b class="readiness-score-text">{?=$value.score_percent?}%</b></small>
+          </td>
+          <td class="col-missing" style="max-width:250px;">
+            {if: $value.score_percent >= 100}
+            <span class="label label-success"><i class="fa fa-check"></i> Siap Verifikasi (Lengkap)</span>
+            {elseif: !empty($value.missing_items)}
+            <small class="text-danger">
+              <i class="fa fa-warning"></i> <span class="missing-items-text">{?=$value.missing_items?}</span>
+            </small>
+            {else}
+            <small class="text-muted">
+              <i class="fa fa-spinner fa-spin"></i> <span class="missing-items-text">Sedang dianalisis mesin kesiapan...</span>
+            </small>
+            {/if}
+          </td>
+          <td class="text-center col-action" style="white-space:nowrap;">
+            <button type="button" class="btn btn-info btn-xs btn-audit" data-norawat="{?=$value.no_rawat?}" title="Buka Detail Checklist Kesiapan">
+              <i class="fa fa-stethoscope"></i> Checklist
+            </button>
+            {if: $value.score_percent >= 100}
+            <a href="{?=url([ADMIN, 'vedika', 'siapklaim', '?periode=' . $periode])?}" class="btn btn-success btn-xs" title="Buka di Antrian Siap Klaim">
+              <i class="fa fa-arrow-right"></i> Siap Klaim
+            </a>
+            {else}
+            <a href="{?=url([ADMIN, 'vedika', 'resume', convertNorawat($value.no_rawat)])?}" class="btn btn-warning btn-xs btn-open-modal-action" title="Lengkapi Resume Medis">
+              <i class="fa fa-pencil"></i> Resume
+            </a>
+            <a href="{?=url([ADMIN, 'vedika', 'ubahdiagnosa', convertNorawat($value.no_rawat)])?}" class="btn btn-primary btn-xs btn-open-modal-action" title="Kelola ICD-10">
+              <i class="fa fa-code"></i> Coding
+            </a>
+            {/if}
+          </td>
+        </tr>
+        {/loop}
+        {else}
+        <tr>
+          <td colspan="8" class="text-center" style="padding:30px;">
+            <i class="fa fa-check-circle-o fa-3x text-success"></i><br>
+            <b style="font-size:16px;color:#2f855a;">Tidak ada pasien BPJS yang belum lengkap pada filter ini!</b><br>
+            <span class="text-muted">Semua berkas pasien pada periode ini sudah memenuhi persyaratan atau belum terdata.</span>
+          </td>
+        </tr>
+        {/if}
+      </tbody>
+    </table>
+  </div>
+  {if: $total_pages > 1}
+  <div class="panel-footer" style="padding:8px 15px;">
+    <div class="row">
+      <div class="col-md-6" style="line-height:30px;">
+        Menampilkan <b>{?=$total?}</b> data dari total <b>{?=number_format($total_all)?}</b> pasien ({if: $order == 'DESC'}terkini{else}terlama{/if}).
+      </div>
+      <div class="col-md-6 text-right">
+        <ul class="pagination pagination-sm" style="margin:0;">
+          <li class="{if: $page <= 1}disabled{/if}">
+            <a href="{if: $page > 1}?page={?=$page - 1?}&{?=$query_string?}{else}javascript:void(0){/if}">&laquo;</a>
+          </li>
+          {loop: $page_numbers}
+          <li class="{if: $value == $page}active{/if}">
+            <a href="?page={?=$value?}&{?=$query_string?}">{?=$value?}</a>
+          </li>
+          {/loop}
+          <li class="{if: $page >= $total_pages}disabled{/if}">
+            <a href="{if: $page < $total_pages}?page={?=$page + 1?}&{?=$query_string?}{else}javascript:void(0){/if}">&raquo;</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  {/if}
+</div>
+
+<!-- MODAL AUDIT KESIAPAN KLAIM -->
+<div class="modal fade" id="modalAuditKlaim" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header bg-primary" style="color:#fff;">
+        <button type="button" class="close" data-dismiss="modal" style="color:#fff;">&times;</button>
+        <h4 class="modal-title"><i class="fa fa-shield"></i> Hasil Pemeriksaan Otomatis Kesiapan Klaim (Claim Readiness Checker)</h4>
+      </div>
+      <div class="modal-body">
+        <div id="modalLoading" class="text-center" style="padding:40px;">
+          <i class="fa fa-spinner fa-spin fa-3x text-primary"></i><br>
+          <span style="margin-top:10px;display:block;">Memeriksa integrasi SEP, Resume Medis, DPJP, Koding, Odontogram & Billing...</span>
+        </div>
+        <div id="modalContent" style="display:none;">
+          <div class="well well-sm">
+            <div class="row">
+              <div class="col-md-6">
+                <div>No. Rawat: <b id="m_no_rawat"></b></div>
+                <div>Pasien: <b id="m_nm_pasien"></b> (<span id="m_no_rm"></span>)</div>
+                <div>Poliklinik: <b id="m_poli"></b></div>
+              </div>
+              <div class="col-md-6 text-right">
+                <div style="font-size:16px;">Skor Kesiapan: <b id="m_score" class="text-danger"></b></div>
+                <div>Status: <span id="m_status" class="label label-danger"></span></div>
+              </div>
+            </div>
+          </div>
+          <table class="table table-bordered table-striped" style="font-size:13px;">
+            <thead>
+              <tr class="active">
+                <th>Persyaratan Dokumen / Variabel</th>
+                <th>Sifat</th>
+                <th>Status Kesiapan</th>
+                <th>Alasan & Sumber Data</th>
+                <th>Aksi Perbaikan</th>
+              </tr>
+            </thead>
+            <tbody id="m_checklist_body">
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Tutup</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL AKSI CEPAT (RESUME & CODING) -->
+<div class="modal fade" id="modalAction" tabindex="-1" role="dialog" style="z-index:1060;">
+  <div class="modal-dialog modal-lg" role="document" style="width:85%;">
+    <div class="modal-content">
+      <div class="modal-body text-center" style="padding:40px;">
+        <i class="fa fa-spinner fa-spin fa-2x"></i>
+        <p style="margin-top:10px;">Memuat formulir...</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL SINKRONISASI SEP MASSAL BPJS -->
+<div class="modal fade" id="modalSyncMassal" tabindex="-1" role="dialog" data-backdrop="static">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header bg-info" style="color:#fff;">
+        <h4 class="modal-title"><i class="fa fa-cloud-download"></i> Sinkronisasi SEP Massal dari BPJS Kesehatan</h4>
+      </div>
+      <div class="modal-body">
+        <p id="syncMassalStatusText">Mempersiapkan antrian pasien...</p>
+        <div class="progress" style="height:22px;margin-bottom:15px;background-color:#e2e8f0;">
+          <div id="syncMassalProgressBar" class="progress-bar progress-bar-info progress-bar-striped active" role="progressbar" style="width:0%;line-height:22px;font-weight:bold;">0%</div>
+        </div>
+        <div id="syncMassalLog" style="max-height:200px;overflow-y:auto;background:#f8fafc;padding:10px;border:1px solid #e2e8f0;font-size:12px;border-radius:4px;font-family:monospace;">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="btnSyncMassalBatal" class="btn btn-warning">Batalkan</button>
+        <button type="button" id="btnSyncMassalTutup" class="btn btn-default" data-dismiss="modal" style="display:none;">Tutup</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  $(function() {
+    $('.tanggal').datetimepicker({
+      format: 'YYYY-MM-DD',
+      locale: 'id'
+    });
+
+    // Quick filter shortcut buttons (Hari Ini, Kemarin, Bulan Ini)
+    $('.btn-quick-date').on('click', function(e) {
+      e.preventDefault();
+      var range = $(this).data('range');
+      var now = new Date();
+      var pad = function(n) { return (n < 10 ? '0' : '') + n; };
+      var fmt = function(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
+
+      if (range === 'today') {
+        var str = fmt(now);
+        $('input[name="tgl_awal"]').val(str);
+        $('input[name="tgl_akhir"]').val(str);
+      } else if (range === 'yesterday') {
+        var yest = new Date(now);
+        yest.setDate(yest.getDate() - 1);
+        var str = fmt(yest);
+        $('input[name="tgl_awal"]').val(str);
+        $('input[name="tgl_akhir"]').val(str);
+      } else if (range === 'this_month') {
+        var firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+        var lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        $('input[name="tgl_awal"]').val(fmt(firstDay));
+        $('input[name="tgl_akhir"]').val(fmt(lastDay));
+      }
+      $(this).closest('form').submit();
+    });
+
+    // Helper update tampilan baris pasien di tabel secara real-time
+    function updateRowReadiness(tr, res) {
+      if (!tr || !tr.length) return;
+      var score = parseInt(res.score_percent) || 0;
+      var pBar = tr.find('.col-readiness .progress-bar');
+      pBar.css('width', score + '%');
+      pBar.removeClass('progress-bar-success progress-bar-warning progress-bar-danger');
+      if (score >= 80) {
+        pBar.addClass('progress-bar-success');
+      } else if (score >= 50) {
+        pBar.addClass('progress-bar-warning');
+      } else {
+        pBar.addClass('progress-bar-danger');
+      }
+      tr.find('.readiness-score-text').text(score + '%');
+
+      // Update kolom SEP jika nomor SEP terdeteksi
+      if (res.sep && res.sep.no_sep && res.sep.no_sep !== '-') {
+        tr.find('.col-sep').html('<span class="label label-success">' + res.sep.no_sep + '</span>');
+      }
+
+      // Update kolom status kelengkapan
+      var colMissing = tr.find('.col-missing');
+      var colAction = tr.find('.col-action');
+      if (score >= 100) {
+        colMissing.html('<span class="label label-success"><i class="fa fa-check"></i> Siap Verifikasi (Lengkap)</span>');
+        if (colAction.find('.btn-success').length === 0) {
+          colAction.find('.btn-warning, .btn-primary').remove();
+          colAction.append(' <a href="{?=url([ADMIN, "vedika", "siapklaim", "?tgl_awal=" . $tgl_awal . "&tgl_akhir=" . $tgl_akhir])?}" class="btn btn-success btn-xs" title="Buka di Antrian Siap Klaim"><i class="fa fa-arrow-right"></i> Siap Klaim</a>');
+        }
+      } else {
+        var missingText = (res.missing_items && res.missing_items.length) ? res.missing_items.join('; ') : 'Beberapa variabel belum lengkap';
+        colMissing.html('<small class="text-danger"><i class="fa fa-warning"></i> <span class="missing-items-text">' + missingText + '</span></small>');
+      }
+      tr.removeAttr('data-needs-audit');
+    }
+
+    // Handler Buka Modal Aksi (Resume / Coding)
+    $(document).on('click', '.btn-open-modal-action', function(e) {
+      e.preventDefault();
+      var url = $(this).attr('href');
+      var modal = $('#modalAction');
+      var modalContent = modal.find('.modal-content');
+      modalContent.html('<div class="modal-body text-center" style="padding:40px;"><i class="fa fa-spinner fa-spin fa-2x"></i><p style="margin-top:10px;">Memuat formulir...</p></div>');
+      modal.modal('show');
+      modalContent.load(url);
+    });
+
+    $('.btn-audit').on('click', function() {
+      var no_rawat = $(this).data('norawat');
+      var trRow = $(this).closest('tr');
+      $('#modalAuditKlaim').modal('show');
+      $('#modalLoading').show();
+      $('#modalContent').hide();
+
+      $.ajax({
+        url: '{?=url([ADMIN, "vedika", "checkreadiness"])?}',
+        type: 'GET',
+        data: { no_rawat: no_rawat },
+        dataType: 'json',
+        success: function(res) {
+          $('#modalLoading').hide();
+          $('#modalContent').show();
+
+          if (res.status === 'success') {
+            // Update modal popup
+            $('#m_no_rawat').text(res.no_rawat);
+            $('#m_nm_pasien').text(res.pasien.nm_pasien);
+            $('#m_no_rm').text(res.pasien.no_rkm_medis);
+            $('#m_poli').text(res.pasien.nm_poli + ' (' + res.pasien.status_lanjut + ')');
+            $('#m_score').text(res.score_percent + '%');
+            $('#m_status').text(res.status_readiness.replace('_', ' ').toUpperCase());
+
+            var html = '';
+            $.each(res.checklist, function(k, item) {
+              var badge = item.is_ready 
+                ? '<span class="label label-success"><i class="fa fa-check"></i> Siap / Lengkap</span>' 
+                : '<span class="label label-danger"><i class="fa fa-times"></i> Belum Lengkap</span>';
+              
+              var reqBadge = (item.requirement.indexOf('Wajib') !== -1)
+                ? '<span class="label label-danger">Wajib</span>'
+                : '<span class="label label-default">' + item.requirement + '</span>';
+
+              var actionBtn = '-';
+              if (item.name.indexOf('SEP') !== -1 && !item.is_ready) {
+                actionBtn = '<button type="button" class="btn btn-xs btn-primary btn-modal-tarik-sep" data-norawat="' + res.no_rawat + '" title="Tarik nomor SEP langsung dari server BPJS Kesehatan"><i class="fa fa-cloud-download"></i> Tarik SEP BPJS</button>';
+              } else if (item.action_url && !item.is_ready) {
+                actionBtn = '<a href="' + item.action_url + '" class="btn btn-xs btn-primary btn-open-modal-action">' + item.action_label + '</a>';
+              }
+
+              html += '<tr>' +
+                '<td><b>' + item.name + '</b><br><small class="text-muted">' + (item.detail || '') + '</small></td>' +
+                '<td>' + reqBadge + '</td>' +
+                '<td>' + badge + '<br><small>' + item.value + '</small></td>' +
+                '<td><small><b>Modul:</b> ' + item.source_module + '<br><b>PJ:</b> ' + item.pic + '<br>' + item.reason + '</small></td>' +
+                '<td class="text-center">' + actionBtn + '</td>' +
+                '</tr>';
+            });
+            $('#m_checklist_body').html(html);
+
+            // Perbarui juga data baris tabel langsung
+            updateRowReadiness(trRow, res);
+          } else {
+            alert(res.message || 'Gagal memuat status kesiapan');
+          }
+        },
+        error: function() {
+          $('#modalLoading').hide();
+          alert('Terjadi kesalahan koneksi ke server.');
+        }
+      });
+    });
+
+    // Helper fungsi AJAX Tarik SEP dari server BPJS Kesehatan
+    function doTarikSep(no_rawat, manual_sep) {
+      var postData = { no_rawat: no_rawat };
+      if (manual_sep) {
+        postData.no_sep = manual_sep;
+      }
+      return $.ajax({
+        url: '{?=url([ADMIN, "vedika", "tariksepbpjs"])?}',
+        type: 'POST',
+        data: postData,
+        dataType: 'json'
+      });
+    }
+
+    // Handler Tarik SEP per baris (Single Patient)
+    $(document).on('click', '.btn-tarik-sep', function(e) {
+      e.preventDefault();
+      var btn = $(this);
+      var no_rawat = btn.data('norawat');
+      var trRow = btn.closest('tr');
+
+      btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Menarik...');
+
+      doTarikSep(no_rawat)
+        .done(function(res) {
+          btn.prop('disabled', false).html('<i class="fa fa-cloud-download"></i> Tarik SEP');
+          if (res.status === 'success') {
+            trRow.find('.col-sep').html('<span class="label label-success">' + res.no_sep + '</span>');
+            if (res.readiness) {
+              updateRowReadiness(trRow, res.readiness);
+            }
+            alert(res.message || 'SEP berhasil ditarik dan disinkronkan dari BPJS!');
+          } else if (res.status === 'not_found' || res.require_manual) {
+            var inputSep = prompt((res.message || 'Tidak ditemukan riwayat SEP di server BPJS.') + "\n\nJika Anda sudah menerbitkan SEP di Portal V-Claim BPJS, silakan ketik/tempel nomor SEP manual (contoh: 0290R...):");
+            if (inputSep && inputSep.trim() !== '') {
+              btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Menghubungkan...');
+              doTarikSep(no_rawat, inputSep.trim())
+                .done(function(res2) {
+                  btn.prop('disabled', false).html('<i class="fa fa-cloud-download"></i> Tarik SEP');
+                  if (res2.status === 'success') {
+                    trRow.find('.col-sep').html('<span class="label label-success">' + res2.no_sep + '</span>');
+                    if (res2.readiness) {
+                      updateRowReadiness(trRow, res2.readiness);
+                    }
+                    alert(res2.message || 'SEP manual berhasil dihubungkan!');
+                  } else {
+                    alert(res2.message || 'Gagal menghubungkan nomor SEP manual.');
+                  }
+                })
+                .fail(function() {
+                  btn.prop('disabled', false).html('<i class="fa fa-cloud-download"></i> Tarik SEP');
+                  alert('Koneksi server gagal saat menghubungkan nomor SEP manual.');
+                });
+            }
+          } else {
+            alert(res.message || 'Gagal menarik SEP dari server BPJS.');
+          }
+        })
+        .fail(function() {
+          btn.prop('disabled', false).html('<i class="fa fa-cloud-download"></i> Tarik SEP');
+          alert('Terjadi kesalahan koneksi saat menghubungi server BPJS.');
+        });
+    });
+
+    // Handler Tarik SEP dari dalam modal checklist
+    $(document).on('click', '.btn-modal-tarik-sep', function(e) {
+      e.preventDefault();
+      var btn = $(this);
+      var no_rawat = btn.data('norawat');
+      var trRow = $('tr.row-patient[data-norawat="' + no_rawat + '"]');
+
+      btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Menarik...');
+
+      doTarikSep(no_rawat)
+        .done(function(res) {
+          if (res.status === 'success') {
+            trRow.find('.col-sep').html('<span class="label label-success">' + res.no_sep + '</span>');
+            if (res.readiness) {
+              updateRowReadiness(trRow, res.readiness);
+            }
+            alert(res.message || 'SEP berhasil disinkronkan!');
+            // Refresh checklist modal
+            trRow.find('.btn-audit').trigger('click');
+          } else if (res.status === 'not_found' || res.require_manual) {
+            btn.prop('disabled', false).html('<i class="fa fa-cloud-download"></i> Tarik SEP BPJS');
+            var inputSep = prompt((res.message || 'Tidak ditemukan riwayat SEP di server BPJS.') + "\n\nJika sudah diterbitkan di V-Claim, silakan ketik/tempel nomor SEP manual (contoh: 0290R...):");
+            if (inputSep && inputSep.trim() !== '') {
+              btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Menghubungkan...');
+              doTarikSep(no_rawat, inputSep.trim())
+                .done(function(res2) {
+                  if (res2.status === 'success') {
+                    trRow.find('.col-sep').html('<span class="label label-success">' + res2.no_sep + '</span>');
+                    if (res2.readiness) {
+                      updateRowReadiness(trRow, res2.readiness);
+                    }
+                    alert(res2.message || 'SEP manual berhasil dihubungkan!');
+                    trRow.find('.btn-audit').trigger('click');
+                  } else {
+                    btn.prop('disabled', false).html('<i class="fa fa-cloud-download"></i> Tarik SEP BPJS');
+                    alert(res2.message || 'Gagal menghubungkan nomor SEP manual.');
+                  }
+                })
+                .fail(function() {
+                  btn.prop('disabled', false).html('<i class="fa fa-cloud-download"></i> Tarik SEP BPJS');
+                  alert('Koneksi server gagal saat menghubungkan nomor SEP manual.');
+                });
+            }
+          } else {
+            btn.prop('disabled', false).html('<i class="fa fa-cloud-download"></i> Tarik SEP BPJS');
+            alert(res.message || 'Gagal menarik SEP dari server BPJS.');
+          }
+        })
+        .fail(function() {
+          btn.prop('disabled', false).html('<i class="fa fa-cloud-download"></i> Tarik SEP BPJS');
+          alert('Terjadi kesalahan koneksi server.');
+        });
+    });
+
+    // Handler Tarik SEP Massal dari BPJS
+    var syncCancelled = false;
+    $('.btn-sync-all-sep').on('click', function(e) {
+      e.preventDefault();
+      var rowsToSync = [];
+      $('.row-patient').each(function() {
+        var tr = $(this);
+        var sepBtn = tr.find('.btn-tarik-sep');
+        if (sepBtn.length > 0) {
+          var nr = sepBtn.data('norawat');
+          if (nr) {
+            rowsToSync.push({
+              no_rawat: nr,
+              nama: tr.find('td:nth-child(2) b').text() || nr,
+              tr: tr,
+              btn: sepBtn
+            });
+          }
+        }
+      });
+
+      if (rowsToSync.length === 0) {
+        alert('Semua pasien pada halaman ini sudah memiliki nomor SEP.');
+        return;
+      }
+
+      if (!confirm('Ditemukan ' + rowsToSync.length + ' pasien yang belum memiliki nomor SEP pada halaman ini.\n\nJalankan penarikan & sinkronisasi otomatis dari server BPJS Kesehatan sekarang?')) {
+        return;
+      }
+
+      syncCancelled = false;
+      $('#modalSyncMassal').modal('show');
+      $('#syncMassalLog').html('');
+      $('#btnSyncMassalBatal').show().prop('disabled', false).text('Batalkan');
+      $('#btnSyncMassalTutup').hide();
+
+      var total = rowsToSync.length;
+      var currentIdx = 0;
+      var successCount = 0;
+      var failedCount = 0;
+
+      function updateSyncProgress() {
+        var pct = Math.round((currentIdx / total) * 100);
+        $('#syncMassalProgressBar').css('width', pct + '%').text(pct + '%');
+      }
+
+      function logSync(msg, color) {
+        var logBox = $('#syncMassalLog');
+        var line = $('<div>').css({ 'color': color || '#2d3748', 'margin-bottom': '4px' }).html(msg);
+        logBox.append(line);
+        logBox.scrollTop(logBox[0].scrollHeight);
+      }
+
+      function processNextPatient() {
+        if (syncCancelled) {
+          logSync('<i class="fa fa-stop-circle text-warning"></i> Sinkronisasi dihentikan oleh pengguna.', '#dd6b20');
+          finishSync();
+          return;
+        }
+
+        if (currentIdx >= total) {
+          finishSync();
+          return;
+        }
+
+        var item = rowsToSync[currentIdx];
+        $('#syncMassalStatusText').html('Memproses pasien (' + (currentIdx + 1) + '/' + total + '): <b>' + item.nama + '</b>...');
+
+        doTarikSep(item.no_rawat)
+          .done(function(res) {
+            if (res.status === 'success') {
+              successCount++;
+              item.tr.find('.col-sep').html('<span class="label label-success">' + res.no_sep + '</span>');
+              if (res.readiness) {
+                updateRowReadiness(item.tr, res.readiness);
+              }
+              logSync('<i class="fa fa-check text-success"></i> <b>' + item.nama + '</b>: SEP ' + res.no_sep + ' berhasil ditarik! (Skor: ' + (res.score_percent || 100) + '%)', '#276749');
+            } else {
+              failedCount++;
+              var reason = (res.status === 'not_found' || res.require_manual) ? 'Belum terbit di BPJS' : (res.message || 'Gagal');
+              logSync('<i class="fa fa-info-circle text-muted"></i> <b>' + item.nama + '</b>: ' + reason, '#718096');
+            }
+          })
+          .fail(function() {
+            failedCount++;
+            logSync('<i class="fa fa-warning text-danger"></i> <b>' + item.nama + '</b>: Gagal koneksi saat memproses data.', '#c53030');
+          })
+          .always(function() {
+            currentIdx++;
+            updateSyncProgress();
+            setTimeout(processNextPatient, 300);
+          });
+      }
+
+      function finishSync() {
+        $('#syncMassalProgressBar').removeClass('active progress-bar-striped');
+        $('#btnSyncMassalBatal').hide();
+        $('#btnSyncMassalTutup').show();
+        $('#syncMassalStatusText').html('<b>Sinkronisasi Selesai!</b> Berhasil menarik: <b class="text-success">' + successCount + ' SEP</b> | Belum terbit di BPJS: <b class="text-muted">' + failedCount + ' pasien</b>.');
+        logSync('<hr style="margin:8px 0;"><b>Ringkasan:</b> ' + successCount + ' pasien kini Siap Klaim (SEP terpasang), ' + failedCount + ' pasien belum memiliki SEP di server BPJS.', '#2b6cb0');
+      }
+
+      $('#btnSyncMassalBatal').off('click').on('click', function() {
+        syncCancelled = true;
+        $(this).prop('disabled', true).text('Menghentikan...');
+      });
+
+      // Mulai proses
+      processNextPatient();
+    });
+
+    // Auto-audit queue di background untuk baris yang belum diaudit
+    var auditQueue = [];
+    $('tr[data-needs-audit="1"]').each(function() {
+      auditQueue.push($(this));
+    });
+
+    function runAuditQueue() {
+      if (auditQueue.length === 0) return;
+      var tr = auditQueue.shift();
+      var norawat = tr.data('norawat');
+      if (!norawat) {
+        runAuditQueue();
+        return;
+      }
+      $.ajax({
+        url: '{?=url([ADMIN, "vedika", "checkreadiness"])?}',
+        type: 'GET',
+        data: { no_rawat: norawat },
+        dataType: 'json',
+        success: function(res) {
+          if (res.status === 'success') {
+            updateRowReadiness(tr, res);
+          }
+        },
+        complete: function() {
+          setTimeout(runAuditQueue, 200);
+        }
+      });
+    }
+
+    if (auditQueue.length > 0) {
+      setTimeout(runAuditQueue, 500);
+    }
+  });
+</script>
+

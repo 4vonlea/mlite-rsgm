@@ -743,3 +743,17 @@ CREATE TABLE IF NOT EXISTS `asesmen_medis_umum_ugd` (
 -- ----------------------------------------------------------------------------
 UPDATE `mlite_rme_form` SET `kategori` = 'UGD' WHERE `kode_form` IN ('AKGMU', 'RM.GD 3', 'RM.GD 5', 'RM.GD 6') OR `id` IN (28, 65, 66, 67);
 UPDATE `poliklinik` SET `kategori_rme` = 'UGD' WHERE `kd_poli` = 'UGD';
+
+-- --------------------------------------------------------
+-- Tabel pendukung obat Program Rujuk Balik (PRB / SRB BPJS)
+-- --------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `bridging_srb_bpjs_obat` (
+  `no_sep` varchar(40) NOT NULL,
+  `no_srb` varchar(10) NOT NULL,
+  `kd_obat` varchar(15) NOT NULL,
+  `nm_obat` varchar(100) DEFAULT NULL,
+  `signa1` varchar(15) DEFAULT NULL,
+  `signa2` varchar(15) DEFAULT NULL,
+  `jumlah` varchar(10) DEFAULT NULL,
+  PRIMARY KEY (`no_sep`,`no_srb`,`kd_obat`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;

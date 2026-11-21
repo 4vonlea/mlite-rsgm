@@ -37,12 +37,7 @@ class BpjsService
 
     protected static function request($type, $url, $datafields, $consid, $secretkey, $user_key, $time_stamp)
     {
-        //date_default_timezone_set('UTC');
-        $tStamp = $time_stamp;
-        if($tStamp == NULL) {
-          date_default_timezone_set('UTC');
-          $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
-        }
+        $tStamp = !empty($time_stamp) ? $time_stamp : strval(time());
         $signature = hash_hmac('sha256', $consid."&".$tStamp, $secretkey, true);
         $encodedSignature = base64_encode($signature);
         $ch = curl_init();
@@ -78,12 +73,7 @@ class BpjsService
     }
     protected static function request2($type, $url, $datafields, $consid, $secretkey, $user_key, $time_stamp)
     {
-        //date_default_timezone_set('UTC');
-        $tStamp = $time_stamp;
-        if($tStamp == NULL) {
-          date_default_timezone_set('UTC');
-          $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
-        }
+        $tStamp = !empty($time_stamp) ? $time_stamp : strval(time());
         $signature = hash_hmac('sha256', $consid."&".$tStamp, $secretkey, true);
         $encodedSignature = base64_encode($signature);
         $ch = curl_init();
@@ -120,12 +110,7 @@ class BpjsService
 
     protected static function requestAplicare($type, $url, $datafields, $consid, $secretkey, $user_key, $time_stamp)
     {
-        //date_default_timezone_set('UTC');
-        $tStamp = $time_stamp;
-        if($tStamp == NULL) {
-          date_default_timezone_set('UTC');
-          $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
-        }
+        $tStamp = !empty($time_stamp) ? $time_stamp : strval(time());
         $signature = hash_hmac('sha256', $consid."&".$tStamp, $secretkey, true);
         $encodedSignature = base64_encode($signature);
         $ch = curl_init();

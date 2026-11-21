@@ -1,88 +1,168 @@
 <div class="row">
-    <div class="col-md-6">
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <h3 class="panel-title">
-                    Lihat Jadwal Dokter SIMRS
-                </h3>
+    <div class="col-md-5">
+        <div class="panel panel-default" style="border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+            <div class="panel-heading" style="background:#f8fafc; font-weight:bold;">
+                <i class="fa fa-filter text-primary"></i> Filter Jadwal Dokter SIMRS
             </div>
             <div class="panel-body">
-                <div class="form-group">
-                    <label for="poli">Poli</label>
-                    <!-- <input type="text" name="poli" id="poli" class="form-control"> -->
-                    <select name="poli" id="poli" class="form-control">
-                        {loop: $poli}
-                        <option value="{?=isset_or($value.kd_poli)?}">{?=isset_or($value.nm_poli)?}</option>
-                        {/loop}
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="poli">Dokter</label>
-                    <select name="dokter" id="dokter" class="form-control">
-                        {loop: $dokter}
-                        <option value="{?=isset_or($value.kd_dokter)?}">{?=isset_or($value.nm_dokter)?}</option>
-                        {/loop}
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="tanggal">Tanggal</label>
-                    <input type="month" name="tanggal" id="tanggal" class="form-control">
-                </div>
-                <div class="form-group">
-                    <button type="button" class="btn btn-primary" onclick="cekHfis()" id="cek">Cek</button>
-                </div>
+                <form id="formCekJadwalSimrs" onsubmit="event.preventDefault(); cekJadwalSimrs();">
+                    <div class="form-group">
+                        <label for="poli"><strong>Pilih Poliklinik:</strong></label>
+                        <select name="poli" id="poli" class="form-control" style="width:100%;">
+                            <option value="-">-- Semua Poliklinik --</option>
+                            {loop: $poli}
+                            <option value="{?=isset_or($value.kd_poli)?}">{?=isset_or($value.nm_poli)?}</option>
+                            {/loop}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="dokter"><strong>Pilih Dokter:</strong></label>
+                        <select name="dokter" id="dokter" class="form-control" style="width:100%;">
+                            <option value="-">-- Semua Dokter --</option>
+                            {loop: $dokter}
+                            <option value="{?=isset_or($value.kd_dokter)?}">{?=isset_or($value.nm_dokter)?}</option>
+                            {/loop}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="hari"><strong>Hari Kerja:</strong></label>
+                        <select name="hari" id="hari" class="form-control" style="width:100%;">
+                            <option value="-">-- Semua Hari --</option>
+                            <option value="SENIN">Senin</option>
+                            <option value="SELASA">Selasa</option>
+                            <option value="RABU">Rabu</option>
+                            <option value="KAMIS">Kamis</option>
+                            <option value="JUMAT">Jumat</option>
+                            <option value="SABTU">Sabtu</option>
+                            <option value="AKHAD">Ahad / Minggu</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom:0;">
+                        <button type="submit" class="btn btn-primary btn-block" id="btnCekJadwal">
+                            <i class="fa fa-search"></i> Tampilkan Jadwal Dokter SIMRS
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
+
+        <div class="alert alert-info" style="font-size:12px; line-height:1.6;">
+            <strong><i class="fa fa-info-circle"></i> Info Data Jadwal SIMRS:</strong>
+            <p style="margin-bottom:0;">
+                Data ini diambil langsung dari tabel basis data <code>jadwal</code> SIMRS yang digunakan untuk pendaftaran poliklinik, antrean onsite anjungan, kuota antrol JKN Mobile, dan sinkronisasi HFIS.
+            </p>
+        </div>
     </div>
-    <div class="col-md-6">
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <h3 class="panel-title">
-                    Tampil Jadwal Dokter SIMRS
-                </h3>
+
+    <div class="col-md-7">
+        <div class="panel panel-default" style="border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+            <div class="panel-heading" style="background:#f8fafc; font-weight:bold;">
+                <i class="fa fa-list-alt text-success"></i> Daftar Jadwal Dokter Aktif (SIMRS)
             </div>
             <div class="panel-body">
-                <div id="tampil"></div>
+                <div id="tampil">
+                    <div class="text-center text-muted" style="padding: 40px 20px;">
+                        <i class="fa fa-calendar-o" style="font-size:48px; color:#ccc; margin-bottom:15px;"></i>
+                        <p style="font-size:14px; margin-bottom:0;">Silakan tentukan filter di sebelah kiri lalu klik <b>"Tampilkan Jadwal Dokter SIMRS"</b>.</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
 <script>
-    $('select').selectator();
-    function cekHfis() {
-        // var cek = document.getElementById('cek')
-        // cek.classList.remove('btn-primary')
-        var poli = document.getElementById('poli').value
-        var dokter = document.getElementById('dokter').value
-        var tgl = document.getElementById('tanggal').value
+function cekJadwalSimrs() {
+    var btn = document.getElementById('btnCekJadwal');
+    var poli = document.getElementById('poli').value;
+    var dokter = document.getElementById('dokter').value;
+    var hari = document.getElementById('hari').value;
+    var tampil = document.getElementById('tampil');
 
-        if (poli == '-') {
-            alert('Silahkan Pilih Poli Terlebih Dahulu')
-        } else {
-            const xhttp = new XMLHttpRequest();
-    
-            xhttp.onload = function() {
-                respawn = JSON.parse(this.responseText)
-                if (respawn.code == '200') {
-                    var output = ''
-                    output += '<div class="card">Nama Dokter : '+respawn.nm_dokter+'</div>'
-                    output += '<div class="card">Bulan & Tahun : '+respawn.bulan+' '+respawn.tahun+'</div>'
-                    output += '<div class="card">Tanggal : '+respawn.tanggal+'</div>'
-                    output += '<div class="card">Poli : '+respawn.nm_poli+'</div>'
-                    output += '<br>'
-                    document.getElementById('tampil').innerHTML = output
-                    // cek.classList.add('btn-primary')
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Memuat Jadwal...';
+    tampil.innerHTML = '<div class="text-center" style="padding:40px;"><i class="fa fa-spinner fa-spin fa-3x text-primary"></i><p style="margin-top:15px; color:#666;">Sedang mengambil data jadwal praktek dari basis data SIMRS...</p></div>';
+
+    var params = 'poli=' + encodeURIComponent(poli) + '&dr=' + encodeURIComponent(dokter) + '&hari=' + encodeURIComponent(hari);
+    var url = "{?=url(ADMIN.'/bridging_hfis/listjadwaldokter/')?}";
+
+    var xhttp = new XMLHttpRequest();
+    xhttp.open("POST", url, true);
+    xhttp.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+
+    xhttp.onload = function() {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa fa-search"></i> Tampilkan Jadwal Dokter SIMRS';
+
+        try {
+            var res = JSON.parse(this.responseText);
+            if (res.status === 'success' && res.code == 200) {
+                if (res.data && res.data.length > 0) {
+                    var html = '<div class="alert alert-success" style="margin-bottom:15px;">' +
+                        '<i class="fa fa-check-circle"></i> Ditemukan <b>' + res.data.length + '</b> jadwal praktek dokter aktif.' +
+                        '</div>';
+
+                    html += '<div class="table-responsive">' +
+                        '<table class="table table-bordered table-striped table-hover" style="margin-bottom:0;">' +
+                        '<thead>' +
+                        '<tr style="background:#f1f5f9;">' +
+                        '<th style="width:5%; text-align:center;">No</th>' +
+                        '<th>Nama Dokter</th>' +
+                        '<th>Poliklinik</th>' +
+                        '<th style="text-align:center;">Hari</th>' +
+                        '<th style="text-align:center;">Jam Praktek</th>' +
+                        '<th style="text-align:center;">Kuota</th>' +
+                        '</tr>' +
+                        '</thead>' +
+                        '<tbody>';
+
+                    res.data.forEach(function(item, idx) {
+                        html += '<tr>' +
+                            '<td style="text-align:center;">' + (idx + 1) + '</td>' +
+                            '<td><b>' + (item.nm_dokter || item.kd_dokter) + '</b></td>' +
+                            '<td>' + (item.nm_poli || item.kd_poli) + '</td>' +
+                            '<td style="text-align:center;"><span class="label label-primary">' + item.hari_kerja + '</span></td>' +
+                            '<td style="text-align:center;"><i class="fa fa-clock-o text-muted"></i> ' + item.jam_mulai + ' - ' + item.jam_selesai + '</td>' +
+                            '<td style="text-align:center;"><span class="badge" style="background:#5cb85c;">' + (item.kuota || 0) + '</span></td>' +
+                            '</tr>';
+                    });
+
+                    html += '</tbody></table></div>';
+                    tampil.innerHTML = html;
                 } else {
-                    alert('Poli Dan Dokter Tidak Sesuai')
+                    tampil.innerHTML = '<div class="alert alert-warning" style="margin-bottom:0;">' +
+                        '<h4 style="margin-top:0;"><i class="fa fa-info-circle"></i> Tidak Ada Data Jadwal</h4>' +
+                        '<p>Belum ada jadwal praktek dokter yang terdaftar di basis data SIMRS untuk kriteria yang dipilih.</p>' +
+                        '<hr style="margin:10px 0;">' +
+                        '<p style="font-size:12px; margin-bottom:0;">' +
+                        'Anda dapat menambahkan atau memperbarui jadwal praktek melalui menu <a href="{?=url(ADMIN."/bridging_hfis/updatehfis")?}"><b>Bridging Update HFIS</b></a> atau menu <a href="{?=url(ADMIN."/rawat_jalan/jadwalpraktek")?}"><b>Rawat Jalan &rarr; Jadwal Praktek</b></a>.' +
+                        '</p>' +
+                        '</div>';
                 }
-                // console.log(respawn);
+            } else {
+                tampil.innerHTML = '<div class="alert alert-danger">' +
+                    '<i class="fa fa-exclamation-triangle"></i> ' + (res.message || 'Gagal memuat jadwal dokter.') +
+                    '</div>';
             }
-    
-            // Send a request
-            xhttp.open("POST", "{?=url(ADMIN.'/bridging_hfis/listjadwaldokter/')?}");
-            xhttp.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-            xhttp.send("poli="+poli+"&tgl="+tgl+"&dr="+dokter);
-
+        } catch (e) {
+            tampil.innerHTML = '<div class="alert alert-danger">' +
+                '<h4 style="margin-top:0;"><i class="fa fa-bug"></i> Error Parsing Data</h4>' +
+                '<p>' + e.message + '</p>' +
+                '</div>';
         }
-    }
+    };
+
+    xhttp.onerror = function() {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa fa-search"></i> Tampilkan Jadwal Dokter SIMRS';
+        tampil.innerHTML = '<div class="alert alert-danger">' +
+            '<i class="fa fa-plug"></i> Gagal terhubung ke server SIMRS.' +
+            '</div>';
+    };
+
+    xhttp.send(params);
+}
 </script>
