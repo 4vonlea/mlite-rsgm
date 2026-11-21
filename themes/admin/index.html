@@ -643,7 +643,7 @@
               <li role="separator" class="rsgm-top-sep"></li>
 
               <!-- 1. Layanan -->
-              <li class="dropdown{if: isset_or($module.category) == 'layanan'} active{/if}">
+              <li class="dropdown{if: isset_or($module.category) == 'layanan' && empty($mlite.is_telusur_erm)} active{/if}">
                 <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
                   <span>Layanan</span><i class="fa fa-angle-down rsgm-caret"></i>
                 </a>
@@ -709,7 +709,7 @@
               </li>
 
               <!-- 3. Rekam Medis (Form RME Dinamis + Modul Rekam Medik) -->
-              <li class="dropdown{if: isset_or($module.category) == 'rekammedik'} active{/if}">
+              <li class="dropdown{if: isset_or($module.category) == 'rekammedik' || !empty($mlite.is_telusur_erm)} active{/if}">
                 <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
                   <span>Rekam Medis</span><i class="fa fa-angle-down rsgm-caret"></i>
                 </a>
@@ -753,6 +753,14 @@
                     </ul>
                   </li>
                   <li role="separator" class="divider"></li>
+                  {if: $mlite.module_pasien && $mlite.pasien_access}
+                  <li{if: !empty($mlite.is_telusur_erm)} class="active"{/if}>
+                    <a href="{?=url([ADMIN, 'pasien', 'telusur'])?}" class="dropdown-item">
+                      <i class="fa fa-search rsgm-dd-ico"></i>
+                      <span>Telusur e-RM</span>
+                    </a>
+                  </li>
+                  {/if}
                   {loop: $mlite.nav}
                   {if: $value.category == 'rekammedik' && $value.dir != 'update_bmt' && $value.dir != 'form_rme'}
                   <li class="{if: !empty($value.subnav)}dropdown-submenu {/if}{if: !empty($value.active)}active{/if}">
@@ -986,7 +994,7 @@
               {if: $mlite.module_pasien}
               <li role="separator" class="rsgm-qsep"></li>
               <li>
-                <a href="{?=url([ADMIN, 'pasien', 'manage'])?}" class="rsgm-qpill{if: isset_or($module.dir) == 'pasien'} active{/if}{if: !$mlite.pasien_access} disabled{/if}">
+                <a href="{?=url([ADMIN, 'pasien', 'manage'])?}" class="rsgm-qpill{if: isset_or($module.dir) == 'pasien' && empty($mlite.is_telusur_erm)} active{/if}{if: !$mlite.pasien_access} disabled{/if}">
                   <i class="fa fa-users ico-pasien"></i><span>Pasien</span>
                 </a>
               </li>
@@ -1106,7 +1114,7 @@
                         <div class="rsgm-page-header">
                             <div class="rsgm-page-title-wrap">
                                 <h1 class="content-title rsgm-page-title">
-                                    {if: $module.name == 'Rawat Jalan' | $module.name == 'Pengguna'}<a href="{?=url([ADMIN,$module.dir,'index'])?}">{$module.name}</a>{else}<a href="{?=url([ADMIN,$module.dir,'manage'])?}">{$module.name}</a>{/if}
+                                    {if: !empty($mlite.is_telusur_erm)}<a href="{?=url([ADMIN,$module.dir,'telusur'])?}">{$module.name}</a>{elseif: $module.name == 'Rawat Jalan' | $module.name == 'Pengguna'}<a href="{?=url([ADMIN,$module.dir,'index'])?}">{$module.name}</a>{else}<a href="{?=url([ADMIN,$module.dir,'manage'])?}">{$module.name}</a>{/if}
                                 </h1>
                             </div>
                             <nav class="rsgm-breadcrumb-nav" aria-label="Breadcrumb">

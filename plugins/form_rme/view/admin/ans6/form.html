@@ -80,27 +80,41 @@
             <div style="border-top: 1px dashed #cbd5e1; padding-top: 10px; margin-bottom: 10px;">
               <div class="form-group" style="margin-bottom: 10px;">
                 <label for="dr_anestesi" class="rsgm-compact-label"><i class="fa fa-user-md text-success"></i> Dokter DPJP Anestesi</label>
-                <input type="text" name="dr_anestesi" id="dr_anestesi" list="dokter_anestesi_list" class="form-control" value="{?=isset_or($data['dr_anestesi'])?}" placeholder="Nama dr. Anestesi...">
-                <datalist id="dokter_anestesi_list">
+                <select name="dr_anestesi" id="dr_anestesi" class="form-control ans6-searchable-select" data-use-search="true" data-use-dimmer="false" data-show-all-options-on-focus="true">
+                  <option value="">-- Pilih Dokter Anestesi --</option>
+                  {if: !empty($data['dr_anestesi']) && !in_array($data['dr_anestesi'], array_column($dokter, 'nm_dokter'))}
+                  <option value="{$data.dr_anestesi}" selected>{$data.dr_anestesi}</option>
+                  {/if}
                   {loop: $dokter}
-                  <option value="{$value.nm_dokter}">{$value.kd_dokter} - {$value.nm_dokter}</option>
+                  <option value="{$value.nm_dokter}" {if: isset($data['dr_anestesi']) && $data['dr_anestesi'] == $value['nm_dokter']}selected{/if}>{$value.nm_dokter}</option>
                   {/loop}
-                </datalist>
+                </select>
               </div>
 
               <div class="form-group" style="margin-bottom: 10px;">
                 <label for="penata_anestesi" class="rsgm-compact-label"><i class="fa fa-user-circle text-info"></i> Penata Anestesi</label>
-                <input type="text" name="penata_anestesi" id="penata_anestesi" list="petugas_anestesi_list" class="form-control" value="{?=!empty($data['penata_anestesi']) ? $data['penata_anestesi'] : (!empty($data['perawat_pacu']) ? $data['perawat_pacu'] : '')?}" placeholder="Nama Penata Anestesi...">
+                <select name="penata_anestesi" id="penata_anestesi" class="form-control ans6-searchable-select" data-use-search="true" data-use-dimmer="false" data-show-all-options-on-focus="true">
+                  <option value="">-- Pilih Penata Anestesi --</option>
+                  {if: (!empty($data['penata_anestesi']) || !empty($data['perawat_pacu'])) && !in_array((!empty($data['penata_anestesi']) ? $data['penata_anestesi'] : $data['perawat_pacu']), array_column($petugas, 'nama'))}
+                  <option value="{?=!empty($data['penata_anestesi']) ? $data['penata_anestesi'] : $data['perawat_pacu']?}" selected>{?=!empty($data['penata_anestesi']) ? $data['penata_anestesi'] : $data['perawat_pacu']?}</option>
+                  {/if}
+                  {loop: $petugas}
+                  <option value="{$value.nama}" {if: (!empty($data['penata_anestesi']) ? $data['penata_anestesi'] : (!empty($data['perawat_pacu']) ? $data['perawat_pacu'] : '')) == $value['nama']}selected{/if}>{$value.nama}</option>
+                  {/loop}
+                </select>
               </div>
 
               <div class="form-group" style="margin-bottom: 12px;">
                 <label for="perawat_pacu" class="rsgm-compact-label"><i class="fa fa-heartbeat text-teal"></i> Perawat Ruang PACU</label>
-                <input type="text" name="perawat_pacu" id="perawat_pacu" list="petugas_anestesi_list" class="form-control" value="{?=!empty($data['perawat_pacu']) ? $data['perawat_pacu'] : (!empty($data['penata_anestesi']) ? $data['penata_anestesi'] : '')?}" placeholder="Nama Perawat PACU...">
-                <datalist id="petugas_anestesi_list">
+                <select name="perawat_pacu" id="perawat_pacu" class="form-control ans6-searchable-select" data-use-search="true" data-use-dimmer="false" data-show-all-options-on-focus="true">
+                  <option value="">-- Pilih Perawat PACU --</option>
+                  {if: (!empty($data['perawat_pacu']) || !empty($data['penata_anestesi'])) && !in_array((!empty($data['perawat_pacu']) ? $data['perawat_pacu'] : $data['penata_anestesi']), array_column($petugas, 'nama'))}
+                  <option value="{?=!empty($data['perawat_pacu']) ? $data['perawat_pacu'] : $data['penata_anestesi']?}" selected>{?=!empty($data['perawat_pacu']) ? $data['perawat_pacu'] : $data['penata_anestesi']?}</option>
+                  {/if}
                   {loop: $petugas}
-                  <option value="{$value.nama}">{$value.nip} - {$value.nama}</option>
+                  <option value="{$value.nama}" {if: (!empty($data['perawat_pacu']) ? $data['perawat_pacu'] : (!empty($data['penata_anestesi']) ? $data['penata_anestesi'] : '')) == $value['nama']}selected{/if}>{$value.nama}</option>
                   {/loop}
-                </datalist>
+                </select>
               </div>
 
               <button type="button" id="btn_demo_ans6" class="btn btn-warning btn-sm btn-block" style="border-radius: 6px; font-weight: 600;" title="Isi form dengan contoh data pasca anestesi lengkap">
@@ -214,20 +228,42 @@
               if (!is_array($skorDetail)) $skorDetail = [];
               ?>
 
-              <!-- NAV TABS SKORING -->
-              <ul class="nav nav-tabs" style="margin-bottom: 12px; border-bottom: 2px solid #cbd5e1;">
-                <li class="active"><a href="#tab_aldrete" data-toggle="tab" style="font-weight: 700;"><i class="fa fa-user"></i> Aldrete Score (Dewasa)</a></li>
-                <li><a href="#tab_steward" data-toggle="tab" style="font-weight: 700;"><i class="fa fa-child"></i> Steward Score (Anak)</a></li>
-                <li><a href="#tab_bromage" data-toggle="tab" style="font-weight: 700;"><i class="fa fa-wheelchair"></i> Bromage Score (Spinal / Regional)</a></li>
-              </ul>
+              <!-- NAV TABS SKORING (RSGM SEGMENTED PILL STYLE) -->
+              <div class="ans6-score-shell">
+                <div class="ans6-score-header">
+                  <ul class="nav nav-tabs rsgm-segmented-tabs" role="tablist">
+                    <li role="presentation" class="active">
+                      <a href="#tab_aldrete" aria-controls="tab_aldrete" role="tab" data-toggle="tab">
+                        <i class="fa fa-user text-primary"></i>
+                        <span>Aldrete Score (Dewasa)</span>
+                        <span class="badge" id="tab_badge_aldrete">-/10</span>
+                      </a>
+                    </li>
+                    <li role="presentation">
+                      <a href="#tab_steward" aria-controls="tab_steward" role="tab" data-toggle="tab">
+                        <i class="fa fa-child text-warning"></i>
+                        <span>Steward Score (Anak)</span>
+                        <span class="badge" id="tab_badge_steward">-/6</span>
+                      </a>
+                    </li>
+                    <li role="presentation">
+                      <a href="#tab_bromage" aria-controls="tab_bromage" role="tab" data-toggle="tab">
+                        <i class="fa fa-wheelchair text-success"></i>
+                        <span>Bromage Score (Spinal / Regional)</span>
+                        <span class="badge">&le;2</span>
+                      </a>
+                    </li>
+                  </ul>
+                </div>
 
-              <div class="tab-content" style="background: #ffffff; border: 1px solid #cbd5e1; border-top: none; border-radius: 0 0 6px 6px; padding: 14px; margin-bottom: 14px;">
+                <div class="tab-content ans6-score-body">
 
-                <!-- TAB ALDRETE -->
-                <div class="tab-pane active" id="tab_aldrete">
-                  <div class="alert alert-info" style="font-size: 11.5px; padding: 8px 12px; margin-bottom: 12px;">
-                    <i class="fa fa-info-circle"></i> <strong>Kriteria Keluar:</strong> Pasien dewasa siap dipindahkan ke ruang rawat bila <strong>Skor Aldrete &ge; 8 atau 9</strong> tanpa ada nilai 0.
-                  </div>
+                  <!-- TAB ALDRETE -->
+                  <div role="tabpanel" class="tab-pane active" id="tab_aldrete">
+                    <div class="ans6-info-banner">
+                      <i class="fa fa-info-circle text-primary"></i>
+                      <span><strong>Kriteria Keluar:</strong> Pasien dewasa siap dipindahkan ke ruang rawat bila <strong>Skor Aldrete &ge; 8 atau 9</strong> tanpa ada nilai 0.</span>
+                    </div>
 
                   <div class="table-responsive">
                     <table class="table table-bordered table-condensed" style="font-size: 11.5px; margin-bottom: 10px;">
@@ -240,85 +276,110 @@
                       </thead>
                       <tbody>
                         <tr>
-                          <td><strong>Aktivitas Motorik</strong></td>
+                          <td style="vertical-align: middle;"><strong>Aktivitas Motorik</strong></td>
                           <td>
-                            <label style="font-weight: normal; margin-right: 15px; cursor: pointer;">
-                              <input type="radio" name="skor_item[aldrete_aktivitas]" value="2" {if: isset($skorDetail['aldrete_aktivitas']) && $skorDetail['aldrete_aktivitas'] == '2'}checked{elseif: !isset($skorDetail['aldrete_aktivitas'])}checked{/if} class="aldrete-radio"> 4 ekstremitas bergerak (2)
-                            </label>
-                            <label style="font-weight: normal; margin-right: 15px; cursor: pointer;">
-                              <input type="radio" name="skor_item[aldrete_aktivitas]" value="1" {if: isset($skorDetail['aldrete_aktivitas']) && $skorDetail['aldrete_aktivitas'] == '1'}checked{/if} class="aldrete-radio"> 2 ekstremitas bergerak (1)
-                            </label>
-                            <label style="font-weight: normal; cursor: pointer;">
-                              <input type="radio" name="skor_item[aldrete_aktivitas]" value="0" {if: isset($skorDetail['aldrete_aktivitas']) && $skorDetail['aldrete_aktivitas'] == '0'}checked{/if} class="aldrete-radio"> Tidak bergerak (0)
-                            </label>
+                            <div class="ans6-radio-grid">
+                              <label class="ans6-radio-opt">
+                                <input type="radio" name="skor_item[aldrete_aktivitas]" value="2" {if: isset($skorDetail['aldrete_aktivitas']) && $skorDetail['aldrete_aktivitas'] == '2'}checked{/if} class="aldrete-radio">
+                                <span>4 ekstremitas bergerak (2)</span>
+                              </label>
+                              <label class="ans6-radio-opt">
+                                <input type="radio" name="skor_item[aldrete_aktivitas]" value="1" {if: isset($skorDetail['aldrete_aktivitas']) && $skorDetail['aldrete_aktivitas'] == '1'}checked{/if} class="aldrete-radio">
+                                <span>2 ekstremitas bergerak (1)</span>
+                              </label>
+                              <label class="ans6-radio-opt">
+                                <input type="radio" name="skor_item[aldrete_aktivitas]" value="0" {if: isset($skorDetail['aldrete_aktivitas']) && $skorDetail['aldrete_aktivitas'] == '0'}checked{/if} class="aldrete-radio">
+                                <span>Tidak bergerak (0)</span>
+                              </label>
+                            </div>
                           </td>
-                          <td class="text-center" style="font-weight: 700;" id="score_aldrete_aktivitas">2</td>
+                          <td class="text-center" style="vertical-align: middle; font-weight: 700;" id="score_aldrete_aktivitas">-</td>
                         </tr>
                         <tr>
-                          <td><strong>Respirasi / Pernapasan</strong></td>
+                          <td style="vertical-align: middle;"><strong>Respirasi / Pernapasan</strong></td>
                           <td>
-                            <label style="font-weight: normal; margin-right: 15px; cursor: pointer;">
-                              <input type="radio" name="skor_item[aldrete_respirasi]" value="2" {if: isset($skorDetail['aldrete_respirasi']) && $skorDetail['aldrete_respirasi'] == '2'}checked{elseif: !isset($skorDetail['aldrete_respirasi'])}checked{/if} class="aldrete-radio"> Bernapas dalam &amp; batuk (2)
-                            </label>
-                            <label style="font-weight: normal; margin-right: 15px; cursor: pointer;">
-                              <input type="radio" name="skor_item[aldrete_respirasi]" value="1" {if: isset($skorDetail['aldrete_respirasi']) && $skorDetail['aldrete_respirasi'] == '1'}checked{/if} class="aldrete-radio"> Dangkal namun adekuat (1)
-                            </label>
-                            <label style="font-weight: normal; cursor: pointer;">
-                              <input type="radio" name="skor_item[aldrete_respirasi]" value="0" {if: isset($skorDetail['aldrete_respirasi']) && $skorDetail['aldrete_respirasi'] == '0'}checked{/if} class="aldrete-radio"> Apnea / obstruksi (0)
-                            </label>
+                            <div class="ans6-radio-grid">
+                              <label class="ans6-radio-opt">
+                                <input type="radio" name="skor_item[aldrete_respirasi]" value="2" {if: isset($skorDetail['aldrete_respirasi']) && $skorDetail['aldrete_respirasi'] == '2'}checked{/if} class="aldrete-radio">
+                                <span>Bernapas dalam &amp; batuk (2)</span>
+                              </label>
+                              <label class="ans6-radio-opt">
+                                <input type="radio" name="skor_item[aldrete_respirasi]" value="1" {if: isset($skorDetail['aldrete_respirasi']) && $skorDetail['aldrete_respirasi'] == '1'}checked{/if} class="aldrete-radio">
+                                <span>Dangkal namun adekuat (1)</span>
+                              </label>
+                              <label class="ans6-radio-opt">
+                                <input type="radio" name="skor_item[aldrete_respirasi]" value="0" {if: isset($skorDetail['aldrete_respirasi']) && $skorDetail['aldrete_respirasi'] == '0'}checked{/if} class="aldrete-radio">
+                                <span>Apnea / obstruksi (0)</span>
+                              </label>
+                            </div>
                           </td>
-                          <td class="text-center" style="font-weight: 700;" id="score_aldrete_respirasi">2</td>
+                          <td class="text-center" style="vertical-align: middle; font-weight: 700;" id="score_aldrete_respirasi">-</td>
                         </tr>
                         <tr>
-                          <td><strong>Sirkulasi / Tekanan Darah</strong></td>
+                          <td style="vertical-align: middle;"><strong>Sirkulasi / Tekanan Darah</strong></td>
                           <td>
-                            <label style="font-weight: normal; margin-right: 15px; cursor: pointer;">
-                              <input type="radio" name="skor_item[aldrete_sirkulasi]" value="2" {if: isset($skorDetail['aldrete_sirkulasi']) && $skorDetail['aldrete_sirkulasi'] == '2'}checked{elseif: !isset($skorDetail['aldrete_sirkulasi'])}checked{/if} class="aldrete-radio"> TD &plusmn; 20% baseline (2)
-                            </label>
-                            <label style="font-weight: normal; margin-right: 15px; cursor: pointer;">
-                              <input type="radio" name="skor_item[aldrete_sirkulasi]" value="1" {if: isset($skorDetail['aldrete_sirkulasi']) && $skorDetail['aldrete_sirkulasi'] == '1'}checked{/if} class="aldrete-radio"> TD &plusmn; 20-50% baseline (1)
-                            </label>
-                            <label style="font-weight: normal; cursor: pointer;">
-                              <input type="radio" name="skor_item[aldrete_sirkulasi]" value="0" {if: isset($skorDetail['aldrete_sirkulasi']) && $skorDetail['aldrete_sirkulasi'] == '0'}checked{/if} class="aldrete-radio"> TD &gt; 50% baseline (0)
-                            </label>
+                            <div class="ans6-radio-grid">
+                              <label class="ans6-radio-opt">
+                                <input type="radio" name="skor_item[aldrete_sirkulasi]" value="2" {if: isset($skorDetail['aldrete_sirkulasi']) && $skorDetail['aldrete_sirkulasi'] == '2'}checked{/if} class="aldrete-radio">
+                                <span>TD &plusmn; 20% baseline (2)</span>
+                              </label>
+                              <label class="ans6-radio-opt">
+                                <input type="radio" name="skor_item[aldrete_sirkulasi]" value="1" {if: isset($skorDetail['aldrete_sirkulasi']) && $skorDetail['aldrete_sirkulasi'] == '1'}checked{/if} class="aldrete-radio">
+                                <span>TD &plusmn; 20-50% baseline (1)</span>
+                              </label>
+                              <label class="ans6-radio-opt">
+                                <input type="radio" name="skor_item[aldrete_sirkulasi]" value="0" {if: isset($skorDetail['aldrete_sirkulasi']) && $skorDetail['aldrete_sirkulasi'] == '0'}checked{/if} class="aldrete-radio">
+                                <span>TD &gt; 50% baseline (0)</span>
+                              </label>
+                            </div>
                           </td>
-                          <td class="text-center" style="font-weight: 700;" id="score_aldrete_sirkulasi">2</td>
+                          <td class="text-center" style="vertical-align: middle; font-weight: 700;" id="score_aldrete_sirkulasi">-</td>
                         </tr>
                         <tr>
-                          <td><strong>Tingkat Kesadaran</strong></td>
+                          <td style="vertical-align: middle;"><strong>Tingkat Kesadaran</strong></td>
                           <td>
-                            <label style="font-weight: normal; margin-right: 15px; cursor: pointer;">
-                              <input type="radio" name="skor_item[aldrete_kesadaran]" value="2" {if: isset($skorDetail['aldrete_kesadaran']) && $skorDetail['aldrete_kesadaran'] == '2'}checked{elseif: !isset($skorDetail['aldrete_kesadaran'])}checked{/if} class="aldrete-radio"> Sadar penuh (2)
-                            </label>
-                            <label style="font-weight: normal; margin-right: 15px; cursor: pointer;">
-                              <input type="radio" name="skor_item[aldrete_kesadaran]" value="1" {if: isset($skorDetail['aldrete_kesadaran']) && $skorDetail['aldrete_kesadaran'] == '1'}checked{/if} class="aldrete-radio"> Bangun bila dipanggil (1)
-                            </label>
-                            <label style="font-weight: normal; cursor: pointer;">
-                              <input type="radio" name="skor_item[aldrete_kesadaran]" value="0" {if: isset($skorDetail['aldrete_kesadaran']) && $skorDetail['aldrete_kesadaran'] == '0'}checked{/if} class="aldrete-radio"> Tidak berespon (0)
-                            </label>
+                            <div class="ans6-radio-grid">
+                              <label class="ans6-radio-opt">
+                                <input type="radio" name="skor_item[aldrete_kesadaran]" value="2" {if: isset($skorDetail['aldrete_kesadaran']) && $skorDetail['aldrete_kesadaran'] == '2'}checked{/if} class="aldrete-radio">
+                                <span>Sadar penuh (2)</span>
+                              </label>
+                              <label class="ans6-radio-opt">
+                                <input type="radio" name="skor_item[aldrete_kesadaran]" value="1" {if: isset($skorDetail['aldrete_kesadaran']) && $skorDetail['aldrete_kesadaran'] == '1'}checked{/if} class="aldrete-radio">
+                                <span>Bangun bila dipanggil (1)</span>
+                              </label>
+                              <label class="ans6-radio-opt">
+                                <input type="radio" name="skor_item[aldrete_kesadaran]" value="0" {if: isset($skorDetail['aldrete_kesadaran']) && $skorDetail['aldrete_kesadaran'] == '0'}checked{/if} class="aldrete-radio">
+                                <span>Tidak berespon (0)</span>
+                              </label>
+                            </div>
                           </td>
-                          <td class="text-center" style="font-weight: 700;" id="score_aldrete_kesadaran">2</td>
+                          <td class="text-center" style="vertical-align: middle; font-weight: 700;" id="score_aldrete_kesadaran">-</td>
                         </tr>
                         <tr>
-                          <td><strong>Saturasi Oksigen (SpO2)</strong></td>
+                          <td style="vertical-align: middle;"><strong>Saturasi Oksigen (SpO2)</strong></td>
                           <td>
-                            <label style="font-weight: normal; margin-right: 15px; cursor: pointer;">
-                              <input type="radio" name="skor_item[aldrete_saturasi]" value="2" {if: isset($skorDetail['aldrete_saturasi']) && $skorDetail['aldrete_saturasi'] == '2'}checked{elseif: !isset($skorDetail['aldrete_saturasi'])}checked{/if} class="aldrete-radio"> SpO2 &gt; 92% room air (2)
-                            </label>
-                            <label style="font-weight: normal; margin-right: 15px; cursor: pointer;">
-                              <input type="radio" name="skor_item[aldrete_saturasi]" value="1" {if: isset($skorDetail['aldrete_saturasi']) && $skorDetail['aldrete_saturasi'] == '1'}checked{/if} class="aldrete-radio"> Perlu O2 suplemen &gt; 90% (1)
-                            </label>
-                            <label style="font-weight: normal; cursor: pointer;">
-                              <input type="radio" name="skor_item[aldrete_saturasi]" value="0" {if: isset($skorDetail['aldrete_saturasi']) && $skorDetail['aldrete_saturasi'] == '0'}checked{/if} class="aldrete-radio"> SpO2 &lt; 90% dengan O2 (0)
-                            </label>
+                            <div class="ans6-radio-grid">
+                              <label class="ans6-radio-opt">
+                                <input type="radio" name="skor_item[aldrete_saturasi]" value="2" {if: isset($skorDetail['aldrete_saturasi']) && $skorDetail['aldrete_saturasi'] == '2'}checked{/if} class="aldrete-radio">
+                                <span>SpO2 &gt; 92% room air (2)</span>
+                              </label>
+                              <label class="ans6-radio-opt">
+                                <input type="radio" name="skor_item[aldrete_saturasi]" value="1" {if: isset($skorDetail['aldrete_saturasi']) && $skorDetail['aldrete_saturasi'] == '1'}checked{/if} class="aldrete-radio">
+                                <span>Perlu O2 suplemen &gt; 90% (1)</span>
+                              </label>
+                              <label class="ans6-radio-opt">
+                                <input type="radio" name="skor_item[aldrete_saturasi]" value="0" {if: isset($skorDetail['aldrete_saturasi']) && $skorDetail['aldrete_saturasi'] == '0'}checked{/if} class="aldrete-radio">
+                                <span>SpO2 &lt; 90% dengan O2 (0)</span>
+                              </label>
+                            </div>
                           </td>
-                          <td class="text-center" style="font-weight: 700;" id="score_aldrete_saturasi">2</td>
+                          <td class="text-center" style="vertical-align: middle; font-weight: 700;" id="score_aldrete_saturasi">-</td>
                         </tr>
                       </tbody>
                       <tfoot>
                         <tr class="active">
                           <th colspan="2" style="font-size: 13px;">TOTAL SKOR ALDRETE</th>
-                          <th class="text-center" style="font-size: 14px; color: #166534;" id="total_aldrete_display">10 / 10</th>
+                          <th class="text-center" style="font-size: 14px; color: #166534;" id="total_aldrete_display">- / 10</th>
                         </tr>
                       </tfoot>
                     </table>
@@ -361,9 +422,10 @@
                 </div>
 
                 <!-- TAB STEWARD -->
-                <div class="tab-pane" id="tab_steward">
-                  <div class="alert alert-info" style="font-size: 11.5px; padding: 8px 12px; margin-bottom: 12px;">
-                    <i class="fa fa-info-circle"></i> <strong>Kriteria Keluar:</strong> Pasien anak siap dipindahkan bila <strong>Skor Steward &ge; 5</strong>.
+                <div role="tabpanel" class="tab-pane" id="tab_steward">
+                  <div class="ans6-info-banner ans6-info-amber">
+                    <i class="fa fa-info-circle text-warning"></i>
+                    <span><strong>Kriteria Keluar:</strong> Pasien anak siap dipindahkan bila <strong>Skor Steward &ge; 5</strong>.</span>
                   </div>
 
                   <div class="table-responsive">
@@ -377,55 +439,70 @@
                       </thead>
                       <tbody>
                         <tr>
-                          <td><strong>Kesadaran</strong></td>
+                          <td style="vertical-align: middle;"><strong>Kesadaran</strong></td>
                           <td>
-                            <label style="font-weight: normal; margin-right: 15px; cursor: pointer;">
-                              <input type="radio" name="skor_item[steward_sadar]" value="2" {if: isset($skorDetail['steward_sadar']) && $skorDetail['steward_sadar'] == '2'}checked{elseif: !isset($skorDetail['steward_sadar'])}checked{/if} class="steward-radio"> Bangun / Sadar (2)
-                            </label>
-                            <label style="font-weight: normal; margin-right: 15px; cursor: pointer;">
-                              <input type="radio" name="skor_item[steward_sadar]" value="1" {if: isset($skorDetail['steward_sadar']) && $skorDetail['steward_sadar'] == '1'}checked{/if} class="steward-radio"> Respon terhadap rangsang (1)
-                            </label>
-                            <label style="font-weight: normal; cursor: pointer;">
-                              <input type="radio" name="skor_item[steward_sadar]" value="0" {if: isset($skorDetail['steward_sadar']) && $skorDetail['steward_sadar'] == '0'}checked{/if} class="steward-radio"> Tidak respon (0)
-                            </label>
+                            <div class="ans6-radio-grid">
+                              <label class="ans6-radio-opt">
+                                <input type="radio" name="skor_item[steward_sadar]" value="2" {if: isset($skorDetail['steward_sadar']) && $skorDetail['steward_sadar'] == '2'}checked{/if} class="steward-radio">
+                                <span>Bangun / Sadar (2)</span>
+                              </label>
+                              <label class="ans6-radio-opt">
+                                <input type="radio" name="skor_item[steward_sadar]" value="1" {if: isset($skorDetail['steward_sadar']) && $skorDetail['steward_sadar'] == '1'}checked{/if} class="steward-radio">
+                                <span>Respon thd rangsang (1)</span>
+                              </label>
+                              <label class="ans6-radio-opt">
+                                <input type="radio" name="skor_item[steward_sadar]" value="0" {if: isset($skorDetail['steward_sadar']) && $skorDetail['steward_sadar'] == '0'}checked{/if} class="steward-radio">
+                                <span>Tidak respon (0)</span>
+                              </label>
+                            </div>
                           </td>
-                          <td class="text-center" style="font-weight: 700;" id="score_steward_sadar">2</td>
+                          <td class="text-center" style="vertical-align: middle; font-weight: 700;" id="score_steward_sadar">-</td>
                         </tr>
                         <tr>
-                          <td><strong>Respirasi</strong></td>
+                          <td style="vertical-align: middle;"><strong>Respirasi</strong></td>
                           <td>
-                            <label style="font-weight: normal; margin-right: 15px; cursor: pointer;">
-                              <input type="radio" name="skor_item[steward_napas]" value="2" {if: isset($skorDetail['steward_napas']) && $skorDetail['steward_napas'] == '2'}checked{elseif: !isset($skorDetail['steward_napas'])}checked{/if} class="steward-radio"> Batuk / menangis (2)
-                            </label>
-                            <label style="font-weight: normal; margin-right: 15px; cursor: pointer;">
-                              <input type="radio" name="skor_item[steward_napas]" value="1" {if: isset($skorDetail['steward_napas']) && $skorDetail['steward_napas'] == '1'}checked{/if} class="steward-radio"> Bebas bernapas adekuat (1)
-                            </label>
-                            <label style="font-weight: normal; cursor: pointer;">
-                              <input type="radio" name="skor_item[steward_napas]" value="0" {if: isset($skorDetail['steward_napas']) && $skorDetail['steward_napas'] == '0'}checked{/if} class="steward-radio"> Obstruksi / apnea (0)
-                            </label>
+                            <div class="ans6-radio-grid">
+                              <label class="ans6-radio-opt">
+                                <input type="radio" name="skor_item[steward_napas]" value="2" {if: isset($skorDetail['steward_napas']) && $skorDetail['steward_napas'] == '2'}checked{/if} class="steward-radio">
+                                <span>Batuk / menangis (2)</span>
+                              </label>
+                              <label class="ans6-radio-opt">
+                                <input type="radio" name="skor_item[steward_napas]" value="1" {if: isset($skorDetail['steward_napas']) && $skorDetail['steward_napas'] == '1'}checked{/if} class="steward-radio">
+                                <span>Bebas bernapas adekuat (1)</span>
+                              </label>
+                              <label class="ans6-radio-opt">
+                                <input type="radio" name="skor_item[steward_napas]" value="0" {if: isset($skorDetail['steward_napas']) && $skorDetail['steward_napas'] == '0'}checked{/if} class="steward-radio">
+                                <span>Obstruksi / apnea (0)</span>
+                              </label>
+                            </div>
                           </td>
-                          <td class="text-center" style="font-weight: 700;" id="score_steward_napas">2</td>
+                          <td class="text-center" style="vertical-align: middle; font-weight: 700;" id="score_steward_napas">-</td>
                         </tr>
                         <tr>
-                          <td><strong>Motorik</strong></td>
+                          <td style="vertical-align: middle;"><strong>Motorik</strong></td>
                           <td>
-                            <label style="font-weight: normal; margin-right: 15px; cursor: pointer;">
-                              <input type="radio" name="skor_item[steward_gerak]" value="2" {if: isset($skorDetail['steward_gerak']) && $skorDetail['steward_gerak'] == '2'}checked{elseif: !isset($skorDetail['steward_gerak'])}checked{/if} class="steward-radio"> Gerak bertujuan (2)
-                            </label>
-                            <label style="font-weight: normal; margin-right: 15px; cursor: pointer;">
-                              <input type="radio" name="skor_item[steward_gerak]" value="1" {if: isset($skorDetail['steward_gerak']) && $skorDetail['steward_gerak'] == '1'}checked{/if} class="steward-radio"> Gerak tanpa tujuan (1)
-                            </label>
-                            <label style="font-weight: normal; cursor: pointer;">
-                              <input type="radio" name="skor_item[steward_gerak]" value="0" {if: isset($skorDetail['steward_gerak']) && $skorDetail['steward_gerak'] == '0'}checked{/if} class="steward-radio"> Diam / tidak bergerak (0)
-                            </label>
+                            <div class="ans6-radio-grid">
+                              <label class="ans6-radio-opt">
+                                <input type="radio" name="skor_item[steward_gerak]" value="2" {if: isset($skorDetail['steward_gerak']) && $skorDetail['steward_gerak'] == '2'}checked{/if} class="steward-radio">
+                                <span>Gerak bertujuan (2)</span>
+                              </label>
+                              <label class="ans6-radio-opt">
+                                <input type="radio" name="skor_item[steward_gerak]" value="1" {if: isset($skorDetail['steward_gerak']) && $skorDetail['steward_gerak'] == '1'}checked{/if} class="steward-radio">
+                                <span>Gerak tanpa tujuan (1)</span>
+                              </label>
+                              <label class="ans6-radio-opt">
+                                <input type="radio" name="skor_item[steward_gerak]" value="0" {if: isset($skorDetail['steward_gerak']) && $skorDetail['steward_gerak'] == '0'}checked{/if} class="steward-radio">
+                                <span>Diam / tidak bergerak (0)</span>
+                              </label>
+                            </div>
                           </td>
-                          <td class="text-center" style="font-weight: 700;" id="score_steward_gerak">2</td>
+                          <td class="text-center" style="vertical-align: middle; font-weight: 700;" id="score_steward_gerak">-</td>
                         </tr>
                       </tbody>
                       <tfoot>
                         <tr class="active">
                           <th colspan="2" style="font-size: 13px;">TOTAL SKOR STEWARD</th>
-                          <th class="text-center" style="font-size: 14px; color: #166534;" id="total_steward_display">6 / 6</th>
+                          <th class="text-center" style="font-size: 14px; color: #166534;" id="total_steward_display">- / 6</th>
                         </tr>
                       </tfoot>
                     </table>
@@ -468,9 +545,10 @@
                 </div>
 
                 <!-- TAB BROMAGE -->
-                <div class="tab-pane" id="tab_bromage">
-                  <div class="alert alert-info" style="font-size: 11.5px; padding: 8px 12px; margin-bottom: 12px;">
-                    <i class="fa fa-info-circle"></i> <strong>Kriteria Keluar:</strong> Pasien pasca anestesi spinal siap dipindahkan bila <strong>Skor Bromage &le; 2</strong> (mampu fleksi lutut atau bebas gerak tungkai).
+                <div role="tabpanel" class="tab-pane" id="tab_bromage">
+                  <div class="ans6-info-banner ans6-info-emerald">
+                    <i class="fa fa-info-circle text-success"></i>
+                    <span><strong>Kriteria Keluar:</strong> Pasien pasca anestesi spinal siap dipindahkan bila <strong>Skor Bromage &le; 2</strong> (mampu fleksi lutut atau bebas gerak tungkai).</span>
                   </div>
 
                   <div class="table-responsive">
@@ -543,7 +621,8 @@
                   </div>
                 </div>
 
-              </div> <!-- /.tab-content -->
+                </div> <!-- /.tab-content -->
+              </div> <!-- /.ans6-score-shell -->
 
               <div class="row">
                 <div class="col-md-4 form-group" style="margin-bottom: 0;">
@@ -738,16 +817,16 @@
 
                 <div class="col-md-6 form-group" style="margin-bottom: 8px;">
                   <label class="rsgm-compact-label">Instruksi Obat / Medikasi Pasca Anestesi</label>
-                  <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px 12px;">
-                    <div class="input-group input-group-sm" style="margin-bottom: 6px;">
+                  <div class="ans6-med-box" style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px 12px;">
+                    <div class="input-group input-group-sm ans6-med-group" style="margin-bottom: 6px;">
                       <span class="input-group-addon">a.</span>
                       <input type="text" name="instruksi_obat_a" class="form-control" value="{?=isset_or($data['instruksi_obat_a'])?}" placeholder="cth: Ketorolac 30mg IV bila nyeri">
                     </div>
-                    <div class="input-group input-group-sm" style="margin-bottom: 6px;">
+                    <div class="input-group input-group-sm ans6-med-group" style="margin-bottom: 6px;">
                       <span class="input-group-addon">b.</span>
                       <input type="text" name="instruksi_obat_b" class="form-control" value="{?=isset_or($data['instruksi_obat_b'])?}" placeholder="cth: Ondansetron 4mg IV bila mual/muntah">
                     </div>
-                    <div class="input-group input-group-sm">
+                    <div class="input-group input-group-sm ans6-med-group">
                       <span class="input-group-addon">c.</span>
                       <input type="text" name="instruksi_obat_c" class="form-control" value="{?=isset_or($data['instruksi_obat_c'])?}" placeholder="cth: Paracetamol drip 1 gr bila demam">
                     </div>
@@ -828,15 +907,30 @@ $(document).ready(function() {
   });
 
   // 3. KALKULASI SKOR ALDRETE
-  function calcAldrete() {
+  function calcScoreGroup(prefix, keys, totalSelector, badgeSelector, maxTotal) {
     var total = 0;
-    var keys = ['aktivitas', 'respirasi', 'sirkulasi', 'kesadaran', 'saturasi'];
+    var hasAny = false;
     keys.forEach(function(k) {
-      var val = parseInt($('input[name="skor_item[aldrete_' + k + ']"]:checked').val()) || 0;
-      $('#score_aldrete_' + k).text(val);
-      total += val;
+      var $radios = $('input[name="skor_item[' + prefix + '_' + k + ']"]');
+      $radios.each(function() {
+        $(this).closest('.ans6-radio-opt').toggleClass('is-selected', $(this).is(':checked'));
+      });
+      var $checked = $radios.filter(':checked');
+      if ($checked.length) {
+        var val = parseInt($checked.val(), 10) || 0;
+        $('#score_' + prefix + '_' + k).text(val);
+        total += val;
+        hasAny = true;
+      } else {
+        $('#score_' + prefix + '_' + k).text('-');
+      }
     });
-    $('#total_aldrete_display').text(total + ' / 10');
+    $(totalSelector).text((hasAny ? total : '-') + ' / ' + maxTotal);
+    $(badgeSelector).text((hasAny ? total : '-') + '/' + maxTotal);
+  }
+
+  function calcAldrete() {
+    calcScoreGroup('aldrete', ['aktivitas', 'respirasi', 'sirkulasi', 'kesadaran', 'saturasi'], '#total_aldrete_display', '#tab_badge_aldrete', 10);
   }
 
   $('.aldrete-radio').on('change', calcAldrete);
@@ -844,14 +938,7 @@ $(document).ready(function() {
 
   // 4. KALKULASI SKOR STEWARD
   function calcSteward() {
-    var total = 0;
-    var keys = ['sadar', 'napas', 'gerak'];
-    keys.forEach(function(k) {
-      var val = parseInt($('input[name="skor_item[steward_' + k + ']"]:checked').val()) || 0;
-      $('#score_steward_' + k).text(val);
-      total += val;
-    });
-    $('#total_steward_display').text(total + ' / 6');
+    calcScoreGroup('steward', ['sadar', 'napas', 'gerak'], '#total_steward_display', '#tab_badge_steward', 6);
   }
 
   $('.steward-radio').on('change', calcSteward);
@@ -917,5 +1004,204 @@ $(document).ready(function() {
     $('#instruksi_prosedur_infus').val('RL : D5 1/4 NS 20 tpm / 2000 cc per 24 jam');
     $('#instruksi_catatan').val('Observasi drain luka operasi, pertahankan suction drain tetap vakum. Lapor DPJP bila tensi < 90/60 mmHg atau drain > 100cc/jam.');
   });
+
+  // 7. Pastikan dropdown Dokter/Petugas memakai Selectator searchable standar RSGM
+  setTimeout(function() {
+    $('.ans6-searchable-select').each(function() {
+      var $el = $(this);
+      if ($el.data('selectator')) {
+        var $wrap = $('#selectator_' + $el.attr('id'));
+        if ($wrap.length) {
+          $wrap.find('.selectator_input').attr('placeholder', 'Ketik nama untuk mencari...');
+        }
+      }
+    });
+  }, 150);
 });
 </script>
+
+<style>
+.ans6-score-shell {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 14px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+.ans6-score-header {
+  padding: 10px 14px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+.ans6-score-body {
+  padding: 14px;
+  background: #ffffff;
+}
+.ans6-score-header .rsgm-segmented-tabs,
+.ans6-score-header ul.rsgm-segmented-tabs {
+  display: inline-flex !important;
+  flex-wrap: wrap !important;
+  gap: 4px !important;
+  background-color: #e2e8f0 !important;
+  padding: 4px !important;
+  border-radius: 8px !important;
+  border: 1px solid #cbd5e1 !important;
+  margin-bottom: 0 !important;
+  width: auto !important;
+}
+.ans6-score-header .rsgm-segmented-tabs::before,
+.ans6-score-header .rsgm-segmented-tabs::after {
+  display: none !important;
+  content: none !important;
+}
+.ans6-score-header .rsgm-segmented-tabs > li {
+  float: none !important;
+  margin-bottom: 0 !important;
+  display: inline-block !important;
+}
+.ans6-score-header .rsgm-segmented-tabs > li > a {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+  padding: 7px 14px !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 6px !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  text-transform: none !important;
+  letter-spacing: 0.1px !important;
+  color: #475569 !important;
+  background-color: transparent !important;
+  transition: all 0.15s ease !important;
+  text-decoration: none !important;
+}
+.ans6-score-header .rsgm-segmented-tabs > li > a:hover {
+  color: #0f172a !important;
+  background-color: rgba(255, 255, 255, 0.72) !important;
+  border: 0 !important;
+}
+.ans6-score-header .rsgm-segmented-tabs > li.active > a,
+.ans6-score-header .rsgm-segmented-tabs > li.active > a:hover,
+.ans6-score-header .rsgm-segmented-tabs > li.active > a:focus {
+  background-color: #ffffff !important;
+  color: #1d4ed8 !important;
+  font-weight: 700 !important;
+  border: 0 !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12), 0 1px 2px rgba(15, 23, 42, 0.06) !important;
+}
+.ans6-score-header .rsgm-segmented-tabs > li > a > .badge {
+  border-radius: 999px !important;
+  padding: 2px 7px !important;
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
+  background-color: #cbd5e1 !important;
+  color: #334155 !important;
+  line-height: 1.2 !important;
+  margin-left: 2px !important;
+}
+.ans6-score-header .rsgm-segmented-tabs > li.active > a > .badge {
+  background-color: #dbeafe !important;
+  color: #1e40af !important;
+}
+.ans6-info-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  margin-bottom: 12px;
+  font-size: 12px;
+  color: #0369a1;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-left: 3.5px solid #0284c7;
+  border-radius: 6px;
+}
+.ans6-info-banner.ans6-info-amber {
+  color: #92400e;
+  background: #fffbeb;
+  border-color: #fde68a;
+  border-left-color: #d97706;
+}
+.ans6-info-banner.ans6-info-emerald {
+  color: #065f46;
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+  border-left-color: #059669;
+}
+.ans6-radio-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  align-items: stretch;
+}
+@media (max-width: 991px) {
+  .ans6-radio-grid {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+}
+.ans6-radio-opt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 !important;
+  padding: 6px 9px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: #f8fafc;
+  color: #334155;
+  font-size: 11.5px;
+  font-weight: 500 !important;
+  line-height: 1.3;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+.ans6-radio-opt:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+.ans6-radio-opt.is-selected {
+  background: #eff6ff;
+  border-color: #93c5fd;
+  color: #1e40af;
+  font-weight: 600 !important;
+}
+.ans6-radio-opt input[type="radio"] {
+  margin: 0 !important;
+  flex-shrink: 0;
+  width: 15px;
+  height: 15px;
+  accent-color: #2563eb;
+  cursor: pointer;
+}
+.ans6-med-group .input-group-addon:first-child {
+  border-radius: 6px 0 0 6px !important;
+  border: 1px solid #cbd5e1 !important;
+  border-right: 0 !important;
+  background-color: #f1f5f9 !important;
+  color: #334155 !important;
+  font-weight: 700 !important;
+  min-width: 34px;
+  text-align: center;
+}
+.ans6-med-group .form-control:last-child {
+  border-top-left-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
+  border-top-right-radius: 6px !important;
+  border-bottom-right-radius: 6px !important;
+}
+.selectator_element.single:not(.disable_search) .selectator_input {
+  border: 1px solid #cbd5e1 !important;
+  border-bottom: 0 !important;
+  border-radius: 6px 6px 0 0 !important;
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+  font-size: 12px !important;
+  padding: 7px 10px !important;
+  bottom: -35px !important;
+  height: 35px !important;
+}
+</style>

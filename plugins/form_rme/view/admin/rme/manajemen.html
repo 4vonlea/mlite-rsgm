@@ -253,24 +253,22 @@
             <!-- TAB 1: KELOLA STATUS PUBLIKASI FORMULIR RME             -->
             <!-- ======================================================== -->
             <div role="tabpanel" class="tab-pane fade {if: $tab == 'status' || empty($tab)}in active{/if}" id="tab-status">
-              <!-- Toolbar Filter & Search -->
-              <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
-                <!-- Filter Status & Kategori -->
+              <!-- Toolbar Filter & Search (Ringkas & Rapi 1 Baris) -->
+              <div class="rsgm-master-toolbar" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; padding: 10px 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 14px;">
+                <!-- Filter Status, Role & Kategori -->
                 <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                  <div class="rsgm-filter-pills" id="btnGroupStatusFilter">
+                  <div class="rsgm-filter-pills" id="btnGroupStatusFilter" style="margin: 0;">
                     <button type="button" class="btn btn-sm rsgm-fpill rsgm-fpill-all active" data-filter-status="all">Semua ({$count_total})</button>
                     <button type="button" class="btn btn-sm rsgm-fpill rsgm-fpill-done" data-filter-status="1"><i class="fa fa-check"></i> Aktif ({$count_active})</button>
                     <button type="button" class="btn btn-sm rsgm-fpill rsgm-fpill-pending" data-filter-status="0"><i class="fa fa-wrench"></i> Nonaktif ({$count_inactive})</button>
                   </div>
-                  <div class="rsgm-filter-pills" id="btnGroupAktorFilter">
-                    <button type="button" class="btn btn-sm rsgm-fpill active" data-filter-aktor="all">Semua Role ({$count_total})</button>
+                  <select id="selectAktorFilter" class="form-control input-sm" data-use-search="false" data-use-dimmer="false" style="width: 195px; display: inline-block; height: 32px; border-radius: 6px; font-size: 12px;">
+                    <option value="all">-- Semua Role ({$count_total}) --</option>
                     {loop: $available_roles}
-                    <button type="button" class="btn btn-sm rsgm-fpill" data-filter-aktor="{$value.role}" data-role-name="{$value.name}">
-                      <i class="{$value.icon}"></i> {$value.name} ({?=isset_or($role_counts[$value['role']], 0)?})
-                    </button>
+                    <option value="{$value.role}" data-role-name="{$value.name}">{$value.name} ({?=isset_or($role_counts[$value['role']], 0)?})</option>
                     {/loop}
-                  </div>
-                  <select id="selectCategoryFilter" class="form-control input-sm" style="width: auto; display: inline-block; height: 30px; border-radius: 6px; font-size: 12px;">
+                  </select>
+                  <select id="selectCategoryFilter" class="form-control input-sm" data-use-search="false" data-use-dimmer="false" style="width: 170px; display: inline-block; height: 32px; border-radius: 6px; font-size: 12px;">
                     <option value="all">-- Semua Kategori --</option>
                     {loop: $kategori_list}
                     <option value="{$value}">{$value}</option>
@@ -279,17 +277,14 @@
                 </div>
 
                 <!-- Search Spotlight & Batch Actions -->
-                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                  <div class="datatable-search" style="margin: 0;">
-                    <div class="dataTables_filter" style="margin: 0;">
-                      <label>
-                        <input type="text" id="inputSearchMasterForm" class="form-control input-sm" placeholder="Cari formulir RME...">
-                      </label>
-                    </div>
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: nowrap;">
+                  <div style="position: relative; width: 220px;">
+                    <i class="fa fa-search" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 12px; pointer-events: none;"></i>
+                    <input type="text" id="inputSearchMasterForm" class="form-control input-sm" placeholder="Cari formulir RME..." style="height: 32px; padding-left: 30px; border-radius: 6px; border: 1px solid #cbd5e1; background: #ffffff; font-size: 12px;">
                   </div>
                   <div class="btn-group">
-                    <button type="button" class="btn btn-sm btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                      <i class="fa fa-check-square-o text-muted"></i> Batch <span class="caret"></span>
+                    <button type="button" class="btn btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="height: 32px; padding: 0 12px; border-radius: 6px !important; background: #ffffff !important; border: 1px solid #cbd5e1 !important; color: #334155 !important; font-weight: 600; font-size: 12px; text-transform: none !important; letter-spacing: 0 !important; display: inline-flex; align-items: center; gap: 6px;">
+                      <i class="fa fa-check-square-o text-primary"></i> Batch <span class="caret"></span>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-right" role="menu">
                       <li><a href="#" id="btnSelectAllRows"><i class="fa fa-check-square-o text-primary" style="width: 16px;"></i> Pilih Semua</a></li>
@@ -868,10 +863,8 @@
           applyFilters();
         });
 
-        $('#btnGroupAktorFilter button').on('click', function() {
-          $('#btnGroupAktorFilter button').removeClass('active');
-          $(this).addClass('active');
-          currentAktorFilter = $(this).data('filter-aktor');
+        $('#selectAktorFilter').on('change', function() {
+          currentAktorFilter = $(this).val();
           applyFilters();
         });
 
@@ -1074,23 +1067,33 @@
         // ==========================================
         // 3B. UPDATE TARGET AKTOR ON-THE-FLY (CHECKBOX)
         // ==========================================
+        function reinitSelectatorFilter($sel) {
+          if ($sel.length && $sel.data('selectator')) {
+            $sel.selectator('destroy');
+            $sel.selectator({ useDimmer: false, useSearch: false });
+          }
+        }
+
         function recalculateAktorKpis() {
-          $('#btnGroupAktorFilter button[data-filter-aktor]').each(function() {
-            var btn = $(this);
-            var role = btn.data('filter-aktor');
+          var $sel = $('#selectAktorFilter');
+          var curVal = $sel.val();
+          $sel.find('option').each(function() {
+            var opt = $(this);
+            var role = String(opt.val() || '');
             if (role === 'all') {
               var total = $('.master-form-row').length;
-              btn.text('Semua Role (' + total + ')');
+              opt.text('-- Semua Role (' + total + ') --');
             } else {
               var count = $('.master-form-row').filter(function() {
                 var a = $(this).attr('data-aktor-filter') || '';
                 return a.split(',').indexOf(role) !== -1;
               }).length;
-              var icon = btn.find('i').attr('class') || '';
-              var name = btn.data('role-name') || role;
-              btn.html((icon ? '<i class="' + icon + '"></i> ' : '') + name + ' (' + count + ')');
+              var name = opt.data('role-name') || role;
+              opt.text(name + ' (' + count + ')');
             }
           });
+          $sel.val(curVal);
+          reinitSelectatorFilter($sel);
         }
 
         // Jangan tutup dropdown checklist saat klik di dalam panelnya
@@ -1214,6 +1217,7 @@
               opt.value = val;
               opt.textContent = val;
               filterSelect.appendChild(opt);
+              reinitSelectatorFilter($(filterSelect));
             }
           }
 

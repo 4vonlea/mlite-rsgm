@@ -12,7 +12,6 @@ class Admin extends AdminModule
   {
     return [
       'Kelola' => 'manage',
-      'Telusur e-RM' => 'telusur',
     ];
   }
 

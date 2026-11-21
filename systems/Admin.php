@@ -176,6 +176,10 @@ class Admin extends Main
                 }
 
                 $details['dir'] = parseUrl()[0];
+                if ($name === 'pasien' && !empty($this->assign['is_telusur_erm'])) {
+                    $details['name'] = 'Telusur e-RM';
+                    $details['category'] = 'rekammedik';
+                }
 
                 $this->tpl->set('module', $details);
             } else {
@@ -295,6 +299,8 @@ class Admin extends Main
 
     public function createNav($activeModule, $activeMethod)
     {
+        $this->assign['is_telusur_erm'] = ($activeModule === 'pasien' && strtolower((string)$activeMethod) === 'telusur');
+
         if (!empty($_SESSION['mlite_force_change'])) {
             $this->assign['nav'] = [
                 [

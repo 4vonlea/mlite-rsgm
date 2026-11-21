@@ -2164,18 +2164,75 @@ select.form-control.rsgm-select {
     cursor: not-allowed !important;
 }
 
-/* Input Groups (e.g. Manual RM Checkbox) */
-.rsgm-reg-form .input-group .form-control:first-child {
+/* Input Groups (left, middle & right addons) */
+.rsgm-reg-form .input-group .form-control:not(:first-child) {
+    border-top-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
+}
+
+.rsgm-reg-form .input-group .form-control:not(:last-child) {
     border-top-right-radius: 0 !important;
     border-bottom-right-radius: 0 !important;
 }
 
 .rsgm-reg-form .input-group-addon {
-    border-radius: 0 6px 6px 0 !important;
     border: 1px solid #cbd5e1 !important;
-    border-left: 0 !important;
     background-color: #f8fafc !important;
     color: #475569 !important;
+    border-radius: 0 !important;
+}
+
+.rsgm-reg-form .input-group-addon:first-child {
+    border-radius: 6px 0 0 6px !important;
+    border-right: 0 !important;
+}
+
+.rsgm-reg-form .input-group-addon:last-child {
+    border-radius: 0 6px 6px 0 !important;
+    border-left: 0 !important;
+}
+
+.rsgm-reg-form .input-group .input-group-btn {
+    vertical-align: top !important;
+}
+
+.rsgm-reg-form .input-group .input-group-btn > .btn {
+    height: 34px !important;
+    min-height: 34px !important;
+    max-height: 34px !important;
+    padding: 0 12px !important;
+    line-height: 32px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    transform: none !important;
+    box-shadow: none !important;
+    font-size: 13px !important;
+}
+
+.rsgm-reg-form .input-group .input-group-btn:last-child > .btn {
+    border-radius: 0 6px 6px 0 !important;
+    margin-left: -1px !important;
+}
+
+.rsgm-reg-form .input-group .input-group-btn:first-child > .btn {
+    border-radius: 6px 0 0 6px !important;
+    margin-right: -1px !important;
+}
+
+.rsgm-reg-form .input-group .input-group-btn > .btn-default {
+    background-color: #f8fafc !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #334155 !important;
+}
+
+.rsgm-reg-form .input-group .input-group-btn > .btn-default:hover,
+.rsgm-reg-form .input-group .input-group-btn > .btn-default:focus {
+    background-color: #f1f5f9 !important;
+    border-color: #94a3b8 !important;
+    color: #1d4ed8 !important;
 }
 
 /* Inline Field Icons, Search Trigger & Click-to-Generate Inputs */

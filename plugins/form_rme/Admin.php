@@ -1179,6 +1179,52 @@ form[action*="form_rme"] .table-bordered tbody tr:hover {
     background: #f8fafc !important;
 }
 
+/* Unified Input-Group Search & Action Buttons across all RME forms */
+.rsgm-reg-form .input-group .input-group-btn,
+form[action*="form_rme"] .input-group .input-group-btn {
+    vertical-align: top !important;
+}
+.rsgm-reg-form .input-group .input-group-btn > .btn,
+form[action*="form_rme"] .input-group .input-group-btn > .btn {
+    height: 34px !important;
+    min-height: 34px !important;
+    max-height: 34px !important;
+    padding: 0 12px !important;
+    line-height: 32px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    transform: none !important;
+    box-shadow: none !important;
+    font-size: 13px !important;
+}
+.rsgm-reg-form .input-group .input-group-btn:last-child > .btn,
+form[action*="form_rme"] .input-group .input-group-btn:last-child > .btn {
+    border-radius: 0 6px 6px 0 !important;
+    margin-left: -1px !important;
+}
+.rsgm-reg-form .input-group .input-group-btn:first-child > .btn,
+form[action*="form_rme"] .input-group .input-group-btn:first-child > .btn {
+    border-radius: 6px 0 0 6px !important;
+    margin-right: -1px !important;
+}
+.rsgm-reg-form .input-group .input-group-btn > .btn-default,
+form[action*="form_rme"] .input-group .input-group-btn > .btn-default {
+    background-color: #f8fafc !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #334155 !important;
+}
+.rsgm-reg-form .input-group .input-group-btn > .btn-default:hover,
+.rsgm-reg-form .input-group .input-group-btn > .btn-default:focus,
+form[action*="form_rme"] .input-group .input-group-btn > .btn-default:hover,
+form[action*="form_rme"] .input-group .input-group-btn > .btn-default:focus {
+    background-color: #f1f5f9 !important;
+    border-color: #94a3b8 !important;
+    color: #1d4ed8 !important;
+}
+
 /* Patient Live Summary Card */
 .rme-patient-live-banner {
     background: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%) !important;

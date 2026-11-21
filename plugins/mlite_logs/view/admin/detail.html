@@ -1,84 +1,115 @@
-<div class="modal-header">
-    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-    <h4 class="modal-title">Detail mlite_query_logs</h4>
+<div class="modal-header" style="background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
+  <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+  <h4 class="modal-title" style="font-weight: 700; font-size: 15px;"><i class="fa fa-terminal text-primary"></i> Detail Log Query</h4>
 </div>
-<div class="modal-body">
-<style>
-#tbl_detail_mlite_query_logs td.text-wrap { white-space: pre-wrap; word-break: break-word; }
-#tbl_detail_mlite_query_logs td { vertical-align: top; }
-</style>
-    <table id="tbl_detail_mlite_query_logs" class="table table-bordered table-striped" style="width:100%">
-        <thead>
-        </thead>
-        <tbody>
-            {loop: $detail}
-            <tr><td>Id</td></tr>
-            <tr><td>{?=isset_or($value.id)?}</td></tr>
-            <tr><td>Sql Text</td></tr>
-            <tr><td class="text-wrap">{?=isset_or($value.sql_text)?}</td></tr>
-            <tr><td>Bindings</td></tr>
-            <tr><td class="text-wrap">{?=isset_or($value.bindings)?}</td></tr>
-            <tr><td>Created At</td></tr>
-            <tr><td>{?=isset_or($value.created_at)?}</td></tr>
-            <tr><td>Error Message</td></tr>
-            <tr><td>{?=isset_or($value.error_message)?}</td></tr>
-            <tr><td>Fullname</td></tr>
-            <tr><td>{?=$this->core->getUserInfo('fullname', null, $value['username'])?}</td></tr>
-            {/loop}
-        </tbody>
-    </table>
+<div class="modal-body" style="padding: 16px;">
+  <style>
+    #tbl_detail_mlite_query_logs th {
+      width: 155px;
+      background: #f8fafc;
+      color: #334155;
+      font-size: 12px;
+      font-weight: 700;
+      vertical-align: top;
+    }
+    #tbl_detail_mlite_query_logs td {
+      vertical-align: top;
+      font-size: 12.5px;
+      word-break: break-word;
+    }
+    .logs-detail-pre {
+      margin: 0;
+      padding: 10px 12px;
+      background: #0f172a;
+      color: #e2e8f0;
+      border: 0;
+      border-radius: 6px;
+      font-size: 11.5px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 280px;
+      overflow-y: auto;
+    }
+  </style>
+  <table id="tbl_detail_mlite_query_logs" class="table table-bordered table-striped" style="width:100%; margin-bottom: 0;">
+    <tbody>
+      {loop: $detail}
+      <tr>
+        <th>ID Log</th>
+        <td><span class="label label-primary">#{$value.id}</span></td>
+      </tr>
+      <tr>
+        <th>Pengguna</th>
+        <td><strong>{$value.display_user}</strong> {if: !empty($value.username)}<span class="text-muted">({$value.username})</span>{/if}</td>
+      </tr>
+      <tr>
+        <th>Waktu Eksekusi</th>
+        <td>{$value.created_at}</td>
+      </tr>
+      <tr>
+        <th>SQL Query</th>
+        <td><pre class="logs-detail-pre">{$value.sql_text}</pre></td>
+      </tr>
+      <tr>
+        <th>Bindings</th>
+        <td><pre class="logs-detail-pre" style="background: #1e293b;">{if: !empty($value.bindings)}{$value.bindings}{else}-{/if}</pre></td>
+      </tr>
+      <tr>
+        <th>Error Message</th>
+        <td>
+          {if: !empty($value.error_message)}
+          <div class="alert alert-danger" style="margin: 0; padding: 8px 10px; font-size: 12px;">{$value.error_message}</div>
+          {else}
+          <span class="label label-success">Tidak ada error (OK)</span>
+          {/if}
+        </td>
+      </tr>
+      {/loop}
+    </tbody>
+  </table>
 </div>
-<div class="modal-footer">
-    <button type="button" id="export_pdf_detail" class="btn btn-danger">PDF</button>
-    <button type="button" class="btn btn-primary" data-dismiss="modal">Tutup</button>
+<div class="modal-footer" style="background: #f8fafc; border-top: 1px solid #e2e8f0;">
+  <button type="button" id="export_pdf_detail" class="btn btn-sm btn-danger"><i class="fa fa-file-pdf-o"></i> PDF</button>
+  <button type="button" class="btn btn-sm btn-default" data-dismiss="modal">Tutup</button>
 </div>
 <script>
 $(document).ready(function() {
-
-    // ===========================================
-    // Ketika tombol export pdf di tekan
-    // ===========================================
-    $("#export_pdf_detail").click(function () {
-        var doc = new jsPDF('p', 'pt', 'A4'); /* pilih 'l' atau 'p' */
-        var img = "{?=file_exists(BASE_DIR . '/' . $settings['logo']) ? base64_encode(file_get_contents(BASE_DIR . '/' . $settings['logo'])) : ''?}";
-        doc.addImage(img, 'JPEG', 20, 10, 50, 50);
-        doc.setFontSize(20);
-        doc.text("{?=isset_or($settings.nama_instansi)?}", 80, 35, null, null, null);
-        doc.setFontSize(10);
-        doc.text("{?=isset_or($settings.alamat)?} - {?=isset_or($settings.kota)?} - {?=isset_or($settings.propinsi)?}", 80, 46, null, null, null);
-        doc.text("Telepon: {?=isset_or($settings.nomor_telepon)?} - Email: {?=isset_or($settings.email)?}", 80, 56, null, null, null);
-        doc.line(20,70,572,70,null); 
-        doc.line(20,72,572,72,null); 
-        doc.setFontSize(14);
-        doc.text("Data Detail", 20, 95, null, null, null);
-        const totalPagesExp = "{total_pages_count_string}";        
-        doc.autoTable({
-            html: '#tbl_detail_mlite_query_logs',
-            startY: 105,
-            margin: {
-                left: 20, 
-                right: 20
-            }, 
-            styles: {
-                fontSize: 10,
-                cellPadding: 5
-            }, 
-            didDrawPage: data => {
-                let footerStr = "Page " + doc.internal.getNumberOfPages();
-                if (typeof doc.putTotalPages === 'function') {
-                footerStr = footerStr + " of " + totalPagesExp;
-                }
-                doc.setFontSize(10);
-                doc.text(`© ${new Date().getFullYear()} {?=isset_or($settings.nama_instansi)?}.`, data.settings.margin.left, doc.internal.pageSize.height - 10);                
-                doc.text(footerStr, data.settings.margin.left + 480, doc.internal.pageSize.height - 10);
-           }
-        });
+  $("#export_pdf_detail").on('click', function () {
+    var doc = new jsPDF('p', 'pt', 'A4');
+    var img = "{?=file_exists(BASE_DIR . '/' . $settings['logo']) ? base64_encode(file_get_contents(BASE_DIR . '/' . $settings['logo'])) : ''?}";
+    if (img) {
+      doc.addImage(img, 'JPEG', 20, 10, 50, 50);
+    }
+    doc.setFontSize(18);
+    doc.text("{?=isset_or($settings.nama_instansi)?}", 80, 35, null, null, null);
+    doc.setFontSize(10);
+    doc.text("{?=isset_or($settings.alamat)?} - {?=isset_or($settings.kota)?} - {?=isset_or($settings.propinsi)?}", 80, 46, null, null, null);
+    doc.text("Telepon: {?=isset_or($settings.nomor_telepon)?} - Email: {?=isset_or($settings.email)?}", 80, 56, null, null, null);
+    doc.line(20, 70, 572, 70, null);
+    doc.line(20, 72, 572, 72, null);
+    doc.setFontSize(13);
+    doc.text("Detail Log Query", 20, 95, null, null, null);
+    const totalPagesExp = "{total_pages_count_string}";
+    doc.autoTable({
+      html: '#tbl_detail_mlite_query_logs',
+      startY: 105,
+      margin: { left: 20, right: 20 },
+      styles: { fontSize: 9, cellPadding: 5 },
+      didDrawPage: function (data) {
+        var footerStr = "Page " + doc.internal.getNumberOfPages();
         if (typeof doc.putTotalPages === 'function') {
-            doc.putTotalPages(totalPagesExp);
+          footerStr = footerStr + " of " + totalPagesExp;
         }
-        // doc.save('detail_data_mlite_query_logs.pdf')
-        window.open(doc.output('bloburl'), '_blank',"toolbar=no,status=no,menubar=no,scrollbars=no,resizable=no,modal=yes");  
-              
-    }) 
-}); 
+        doc.setFontSize(9);
+        doc.text("© " + new Date().getFullYear() + " {?=isset_or($settings.nama_instansi)?}.", data.settings.margin.left, doc.internal.pageSize.height - 10);
+        doc.text(footerStr, data.settings.margin.left + 480, doc.internal.pageSize.height - 10);
+      }
+    });
+    if (typeof doc.putTotalPages === 'function') {
+      doc.putTotalPages(totalPagesExp);
+    }
+    window.open(doc.output('bloburl'), '_blank', 'toolbar=no,status=no,menubar=no,scrollbars=no,resizable=no,modal=yes');
+  });
+});
 </script>
