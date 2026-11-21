@@ -203,6 +203,11 @@ class QueryWrapper
         }
 
         if (is_array($value) && !empty($value)) {
+            if ($operator === '=') {
+                $operator = 'IN';
+            } elseif ($operator === '!=' || $operator === '<>') {
+                $operator = 'NOT IN';
+            }
             foreach ($value as $v) {
                 array_push($this->condition_binds, $v);
             }

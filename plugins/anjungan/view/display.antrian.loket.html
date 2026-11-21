@@ -411,14 +411,14 @@
       <!-- Card 1: Loket Pendaftaran 1 (A) -->
       <article class="queue-card card-loket" id="cardLoket1">
         <div class="card-header-bar">
-          <span class="card-title-text"><i class="fa fa-id-card"></i> {$nama_loket_1}</span>
+          <span class="card-title-text" id="titleCard1"><i class="fa fa-id-card"></i> {$nama_loket_1}</span>
           <span class="card-badge-letter">A</span>
         </div>
         <div class="card-body-number">
           <div class="digital-number">A-<span class="antrian_Loket1">{?=isset_or($init_loket1_no, '000')?}</span></div>
         </div>
         <div class="card-footer-bar">
-          <div class="footer-counter">KONTER <span class="get_Loket1">1</span></div>
+          <div class="footer-counter"><span class="txt-sebutan">{?=strtoupper(isset_or($sebutan_loket, 'Loket'))?}</span> <span class="get_Loket1">{?=isset_or($loket_first, '1')?}</span></div>
           <span class="footer-status-label" id="statusLoket1">Menunggu</span>
         </div>
       </article>
@@ -439,7 +439,7 @@
           <div class="digital-number"><span id="prefixCard2">{$card2_prefix}</span>-<span class="antrian_Loket2">{?=isset_or($init_card2_no, '000')?}</span></div>
         </div>
         <div class="card-footer-bar">
-          <div class="footer-counter">KONTER <span class="get_Loket2">{?=isset_or($init_card2_counter, '2')?}</span></div>
+          <div class="footer-counter"><span class="txt-sebutan">{?=strtoupper(isset_or($sebutan_loket, 'Loket'))?}</span> <span class="get_Loket2">{?=isset_or($init_card2_counter, '2')?}</span></div>
           <span class="footer-status-label" id="statusLoket2">Menunggu</span>
         </div>
       </article>
@@ -454,7 +454,7 @@
           <div class="digital-number">F-<span class="antrian_Apotek">{?=isset_or($init_apotek_no, '000')?}</span></div>
         </div>
         <div class="card-footer-bar">
-          <div class="footer-counter">KONTER <span class="get_Apotek">{?=isset_or($init_apotek_counter, '1')?}</span></div>
+          <div class="footer-counter"><span class="txt-sebutan">{?=strtoupper(isset_or($sebutan_loket, 'Loket'))?}</span> <span class="get_Apotek">{?=isset_or($init_apotek_counter, '1')?}</span></div>
           <span class="footer-status-label" id="statusApotek">Menunggu</span>
         </div>
       </article>
@@ -565,9 +565,15 @@
       cache: false,
       success: function(data) {
         if(!data) return;
+        if(data.sebutan_loket) {
+          $('.txt-sebutan').text(data.sebutan_loket.toUpperCase());
+        }
         if(data.loket1) {
           $('.antrian_Loket1').html(data.loket1.antrian || '000');
           $('.get_Loket1').html(data.loket1.counter || '1');
+          if (data.loket1.nama) {
+            $('#titleCard1').html('<i class="fa fa-id-card"></i> ' + data.loket1.nama);
+          }
         }
         if(data.card2) {
           $('.antrian_Loket2').html(data.card2.antrian || '000');
@@ -616,7 +622,7 @@
         if(data && data.status === true && data.type) {
           isAnnouncing = true;
           highlightCard(data.type, data.noantrian, data.loket);
-          panggilAudio(data.panggil, data.type, data.noantrian, data.loket, function() {
+          panggilAudio(data, function() {
             setSelesai(data.id);
             isAnnouncing = false;
             setTimeout(getAntrian, 1500);
@@ -649,16 +655,21 @@
       $('.get_Apotek').html(loket || '1');
     } else {
       // Type: Loket (Pendaftaran)
-      if(parseInt(loket) === 2) {
-        cardId = '#cardLoket2';
-        statusId = '#statusLoket2';
-        $('.antrian_Loket2').html(nomor);
-        $('.get_Loket2').html('2');
-      } else {
+      var curSebutan = '{?=isset_or($sebutan_loket, "Loket")?}';
+      var loketFirst = parseInt('{?=isset_or($loket_first, 1)?}', 10);
+      if(parseInt(loket) === loketFirst) {
         cardId = '#cardLoket1';
         statusId = '#statusLoket1';
         $('.antrian_Loket1').html(nomor);
-        $('.get_Loket1').html('1');
+        $('.get_Loket1').html(loket);
+      } else {
+        cardId = '#cardLoket2';
+        statusId = '#statusLoket2';
+        $('.antrian_Loket2').html(nomor);
+        $('.get_Loket2').html(loket);
+        if ('{?=isset_or($display_card2, "loket2")?}' === 'loket2') {
+          $('#titleCard2').html('<i class="fa fa-id-card"></i> ' + curSebutan + ' Pendaftaran ' + loket);
+        }
       }
       $('.antrian_Loket').html(nomor);
       $('.get_Loket').html(loket);
@@ -673,16 +684,143 @@
     }, 12000);
   }
 
-  function panggilAudio(wordsArray, type, nomor, loket, callback) {
+  // Dispatcher pemutaran suara panggilan (TTS Selaras atau Potongan File WAV)
+  function panggilAudio(dataOrWords, param2, param3, param4, param5) {
+    var callback = null;
+    var dataObj = {};
+
+    if (dataOrWords && typeof dataOrWords === 'object' && !Array.isArray(dataOrWords) && dataOrWords.type) {
+      dataObj = dataOrWords;
+      callback = (typeof param2 === 'function') ? param2 : null;
+    } else {
+      dataObj = {
+        panggil: dataOrWords,
+        type: param2,
+        noantrian: param3,
+        loket: param4
+      };
+      callback = (typeof param5 === 'function') ? param5 : null;
+    }
+
+    var mode = dataObj.suara_mode || '{?=isset_or($suara_panggilan_mode, "tts")?}';
+
+    if (mode === 'tts' && ('speechSynthesis' in window)) {
+      panggilAudioTTS(dataObj, callback);
+    } else {
+      panggilAudioLegacy(dataObj.panggil, dataObj.type, dataObj.noantrian, dataObj.loket, callback);
+    }
+  }
+
+  // 1. Suara Panggilan Selaras & Alami (Text-to-Speech Bahasa Indonesia + Chime Ding-Dong)
+  function panggilAudioTTS(data, callback) {
+    var chime = new Audio('{?=url()?}/plugins/anjungan/suara/notification.wav');
+    chime.playbackRate = 1.0;
+
+    var hasSpoken = false;
+    function doSpeak() {
+      if (hasSpoken) return;
+      hasSpoken = true;
+
+      try {
+        window.speechSynthesis.cancel();
+      } catch(e) {}
+
+      var letter = (data.kode || 'a').toUpperCase();
+      var rawNo = parseInt(data.raw_noantrian || data.noantrian || 1, 10);
+      var formattedNo = data.noantrian || ('000' + rawNo).slice(-3);
+
+      var penyebutan = data.suara_penyebutan || '{?=isset_or($suara_panggilan_penyebutan, "kode")?}';
+      // Contoh: 'A001' (diucapkan per digit "A nol nol satu") atau 'A 1' (diucapkan terbilang "A satu")
+      var noSpoken = (penyebutan === 'terbilang') ? (letter + ' ' + rawNo) : (letter + formattedNo);
+
+      var sebutan = data.sebutan || '{?=isset_or($sebutan_loket, "Loket")?}';
+      var numLoket = parseInt(data.loket || 1, 10);
+      var destination = sebutan + ' ' + numLoket;
+
+      var typeLower = (data.type || '').toLowerCase();
+      if (typeLower === 'cs') {
+        letter = 'B';
+        destination = 'Customer Service';
+        noSpoken = (penyebutan === 'terbilang') ? ('B ' + rawNo) : ('B' + formattedNo);
+      } else if (typeLower === 'apotek') {
+        letter = 'F';
+        destination = 'Apotek Farmasi';
+        noSpoken = (penyebutan === 'terbilang') ? ('F ' + rawNo) : ('F' + formattedNo);
+      }
+
+      var formatK = data.suara_format || '{?=isset_or($suara_panggilan_format, "di")?}';
+      var sentence = '';
+      if (formatK === 'menuju') {
+        sentence = 'Nomor antrian ' + noSpoken + ', silakan menuju ke ' + destination;
+      } else {
+        // Format selaras default: "Nomor antrian A001, di Loket 3"
+        sentence = 'Nomor antrian ' + noSpoken + ', di ' + destination;
+      }
+
+      var utterance = new SpeechSynthesisUtterance(sentence);
+      utterance.lang = 'id-ID';
+      utterance.rate = 0.92;
+      utterance.pitch = 1.0;
+
+      // Cari profil suara Bahasa Indonesia terbaik
+      var voices = window.speechSynthesis.getVoices();
+      var idVoice = null;
+      for (var i = 0; i < voices.length; i++) {
+        var v = voices[i];
+        if (v.lang === 'id-ID' || v.lang === 'id_ID' || (v.lang && v.lang.toLowerCase().indexOf('id') === 0)) {
+          idVoice = v;
+          break;
+        }
+      }
+      if (idVoice) utterance.voice = idVoice;
+
+      var ended = false;
+      function finishTTS() {
+        if (!ended) {
+          ended = true;
+          if (typeof callback === 'function') callback();
+        }
+      }
+
+      utterance.onend = finishTTS;
+      utterance.onerror = function(err) {
+        console.log('TTS speak error, fallback to legacy:', err);
+        finishTTS();
+      };
+
+      setTimeout(finishTTS, 8000);
+      window.speechSynthesis.speak(utterance);
+    }
+
+    chime.addEventListener('ended', doSpeak);
+    chime.addEventListener('error', doSpeak);
+
+    var playPromise = chime.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(function(err) {
+        console.log('Chime playback prevented, speaking directly:', err);
+        showAudioUnlockNotice();
+        doSpeak();
+      });
+    }
+
+    setTimeout(doSpeak, 3000);
+  }
+
+  // 2. Pemutar File Audio Potongan (.WAV Bawaan - Mode Klasik / Fallback)
+  function panggilAudioLegacy(wordsArray, type, nomor, loket, callback) {
     if (!wordsArray || wordsArray.length === 0) {
-      fallbackTTS(type, nomor, loket, callback);
+      if (typeof callback === 'function') callback();
       return;
     }
 
     var audioQueue = [];
     $.each(wordsArray, function(idx, word) {
       if(word && word.trim() !== '') {
-        var soundFile = "{?=url()?}/plugins/anjungan/suara/" + word.trim().toLowerCase() + ".wav";
+        var w = word.trim().toLowerCase();
+        var ext = (w === 'loket' || w === 'lab') ? '.mp3' : '.wav';
+        if (w.indexOf('.') !== -1) ext = '';
+        var soundFile = "{?=url()?}/plugins/anjungan/suara/" + w + ext;
         audioQueue.push(soundFile);
       }
     });
@@ -712,6 +850,17 @@
     audio.addEventListener('ended', next);
     audio.addEventListener('error', function() {
       console.log('Suara tidak ditemukan:', files[index]);
+      if (files[index].indexOf('.wav') !== -1) {
+        var altMp3 = files[index].replace(/\.wav$/, '.mp3');
+        var audioAlt = new Audio(altMp3);
+        audioAlt.addEventListener('ended', next);
+        audioAlt.addEventListener('error', function() { next(); });
+        var playPromiseAlt = audioAlt.play();
+        if (playPromiseAlt !== undefined) {
+          playPromiseAlt.catch(function() { next(); });
+        }
+        return;
+      }
       next();
     });
 
@@ -726,34 +875,6 @@
 
     // Safety timeout in case ended doesn't fire
     setTimeout(next, 3500);
-  }
-
-  // SpeechSynthesis Web API fallback
-  function fallbackTTS(type, nomor, loket, callback) {
-    if ('speechSynthesis' in window) {
-      var letter = 'A';
-      var destination = (parseInt(loket) === 2) ? 'Loket Pendaftaran 2' : 'Loket Pendaftaran 1';
-      if ((type || '').toLowerCase() === 'cs') {
-        letter = 'B';
-        destination = 'Customer Service';
-      } else if ((type || '').toLowerCase() === 'apotek') {
-        letter = 'F';
-        destination = 'Apotek Farmasi';
-      }
-
-      var utterance = new SpeechSynthesisUtterance('Nomor antrian ' + letter + ' ' + parseInt(nomor) + ', silakan menuju ke ' + destination);
-      utterance.lang = 'id-ID';
-      utterance.rate = 0.9;
-      utterance.onend = function() {
-        if (typeof callback === 'function') callback();
-      };
-      utterance.onerror = function() {
-        if (typeof callback === 'function') callback();
-      };
-      window.speechSynthesis.speak(utterance);
-    } else {
-      if (typeof callback === 'function') callback();
-    }
   }
 
   function setSelesai(id) {

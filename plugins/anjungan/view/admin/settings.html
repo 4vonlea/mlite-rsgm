@@ -31,21 +31,25 @@
                         </div>
                         <div class="panel-body">
                             <div class="form-group">
-                                <label>Mode Loket Pendaftaran yang Aktif:</label>
-                                <select name="anjungan[antrian_loket]" class="form-control">
-                                    <option value="1,2" {if: isset_or($settings.anjungan.antrian_loket) == '1,2'}selected{/if}>2 Loket Aktif (Konter 1 & Konter 2 Melayani Antrian Pendaftaran A)</option>
-                                    <option value="1" {if: isset_or($settings.anjungan.antrian_loket) == '1'}selected{/if}>1 Loket Saja (Hanya Konter 1)</option>
-                                    <option value="1,2,3" {if: isset_or($settings.anjungan.antrian_loket) == '1,2,3'}selected{/if}>3 Loket Aktif (Konter 1, 2, & 3)</option>
+                                <label>Sebutan Kata Panggilan (Loket / Konter):</label>
+                                <select name="anjungan[sebutan_loket]" class="form-control">
+                                    <option value="Loket" {if: isset_or($settings.anjungan.sebutan_loket, 'Loket') == 'Loket'}selected{/if}>Loket (Suara: "Nomor antrian ... Loket X" & Tampilan TV "LOKET X")</option>
+                                    <option value="Konter" {if: isset_or($settings.anjungan.sebutan_loket) == 'Konter'}selected{/if}>Konter (Suara: "Nomor antrian ... Konter X" & Tampilan TV "KONTER X")</option>
                                 </select>
-                                <small class="text-muted"><i class="fa fa-info-circle"></i> Pilih apakah pendaftaran dilayani oleh 1 loket atau 2 loket sekaligus secara paralel.</small>
+                                <small class="text-muted"><i class="fa fa-info-circle"></i> Menentukan kata yang diucapkan pengeras suara TV dan ditampilkan pada layar kartu/pemanggil.</small>
+                            </div>
+                            <div class="form-group">
+                                <label>Daftar Nomor Loket Pendaftaran Aktif (Fleksibel):</label>
+                                <input type="text" name="anjungan[antrian_loket]" class="form-control" value="{?=isset_or($settings.anjungan.antrian_loket, '1,2')?}" placeholder="Contoh: 1,2 atau 1,2,3 atau 1,2,3,4,5" />
+                                <small class="text-muted"><i class="fa fa-info-circle"></i> Masukkan angka nomor loket yang beroperasi dipisahkan dengan tanda koma (contoh: <code>1,2</code>, <code>1,2,3</code>, atau <code>1,2,3,4,5</code>). Petugas di loket mana pun dapat langsung memanggil sesuai nomor loketnya.</small>
                             </div>
                             <div class="form-group">
                                 <label>Mode Kartu 2 pada TV Display Antrian:</label>
                                 <select name="anjungan[display_card2]" class="form-control">
-                                    <option value="loket2" {if: isset_or($settings.anjungan.display_card2, 'loket2') == 'loket2'}selected{/if}>Loket Pendaftaran 2 (A) - [Customer Service difungsikan jadi Loket 2]</option>
+                                    <option value="loket2" {if: isset_or($settings.anjungan.display_card2, 'loket2') == 'loket2'}selected{/if}>Loket Pendaftaran 2 / Loket Aktif Lainnya (A)</option>
                                     <option value="cs" {if: isset_or($settings.anjungan.display_card2) == 'cs'}selected{/if}>Customer Service / Pengaduan (B)</option>
                                 </select>
-                                <small class="text-muted"><i class="fa fa-info-circle"></i> Pilih <b>Loket Pendaftaran 2</b> agar kolom kedua di TV Display menampilkan Loket 2 (A), atau <b>Customer Service</b> jika tetap ingin menampilkan antrian CS (B).</small>
+                                <small class="text-muted"><i class="fa fa-info-circle"></i> Pilih <b>Loket Pendaftaran 2 / Loket Lainnya</b> agar kolom kedua di TV Display menampilkan loket pendaftaran paralel (A), atau <b>Customer Service</b> jika ingin menampilkan antrian CS (B).</small>
                             </div>
                             <div class="form-group">
                                 <label>Nama / Label Loket 1:</label>
@@ -54,6 +58,36 @@
                             <div class="form-group">
                                 <label>Nama / Label Loket 2:</label>
                                 <input type="text" name="anjungan[nama_loket_2]" class="form-control" value="{?=isset_or($settings.anjungan.nama_loket_2, 'Loket Pendaftaran 2')?}" />
+                            </div>
+
+                            <hr style="margin: 15px 0; border-top: 1px dashed #cbd5e1;" />
+                            <h5 style="font-weight: bold; color: #1e293b;"><i class="fa fa-volume-up text-primary"></i> Penyelarasan Suara Pengumuman Panggilan</h5>
+
+                            <div class="form-group">
+                                <label>Mode Suara Pengumuman Panggilan:</label>
+                                <select name="anjungan[suara_panggilan_mode]" id="suaraPanggilanMode" class="form-control">
+                                    <option value="tts" {if: isset_or($settings.anjungan.suara_panggilan_mode, 'tts') == 'tts'}selected{/if}>Suara Sintesis Alami Selaras (TTS Bahasa Indonesia - Rekomendasi)</option>
+                                    <option value="file" {if: isset_or($settings.anjungan.suara_panggilan_mode) == 'file'}selected{/if}>File Audio Rekaman Potongan (.WAV Bawaan)</option>
+                                </select>
+                                <small class="text-muted"><i class="fa fa-info-circle"></i> <b>TTS Selaras (Rekomendasi)</b> menghasilkan satu suara narator resmi yang mulus, jernih, dan selaras dari awal sampai akhir tanpa potongan audio belang-belang, serta fleksibel untuk nomor loket berapa pun.</small>
+                            </div>
+                            <div class="form-group">
+                                <label>Format Kalimat Panggilan:</label>
+                                <select name="anjungan[suara_panggilan_format]" id="suaraPanggilanFormat" class="form-control">
+                                    <option value="di" {if: isset_or($settings.anjungan.suara_panggilan_format, 'di') == 'di'}selected{/if}>"Nomor antrian {huruf}{nomor}, di {sebutan} {loket}" (Contoh: "Nomor antrian A001 di Loket 3")</option>
+                                    <option value="menuju" {if: isset_or($settings.anjungan.suara_panggilan_format) == 'menuju'}selected{/if}>"Nomor antrian {huruf}{nomor}, silakan menuju ke {sebutan} {loket}"</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Gaya Pelafalan Nomor Antrian:</label>
+                                <select name="anjungan[suara_panggilan_penyebutan]" id="suaraPanggilanPenyebutan" class="form-control">
+                                    <option value="kode" {if: isset_or($settings.anjungan.suara_panggilan_penyebutan, 'kode') == 'kode'}selected{/if}>Kode Lengkap Tiket (Contoh: "A001" / diucapkan "A nol nol satu")</option>
+                                    <option value="terbilang" {if: isset_or($settings.anjungan.suara_panggilan_penyebutan) == 'terbilang'}selected{/if}>Terbilang Angka (Contoh: "A satu", "A dua puluh lima")</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="background: #f8fafc; padding: 10px 14px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                                <button type="button" class="btn btn-sm btn-info" onclick="tesSuaraPanggilan()"><i class="fa fa-play-circle"></i> Tes Dengarkan Suara Panggilan</button>
+                                <span id="tesSuaraStatus" style="margin-left: 10px; font-weight: 600; font-size: 12px; color: #0284c7;"></span>
                             </div>
                         </div>
                     </div>
@@ -106,3 +140,78 @@
     </form>
 </div>
 <div style="display: none;">Powered by <a href="https://mlite.id/">mLITE</a></div>
+
+<script>
+function tesSuaraPanggilan() {
+    var mode = $('#suaraPanggilanMode').val();
+    var format = $('#suaraPanggilanFormat').val();
+    var penyebutan = $('#suaraPanggilanPenyebutan').val();
+    var sebutan = $('select[name="anjungan[sebutan_loket]"]').val() || 'Loket';
+    var statusSpan = $('#tesSuaraStatus');
+
+    statusSpan.html('<i class="fa fa-spinner fa-spin"></i> Memutar bel ding-dong...');
+
+    var chime = new Audio('{?=url()?}/plugins/anjungan/suara/notification.wav');
+    chime.playbackRate = 1.0;
+
+    function speakNow() {
+        if (mode === 'tts' && ('speechSynthesis' in window)) {
+            statusSpan.html('<i class="fa fa-volume-up"></i> Berbicara suara selaras...');
+            try {
+                window.speechSynthesis.cancel();
+            } catch(e) {}
+
+            var noSpoken = (penyebutan === 'terbilang') ? 'A 1' : 'A001';
+            var sentence = (format === 'menuju') ?
+                ('Nomor antrian ' + noSpoken + ', silakan menuju ke ' + sebutan + ' 3') :
+                ('Nomor antrian ' + noSpoken + ', di ' + sebutan + ' 3');
+
+            var utterance = new SpeechSynthesisUtterance(sentence);
+            utterance.lang = 'id-ID';
+            utterance.rate = 0.92;
+            utterance.pitch = 1.0;
+
+            var voices = window.speechSynthesis.getVoices();
+            var idVoice = null;
+            for (var i = 0; i < voices.length; i++) {
+                var v = voices[i];
+                if (v.lang === 'id-ID' || v.lang === 'id_ID' || (v.lang && v.lang.toLowerCase().indexOf('id') === 0)) {
+                    idVoice = v;
+                    break;
+                }
+            }
+            if (idVoice) utterance.voice = idVoice;
+
+            utterance.onend = function() {
+                statusSpan.html('<i class="fa fa-check-circle text-success"></i> Selesai diucapkan.');
+                setTimeout(function() { statusSpan.text(''); }, 3500);
+            };
+            utterance.onerror = function() {
+                statusSpan.text('TTS error pada browser.');
+            };
+
+            setTimeout(function() {
+                statusSpan.text('');
+            }, 6000);
+
+            window.speechSynthesis.speak(utterance);
+        } else {
+            statusSpan.html('<i class="fa fa-info-circle"></i> Mode file WAV aktif.');
+            setTimeout(function() { statusSpan.text(''); }, 3000);
+        }
+    }
+
+    chime.addEventListener('ended', speakNow);
+    chime.addEventListener('error', speakNow);
+
+    var playPromise = chime.play();
+    if (playPromise !== undefined) {
+        playPromise.catch(function(err) {
+            console.log('Chime playback caught:', err);
+            speakNow();
+        });
+    }
+
+    setTimeout(speakNow, 2500);
+}
+</script>

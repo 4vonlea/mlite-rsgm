@@ -1072,7 +1072,7 @@
     function refreshNextQueueNumbers() {
       // Fetch Next Loket Number
       $.ajax({
-        url: '{?=url()?}/anjungan/ajax?show=tampilloket',
+        url: '{?=url("anjungan/ajax")?}?show=tampilloket',
         type: 'GET',
         cache: false,
         success: function(html) {
@@ -1091,7 +1091,7 @@
 
       // Fetch Next CS Number
       $.ajax({
-        url: '{?=url()?}/anjungan/ajax?show=tampilcs',
+        url: '{?=url("anjungan/ajax")?}?show=tampilcs',
         type: 'GET',
         cache: false,
         success: function(html) {
@@ -1132,7 +1132,7 @@
       var btn = (type === 'Loket') ? $('#btnAmbilLoket') : $('#btnAmbilCS');
       btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Mencetak...');
 
-      var ajaxUrl = '{?=url()?}/anjungan/ajax?show=' + (type === 'Loket' ? 'simpanloket' : 'simpancs');
+      var ajaxUrl = '{?=url("anjungan/ajax")?}?show=' + (type === 'Loket' ? 'simpanloket' : 'simpancs');
 
       $.ajax({
         url: ajaxUrl,

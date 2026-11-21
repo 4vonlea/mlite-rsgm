@@ -5,14 +5,72 @@
                 <i class="fa fa-calendar-plus-o text-primary"></i> Bridging Update Jadwal Dokter ke BPJS HFIS
             </div>
             <div class="panel-body">
+                <style>
+                .day-card {
+                    transition: all 0.2s ease-in-out;
+                }
+                .day-card .toggle {
+                    width: 20px !important;
+                    height: 20px !important;
+                    border-radius: 4px !important;
+                    border: 2px solid #94a3b8 !important;
+                    background: #ffffff !important;
+                    margin-right: 6px !important;
+                    vertical-align: middle !important;
+                    box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
+                    transition: all 0.15s ease !important;
+                }
+                .day-card .toggle:hover {
+                    border-color: #22c55e !important;
+                }
+                .day-card .toggle.checked {
+                    background: #16a34a !important;
+                    border-color: #15803d !important;
+                    box-shadow: 0 2px 4px rgba(22, 163, 74, 0.25) !important;
+                }
+                .day-card .toggle.checked:after {
+                    content: '\2713' !important;
+                    color: #ffffff !important;
+                    font-size: 14px !important;
+                    font-weight: 900 !important;
+                    top: 50% !important;
+                    left: 50% !important;
+                    transform: translate(-50%, -50%) !important;
+                }
+                </style>
                 <div id="notif" style="margin-bottom:15px;"></div>
 
-                <div class="row" style="background:#f9fafb; padding:15px 5px; border-radius:6px; margin:0 0 20px 0; border:1px solid #eef2f6;">
+                <!-- KOTAK PANDUAN & ALUR HFIS BPJS -->
+                <div class="alert alert-info" style="border-left: 4px solid #0284c7; background: #f0f9ff; color: #0c4a6e; border-radius: 6px; padding: 14px 18px; margin-bottom: 20px;">
+                    <h4 style="margin-top: 0; color: #0369a1; font-weight: bold; font-size: 15px;">
+                        <i class="fa fa-info-circle"></i> Petunjuk & Alur Kerja Bridging HFIS BPJS:
+                    </h4>
+                    <div class="row" style="font-size: 12px; line-height: 1.6;">
+                        <div class="col-md-6" style="border-right: 1px dashed #bae6fd;">
+                            <b style="color: #0369a1;"><i class="fa fa-refresh"></i> 1. Alur Sinkronisasi Jadwal Dokter:</b>
+                            <ul style="margin: 4px 0 0 16px; padding-left: 0;">
+                                <li>Pilih <b>Dokter DPJP BPJS</b> dan <b>Poliklinik BPJS</b>. Sistem akan otomatis memuat jadwal praktek yang saat ini aktif tersimpan di database SIMRS.</li>
+                                <li>Centang hari-hari praktek yang dibuka, lalu tentukan <b>Kuota Pasien</b>, <b>Jam Buka</b>, dan <b>Jam Tutup</b>.</li>
+                                <li>Klik tombol <b class="text-primary"><i class="fa fa-upload"></i> Kirim & Simpan Jadwal ke BPJS HFIS</b>. Jadwal akan dikirim ke server BPJS dan langsung sinkron ke aplikasi <b>Mobile JKN</b> pasien.</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <b style="color: #b45309;"><i class="fa fa-calendar-times-o"></i> 2. Panduan Cara "Tutup HFIS / Dokter Libur":</b>
+                            <ul style="margin: 4px 0 0 16px; padding-left: 0;">
+                                <li><b>Tutup Hari Tertentu Permanen/Rutin (Misal Hari Sabtu Libur):</b> Cukup <u>hilangkan centang (uncheck)</u> pada hari tersebut, lalu klik tombol kirim. Server BPJS akan menimpa data dan otomatis menutup hari yang tidak dicentang di Mobile JKN.</li>
+                                <li><b>Dokter Cuti / Izin Sementara pada Tanggal Tertentu:</b> Dianjurkan mengatur di portal web resmi BPJS HFIS (<code>hfis.bpjs-kesehatan.go.id</code> menu <i>Libur Dokter</i>) agar jadwal mingguan tidak terhapus. Atau hilangkan centang hari tersebut di sini selama cuti, lalu centang kembali setelah dokter masuk.</li>
+                                <li><b>Tutup Karena Kuota Penuh:</b> Berjalan 100% otomatis ketika pendaftar Mobile JKN telah mencapai batas kuota yang diatur.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row" style="background:#f9fafb; padding:15px; border-radius:6px; margin:0 0 20px 0; border:1px solid #eef2f6;">
                     <div class="col-md-4">
                         <div class="form-group" style="margin-bottom:0;">
                             <label for="kd_dokter"><strong>Pilih Dokter DPJP BPJS:</strong></label>
                             <input type="hidden" name="t" id="t" value="{?=$_SESSION['token']?}">
-                            <select name="kd_dokter" id="kd_dokter" class="form-control" style="width:100%;">
+                            <select name="kd_dokter" id="kd_dokter" class="form-control" style="width:100%;" onchange="onDokterPoliChange()">
                                 <option value="">-- Pilih Dokter DPJP --</option>
                                 {loop: $dokter}
                                 <option value="{?=isset_or($value.kd_dokter_bpjs)?}">
@@ -25,7 +83,7 @@
                     <div class="col-md-4">
                         <div class="form-group" style="margin-bottom:0;">
                             <label for="kd_poli"><strong>Pilih Poliklinik BPJS:</strong></label>
-                            <select name="kd_poli" id="kd_poli" class="form-control" style="width:100%;">
+                            <select name="kd_poli" id="kd_poli" class="form-control" style="width:100%;" onchange="onDokterPoliChange()">
                                 <option value="">-- Pilih Poliklinik BPJS --</option>
                                 {loop: $poli}
                                 <option value="{?=isset_or($value.kd_poli_bpjs)?}">
@@ -43,6 +101,49 @@
                             </button>
                         </div>
                     </div>
+
+                    <!-- Tombol Aksi Tambahan & Preview Jadwal Saat Ini -->
+                    <div class="col-md-12" style="margin-top: 14px; border-top: 1px dashed #cbd5e1; padding-top: 10px;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                            <div>
+                                <button type="button" class="btn btn-warning btn-xs" id="btnTarikBpjs" onclick="tarikJadwalLangsungBpjs(true)">
+                                    <i class="fa fa-cloud-download"></i> <b>Tarik Jadwal Resmi dari BPJS HFIS</b>
+                                </button>
+                                <button type="button" class="btn btn-info btn-xs" id="btnMuatJadwal" onclick="muatJadwalAktif(true)">
+                                    <i class="fa fa-database"></i> Muat dari Database SIMRS
+                                </button>
+                                <button type="button" class="btn btn-default btn-xs" onclick="kosongkanForm()">
+                                    <i class="fa fa-eraser"></i> Kosongkan Pilihan
+                                </button>
+                                <span id="statusMuatJadwal" style="margin-left: 8px; font-size: 12px; font-weight: bold;"></span>
+                            </div>
+                            <div>
+                                <a href="{?=url([ADMIN, 'bridging_hfis', 'lihathfis'])?}" target="_blank" class="btn btn-xs btn-default" style="font-weight: 600;">
+                                    <i class="fa fa-search text-success"></i> Verifikasi Jadwal di Server BPJS (Lihat HFIS) <i class="fa fa-external-link"></i>
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Baris Aksi Khusus: Darurat Tutup Hari Ini & Pulihkan Jadwal -->
+                        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #cbd5e1;">
+                            <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 6px;">
+                                <span style="font-size: 11px; font-weight: bold; color: #64748b; text-transform: uppercase; margin-right: 4px;">
+                                    <i class="fa fa-bolt text-warning"></i> Operasional Cepat:
+                                </span>
+                                <button type="button" class="btn btn-danger btn-xs" id="btnTutupHariIni" onclick="konfirmasiTutupHariIni()" style="font-weight: bold; box-shadow: 0 1px 2px rgba(220, 38, 38, 0.2);">
+                                    <i class="fa fa-ban"></i> ⛔ Tutup Pelayanan Hari Ini (Dokter Berhalangan / Sakit)
+                                </button>
+                                <button type="button" class="btn btn-success btn-xs" id="btnPulihkanJadwal" onclick="konfirmasiPulihkanJadwal()" style="font-weight: bold;">
+                                    <i class="fa fa-refresh"></i> 🔄 Pulihkan Jadwal Normal SIMRS
+                                </button>
+                                <a href="{?=url([ADMIN, 'bridging_hfis', 'cutidokter'])?}" class="btn btn-warning btn-xs" style="font-weight: bold; color: #78350f;">
+                                    <i class="fa fa-calendar-times-o"></i> 📅 Kelola Cuti Dokter & DPJP Pengganti
+                                </a>
+                            </div>
+                        </div>
+
+                        <div id="previewJadwalAktif" style="display: none; margin-top: 10px; padding: 10px 14px; background: #e0f2fe; border: 1px solid #bae6fd; border-radius: 6px; font-size: 12px; color: #0369a1;"></div>
+                    </div>
                 </div>
 
                 <h4 style="margin-top:10px; margin-bottom:15px; border-bottom:2px solid #337ab7; padding-bottom:8px; color:#333;">
@@ -52,126 +153,132 @@
                 <div class="row">
                     <!-- Senin Pagi -->
                     <div class="col-md-2 col-sm-4 col-xs-6">
-                        <div class="well well-sm" style="background:#fff; border:1px solid #ddd;">
-                            <label style="display:block; margin-bottom:5px;">
-                                <input id="senin" type="checkbox" value="1|pagi"> <b>Senin</b>
+                        <div class="well well-sm day-card" id="card_senin" style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:6px; transition: all 0.2s;">
+                            <label style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; cursor:pointer;">
+                                <span><input id="senin" type="checkbox" value="1|pagi" onchange="onCheckboxDayChange('senin')" style="width:17px; height:17px; vertical-align:middle; cursor:pointer;"> <b style="font-size:13px; margin-left:3px; vertical-align:middle;">Senin</b></span>
+                                <span id="badge_senin" class="label label-default" style="font-size:10px; padding:3px 6px;">TUTUP</span>
                             </label>
                             <div class="form-group form-group-sm" style="margin-bottom:5px;">
                                 <label style="font-size:11px;">Kuota Pasien:</label>
-                                <input type="number" class="form-control" placeholder="Contoh: 30" id="kuotasenin">
+                                <input type="number" class="form-control" placeholder="Contoh: 30" id="kuotasenin" oninput="onInputDayChange('senin')">
                             </div>
                             <div class="form-group form-group-sm" style="margin-bottom:5px;">
                                 <label style="font-size:11px;">Buka:</label>
-                                <input type="time" name="dari1" class="form-control" id="dari1|pagi">
+                                <input type="time" name="dari1" class="form-control" id="dari1|pagi" oninput="onInputDayChange('senin')">
                             </div>
                             <div class="form-group form-group-sm" style="margin-bottom:0;">
                                 <label style="font-size:11px;">Tutup:</label>
-                                <input type="time" name="sampai1" class="form-control" id="sampai1|pagi">
+                                <input type="time" name="sampai1" class="form-control" id="sampai1|pagi" oninput="onInputDayChange('senin')">
                             </div>
                         </div>
                     </div>
 
                     <!-- Selasa Pagi -->
                     <div class="col-md-2 col-sm-4 col-xs-6">
-                        <div class="well well-sm" style="background:#fff; border:1px solid #ddd;">
-                            <label style="display:block; margin-bottom:5px;">
-                                <input id="selasa" type="checkbox" value="2|pagi"> <b>Selasa</b>
+                        <div class="well well-sm day-card" id="card_selasa" style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:6px; transition: all 0.2s;">
+                            <label style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; cursor:pointer;">
+                                <span><input id="selasa" type="checkbox" value="2|pagi" onchange="onCheckboxDayChange('selasa')" style="width:17px; height:17px; vertical-align:middle; cursor:pointer;"> <b style="font-size:13px; margin-left:3px; vertical-align:middle;">Selasa</b></span>
+                                <span id="badge_selasa" class="label label-default" style="font-size:10px; padding:3px 6px;">TUTUP</span>
                             </label>
                             <div class="form-group form-group-sm" style="margin-bottom:5px;">
                                 <label style="font-size:11px;">Kuota Pasien:</label>
-                                <input type="number" class="form-control" placeholder="Contoh: 30" id="kuotaselasa">
+                                <input type="number" class="form-control" placeholder="Contoh: 30" id="kuotaselasa" oninput="onInputDayChange('selasa')">
                             </div>
                             <div class="form-group form-group-sm" style="margin-bottom:5px;">
                                 <label style="font-size:11px;">Buka:</label>
-                                <input type="time" name="dari2" class="form-control" id="dari2|pagi">
+                                <input type="time" name="dari2" class="form-control" id="dari2|pagi" oninput="onInputDayChange('selasa')">
                             </div>
                             <div class="form-group form-group-sm" style="margin-bottom:0;">
                                 <label style="font-size:11px;">Tutup:</label>
-                                <input type="time" name="sampai2" class="form-control" id="sampai2|pagi">
+                                <input type="time" name="sampai2" class="form-control" id="sampai2|pagi" oninput="onInputDayChange('selasa')">
                             </div>
                         </div>
                     </div>
 
                     <!-- Rabu Pagi -->
                     <div class="col-md-2 col-sm-4 col-xs-6">
-                        <div class="well well-sm" style="background:#fff; border:1px solid #ddd;">
-                            <label style="display:block; margin-bottom:5px;">
-                                <input id="rabu" type="checkbox" value="3|pagi"> <b>Rabu</b>
+                        <div class="well well-sm day-card" id="card_rabu" style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:6px; transition: all 0.2s;">
+                            <label style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; cursor:pointer;">
+                                <span><input id="rabu" type="checkbox" value="3|pagi" onchange="onCheckboxDayChange('rabu')" style="width:17px; height:17px; vertical-align:middle; cursor:pointer;"> <b style="font-size:13px; margin-left:3px; vertical-align:middle;">Rabu</b></span>
+                                <span id="badge_rabu" class="label label-default" style="font-size:10px; padding:3px 6px;">TUTUP</span>
                             </label>
                             <div class="form-group form-group-sm" style="margin-bottom:5px;">
                                 <label style="font-size:11px;">Kuota Pasien:</label>
-                                <input type="number" class="form-control" placeholder="Contoh: 30" id="kuotarabu">
+                                <input type="number" class="form-control" placeholder="Contoh: 30" id="kuotarabu" oninput="onInputDayChange('rabu')">
                             </div>
                             <div class="form-group form-group-sm" style="margin-bottom:5px;">
                                 <label style="font-size:11px;">Buka:</label>
-                                <input type="time" name="dari3" class="form-control" id="dari3|pagi">
+                                <input type="time" name="dari3" class="form-control" id="dari3|pagi" oninput="onInputDayChange('rabu')">
                             </div>
                             <div class="form-group form-group-sm" style="margin-bottom:0;">
                                 <label style="font-size:11px;">Tutup:</label>
-                                <input type="time" name="sampai3" class="form-control" id="sampai3|pagi">
+                                <input type="time" name="sampai3" class="form-control" id="sampai3|pagi" oninput="onInputDayChange('rabu')">
                             </div>
                         </div>
                     </div>
 
                     <!-- Kamis Pagi -->
                     <div class="col-md-2 col-sm-4 col-xs-6">
-                        <div class="well well-sm" style="background:#fff; border:1px solid #ddd;">
-                            <label style="display:block; margin-bottom:5px;">
-                                <input id="kamis" type="checkbox" value="4|pagi"> <b>Kamis</b>
+                        <div class="well well-sm day-card" id="card_kamis" style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:6px; transition: all 0.2s;">
+                            <label style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; cursor:pointer;">
+                                <span><input id="kamis" type="checkbox" value="4|pagi" onchange="onCheckboxDayChange('kamis')" style="width:17px; height:17px; vertical-align:middle; cursor:pointer;"> <b style="font-size:13px; margin-left:3px; vertical-align:middle;">Kamis</b></span>
+                                <span id="badge_kamis" class="label label-default" style="font-size:10px; padding:3px 6px;">TUTUP</span>
                             </label>
                             <div class="form-group form-group-sm" style="margin-bottom:5px;">
                                 <label style="font-size:11px;">Kuota Pasien:</label>
-                                <input type="number" class="form-control" placeholder="Contoh: 30" id="kuotakamis">
+                                <input type="number" class="form-control" placeholder="Contoh: 30" id="kuotakamis" oninput="onInputDayChange('kamis')">
                             </div>
                             <div class="form-group form-group-sm" style="margin-bottom:5px;">
                                 <label style="font-size:11px;">Buka:</label>
-                                <input type="time" name="dari4" class="form-control" id="dari4|pagi">
+                                <input type="time" name="dari4" class="form-control" id="dari4|pagi" oninput="onInputDayChange('kamis')">
                             </div>
                             <div class="form-group form-group-sm" style="margin-bottom:0;">
                                 <label style="font-size:11px;">Tutup:</label>
-                                <input type="time" name="sampai4" class="form-control" id="sampai4|pagi">
+                                <input type="time" name="sampai4" class="form-control" id="sampai4|pagi" oninput="onInputDayChange('kamis')">
                             </div>
                         </div>
                     </div>
 
                     <!-- Jumat Pagi -->
                     <div class="col-md-2 col-sm-4 col-xs-6">
-                        <div class="well well-sm" style="background:#fff; border:1px solid #ddd;">
-                            <label style="display:block; margin-bottom:5px;">
-                                <input id="jumat" type="checkbox" value="5|pagi"> <b>Jumat</b>
+                        <div class="well well-sm day-card" id="card_jumat" style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:6px; transition: all 0.2s;">
+                            <label style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; cursor:pointer;">
+                                <span><input id="jumat" type="checkbox" value="5|pagi" onchange="onCheckboxDayChange('jumat')" style="width:17px; height:17px; vertical-align:middle; cursor:pointer;"> <b style="font-size:13px; margin-left:3px; vertical-align:middle;">Jumat</b></span>
+                                <span id="badge_jumat" class="label label-default" style="font-size:10px; padding:3px 6px;">TUTUP</span>
                             </label>
                             <div class="form-group form-group-sm" style="margin-bottom:5px;">
                                 <label style="font-size:11px;">Kuota Pasien:</label>
-                                <input type="number" class="form-control" placeholder="Contoh: 30" id="kuotajumat">
+                                <input type="number" class="form-control" placeholder="Contoh: 30" id="kuotajumat" oninput="onInputDayChange('jumat')">
                             </div>
                             <div class="form-group form-group-sm" style="margin-bottom:5px;">
                                 <label style="font-size:11px;">Buka:</label>
-                                <input type="time" name="dari5" class="form-control" id="dari5|pagi">
+                                <input type="time" name="dari5" class="form-control" id="dari5|pagi" oninput="onInputDayChange('jumat')">
                             </div>
                             <div class="form-group form-group-sm" style="margin-bottom:0;">
                                 <label style="font-size:11px;">Tutup:</label>
-                                <input type="time" name="sampai5" class="form-control" id="sampai5|pagi">
+                                <input type="time" name="sampai5" class="form-control" id="sampai5|pagi" oninput="onInputDayChange('jumat')">
                             </div>
                         </div>
                     </div>
 
                     <!-- Sabtu Pagi -->
                     <div class="col-md-2 col-sm-4 col-xs-6">
-                        <div class="well well-sm" style="background:#fff; border:1px solid #ddd;">
-                            <label style="display:block; margin-bottom:5px;">
-                                <input id="sabtu" type="checkbox" value="6|pagi"> <b>Sabtu</b>
+                        <div class="well well-sm day-card" id="card_sabtu" style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:6px; transition: all 0.2s;">
+                            <label style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; cursor:pointer;">
+                                <span><input id="sabtu" type="checkbox" value="6|pagi" onchange="onCheckboxDayChange('sabtu')" style="width:17px; height:17px; vertical-align:middle; cursor:pointer;"> <b style="font-size:13px; margin-left:3px; vertical-align:middle;">Sabtu</b></span>
+                                <span id="badge_sabtu" class="label label-default" style="font-size:10px; padding:3px 6px;">TUTUP</span>
                             </label>
                             <div class="form-group form-group-sm" style="margin-bottom:5px;">
                                 <label style="font-size:11px;">Kuota Pasien:</label>
-                                <input type="number" class="form-control" placeholder="Contoh: 30" id="kuotasabtu">
+                                <input type="number" class="form-control" placeholder="Contoh: 30" id="kuotasabtu" oninput="onInputDayChange('sabtu')">
                             </div>
                             <div class="form-group form-group-sm" style="margin-bottom:5px;">
                                 <label style="font-size:11px;">Buka:</label>
-                                <input type="time" name="dari6" class="form-control" id="dari6|pagi">
+                                <input type="time" name="dari6" class="form-control" id="dari6|pagi" oninput="onInputDayChange('sabtu')">
                             </div>
                             <div class="form-group form-group-sm" style="margin-bottom:0;">
                                 <label style="font-size:11px;">Tutup:</label>
-                                <input type="time" name="sampai6" class="form-control" id="sampai6|pagi">
+                                <input type="time" name="sampai6" class="form-control" id="sampai6|pagi" oninput="onInputDayChange('sabtu')">
                             </div>
                         </div>
                     </div>
@@ -184,131 +291,335 @@
                 <div class="row">
                     <!-- Senin Sore -->
                     <div class="col-md-2 col-sm-4 col-xs-6">
-                        <div class="well well-sm" style="background:#fff; border:1px solid #ddd;">
-                            <label style="display:block; margin-bottom:5px;">
-                                <input id="seninsore" type="checkbox" value="1|sore"> <b>Senin Sore</b>
+                        <div class="well well-sm day-card" id="card_seninsore" style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:6px; transition: all 0.2s;">
+                            <label style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; cursor:pointer;">
+                                <span><input id="seninsore" type="checkbox" value="1|sore" onchange="onCheckboxDayChange('seninsore')" style="width:17px; height:17px; vertical-align:middle; cursor:pointer;"> <b style="font-size:13px; margin-left:3px; vertical-align:middle;">Senin Sore</b></span>
+                                <span id="badge_seninsore" class="label label-default" style="font-size:10px; padding:3px 6px;">TUTUP</span>
                             </label>
                             <div class="form-group form-group-sm" style="margin-bottom:5px;">
                                 <label style="font-size:11px;">Kuota Pasien:</label>
-                                <input type="number" class="form-control" placeholder="Contoh: 30" id="kuotaseninsore">
+                                <input type="number" class="form-control" placeholder="Contoh: 30" id="kuotaseninsore" oninput="onInputDayChange('seninsore')">
                             </div>
                             <div class="form-group form-group-sm" style="margin-bottom:5px;">
                                 <label style="font-size:11px;">Buka:</label>
-                                <input type="time" name="dari1sore" class="form-control" id="darisore1|sore">
+                                <input type="time" name="dari1sore" class="form-control" id="darisore1|sore" oninput="onInputDayChange('seninsore')">
                             </div>
                             <div class="form-group form-group-sm" style="margin-bottom:0;">
                                 <label style="font-size:11px;">Tutup:</label>
-                                <input type="time" name="sampai1sore" class="form-control" id="sampaisore1|sore">
+                                <input type="time" name="sampai1sore" class="form-control" id="sampaisore1|sore" oninput="onInputDayChange('seninsore')">
                             </div>
                         </div>
                     </div>
 
                     <!-- Selasa Sore -->
                     <div class="col-md-2 col-sm-4 col-xs-6">
-                        <div class="well well-sm" style="background:#fff; border:1px solid #ddd;">
-                            <label style="display:block; margin-bottom:5px;">
-                                <input id="selasasore" type="checkbox" value="2|sore"> <b>Selasa Sore</b>
+                        <div class="well well-sm day-card" id="card_selasasore" style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:6px; transition: all 0.2s;">
+                            <label style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; cursor:pointer;">
+                                <span><input id="selasasore" type="checkbox" value="2|sore" onchange="onCheckboxDayChange('selasasore')" style="width:17px; height:17px; vertical-align:middle; cursor:pointer;"> <b style="font-size:13px; margin-left:3px; vertical-align:middle;">Selasa Sore</b></span>
+                                <span id="badge_selasasore" class="label label-default" style="font-size:10px; padding:3px 6px;">TUTUP</span>
                             </label>
                             <div class="form-group form-group-sm" style="margin-bottom:5px;">
                                 <label style="font-size:11px;">Kuota Pasien:</label>
-                                <input type="number" class="form-control" placeholder="Contoh: 30" id="kuotaselasasore">
+                                <input type="number" class="form-control" placeholder="Contoh: 30" id="kuotaselasasore" oninput="onInputDayChange('selasasore')">
                             </div>
                             <div class="form-group form-group-sm" style="margin-bottom:5px;">
                                 <label style="font-size:11px;">Buka:</label>
-                                <input type="time" name="dari2sore" class="form-control" id="darisore2|sore">
+                                <input type="time" name="dari2sore" class="form-control" id="darisore2|sore" oninput="onInputDayChange('selasasore')">
                             </div>
                             <div class="form-group form-group-sm" style="margin-bottom:0;">
                                 <label style="font-size:11px;">Tutup:</label>
-                                <input type="time" name="sampai2sore" class="form-control" id="sampaisore2|sore">
+                                <input type="time" name="sampai2sore" class="form-control" id="sampaisore2|sore" oninput="onInputDayChange('selasasore')">
                             </div>
                         </div>
                     </div>
 
                     <!-- Rabu Sore -->
                     <div class="col-md-2 col-sm-4 col-xs-6">
-                        <div class="well well-sm" style="background:#fff; border:1px solid #ddd;">
-                            <label style="display:block; margin-bottom:5px;">
-                                <input id="rabusore" type="checkbox" value="3|sore"> <b>Rabu Sore</b>
+                        <div class="well well-sm day-card" id="card_rabusore" style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:6px; transition: all 0.2s;">
+                            <label style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; cursor:pointer;">
+                                <span><input id="rabusore" type="checkbox" value="3|sore" onchange="onCheckboxDayChange('rabusore')" style="width:17px; height:17px; vertical-align:middle; cursor:pointer;"> <b style="font-size:13px; margin-left:3px; vertical-align:middle;">Rabu Sore</b></span>
+                                <span id="badge_rabusore" class="label label-default" style="font-size:10px; padding:3px 6px;">TUTUP</span>
                             </label>
                             <div class="form-group form-group-sm" style="margin-bottom:5px;">
                                 <label style="font-size:11px;">Kuota Pasien:</label>
-                                <input type="number" class="form-control" placeholder="Contoh: 30" id="kuotarabusore">
+                                <input type="number" class="form-control" placeholder="Contoh: 30" id="kuotarabusore" oninput="onInputDayChange('rabusore')">
                             </div>
                             <div class="form-group form-group-sm" style="margin-bottom:5px;">
                                 <label style="font-size:11px;">Buka:</label>
-                                <input type="time" name="dari3sore" class="form-control" id="darisore3|sore">
+                                <input type="time" name="dari3sore" class="form-control" id="darisore3|sore" oninput="onInputDayChange('rabusore')">
                             </div>
                             <div class="form-group form-group-sm" style="margin-bottom:0;">
                                 <label style="font-size:11px;">Tutup:</label>
-                                <input type="time" name="sampai3sore" class="form-control" id="sampaisore3|sore">
+                                <input type="time" name="sampai3sore" class="form-control" id="sampaisore3|sore" oninput="onInputDayChange('rabusore')">
                             </div>
                         </div>
                     </div>
 
                     <!-- Kamis Sore -->
                     <div class="col-md-2 col-sm-4 col-xs-6">
-                        <div class="well well-sm" style="background:#fff; border:1px solid #ddd;">
-                            <label style="display:block; margin-bottom:5px;">
-                                <input id="kamissore" type="checkbox" value="4|sore"> <b>Kamis Sore</b>
+                        <div class="well well-sm day-card" id="card_kamissore" style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:6px; transition: all 0.2s;">
+                            <label style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; cursor:pointer;">
+                                <span><input id="kamissore" type="checkbox" value="4|sore" onchange="onCheckboxDayChange('kamissore')" style="width:17px; height:17px; vertical-align:middle; cursor:pointer;"> <b style="font-size:13px; margin-left:3px; vertical-align:middle;">Kamis Sore</b></span>
+                                <span id="badge_kamissore" class="label label-default" style="font-size:10px; padding:3px 6px;">TUTUP</span>
                             </label>
                             <div class="form-group form-group-sm" style="margin-bottom:5px;">
                                 <label style="font-size:11px;">Kuota Pasien:</label>
-                                <input type="number" class="form-control" placeholder="Contoh: 30" id="kuotakamissore">
+                                <input type="number" class="form-control" placeholder="Contoh: 30" id="kuotakamissore" oninput="onInputDayChange('kamissore')">
                             </div>
                             <div class="form-group form-group-sm" style="margin-bottom:5px;">
                                 <label style="font-size:11px;">Buka:</label>
-                                <input type="time" name="dari4sore" class="form-control" id="darisore4|sore">
+                                <input type="time" name="dari4sore" class="form-control" id="darisore4|sore" oninput="onInputDayChange('kamissore')">
                             </div>
                             <div class="form-group form-group-sm" style="margin-bottom:0;">
                                 <label style="font-size:11px;">Tutup:</label>
-                                <input type="time" name="sampai4sore" class="form-control" id="sampaisore4|sore">
+                                <input type="time" name="sampai4sore" class="form-control" id="sampaisore4|sore" oninput="onInputDayChange('kamissore')">
                             </div>
                         </div>
                     </div>
 
                     <!-- Jumat Sore -->
                     <div class="col-md-2 col-sm-4 col-xs-6">
-                        <div class="well well-sm" style="background:#fff; border:1px solid #ddd;">
-                            <label style="display:block; margin-bottom:5px;">
-                                <input id="jumatsore" type="checkbox" value="5|sore"> <b>Jumat Sore</b>
+                        <div class="well well-sm day-card" id="card_jumatsore" style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:6px; transition: all 0.2s;">
+                            <label style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; cursor:pointer;">
+                                <span><input id="jumatsore" type="checkbox" value="5|sore" onchange="onCheckboxDayChange('jumatsore')" style="width:17px; height:17px; vertical-align:middle; cursor:pointer;"> <b style="font-size:13px; margin-left:3px; vertical-align:middle;">Jumat Sore</b></span>
+                                <span id="badge_jumatsore" class="label label-default" style="font-size:10px; padding:3px 6px;">TUTUP</span>
                             </label>
                             <div class="form-group form-group-sm" style="margin-bottom:5px;">
                                 <label style="font-size:11px;">Kuota Pasien:</label>
-                                <input type="number" class="form-control" placeholder="Contoh: 30" id="kuotajumatsore">
+                                <input type="number" class="form-control" placeholder="Contoh: 30" id="kuotajumatsore" oninput="onInputDayChange('jumatsore')">
                             </div>
                             <div class="form-group form-group-sm" style="margin-bottom:5px;">
                                 <label style="font-size:11px;">Buka:</label>
-                                <input type="time" name="dari5sore" class="form-control" id="darisore5|sore">
+                                <input type="time" name="dari5sore" class="form-control" id="darisore5|sore" oninput="onInputDayChange('jumatsore')">
                             </div>
                             <div class="form-group form-group-sm" style="margin-bottom:0;">
                                 <label style="font-size:11px;">Tutup:</label>
-                                <input type="time" name="sampai5sore" class="form-control" id="sampaisore5|sore">
+                                <input type="time" name="sampai5sore" class="form-control" id="sampaisore5|sore" oninput="onInputDayChange('jumatsore')">
                             </div>
                         </div>
                     </div>
 
                     <!-- Sabtu Sore -->
                     <div class="col-md-2 col-sm-4 col-xs-6">
-                        <div class="well well-sm" style="background:#fff; border:1px solid #ddd;">
-                            <label style="display:block; margin-bottom:5px;">
-                                <input id="sabtusore" type="checkbox" value="6|sore"> <b>Sabtu Sore</b>
+                        <div class="well well-sm day-card" id="card_sabtusore" style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:6px; transition: all 0.2s;">
+                            <label style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; cursor:pointer;">
+                                <span><input id="sabtusore" type="checkbox" value="6|sore" onchange="onCheckboxDayChange('sabtusore')" style="width:17px; height:17px; vertical-align:middle; cursor:pointer;"> <b style="font-size:13px; margin-left:3px; vertical-align:middle;">Sabtu Sore</b></span>
+                                <span id="badge_sabtusore" class="label label-default" style="font-size:10px; padding:3px 6px;">TUTUP</span>
                             </label>
                             <div class="form-group form-group-sm" style="margin-bottom:5px;">
                                 <label style="font-size:11px;">Kuota Pasien:</label>
-                                <input type="number" class="form-control" placeholder="Contoh: 30" id="kuotasabtusore">
+                                <input type="number" class="form-control" placeholder="Contoh: 30" id="kuotasabtusore" oninput="onInputDayChange('sabtusore')">
                             </div>
                             <div class="form-group form-group-sm" style="margin-bottom:5px;">
                                 <label style="font-size:11px;">Buka:</label>
-                                <input type="time" name="dari6sore" class="form-control" id="darisore6|sore">
+                                <input type="time" name="dari6sore" class="form-control" id="darisore6|sore" oninput="onInputDayChange('sabtusore')">
                             </div>
                             <div class="form-group form-group-sm" style="margin-bottom:0;">
                                 <label style="font-size:11px;">Tutup:</label>
-                                <input type="time" name="sampai6sore" class="form-control" id="sampaisore6|sore">
+                                <input type="time" name="sampai6sore" class="form-control" id="sampaisore6|sore" oninput="onInputDayChange('sabtusore')">
                             </div>
                         </div>
                     </div>
                 </div>
 
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================== -->
+<!-- SAFETY MODAL 1: KONFIRMASI SIMPAN & UPDATE JADWAL KE BPJS      -->
+<!-- ============================================================== -->
+<div class="modal fade" id="modalKonfirmasiUbahHfis" tabindex="-1" role="dialog" aria-labelledby="modalKonfirmasiUbahTitle" aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog" role="document" style="max-width:580px;">
+        <div class="modal-content" style="border-radius:8px; overflow:hidden; border:2px solid #0284c7; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
+            <div class="modal-header" style="background:#f0f9ff; border-bottom:1px solid #bae6fd; padding:15px 20px;">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="font-size:24px; color:#0369a1;">&times;</button>
+                <h4 class="modal-title" id="modalKonfirmasiUbahTitle" style="color:#0369a1; font-weight:bold; margin:0;">
+                    <i class="fa fa-shield"></i> KONFIRMASI PENGIRIMAN JADWAL KE BPJS HFIS
+                </h4>
+            </div>
+            <div class="modal-body" style="padding:20px; font-size:13px; line-height:1.6;">
+                <div class="alert alert-info" style="font-size:12px; border-radius:6px; padding:10px 14px; margin-bottom:15px;">
+                    <i class="fa fa-info-circle"></i> Periksa ringkasan hari praktek di bawah ini sebelum mengirim ke BPJS. <b>Hari yang tidak dicentang otomatis menjadi TUTUP di BPJS HFIS dan Mobile JKN.</b>
+                </div>
+
+                <div class="panel panel-default" style="border:1px solid #e2e8f0; border-radius:6px; margin-bottom:15px;">
+                    <table class="table table-condensed table-bordered" style="margin-bottom:0; font-size:12px;">
+                        <tbody>
+                            <tr>
+                                <th style="width:35%; background:#f8fafc;">Dokter DPJP</th>
+                                <td id="modalUbahDocName" style="font-weight:bold; color:#1e293b;">-</td>
+                            </tr>
+                            <tr>
+                                <th style="background:#f8fafc;">Poliklinik</th>
+                                <td id="modalUbahPoliName" style="font-weight:bold; color:#1e293b;">-</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div style="margin-bottom:12px;">
+                    <label style="color:#166534; font-size:12px; margin-bottom:4px; display:block;">
+                        <i class="fa fa-check-circle"></i> <b>Hari yang DIBUKA di BPJS HFIS (<span id="modalJumlahHariBuka">0</span> Hari):</b>
+                    </label>
+                    <div id="modalListHariBuka" style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:6px; padding:10px; font-size:12px; color:#166534; max-height:120px; overflow-y:auto;">
+                        <!-- Diisi via JS -->
+                    </div>
+                </div>
+
+                <div style="margin-bottom:15px;">
+                    <label style="color:#991b1b; font-size:12px; margin-bottom:4px; display:block;">
+                        <i class="fa fa-times-circle"></i> <b>Hari yang DITUTUP / LIBUR di BPJS HFIS:</b>
+                    </label>
+                    <div id="modalListHariTutup" style="background:#fef2f2; border:1px solid #fecaca; border-radius:6px; padding:8px 10px; font-size:11px; color:#991b1b;">
+                        <!-- Diisi via JS -->
+                    </div>
+                </div>
+
+                <div class="well well-sm" style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:6px; padding:12px; margin-bottom:0;">
+                    <label style="cursor:pointer; display:flex; align-items:flex-start; margin-bottom:0; font-weight:normal; color:#334155;">
+                        <input type="checkbox" id="chkSetujuUbahHfis" onchange="toggleBtnEksekusiUbahHfis()" style="width:18px; height:18px; margin-top:1px; margin-right:8px; cursor:pointer;">
+                        <span>
+                            <b>Saya telah memverifikasi seluruh hari praktek, jam buka/tutup, dan kuota di atas.</b> Saya menyetujui pengiriman data jadwal ini ke server BPJS HFIS.
+                        </span>
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer" style="background:#f8fafc; border-top:1px solid #e2e8f0; padding:12px 20px; display:flex; justify-content:space-between; align-items:center;">
+                <button type="button" class="btn btn-default" data-dismiss="modal">
+                    <i class="fa fa-times"></i> Batal / Periksa Kembali
+                </button>
+                <button type="button" class="btn btn-primary" id="btnEksekusiUbahHfis" onclick="eksekusiUbahHfis()" disabled style="font-weight:bold;">
+                    <i class="fa fa-upload"></i> YA, KIRIM & SIMPAN KE BPJS HFIS
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================== -->
+<!-- SAFETY MODAL 2: PERINGATAN DARURAT TUTUP PELAYANAN HARI INI     -->
+<!-- ============================================================== -->
+<div class="modal fade" id="modalTutupHariIni" tabindex="-1" role="dialog" aria-labelledby="modalTutupHariIniTitle" aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog" role="document" style="max-width:620px;">
+        <div class="modal-content" style="border-radius:8px; overflow:hidden; border:2px solid #ef4444; box-shadow:0 10px 25px rgba(239, 68, 68, 0.3);">
+            <div class="modal-header" style="background:#fef2f2; border-bottom:1px solid #fecaca; padding:15px 20px;">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="font-size:24px; color:#991b1b;">&times;</button>
+                <h4 class="modal-title" id="modalTutupHariIniTitle" style="color:#991b1b; font-weight:bold; margin:0;">
+                    <i class="fa fa-ban text-danger"></i> PERINGATAN DARURAT: TUTUP PELAYANAN HARI INI
+                </h4>
+            </div>
+            <div class="modal-body" style="padding:20px; font-size:13px; line-height:1.6;">
+                <div class="alert alert-danger" style="margin-bottom:15px; font-size:12px; border-radius:6px; padding:10px 14px;">
+                    <i class="fa fa-exclamation-triangle"></i> <b>TINDAKAN SENSITIF:</b> Pelayanan dokter hari ini akan <b>DITUTUP di server BPJS HFIS</b>. Pasien baru tidak akan bisa mendaftar Mobile JKN hari ini.
+                </div>
+
+                <div class="panel panel-default" style="border:1px solid #e2e8f0; border-radius:6px; margin-bottom:15px;">
+                    <table class="table table-condensed table-bordered" style="margin-bottom:0; font-size:12px;">
+                        <tbody>
+                            <tr>
+                                <th style="width:35%; background:#f8fafc;">Dokter DPJP</th>
+                                <td id="modalTutupDocName" style="font-weight:bold; color:#1e293b;">-</td>
+                            </tr>
+                            <tr>
+                                <th style="background:#f8fafc;">Poliklinik</th>
+                                <td id="modalTutupPoliName" style="font-weight:bold; color:#1e293b;">-</td>
+                            </tr>
+                            <tr>
+                                <th style="background:#f8fafc;">Tanggal Pelayanan</th>
+                                <td id="modalTutupTanggal" style="color:#991b1b; font-weight:bold;">-</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- LIVE CHECK PASIEN BPJS MOBILE JKN HARI INI -->
+                <div id="modalTutupPasienContainer" style="margin-bottom:15px;">
+                    <div class="text-center text-muted" style="padding:15px; background:#f8fafc; border-radius:6px; border:1px dashed #cbd5e1;">
+                        <i class="fa fa-spinner fa-spin text-primary"></i> Sedang memeriksa pendaftaran pasien hari ini di server BPJS...
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom:15px;">
+                    <label for="alasanTutupHariIni" style="font-size:12px;"><strong>Alasan Resmi Penutupan / Pembatalan BPJS:</strong></label>
+                    <input type="text" id="alasanTutupHariIni" class="form-control input-sm" value="Dokter berhalangan hadir mendadak / sakit">
+                    <small class="text-muted" style="font-size:11px;">Alasan ini akan dikirimkan ke server BPJS Antrean sebagai keterangan resmi pembatalan faskes.</small>
+                </div>
+
+                <div class="well well-sm" style="background:#fff7ed; border:1px solid #fed7aa; border-radius:6px; padding:12px; margin-bottom:0;">
+                    <label style="cursor:pointer; display:flex; align-items:flex-start; margin-bottom:0; font-weight:normal; color:#9a3412;">
+                        <input type="checkbox" id="chkSetujuTutupHariIni" onchange="toggleBtnEksekusiTutupHariIni()" style="width:18px; height:18px; margin-top:1px; margin-right:8px; cursor:pointer;">
+                        <span>
+                            <b>Saya mengonfirmasi dokter berhalangan hadir hari ini.</b> Saya menyetujui penutupan jadwal di BPJS HFIS dan pembatalan antrean pasien hari ini sesuai regulasi BPJS.
+                        </span>
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer" style="background:#f8fafc; border-top:1px solid #e2e8f0; padding:12px 20px; display:flex; justify-content:space-between; align-items:center;">
+                <button type="button" class="btn btn-default" data-dismiss="modal">
+                    <i class="fa fa-times"></i> Batal
+                </button>
+                <button type="button" class="btn btn-danger" id="btnEksekusiTutupHariIni" onclick="eksekusiTutupHariIni()" disabled style="font-weight:bold;">
+                    <i class="fa fa-ban"></i> ⛔ YA, TUTUP PELAYANAN HARI INI
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================== -->
+<!-- SAFETY MODAL 3: KONFIRMASI PEMULIHAN JADWAL NORMAL SIMRS       -->
+<!-- ============================================================== -->
+<div class="modal fade" id="modalPulihkanJadwal" tabindex="-1" role="dialog" aria-labelledby="modalPulihkanTitle" aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog" role="document" style="max-width:540px;">
+        <div class="modal-content" style="border-radius:8px; overflow:hidden; border:2px solid #10b981; box-shadow:0 10px 25px rgba(16, 185, 129, 0.2);">
+            <div class="modal-header" style="background:#ecfdf5; border-bottom:1px solid #a7f3d0; padding:15px 20px;">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="font-size:24px; color:#065f46;">&times;</button>
+                <h4 class="modal-title" id="modalPulihkanTitle" style="color:#065f46; font-weight:bold; margin:0;">
+                    <i class="fa fa-refresh"></i> KONFIRMASI PEMULIHAN JADWAL NORMAL SIMRS
+                </h4>
+            </div>
+            <div class="modal-body" style="padding:20px; font-size:13px; line-height:1.6;">
+                <div class="alert alert-success" style="font-size:12px; border-radius:6px; padding:10px 14px; margin-bottom:15px;">
+                    <i class="fa fa-info-circle"></i> Fitur ini akan <b>mengambil seluruh jadwal normal dokter</b> yang tersimpan di database SIMRS lokal dan mengirimkannya kembali ke server BPJS HFIS untuk membuka kembali jadwal yang sebelumnya ditutup/diliburkan.
+                </div>
+
+                <div class="panel panel-default" style="border:1px solid #e2e8f0; border-radius:6px; margin-bottom:15px;">
+                    <table class="table table-condensed table-bordered" style="margin-bottom:0; font-size:12px;">
+                        <tbody>
+                            <tr>
+                                <th style="width:35%; background:#f8fafc;">Dokter DPJP</th>
+                                <td id="modalPulihkanDocName" style="font-weight:bold; color:#1e293b;">-</td>
+                            </tr>
+                            <tr>
+                                <th style="background:#f8fafc;">Poliklinik</th>
+                                <td id="modalPulihkanPoliName" style="font-weight:bold; color:#1e293b;">-</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="modalPulihkanDetailJadwal" style="margin-bottom:15px; font-size:12px; color:#166534; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:6px; padding:10px;">
+                    <!-- Diisi via JS -->
+                </div>
+
+                <div class="well well-sm" style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:6px; padding:12px; margin-bottom:0;">
+                    <label style="cursor:pointer; display:flex; align-items:flex-start; margin-bottom:0; font-weight:normal; color:#334155;">
+                        <input type="checkbox" id="chkSetujuPulihkan" onchange="toggleBtnEksekusiPulihkan()" style="width:18px; height:18px; margin-top:1px; margin-right:8px; cursor:pointer;">
+                        <span>
+                            <b>Saya yakin ingin memulihkan jadwal normal dokter ini ke server BPJS HFIS.</b>
+                        </span>
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer" style="background:#f8fafc; border-top:1px solid #e2e8f0; padding:12px 20px; display:flex; justify-content:space-between; align-items:center;">
+                <button type="button" class="btn btn-default" data-dismiss="modal">
+                    <i class="fa fa-times"></i> Batal
+                </button>
+                <button type="button" class="btn btn-success" id="btnEksekusiPulihkan" onclick="eksekusiPulihkanJadwal()" disabled style="font-weight:bold;">
+                    <i class="fa fa-refresh"></i> 🔄 YA, PULIHKAN KE BPJS SEKARANG
+                </button>
             </div>
         </div>
     </div>

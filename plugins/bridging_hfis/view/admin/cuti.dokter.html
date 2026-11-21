@@ -1,0 +1,659 @@
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default" style="border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+            <div class="panel-heading" style="background:#f8fafc; font-weight:bold; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <i class="fa fa-calendar-times-o text-warning"></i> <b>Kelola Jadwal Cuti Dokter (Bridging HFIS BPJS)</b>
+                </div>
+                <div>
+                    <a href="{?=url([ADMIN, 'bridging_hfis', 'updatehfis'])?}" class="btn btn-xs btn-primary">
+                        <i class="fa fa-calendar-plus-o"></i> Update Jadwal HFIS
+                    </a>
+                    <a href="{?=url([ADMIN, 'bridging_hfis', 'lihathfis'])?}" target="_blank" class="btn btn-xs btn-default">
+                        <i class="fa fa-search text-success"></i> Verifikasi di Server BPJS <i class="fa fa-external-link"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="panel-body">
+                <div id="notifCuti" style="margin-bottom:15px;"></div>
+
+                <!-- PANDUAN REGULASI RESMI BPJS TERKAIT CUTI / LIBUR DOKTER -->
+                <div class="alert alert-warning" style="border-left: 4px solid #f59e0b; background: #fffbeb; color: #78350f; border-radius: 6px; padding: 14px 18px; margin-bottom: 20px;">
+                    <h4 style="margin-top: 0; color: #b45309; font-weight: bold; font-size: 15px;">
+                        <i class="fa fa-shield"></i> Ketentuan & Regulasi BPJS Kesehatan Terkait Cuti Dokter:
+                    </h4>
+                    <div class="row" style="font-size: 12px; line-height: 1.6;">
+                        <div class="col-md-6" style="border-right: 1px dashed #fde68a;">
+                            <b><i class="fa fa-info-circle"></i> 1. Kepatuhan Layanan & Waktu Tunggu BPJS:</b>
+                            <ul style="margin: 4px 0 0 16px; padding-left: 0;">
+                                <li>Dokter DPJP yang berhalangan praktek (cuti tahunan, sakit, seminar, dll.) <b>wajib dicatatkan</b> agar faskes terhindar dari pelanggaran komitmen mutu layanan dan penalti Waktu Tunggu Layanan (WTL) BPJS.</li>
+                                <li>Pasien pengguna aplikasi <b>Mobile JKN</b> tidak akan dapat mendaftar antrean pada jadwal dokter yang sedang berstatus cuti.</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <b><i class="fa fa-user-md"></i> 2. Kebijakan Dokter Pengganti (Substitusi DPJP):</b>
+                            <ul style="margin: 4px 0 0 16px; padding-left: 0;">
+                                <li>Jika poliklinik <b>tetap buka</b> dan dilayani dokter pengganti, pilih opsi <u>Ada Dokter Pengganti</u> agar kuota antrean dapat dialihkan tanpa menolak pasien.</li>
+                                <li>Jika <b>tanpa dokter pengganti</b> dan cuti mencakup hari ini, sistem akan <b>otomatis menonaktifkan slot jadwal hari ini di BPJS HFIS</b>.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- FORM PENGAJUAN CUTI -->
+                    <div class="col-md-5">
+                        <div class="panel panel-default" style="border:1px solid #e2e8f0; border-radius:6px;">
+                            <div class="panel-heading" style="background:#f1f5f9; font-weight:bold; color:#1e293b;">
+                                <i class="fa fa-calendar-plus-o text-primary"></i> Form Catat Cuti Dokter
+                            </div>
+                            <div class="panel-body" style="padding:15px;">
+                                <form id="formCutiDokter" onsubmit="event.preventDefault(); bukaModalKonfirmasiCuti();">
+                                    <div class="form-group">
+                                        <label for="cuti_kd_dokter"><strong>Dokter DPJP BPJS:</strong> <span class="text-danger">*</span></label>
+                                        <select name="cuti_kd_dokter" id="cuti_kd_dokter" class="form-control" required>
+                                            <option value="">-- Pilih Dokter DPJP --</option>
+                                            {loop: $dokter}
+                                            <option value="{?=isset_or($value.kd_dokter_bpjs)?}">
+                                                {?=isset_or($value.nm_dokter_bpjs)?} ({?=isset_or($value.kd_dokter_bpjs)?})
+                                            </option>
+                                            {/loop}
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="cuti_kd_poli"><strong>Poliklinik BPJS:</strong> <span class="text-danger">*</span></label>
+                                        <select name="cuti_kd_poli" id="cuti_kd_poli" class="form-control" required>
+                                            <option value="">-- Pilih Poliklinik BPJS --</option>
+                                            {loop: $poli}
+                                            <option value="{?=isset_or($value.kd_poli_bpjs)?}">
+                                                {?=isset_or($value.kd_poli_bpjs)?} - {?=isset_or($value.nm_poli_bpjs)?}
+                                            </option>
+                                            {/loop}
+                                        </select>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-xs-6">
+                                            <div class="form-group">
+                                                <label for="cuti_tgl_mulai"><strong>Mulai Tanggal:</strong> <span class="text-danger">*</span></label>
+                                                <input type="date" name="cuti_tgl_mulai" id="cuti_tgl_mulai" class="form-control" value="{?=$today?}" required onchange="hitungDurasiCuti()">
+                                            </div>
+                                        </div>
+                                        <div class="col-xs-6">
+                                            <div class="form-group">
+                                                <label for="cuti_tgl_selesai"><strong>Sampai Tanggal:</strong> <span class="text-danger">*</span></label>
+                                                <input type="date" name="cuti_tgl_selesai" id="cuti_tgl_selesai" class="form-control" value="{?=$today?}" required onchange="hitungDurasiCuti()">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id="infoDurasiCuti" style="margin-top:-5px; margin-bottom:10px; font-size:12px; color:#64748b; font-weight:600;"></div>
+
+                                    <div class="form-group">
+                                        <label for="cuti_alasan"><strong>Alasan Cuti:</strong> <span class="text-danger">*</span></label>
+                                        <input type="text" name="cuti_alasan" id="cuti_alasan" class="form-control" list="listAlasanCuti" placeholder="Contoh: Cuti Tahunan, Izin Sakit, Seminar..." required value="Cuti Tahunan">
+                                        <datalist id="listAlasanCuti">
+                                            <option value="Cuti Tahunan">
+                                            <option value="Izin Sakit / Rawat Inap">
+                                            <option value="Pelatihan / Seminar Medis">
+                                            <option value="Ibadah Umroh / Haji">
+                                            <option value="Cuti Melahirkan">
+                                            <option value="Dinas Luar Kota">
+                                            <option value="Keperluan Keluarga Mendadak">
+                                        </datalist>
+                                    </div>
+
+                                    <div class="well well-sm" style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:6px; margin-bottom:15px; padding:10px 12px;">
+                                        <label style="cursor:pointer; display:flex; align-items:center; margin-bottom:0;">
+                                            <input type="checkbox" id="cuti_ada_pengganti" onchange="toggleDokterPengganti()" style="width:17px; height:17px; margin-right:8px;">
+                                            <span><b>Ada Dokter Pengganti (Substitusi DPJP)</b></span>
+                                        </label>
+                                        <div id="divPengganti" style="display:none; margin-top:10px; padding-top:10px; border-top:1px dashed #cbd5e1;">
+                                            <label for="cuti_kd_dokter_pengganti" style="font-size:12px;"><strong>Pilih Dokter Pengganti:</strong></label>
+                                            <select name="cuti_kd_dokter_pengganti" id="cuti_kd_dokter_pengganti" class="form-control input-sm">
+                                                <option value="">-- Pilih Dokter Pengganti --</option>
+                                                {loop: $dokter}
+                                                <option value="{?=isset_or($value.kd_dokter_bpjs)?}">
+                                                    {?=isset_or($value.nm_dokter_bpjs)?} ({?=isset_or($value.kd_dokter_bpjs)?})
+                                                </option>
+                                                {/loop}
+                                            </select>
+                                            <small class="text-muted" style="display:block; margin-top:4px;">Dokter pengganti harus memiliki SIP resmi yang berlaku di faskes.</small>
+                                        </div>
+                                    </div>
+
+                                    <button type="submit" class="btn btn-warning btn-block" id="btnBukaModalCuti" style="font-weight:bold; padding:10px;">
+                                        <i class="fa fa-calendar-check-o"></i> Simpan Cuti & Verifikasi ke BPJS
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TABEL RIWAYAT / DAFTAR CUTI DOKTER -->
+                    <div class="col-md-7">
+                        <div class="panel panel-default" style="border:1px solid #e2e8f0; border-radius:6px;">
+                            <div class="panel-heading" style="background:#f1f5f9; font-weight:bold; color:#1e293b; display:flex; justify-content:space-between; align-items:center;">
+                                <span><i class="fa fa-list text-primary"></i> Daftar Cuti Dokter Terdata</span>
+                                <span class="badge" style="background:#3b82f6;">{?=count($cuti_list)?} Data</span>
+                            </div>
+                            <div class="panel-body" style="padding:10px;">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-striped table-hover" id="tabelCutiDokter" style="font-size:12px; margin-bottom:0;">
+                                        <thead>
+                                            <tr style="background:#f8fafc;">
+                                                <th style="width:30px; text-align:center;">No</th>
+                                                <th>Dokter DPJP</th>
+                                                <th>Poli</th>
+                                                <th>Periode Cuti</th>
+                                                <th>Alasan / Pengganti</th>
+                                                <th style="text-align:center;">Status</th>
+                                                <th style="width:90px; text-align:center;">Aksi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {if: !empty($cuti_list)}
+                                                {loop: $cuti_list}
+                                                <tr>
+                                                    <td style="text-align:center;">{?=$key + 1?}</td>
+                                                    <td>
+                                                        <b>{?=isset_or($value.nm_dokter_bpjs)?}</b>
+                                                        <br><small class="text-muted">Kode: {?=isset_or($value.kd_dokter_bpjs)?}</small>
+                                                    </td>
+                                                    <td>
+                                                        <b>{?=isset_or($value.nm_poli_bpjs)?}</b>
+                                                        <br><small class="text-muted">({?=isset_or($value.kd_poli_bpjs)?})</small>
+                                                    </td>
+                                                    <td>
+                                                        <span class="label label-default" style="font-size:11px;">
+                                                            <i class="fa fa-calendar"></i> {?=date('d/m/Y', strtotime($value.tgl_mulai))?} s/d {?=date('d/m/Y', strtotime($value.tgl_selesai))?}
+                                                        </span>
+                                                        <br>
+                                                        <small class="text-muted">
+                                                            {?=max(1, round((strtotime($value.tgl_selesai) - strtotime($value.tgl_mulai)) / 86400) + 1)?} Hari
+                                                        </small>
+                                                    </td>
+                                                    <td>
+                                                        <b>{?=isset_or($value.alasan)?}</b>
+                                                        {if: $value.ada_pengganti == '1'}
+                                                            <br><small class="text-info"><i class="fa fa-user-md"></i> Pengganti: <b>{?=isset_or($value.nm_dokter_pengganti)?}</b></small>
+                                                        {else}
+                                                            <br><small class="text-danger"><i class="fa fa-times-circle"></i> Tanpa Pengganti</small>
+                                                        {/if}
+                                                    </td>
+                                                    <td style="text-align:center;">
+                                                        {if: $value.status == 'aktif'}
+                                                            {if: $today >= $value.tgl_mulai && $today <= $value.tgl_selesai}
+                                                                <span class="label label-warning" style="font-size:11px; padding:3px 6px;">
+                                                                    <i class="fa fa-clock-o"></i> SEDANG CUTI
+                                                                </span>
+                                                            {elseif: $today < $value.tgl_mulai}
+                                                                <span class="label label-info" style="font-size:11px; padding:3px 6px;">
+                                                                    <i class="fa fa-calendar-check-o"></i> TERJADWAL
+                                                                </span>
+                                                            {else}
+                                                                <span class="label label-default" style="font-size:11px; padding:3px 6px;">
+                                                                    LEWAT TANGGAL
+                                                                </span>
+                                                            {/if}
+                                                        {elseif: $value.status == 'selesai'}
+                                                            <span class="label label-success" style="font-size:11px; padding:3px 6px;">
+                                                                <i class="fa fa-check"></i> SELESAI
+                                                            </span>
+                                                        {elseif: $value.status == 'dibatalkan'}
+                                                            <span class="label label-danger" style="font-size:11px; padding:3px 6px;">
+                                                                <i class="fa fa-times"></i> DIBATALKAN
+                                                            </span>
+                                                        {/if}
+                                                    </td>
+                                                    <td style="text-align:center;">
+                                                        {if: $value.status == 'aktif'}
+                                                            <div class="btn-group-vertical btn-group-xs">
+                                                                <button type="button" class="btn btn-success btn-xs" title="Dokter sudah masuk kembali sebelum periode selesai" onclick="bukaModalAksiCuti('{?=$value.id?}', 'akhiri', '{?=addslashes($value.nm_dokter_bpjs)?}', '{?=date('d/m/Y', strtotime($value.tgl_mulai))?} s/d {?=date('d/m/Y', strtotime($value.tgl_selesai))?}')">
+                                                                    <i class="fa fa-check"></i> Akhiri
+                                                                </button>
+                                                                <button type="button" class="btn btn-danger btn-xs" title="Batalkan pencatatan cuti ini dan pulihkan jadwal" onclick="bukaModalAksiCuti('{?=$value.id?}', 'batalkan', '{?=addslashes($value.nm_dokter_bpjs)?}', '{?=date('d/m/Y', strtotime($value.tgl_mulai))?} s/d {?=date('d/m/Y', strtotime($value.tgl_selesai))?}')" style="margin-top:2px;">
+                                                                    <i class="fa fa-trash"></i> Batal
+                                                                </button>
+                                                            </div>
+                                                        {else}
+                                                            <span class="text-muted" style="font-size:11px;">-</span>
+                                                        {/if}
+                                                    </td>
+                                                </tr>
+                                                {/loop}
+                                            {else}
+                                                <tr>
+                                                    <td colspan="7" class="text-center text-muted" style="padding:25px;">
+                                                        <i class="fa fa-calendar-o" style="font-size:24px; color:#cbd5e1; margin-bottom:8px; display:block;"></i>
+                                                        Belum ada data pencatatan cuti dokter di SIMRS.
+                                                    </td>
+                                                </tr>
+                                            {/if}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================== -->
+<!-- SAFETY MODAL 1: PERINGATAN KONFIRMASI SIMPAN CUTI DOKTER       -->
+<!-- ============================================================== -->
+<div class="modal fade" id="modalKonfirmasiCuti" tabindex="-1" role="dialog" aria-labelledby="modalKonfirmasiCutiTitle" aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog" role="document" style="max-width:550px;">
+        <div class="modal-content" style="border-radius:8px; overflow:hidden; border:2px solid #f59e0b; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
+            <div class="modal-header" style="background:#fef3c7; border-bottom:1px solid #fde68a; padding:15px 20px;">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="font-size:24px; color:#92400e;">&times;</button>
+                <h4 class="modal-title" id="modalKonfirmasiCutiTitle" style="color:#92400e; font-weight:bold; margin:0;">
+                    <i class="fa fa-exclamation-triangle"></i> PERINGATAN KONFIRMASI: SIMPAN CUTI DOKTER
+                </h4>
+            </div>
+            <div class="modal-body" style="padding:20px; font-size:13px; line-height:1.6;">
+                <div class="alert alert-danger" style="margin-bottom:15px; font-size:12px; border-radius:6px; padding:10px 14px;">
+                    <i class="fa fa-warning"></i> <b>PERHATIAN PENTING:</b> Data cuti ini akan langsung berdampak pada ketersediaan jadwal dokter dan pendaftaran pasien via <b>Mobile JKN BPJS</b>. Pastikan data di bawah sudah benar!
+                </div>
+
+                <div class="panel panel-default" style="border:1px solid #e2e8f0; border-radius:6px; margin-bottom:15px;">
+                    <table class="table table-condensed table-bordered" style="margin-bottom:0; font-size:12px;">
+                        <tbody>
+                            <tr>
+                                <th style="width:35%; background:#f8fafc;">Dokter DPJP</th>
+                                <td id="modalCutiDocName" style="font-weight:bold; color:#1e293b;">-</td>
+                            </tr>
+                            <tr>
+                                <th style="background:#f8fafc;">Poliklinik</th>
+                                <td id="modalCutiPoliName" style="font-weight:bold; color:#1e293b;">-</td>
+                            </tr>
+                            <tr>
+                                <th style="background:#f8fafc;">Periode Cuti</th>
+                                <td id="modalCutiPeriode" style="color:#b45309; font-weight:bold;">-</td>
+                            </tr>
+                            <tr>
+                                <th style="background:#f8fafc;">Alasan</th>
+                                <td id="modalCutiAlasan">-</td>
+                            </tr>
+                            <tr>
+                                <th style="background:#f8fafc;">Dokter Pengganti</th>
+                                <td id="modalCutiPengganti">-</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="modalCutiDampakBpjs" class="alert alert-info" style="font-size:12px; margin-bottom:15px; padding:10px 14px; border-radius:6px;">
+                    <!-- Diisi dinamis via JS -->
+                </div>
+
+                <div class="well well-sm" style="background:#fff7ed; border:1px solid #fed7aa; border-radius:6px; padding:12px; margin-bottom:0;">
+                    <label style="cursor:pointer; display:flex; align-items:flex-start; margin-bottom:0; font-weight:normal; color:#9a3412;">
+                        <input type="checkbox" id="chkSetujuCuti" onchange="toggleBtnEksekusiCuti()" style="width:18px; height:18px; margin-top:1px; margin-right:8px; cursor:pointer;">
+                        <span>
+                            <b>Saya telah memverifikasi seluruh data di atas dengan benar.</b> Saya memahami bahwa perubahan jadwal ini akan disinkronkan ke server BPJS HFIS dan aplikasi Mobile JKN pasien.
+                        </span>
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer" style="background:#f8fafc; border-top:1px solid #e2e8f0; padding:12px 20px; display:flex; justify-content:space-between; align-items:center;">
+                <button type="button" class="btn btn-default" data-dismiss="modal">
+                    <i class="fa fa-times"></i> Batal / Periksa Kembali
+                </button>
+                <button type="button" class="btn btn-warning" id="btnEksekusiCuti" onclick="eksekusiSimpanCutiDokter()" disabled style="font-weight:bold;">
+                    <i class="fa fa-calendar-check-o"></i> YA, SIMPAN CUTI & SYNC BPJS
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================== -->
+<!-- SAFETY MODAL 2: KONFIRMASI AKHIRI / BATALKAN CUTI DOKTER       -->
+<!-- ============================================================== -->
+<div class="modal fade" id="modalAksiCuti" tabindex="-1" role="dialog" aria-labelledby="modalAksiCutiTitle" aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog" role="document" style="max-width:500px;">
+        <div class="modal-content" style="border-radius:8px; overflow:hidden; border:2px solid #3b82f6; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
+            <div class="modal-header" style="background:#eff6ff; border-bottom:1px solid #bfdbfe; padding:15px 20px;">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="font-size:24px; color:#1e40af;">&times;</button>
+                <h4 class="modal-title" id="modalAksiCutiTitle" style="color:#1e40af; font-weight:bold; margin:0;">
+                    <i class="fa fa-refresh"></i> KONFIRMASI TINDAKAN CUTI DOKTER
+                </h4>
+            </div>
+            <div class="modal-body" style="padding:20px; font-size:13px; line-height:1.6;">
+                <input type="hidden" id="aksiCutiId" value="">
+                <input type="hidden" id="aksiCutiTipe" value="">
+
+                <p id="modalAksiCutiText" style="margin-bottom:15px; color:#1e293b; font-size:13px;">
+                    <!-- Diisi dinamis via JS -->
+                </p>
+
+                <div class="well well-sm" style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:6px; padding:12px; margin-bottom:15px;">
+                    <label style="cursor:pointer; display:flex; align-items:flex-start; margin-bottom:0; font-weight:normal; color:#166534;">
+                        <input type="checkbox" id="aksiCutiPulihkanBpjs" checked style="width:18px; height:18px; margin-top:1px; margin-right:8px; cursor:pointer;">
+                        <span>
+                            <b>Otomatis Pulihkan Master Jadwal Normal ke BPJS HFIS</b><br>
+                            <small class="text-muted">Mengirimkan kembali jadwal praktek mingguan dari basis data SIMRS ke server BPJS HFIS agar pasien Mobile JKN dapat mendaftar kembali.</small>
+                        </span>
+                    </label>
+                </div>
+
+                <div class="well well-sm" style="background:#fff7ed; border:1px solid #fed7aa; border-radius:6px; padding:12px; margin-bottom:0;">
+                    <label style="cursor:pointer; display:flex; align-items:flex-start; margin-bottom:0; font-weight:normal; color:#9a3412;">
+                        <input type="checkbox" id="chkSetujuAksiCuti" onchange="toggleBtnEksekusiAksiCuti()" style="width:18px; height:18px; margin-top:1px; margin-right:8px; cursor:pointer;">
+                        <span>
+                            <b>Saya yakin dan menyetujui tindakan ini.</b>
+                        </span>
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer" style="background:#f8fafc; border-top:1px solid #e2e8f0; padding:12px 20px; display:flex; justify-content:space-between; align-items:center;">
+                <button type="button" class="btn btn-default" data-dismiss="modal">
+                    <i class="fa fa-times"></i> Batal
+                </button>
+                <button type="button" class="btn btn-primary" id="btnEksekusiAksiCuti" onclick="eksekusiAksiCutiDokter()" disabled style="font-weight:bold;">
+                    <i class="fa fa-check-circle"></i> YA, PROSES SEKARANG
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function hitungDurasiCuti() {
+    var m = document.getElementById('cuti_tgl_mulai').value;
+    var s = document.getElementById('cuti_tgl_selesai').value;
+    var info = document.getElementById('infoDurasiCuti');
+    if (m && s) {
+        var d1 = new Date(m);
+        var d2 = new Date(s);
+        var diffTime = d2.getTime() - d1.getTime();
+        var diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+        if (diffDays < 1) {
+            info.innerHTML = '<span class="text-danger"><i class="fa fa-times-circle"></i> Tanggal selesai tidak boleh mendahului tanggal mulai!</span>';
+        } else {
+            info.innerHTML = '<i class="fa fa-clock-o text-primary"></i> Durasi Cuti: <b>' + diffDays + ' Hari Kalender</b>';
+        }
+    }
+}
+
+function toggleDokterPengganti() {
+    var chk = document.getElementById('cuti_ada_pengganti');
+    var div = document.getElementById('divPengganti');
+    if (chk && div) {
+        div.style.display = chk.checked ? 'block' : 'none';
+        if (!chk.checked) {
+            document.getElementById('cuti_kd_dokter_pengganti').value = '';
+        }
+    }
+}
+
+function bukaModalKonfirmasiCuti() {
+    var kd_dokter = document.getElementById('cuti_kd_dokter').value;
+    var kd_poli = document.getElementById('cuti_kd_poli').value;
+    var tgl_mulai = document.getElementById('cuti_tgl_mulai').value;
+    var tgl_selesai = document.getElementById('cuti_tgl_selesai').value;
+    var alasan = document.getElementById('cuti_alasan').value;
+    var ada_pengganti = document.getElementById('cuti_ada_pengganti').checked;
+    var kd_pengganti = document.getElementById('cuti_kd_dokter_pengganti').value;
+
+    if (!kd_dokter) {
+        alert("Pilih Dokter DPJP BPJS terlebih dahulu!");
+        document.getElementById('cuti_kd_dokter').focus();
+        return;
+    }
+    if (!kd_poli) {
+        alert("Pilih Poliklinik BPJS terlebih dahulu!");
+        document.getElementById('cuti_kd_poli').focus();
+        return;
+    }
+    if (!tgl_mulai || !tgl_selesai) {
+        alert("Rentang tanggal cuti harus diisi lengkap!");
+        return;
+    }
+    if (new Date(tgl_selesai) < new Date(tgl_mulai)) {
+        alert("Tanggal selesai cuti tidak boleh mendahului tanggal mulai cuti!");
+        return;
+    }
+    if (ada_pengganti && !kd_pengganti) {
+        alert("Anda mencentang 'Ada Dokter Pengganti', silakan pilih Dokter Pengganti dari dropdown!");
+        document.getElementById('cuti_kd_dokter_pengganti').focus();
+        return;
+    }
+
+    var selDoc = document.getElementById('cuti_kd_dokter');
+    var docName = selDoc.options[selDoc.selectedIndex].text;
+    var selPoli = document.getElementById('cuti_kd_poli');
+    var poliName = selPoli.options[selPoli.selectedIndex].text;
+
+    var selPengganti = document.getElementById('cuti_kd_dokter_pengganti');
+    var penggantiName = (ada_pengganti && selPengganti.selectedIndex > 0) ? selPengganti.options[selPengganti.selectedIndex].text : '<span class="text-danger">Tidak Ada Dokter Pengganti (Poliklinik Tutup)</span>';
+
+    var d1 = new Date(tgl_mulai);
+    var d2 = new Date(tgl_selesai);
+    var diffDays = Math.ceil((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+
+    document.getElementById('modalCutiDocName').innerText = docName;
+    document.getElementById('modalCutiPoliName').innerText = poliName;
+    document.getElementById('modalCutiPeriode').innerText = tgl_mulai + ' s/d ' + tgl_selesai + ' (' + diffDays + ' Hari)';
+    document.getElementById('modalCutiAlasan').innerText = alasan || '-';
+    document.getElementById('modalCutiPengganti').innerHTML = penggantiName;
+
+    var dampak = document.getElementById('modalCutiDampakBpjs');
+    var todayStr = '{?=$today?}';
+    var isIncludeToday = (todayStr >= tgl_mulai && todayStr <= tgl_selesai);
+
+    if (ada_pengganti) {
+        dampak.className = 'alert alert-info';
+        dampak.innerHTML = '<i class="fa fa-info-circle"></i> <b>Dampak Layanan:</b> Poliklinik tetap dibuka dan dilayani oleh Dokter Pengganti (Substitusi DPJP). Pasien Mobile JKN dapat mendaftar seperti biasa.';
+    } else {
+        if (isIncludeToday) {
+            dampak.className = 'alert alert-danger';
+            dampak.innerHTML = '<i class="fa fa-exclamation-triangle"></i> <b>Dampak BPJS HFIS:</b> Karena cuti mencakup hari ini (' + todayStr + ') dan <u>tanpa dokter pengganti</u>, sistem akan <b>otomatis menonaktifkan slot jadwal hari ini di server BPJS HFIS</b>.';
+        } else {
+            dampak.className = 'alert alert-warning';
+            dampak.innerHTML = '<i class="fa fa-calendar-times-o"></i> <b>Dampak Layanan:</b> Jadwal cuti tersimpan di sistem SIMRS. Pada tanggal cuti tersebut, pendaftaran Mobile JKN untuk dokter ini tidak akan dilayani.';
+        }
+    }
+
+    // Reset safety checkbox
+    var chk = document.getElementById('chkSetujuCuti');
+    chk.checked = false;
+    toggleBtnEksekusiCuti();
+
+    $('#modalKonfirmasiCuti').modal('show');
+}
+
+function toggleBtnEksekusiCuti() {
+    var chk = document.getElementById('chkSetujuCuti');
+    var btn = document.getElementById('btnEksekusiCuti');
+    if (btn) {
+        btn.disabled = !chk.checked;
+    }
+}
+
+function eksekusiSimpanCutiDokter() {
+    var baseURL = mlite.url + '/' + mlite.admin;
+    var url = baseURL + '/bridging_hfis/simpancutidokter?t=' + (mlite.token || '');
+    var btn = document.getElementById('btnEksekusiCuti');
+    var notif = document.getElementById('notifCuti');
+
+    var kd_dokter = document.getElementById('cuti_kd_dokter').value;
+    var kd_poli = document.getElementById('cuti_kd_poli').value;
+    var tgl_mulai = document.getElementById('cuti_tgl_mulai').value;
+    var tgl_selesai = document.getElementById('cuti_tgl_selesai').value;
+    var alasan = document.getElementById('cuti_alasan').value;
+    var ada_pengganti = document.getElementById('cuti_ada_pengganti').checked ? '1' : '0';
+    var kd_pengganti = document.getElementById('cuti_kd_dokter_pengganti').value;
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Menyimpan & Mengupdate BPJS...';
+
+    var params = 'kd_dokter=' + encodeURIComponent(kd_dokter) +
+        '&kd_poli=' + encodeURIComponent(kd_poli) +
+        '&tgl_mulai=' + encodeURIComponent(tgl_mulai) +
+        '&tgl_selesai=' + encodeURIComponent(tgl_selesai) +
+        '&alasan=' + encodeURIComponent(alasan) +
+        '&ada_pengganti=' + encodeURIComponent(ada_pengganti) +
+        '&kd_dokter_pengganti=' + encodeURIComponent(kd_pengganti);
+
+    var http = new XMLHttpRequest();
+    http.open('POST', url, true);
+    http.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+
+    http.onload = function () {
+        $('#modalKonfirmasiCuti').modal('hide');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa fa-calendar-check-o"></i> YA, SIMPAN CUTI & SYNC BPJS';
+
+        try {
+            var res = JSON.parse(this.responseText);
+            if (res.status === 'success') {
+                if (notif) {
+                    notif.innerHTML = '<div class="alert alert-success alert-dismissible" style="border-radius:4px;">' +
+                        '<button type="button" class="close" data-dismiss="alert">&times;</button>' +
+                        '<h4><i class="fa fa-check-circle"></i> Berhasil Dicatat!</h4>' +
+                        '<p>' + res.message + '</p>' +
+                        '</div>';
+                }
+                setTimeout(function() {
+                    location.reload();
+                }, 1200);
+            } else {
+                if (notif) {
+                    notif.innerHTML = '<div class="alert alert-danger alert-dismissible" style="border-radius:4px;">' +
+                        '<button type="button" class="close" data-dismiss="alert">&times;</button>' +
+                        '<h4><i class="fa fa-exclamation-triangle"></i> Gagal</h4>' +
+                        '<p>' + (res.message || 'Terjadi kesalahan saat menyimpan cuti.') + '</p>' +
+                        '</div>';
+                }
+            }
+        } catch (e) {
+            if (notif) {
+                notif.innerHTML = '<div class="alert alert-warning alert-dismissible">' +
+                    '<button type="button" class="close" data-dismiss="alert">&times;</button>' +
+                    '<h4><i class="fa fa-info-circle"></i> Respon Server:</h4>' +
+                    '<p>' + this.responseText + '</p>' +
+                    '</div>';
+            }
+        }
+        if (notif && notif.scrollIntoView) {
+            notif.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    };
+
+    http.onerror = function() {
+        $('#modalKonfirmasiCuti').modal('hide');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa fa-calendar-check-o"></i> YA, SIMPAN CUTI & SYNC BPJS';
+        alert("Gagal menghubungi server SIMRS. Silakan periksa jaringan.");
+    };
+
+    http.send(params);
+}
+
+function bukaModalAksiCuti(id, tipe, docName, periode) {
+    document.getElementById('aksiCutiId').value = id;
+    document.getElementById('aksiCutiTipe').value = tipe;
+
+    var title = document.getElementById('modalAksiCutiTitle');
+    var text = document.getElementById('modalAksiCutiText');
+    var btn = document.getElementById('btnEksekusiAksiCuti');
+
+    if (tipe === 'akhiri') {
+        title.innerHTML = '<i class="fa fa-check-circle text-success"></i> Konfirmasi Akhiri Cuti Dokter Lebih Awal';
+        text.innerHTML = 'Dokter <b>' + docName + '</b> yang sebelumnya tercatat cuti pada <b>' + periode + '</b> telah hadir kembali dan siap melayani pasien?<br><br>Status cuti akan diubah menjadi <b>SELESAI</b>.';
+        btn.className = 'btn btn-success';
+        btn.innerHTML = '<i class="fa fa-check-circle"></i> YA, AKHIRI CUTI SEKARANG';
+    } else {
+        title.innerHTML = '<i class="fa fa-trash text-danger"></i> Konfirmasi Batalkan Pengajuan Cuti';
+        text.innerHTML = 'Anda yakin ingin membatalkan pengajuan cuti untuk Dokter <b>' + docName + '</b> (' + periode + ')?<br><br>Status cuti akan diubah menjadi <b>DIBATALKAN</b>.';
+        btn.className = 'btn btn-danger';
+        btn.innerHTML = '<i class="fa fa-trash"></i> YA, BATALKAN CUTI SEKARANG';
+    }
+
+    // Reset safety checkbox
+    var chk = document.getElementById('chkSetujuAksiCuti');
+    chk.checked = false;
+    toggleBtnEksekusiAksiCuti();
+
+    $('#modalAksiCuti').modal('show');
+}
+
+function toggleBtnEksekusiAksiCuti() {
+    var chk = document.getElementById('chkSetujuAksiCuti');
+    var btn = document.getElementById('btnEksekusiAksiCuti');
+    if (btn) {
+        btn.disabled = !chk.checked;
+    }
+}
+
+function eksekusiAksiCutiDokter() {
+    var id = document.getElementById('aksiCutiId').value;
+    var tipe = document.getElementById('aksiCutiTipe').value;
+    var pulihkan = document.getElementById('aksiCutiPulihkanBpjs').checked ? 1 : 0;
+    var btn = document.getElementById('btnEksekusiAksiCuti');
+    var notif = document.getElementById('notifCuti');
+
+    var baseURL = mlite.url + '/' + mlite.admin;
+    var endpoint = (tipe === 'akhiri') ? '/bridging_hfis/akhiricutidokter' : '/bridging_hfis/batalkancutidokter';
+    var url = baseURL + endpoint + '?t=' + (mlite.token || '');
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Memproses...';
+
+    var params = 'id=' + encodeURIComponent(id) + '&pulihkan=' + encodeURIComponent(pulihkan);
+
+    var http = new XMLHttpRequest();
+    http.open('POST', url, true);
+    http.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+
+    http.onload = function () {
+        $('#modalAksiCuti').modal('hide');
+        btn.disabled = false;
+
+        try {
+            var res = JSON.parse(this.responseText);
+            if (res.status === 'success') {
+                if (notif) {
+                    notif.innerHTML = '<div class="alert alert-success alert-dismissible" style="border-radius:4px;">' +
+                        '<button type="button" class="close" data-dismiss="alert">&times;</button>' +
+                        '<h4><i class="fa fa-check-circle"></i> Berhasil!</h4>' +
+                        '<p>' + res.message + '</p>' +
+                        '</div>';
+                }
+                setTimeout(function() {
+                    location.reload();
+                }, 1000);
+            } else {
+                if (notif) {
+                    notif.innerHTML = '<div class="alert alert-danger alert-dismissible" style="border-radius:4px;">' +
+                        '<button type="button" class="close" data-dismiss="alert">&times;</button>' +
+                        '<h4><i class="fa fa-exclamation-triangle"></i> Gagal</h4>' +
+                        '<p>' + (res.message || 'Terjadi kesalahan.') + '</p>' +
+                        '</div>';
+                }
+            }
+        } catch (e) {
+            alert("Respon: " + this.responseText);
+        }
+    };
+
+    http.onerror = function() {
+        $('#modalAksiCuti').modal('hide');
+        btn.disabled = false;
+        alert("Gagal menghubungi server SIMRS.");
+    };
+
+    http.send(params);
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    hitungDurasiCuti();
+});
+</script>
+

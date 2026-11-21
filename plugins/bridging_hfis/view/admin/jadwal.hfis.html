@@ -136,6 +136,12 @@ function cekHfis() {
                     '</div>';
 
                 if (Array.isArray(res.data) && res.data.length > 0) {
+                    html += '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">' +
+                        '<div><span class="label label-info" style="font-size:12px; padding:4px 8px;"><i class="fa fa-user-md"></i> Total ' + res.data.length + ' Dokter DPJP Terdaftar</span></div>' +
+                        '<div>' +
+                        '<button type="button" class="btn btn-xs btn-success" onclick="salinSemuaJadwal()" id="btnSalinSemua" style="font-weight:bold; padding:5px 12px;"><i class="fa fa-download"></i> Salin Semua Jadwal Ini ke Database SIMRS</button>' +
+                        '</div>' +
+                        '</div>';
                     html += '<div class="table-responsive">' +
                         '<table class="table table-bordered table-striped table-hover" style="margin-bottom:0;">' +
                         '<thead>' +
@@ -376,5 +382,68 @@ function salinJadwal(idx) {
     };
 
     xhttp.send(params);
+}
+
+// Salin Semua Jadwal yang Tampil ke Database SIMRS Lokal
+function salinSemuaJadwal() {
+    if (!currentHfisData || currentHfisData.length === 0) {
+        alert('Tidak ada data jadwal untuk disalin.');
+        return;
+    }
+
+    var pesan = "Salin seluruh " + currentHfisData.length + " jadwal dokter di poli ini ke database SIMRS lokal?";
+    if (!confirm(pesan)) return;
+
+    var btn = document.getElementById('btnSalinSemua');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Menyalin ke SIMRS...';
+    }
+
+    var notifSalin = document.getElementById('notifSalin');
+    if (notifSalin) {
+        notifSalin.innerHTML = '<div class="alert alert-info"><i class="fa fa-spinner fa-spin"></i> Sedang menyalin seluruh jadwal ke database SIMRS...</div>';
+    }
+
+    var url = "{?=url(ADMIN.'/bridging_hfis/salinsemuajadwalhfis')?}";
+    var xhttp = new XMLHttpRequest();
+    xhttp.open("POST", url, true);
+    xhttp.setRequestHeader('Content-type', 'application/json');
+
+    xhttp.onload = function() {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa fa-download"></i> Salin Semua Jadwal Ini ke Database SIMRS';
+        }
+        try {
+            var res = JSON.parse(this.responseText);
+            if (notifSalin) {
+                notifSalin.innerHTML = '<div class="alert alert-' + (res.status === 'success' ? 'success' : 'danger') + ' alert-dismissible">' +
+                    '<button type="button" class="close" data-dismiss="alert">&times;</button>' +
+                    '<i class="fa fa-check-circle"></i> ' + (res.message || 'Proses salin selesai.') +
+                    '</div>';
+                notifSalin.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        } catch(e) {
+            if (notifSalin) {
+                notifSalin.innerHTML = '<div class="alert alert-danger"><i class="fa fa-exclamation-triangle"></i> Gagal parsing respon server.</div>';
+            }
+        }
+    };
+
+    xhttp.onerror = function() {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa fa-download"></i> Salin Semua Jadwal Ini ke Database SIMRS';
+        }
+        if (notifSalin) {
+            notifSalin.innerHTML = '<div class="alert alert-danger"><i class="fa fa-plug"></i> Gagal terhubung ke server SIMRS.</div>';
+        }
+    };
+
+    xhttp.send(JSON.stringify({
+        kodepoli: currentPoliCode,
+        items: currentHfisData
+    }));
 }
 </script>
