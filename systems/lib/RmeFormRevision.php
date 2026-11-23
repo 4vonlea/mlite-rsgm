@@ -4,7 +4,7 @@ namespace Systems\Lib;
 
 /**
  * Manajemen Penandaan Koreksi, Jejak Audit, & Pembatalan (VOID) untuk Form RME Rawat Jalan
- * sesuai standar akreditasi MRMIK 8.
+ * sesuai standar pengelolaan rekam medis elektronik.
  *
  * Menggunakan tabel terpadu `mlite_rme_revisions` (bersama SoapRevision).
  */
@@ -26,7 +26,7 @@ class RmeFormRevision
 
     /**
      * Daftarkan peta seluruh formulir RME (IGD, Ranap, Bedah, Rajal) secara dinamis
-     * agar MRMIK 8 mencakup seluruh formulir selain 12 formulir Rajal eksplisit.
+     * agar revisi berjejak mencakup seluruh formulir selain 12 formulir Rajal eksplisit.
      */
     public static function setDynamicCatalog(array $formMap)
     {
@@ -764,7 +764,7 @@ class RmeFormRevision
     }
 
     /**
-     * Cek sebelum update apakah edit atas record $id membutuhkan alasan koreksi (MRMIK 8).
+     * Cek sebelum update apakah edit atas record $id membutuhkan alasan koreksi.
      * Mengembalikan null jika boleh lanjut simpan, atau array hasil `needs_reason` jika wajib alasan.
      */
     public static function prepareBeforeUpdate($core, $table, $id, array $newPayload, array $opts = [])
@@ -840,7 +840,7 @@ class RmeFormRevision
                 'changed_fields'  => $cleanDiff,
                 'table_name'      => $table,
                 'record_key'      => (string)$id,
-                'message'         => $grace['why'] . '. Wajib mengisi alasan koreksi formulir (MRMIK 8).',
+                'message'         => $grace['why'] . '. Wajib mengisi alasan koreksi formulir.',
             ];
         }
 
@@ -998,7 +998,7 @@ class RmeFormRevision
                 'why'        => $grace['why'],
                 'table_name' => $table,
                 'record_key' => (string)$id,
-                'message'    => $grace['why'] . '. Wajib mengisi alasan pembatalan / VOID formulir (MRMIK 8).',
+                'message'    => $grace['why'] . '. Wajib mengisi alasan pembatalan / VOID formulir.',
             ];
         }
 
@@ -1045,7 +1045,7 @@ class RmeFormRevision
             return [
                 'status'  => 'success',
                 'mode'    => 'void',
-                'message' => 'Formulir berhasil dibatalkan (VOID) dan dicatat dalam log audit MRMIK 8.',
+                'message' => 'Formulir berhasil dibatalkan (VOID) dan dicatat dalam log audit.',
             ];
         } catch (\Throwable $e) {
             if ($pdo->inTransaction()) {
@@ -1056,7 +1056,7 @@ class RmeFormRevision
     }
 
     /**
-     * Lengkapi daftar baris formulir RME Rajal dengan metadata penandaan koreksi (MRMIK 8).
+     * Lengkapi daftar baris formulir RME Rajal dengan metadata penandaan koreksi.
      */
     public static function enrichRows($core, $table, array $rows, $actorUsername = '')
     {
@@ -1326,7 +1326,7 @@ class RmeFormRevision
 
     /**
      * Endpoint JSON tampilan baca ringkas generik (Opsi 2) untuk semua formulir RME.
-     * Hanya menampilkan field yang terisi, tabel JSON bersarang, status TTE, dan riwayat koreksi MRMIK 8.
+     * Hanya menampilkan field yang terisi, tabel JSON bersarang, status TTE, dan riwayat koreksi.
      */
     public static function outputDetailSummaryJson($core)
     {
@@ -1346,7 +1346,7 @@ class RmeFormRevision
 
         $pdo = $core->db()->pdo();
 
-        // Allowlist ketat: hanya tabel dari mlite_rme_form atau registry MRMIK 8 yang ada di database
+        // Allowlist ketat: hanya tabel dari mlite_rme_form atau registry revisi yang ada di database
         $meta = self::getMetaByTable($table);
         $formInfo = null;
         try {
@@ -1394,7 +1394,7 @@ class RmeFormRevision
         $effectiveId = ($pkCol !== '' && isset($row[$pkCol])) ? (string)$row[$pkCol] : $recordKey;
         $labels = $meta['labels'] ?? [];
 
-        // Enrich metadata revisi & status TTE bila terdaftar MRMIK 8
+        // Enrich metadata revisi & status TTE bila terdaftar pada registry revisi
         $enriched = $meta ? self::enrichSingleRow($core, $table, $row) : $row;
 
         // Kumpulkan field terisi secara terstruktur (hanya yang tidak kosong)
@@ -1653,7 +1653,7 @@ class RmeFormRevision
     }
 
     /* =========================================================================
-     * INTERCEPTOR GENERIK MRMIK 8 UNTUK SELURUH FORM IGD, RAWAT INAP, & BEDAH
+     * INTERCEPTOR GENERIK REVISI & VOID UNTUK SELURUH FORM IGD, RAWAT INAP, & BEDAH
      * ========================================================================= */
 
     private static function tableHasIdColumn(\PDO $pdo, string $table): bool
@@ -1706,7 +1706,7 @@ class RmeFormRevision
     }
 
     /**
-     * Cegat aksi HAPUS/DELETE pada seluruh formulir IGD, Ranap, & Bedah agar menjadi Soft-Delete (VOID) berjejak MRMIK 8.
+     * Cegat aksi HAPUS/DELETE pada seluruh formulir IGD, Ranap, & Bedah agar menjadi Soft-Delete (VOID) berjejak.
      * Mengembalikan true jika sudah ditangani (controller delete permanen tidak perlu dijalankan).
      */
     public static function interceptGenericVoid($core, array $formMap, string $rawMethod, array $params = []): bool
@@ -1755,7 +1755,7 @@ class RmeFormRevision
 
     /**
      * Cegat aksi SAVE/SIMPAN pada seluruh formulir IGD, Ranap, & Bedah untuk:
-     *  - Memblokir perubahan pada record VOID atau perubahan lewat 15 menit tanpa alasan koreksi (MRMIK 8)
+     *  - Memblokir perubahan pada record VOID atau perubahan lewat 15 menit tanpa alasan koreksi
      *  - Mencatat entri awal (`markCreated`) atau snapshot before/after revisi (`commitRevision`) setelah DB selesai ditulis
      */
     public static function interceptGenericSave($core, array $formMap, string $rawMethod): void
@@ -1794,7 +1794,7 @@ class RmeFormRevision
                 return;
             }
             if (!empty($existing['deleted_at'])) {
-                $err = ['status' => 'error', 'message' => 'Formulir ini sudah berstatus dibatalkan (VOID) dan tidak dapat diubah lagi (MRMIK 8).'];
+                $err = ['status' => 'error', 'message' => 'Formulir ini sudah berstatus dibatalkan (VOID) dan tidak dapat diubah lagi.'];
                 if ($isAjax) {
                     while (ob_get_level()) ob_end_clean();
                     header('Content-Type: application/json; charset=utf-8');
@@ -1817,7 +1817,7 @@ class RmeFormRevision
                     'why'        => $grace['why'],
                     'table_name' => $table,
                     'record_key' => (string)$id,
-                    'message'    => ($grace['why'] ?: 'Perubahan melewati masa tenggang 15 menit') . '. Wajib mengisi alasan koreksi (MRMIK 8).',
+                    'message'    => ($grace['why'] ?: 'Perubahan melewati masa tenggang 15 menit') . '. Wajib mengisi alasan koreksi.',
                 ];
                 if ($isAjax) {
                     while (ob_get_level()) ob_end_clean();

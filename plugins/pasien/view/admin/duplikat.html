@@ -529,7 +529,7 @@
     var tbl = el('table', 'table table-striped table-bordered table-condensed');
     var thead = el('thead');
     var hTr = el('tr');
-    ['Waktu', 'RM Sumber (Arsip) → RM Utama', 'Alasan (MRMIK 8)', 'Baris Dipindah', 'Petugas', 'e-RM'].forEach(function (h) {
+    ['Waktu', 'RM Sumber (Arsip) → RM Utama', 'Alasan', 'Baris Dipindah', 'Petugas', 'e-RM'].forEach(function (h) {
       hTr.appendChild(el('th', null, h));
     });
     thead.appendChild(hTr);
@@ -827,7 +827,7 @@
     }
 
     var fgReason = el('div', 'form-group');
-    var lblReason = el('label', null, 'Alasan Penggabungan (Wajib untuk Audit MRMIK 8)');
+    var lblReason = el('label', null, 'Alasan Penggabungan (Wajib untuk Jejak Audit)');
     var txtReason = document.createElement('input');
     txtReason.type = 'text';
     txtReason.id = 'inputMergeReason';

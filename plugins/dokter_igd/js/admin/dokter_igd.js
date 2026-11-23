@@ -451,7 +451,7 @@ $("#soap").on("click",".edit_soap", function(event){
 
 });
 
-// ketika tombol hapus ditekan (Soft-Delete VOID MRMIK 8)
+// ketika tombol hapus ditekan (Soft-Delete VOID)
 $("#soap").on("click",".hapus_soap", function(event){
   var baseURL = mlite.url + '/' + mlite.admin;
   event.preventDefault();

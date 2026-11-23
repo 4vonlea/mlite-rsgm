@@ -134,7 +134,7 @@ class Admin extends AdminModule
             $variables['actor_permission_message'] = $perm['message'];
         }
 
-        // MRMIK 8: Enrich data formulir RME Rawat Jalan pada manage / form / cetak
+        // Enrich data formulir RME Rawat Jalan pada manage / form / cetak
         $rajalDir = explode('/', (string)$file)[0];
         $rajalTable = $this->getRajalTableByViewDir($rajalDir);
         $isRajalManage = ($rajalTable !== '' && (strpos($file, 'manage.html') !== false));
@@ -302,7 +302,7 @@ class Admin extends AdminModule
         if (!$isVoided && $revCount === 0 && !$isOutdated && !$needsReason) {
             $minLeft = (int)($meta['minutes_left'] ?? 0);
             return '<div class="rsgm-soap-rev-banner" style="margin: 0 0 14px 0; padding: 9px 14px; border-radius: 8px; background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; font-size: 12px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">'
-                . '<div><i class="fa fa-clock-o"></i> <strong>Masa Tenggang Koreksi Langsung (MRMIK 8):</strong> Perubahan dalam &le; ' . $minLeft . ' menit oleh pembuat awal dapat disimpan langsung tanpa alasan formal.</div>'
+                . '<div><i class="fa fa-clock-o"></i> <strong>Masa Tenggang Koreksi Langsung:</strong> Perubahan dalam &le; ' . $minLeft . ' menit oleh pembuat awal dapat disimpan langsung tanpa alasan formal.</div>'
                 . '</div>';
         }
 
@@ -330,7 +330,7 @@ class Admin extends AdminModule
             $badges .= '<span class="rsgm-soap-tte-warn-badge" style="margin-right:6px;"><i class="fa fa-exclamation-triangle"></i> TTE Sebelum Koreksi (Perlu TTE Ulang)</span>';
         }
         if ($needsReason) {
-            $badges .= '<span class="label label-warning" style="font-size:10.5px;padding:3px 7px;"><i class="fa fa-shield"></i> Wajib Alasan Koreksi (MRMIK 8)</span>';
+            $badges .= '<span class="label label-warning" style="font-size:10.5px;padding:3px 7px;"><i class="fa fa-shield"></i> Wajib Alasan Koreksi</span>';
         }
 
         $detailText = '';
@@ -348,40 +348,24 @@ class Admin extends AdminModule
 
     private function injectRajalCetakRevisionMarkers($rendered, array $meta)
     {
-        $topStampHtml = $this->buildRajalCetakTopStampHtml($meta);
+        // Penandaan koreksi tidak ditempel di atas KOP formulir PDF agar tata letak kop resmi tetap bersih;
+        // rincian riwayat koreksi tetap dicetak pada tabel riwayat di bagian akhir formulir.
         $auditHtml = $this->buildRajalCetakAuditHtml($meta);
-        if ($topStampHtml === '' && $auditHtml === '') {
+        if ($auditHtml === '') {
             return $rendered;
         }
 
         $isPdf = isset($_REQUEST['pdf']) && (string)$_REQUEST['pdf'] === '1';
         $hasPageWrapper = (bool)preg_match('/<div\s+class="[^"]*\b(?:sheet|page)\b[^"]*"[^>]*>/i', $rendered);
 
-        if ($topStampHtml !== '') {
-            if ($hasPageWrapper) {
-                $rendered = preg_replace('/(<div\s+class="[^"]*\b(?:sheet|page)\b[^"]*"[^>]*>)/i', '$1' . "\n" . $topStampHtml, $rendered, 1);
+        if ($hasPageWrapper && preg_match('/<\/div>(\s*(?:<script\b[\s\S]*?<\/script>\s*)*<\/body>)/i', $rendered)) {
+            $rendered = preg_replace('/<\/div>(\s*(?:<script\b[\s\S]*?<\/script>\s*)*<\/body>)/i', $auditHtml . "\n</div>$1", $rendered, 1);
+        } else {
+            $wrappedBottom = $isPdf ? $auditHtml : ('<div style="max-width:210mm; margin:10px auto;">' . $auditHtml . '</div>');
+            if (stripos($rendered, '</body>') !== false) {
+                $rendered = preg_replace('/<\/body>/i', $wrappedBottom . '</body>', $rendered, 1);
             } else {
-                $wrappedTop = $isPdf ? $topStampHtml : ('<div style="max-width:210mm; margin:8px auto 4px;">' . $topStampHtml . '</div>');
-                if (preg_match('/(<div\s+class="[^"]*no-print[^"]*"[^>]*>[\s\S]*?<\/div>)/i', $rendered)) {
-                    $rendered = preg_replace('/(<div\s+class="[^"]*no-print[^"]*"[^>]*>[\s\S]*?<\/div>)/i', '$1' . "\n" . $wrappedTop, $rendered, 1);
-                } elseif (preg_match('/(<body[^>]*>)/i', $rendered)) {
-                    $rendered = preg_replace('/(<body[^>]*>)/i', '$1' . "\n" . $wrappedTop, $rendered, 1);
-                } else {
-                    $rendered = $wrappedTop . $rendered;
-                }
-            }
-        }
-
-        if ($auditHtml !== '') {
-            if ($hasPageWrapper && preg_match('/<\/div>(\s*(?:<script\b[\s\S]*?<\/script>\s*)*<\/body>)/i', $rendered)) {
-                $rendered = preg_replace('/<\/div>(\s*(?:<script\b[\s\S]*?<\/script>\s*)*<\/body>)/i', $auditHtml . "\n</div>$1", $rendered, 1);
-            } else {
-                $wrappedBottom = $isPdf ? $auditHtml : ('<div style="max-width:210mm; margin:10px auto;">' . $auditHtml . '</div>');
-                if (stripos($rendered, '</body>') !== false) {
-                    $rendered = preg_replace('/<\/body>/i', $wrappedBottom . '</body>', $rendered, 1);
-                } else {
-                    $rendered .= $wrappedBottom;
-                }
+                $rendered .= $wrappedBottom;
             }
         }
 
@@ -432,12 +416,12 @@ class Admin extends AdminModule
                 }
             }
             if (!empty($changedLabels)) {
-                $detailLine .= '<br><span style="color:#78350f;"><strong>Bagian dikoreksi:</strong> ' . implode(', ', array_unique($changedLabels)) . ' <em>(lihat rincian Semula &rarr; Menjadi pada tabel Audit MRMIK 8 di akhir formulir)</em></span>';
+                $detailLine .= '<br><span style="color:#78350f;"><strong>Bagian dikoreksi:</strong> ' . implode(', ', array_unique($changedLabels)) . ' <em>(lihat rincian Semula &rarr; Menjadi pada tabel riwayat koreksi di akhir formulir)</em></span>';
             }
         }
 
-        return '<div class="rsgm-mrmik8-print-header" style="margin:0 0 6px 0; padding:5px 8px; border:1px solid ' . $bd . '; border-left:4px solid ' . $bd . '; background:' . $bg . '; color:' . $fg . '; font-family:Arial,sans-serif; font-size:7.6pt; line-height:1.3; page-break-inside:avoid;">'
-            . '<div style="margin-bottom:2px;">' . $pills . '<strong style="color:#0f172a;">PENANDAAN KOREKSI REKAM MEDIS (MRMIK 8)</strong></div>'
+        return '<div class="rsgm-rme-print-header" style="margin:0 0 6px 0; padding:5px 8px; border:1px solid ' . $bd . '; border-left:4px solid ' . $bd . '; background:' . $bg . '; color:' . $fg . '; font-family:Arial,sans-serif; font-size:7.6pt; line-height:1.3; page-break-inside:avoid;">'
+            . '<div style="margin-bottom:2px;">' . $pills . '<strong style="color:#0f172a;">PENANDAAN KOREKSI REKAM MEDIS</strong></div>'
             . '<div>' . $detailLine . '</div>'
             . '</div>';
     }
@@ -451,8 +435,8 @@ class Admin extends AdminModule
             return '';
         }
 
-        $html = '<div class="rsgm-mrmik8-print-audit" style="margin-top:8px; padding:7px 9px; border:1px solid #94a3b8; background:#f8fafc; font-family:Arial,sans-serif; font-size:8pt; page-break-inside:avoid;">';
-        $html .= '<div style="font-weight:bold; color:#0f172a; margin-bottom:4px; border-bottom:1px solid #cbd5e1; padding-bottom:3px;">PENANDAAN KOREKSI &amp; VALIDASI REKAM MEDIS (MRMIK 8)</div>';
+        $html = '<div class="rsgm-rme-print-audit" style="margin-top:8px; padding:7px 9px; border:1px solid #94a3b8; background:#f8fafc; font-family:Arial,sans-serif; font-size:8pt; page-break-inside:avoid;">';
+        $html .= '<div style="font-weight:bold; color:#0f172a; margin-bottom:4px; border-bottom:1px solid #cbd5e1; padding-bottom:3px;">RIWAYAT KOREKSI &amp; VALIDASI REKAM MEDIS</div>';
 
         if ($isVoided) {
             $vi = $meta['void_info'] ?? [];
@@ -2080,7 +2064,7 @@ public function getJs()
             setStatus('dirty', 'Ada perubahan...');
         }
 
-        // 4b. Indikator Persentase Kelengkapan Form RME Real-Time (MRMIK 12)
+        // 4b. Indikator Persentase Kelengkapan Form RME Real-Time
         var completenessTimer = null;
         function computeRealtimeCompleteness() {
             var $pill = $('#rme-completeness-pill');
@@ -2380,7 +2364,7 @@ public function getJs()
 
         if (rmeRevMeta && (rmeRevMeta.needs_reason || rmeRevMeta.is_voided)) {
             autoSaveEnabled = false;
-            $('#rme-toggle-autosave').prop('checked', false).closest('.rme-autosave-toggle').attr('title', 'Auto-Save dijeda: perubahan pada dokumen ini memerlukan alasan koreksi MRMIK 8');
+            $('#rme-toggle-autosave').prop('checked', false).closest('.rme-autosave-toggle').attr('title', 'Auto-Save dijeda: perubahan pada dokumen ini memerlukan alasan koreksi');
         }
 
         // Toggle Auto-Save
@@ -2477,7 +2461,7 @@ public function getJs()
                         $('#rme-toggle-autosave').prop('checked', false);
                         if (window.RSGMSoapRevision && typeof window.RSGMSoapRevision.promptReason === 'function') {
                             window.RSGMSoapRevision.promptReason({
-                                title: 'Alasan Koreksi Formulir RME (MRMIK 8)',
+                                title: 'Alasan Koreksi Formulir RME',
                                 infoText: res.message || 'Perubahan formulir ini memerlukan alasan koreksi.',
                                 changedFields: res.changed_fields || {},
                                 required: true,
@@ -2516,7 +2500,7 @@ public function getJs()
 
                     if (!isAuto) {
                         var okMsg = (res && res.revision && res.revision.mode === 'amend')
-                            ? '✓ Koreksi #' + res.revision.revision_no + ' tercatat (MRMIK 8)'
+                            ? '✓ Koreksi #' + res.revision.revision_no + ' tercatat'
                             : '✓ Data berhasil disimpan tanpa keluar halaman';
                         showToast(okMsg, 'success');
                     }
@@ -5630,8 +5614,8 @@ public function getPatientContext($no_rawat)
                             $lastRow = $entries[0];
                         }
                         // Evaluasi persentase kelengkapan isian dari row mentah (sebelum enrich metadata revisi)
-                        if (is_array($lastRow) && class_exists('\Systems\Lib\MrmikService')) {
-                            $fillEval = \Systems\Lib\MrmikService::evaluateRmeRowCompleteness(
+                        if (is_array($lastRow) && class_exists('\Systems\Lib\RmeService')) {
+                            $fillEval = \Systems\Lib\RmeService::evaluateRmeRowCompleteness(
                                 (string)$f['nama_tabel'],
                                 $lastRow,
                                 [
@@ -21391,7 +21375,7 @@ if (ob_get_length()) {
     }
 
     /**
-     * Guard pembaruan formulir RME Rajal sesuai MRMIK 8 sebelum query UPDATE dijalankan.
+     * Guard pembaruan formulir RME Rajal sebelum query UPDATE dijalankan.
      * Otomatis membalas JSON `needs_reason`/`error` bila AJAX, atau redirect + flash notify bila POST biasa.
      */
     private function guardRajalUpdateOrRespond($table, $id, array $payload, $redirectUrl, array $opts = [])
@@ -21411,7 +21395,7 @@ if (ob_get_length()) {
                 echo json_encode($prep, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
                 exit();
             }
-            $this->notify('failure', $prep['message'] ?? 'Diperlukan alasan koreksi (MRMIK 8).');
+            $this->notify('failure', $prep['message'] ?? 'Diperlukan alasan koreksi.');
             redirect($redirectUrl);
             exit();
         }
@@ -25590,7 +25574,7 @@ if (ob_get_length()) {
             redirect(url([ADMIN, 'form_rme', 'cpptmanage']));
         }
 
-        // Ambil riwayat SOAP ralan dan ranap (termasuk entri VOID untuk jejak audit MRMIK 8)
+        // Ambil riwayat SOAP ralan dan ranap (termasuk entri VOID untuk jejak audit)
         $pdo = $this->db()->pdo();
         $currentUser = $this->core->getUserInfo('username');
         $rows_ralan = \Systems\Lib\SoapRevision::fetchSoapRows($pdo, 'pemeriksaan_ralan', $no_rawat, true, 'ASC');
@@ -25827,7 +25811,7 @@ if (ob_get_length()) {
         $norm_pad = str_pad($norm_clean, 6, '0', STR_PAD_LEFT);
         $norm_boxes = str_split($norm_pad);
 
-        // Ambil data CPPT ralan dan ranap (termasuk VOID & riwayat koreksi MRMIK 8)
+        // Ambil data CPPT ralan dan ranap (termasuk VOID & riwayat koreksi)
         $pdo = $this->db()->pdo();
         $rows_ralan = \Systems\Lib\SoapRevision::fetchSoapRows($pdo, 'pemeriksaan_ralan', $no_rawat, true, 'ASC');
         $rows_ranap = \Systems\Lib\SoapRevision::fetchSoapRows($pdo, 'pemeriksaan_ranap', $no_rawat, true, 'ASC');

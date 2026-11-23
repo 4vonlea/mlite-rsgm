@@ -3,25 +3,25 @@
 namespace Systems\Lib;
 
 /**
- * Layanan Terpadu Kepatuhan Akreditasi MRMIK (STARKES Kemenkes & PMK 24/2022):
- *  - MRMIK 11: Audit Log Akses Baca & Cetak e-RM (mlite_rme_access_logs)
- *  - MRMIK 12: Review Kelengkapan Rekam Medis / KLPCM Kuantitatif & Kualitatif (mlite_klpcm_reviews)
- *  - MRMIK 2.1: Kamus Daftar Singkatan & Simbol Terstandar / Do Not Use (mlite_mrmik_singkatan)
+ * Layanan Terpadu Rekam Medis Elektronik (RME):
+ *  - Audit Log Akses Baca & Cetak e-RM (mlite_rme_access_logs)
+ *  - Review Kelengkapan Rekam Medis / KLPCM Kuantitatif & Kualitatif (mlite_klpcm_reviews)
+ *  - Kamus Daftar Singkatan & Simbol Terstandar / Do Not Use (mlite_mrmik_singkatan)
  */
-class MrmikService
+class RmeService
 {
     private static $schemaEnsured = false;
 
     /**
-     * Hak akses petugas/komite MRMIK (admin & rekammedis).
+     * Hak akses petugas/admin Rekam Medis (admin & rekammedis).
      */
-    public static function canManageMrmik($core): bool
+    public static function canManageRmeAudit($core): bool
     {
         return PasienMergeService::canManageMerge($core);
     }
 
     /**
-     * Pastikan tabel MRMIK tersedia dan seed singkatan standar RSGM bila masih kosong.
+     * Pastikan tabel layanan RME tersedia dan seed singkatan standar RSGM bila masih kosong.
      */
     public static function ensureSchema(\PDO $pdo): void
     {
@@ -162,7 +162,7 @@ class MrmikService
     }
 
     /* =========================================================================
-     * 1. MRMIK 11 — AUDIT LOG AKSES BACA & CETAK e-RM
+     * 1. AUDIT LOG AKSES BACA & CETAK e-RM
      * ========================================================================= */
 
     public static function actionLabels(): array
@@ -459,7 +459,7 @@ class MrmikService
     }
 
     /* =========================================================================
-     * 2. MRMIK 12 — DASHBOARD REVIEW KELENGKAPAN REKAM MEDIS (KLPCM)
+     * 2. DASHBOARD REVIEW KELENGKAPAN REKAM MEDIS (KLPCM)
      * ========================================================================= */
 
     public static function getKlpcmFilterOptions(\PDO $pdo): array
@@ -494,7 +494,7 @@ class MrmikService
     /**
      * Evaluasi kelengkapan pengisian field pada 1 baris formulir RME yang benar-benar diisi pada suatu kunjungan.
      * - Hanya mengecek form yang memang diisi (form yang tidak diisi pada kunjungan tidak ikut dinilai).
-     * - Mengabaikan kolom metadata sistem, audit MRMIK 8, dan kolom opsional (*_lainnya, *_ket, *_catatan).
+     * - Mengabaikan kolom metadata sistem, audit revisi, dan kolom opsional (*_lainnya, *_ket, *_catatan).
      * - Mendeteksi TTE / tanda tangan secara terpisah.
      */
     public static function evaluateRmeRowCompleteness(string $table, array $row, array $formInfo): array
@@ -1085,7 +1085,7 @@ class MrmikService
 
     public static function saveKlpcmReview($core, array $input): array
     {
-        if (!self::canManageMrmik($core)) {
+        if (!self::canManageRmeAudit($core)) {
             return ['status' => 'error', 'message' => 'Hanya Admin / Petugas Rekam Medis yang dapat menyimpan review KLPCM.'];
         }
         $pdo = $core->db()->pdo();
@@ -1276,7 +1276,7 @@ class MrmikService
         $userCap = (string)$core->getUserInfo('cap', $uid, true);
         $poliCodes = array_values(array_filter(array_map('trim', explode(',', $userCap))));
         $isAdmin = ($accessStr === 'all') || ($role === 'admin') || ($uid === 1);
-        $isRm = self::canManageMrmik($core);
+        $isRm = self::canManageRmeAudit($core);
 
         $items = [];
         $counts = ['all' => 0, 'klpcm' => 0, 'klinis' => 0, 'penunjang' => 0];
@@ -1541,7 +1541,7 @@ class MrmikService
 
         $uid = (int)($_SESSION['mlite_user'] ?? 0);
         $uname = trim((string)$core->getUserInfo('username', $uid, true));
-        $isRm = self::canManageMrmik($core);
+        $isRm = self::canManageRmeAudit($core);
 
         $scope = trim((string)($filters['scope'] ?? ($isRm ? 'all' : 'mine')));
         if (!$isRm) {
@@ -1730,7 +1730,7 @@ class MrmikService
     }
 
     /* =========================================================================
-     * 3. MRMIK 2.1 — KAMUS DAFTAR SINGKATAN & SIMBOL TERSTANDAR
+     * 3. KAMUS DAFTAR SINGKATAN & SIMBOL TERSTANDAR
      * ========================================================================= */
 
     public static function listSingkatan(\PDO $pdo, array $filters = []): array
@@ -1786,7 +1786,7 @@ class MrmikService
 
     public static function saveSingkatan($core, array $input): array
     {
-        if (!self::canManageMrmik($core)) {
+        if (!self::canManageRmeAudit($core)) {
             return ['status' => 'error', 'message' => 'Hanya Admin / Petugas Rekam Medis yang dapat mengubah kamus singkatan.'];
         }
         $pdo = $core->db()->pdo();
@@ -1829,7 +1829,7 @@ class MrmikService
 
     public static function deleteSingkatan($core, int $id): array
     {
-        if (!self::canManageMrmik($core)) {
+        if (!self::canManageRmeAudit($core)) {
             return ['status' => 'error', 'message' => 'Hanya Admin / Petugas Rekam Medis yang dapat menghapus entri kamus singkatan.'];
         }
         $pdo = $core->db()->pdo();
@@ -1887,7 +1887,7 @@ class MrmikService
             ['TMJ', 'Temporomandibular Joint', 'diperbolehkan', 'Kedokteran Gigi', '', 'Sendi rahang'],
             ['BM', 'Bedah Mulut dan Maksilofasial', 'diperbolehkan', 'Kedokteran Gigi', '', 'Unit / KSM Bedah Mulut'],
 
-            // === DILARANG (DO NOT USE LIST — ISMP / JCI / STARKES MRMIK 2.1) ===
+            // === DILARANG (DO NOT USE LIST — ISMP / JCI) ===
             ['U / u', 'Unit (sering salah baca menjadi 0, 4, atau cc)', 'dilarang', 'Farmasi & Resep', 'Tulis lengkap: "unit"', 'Risiko overdosis insulin/heparin 10x lipat'],
             ['IU', 'International Unit (sering salah baca menjadi IV atau 10)', 'dilarang', 'Farmasi & Resep', 'Tulis lengkap: "International Unit" atau "unit"', 'Dilarang pada resep, CPPT, dan instruksi obat'],
             ['QD / q.d.', 'Quaque die / setiap hari (sering salah baca menjadi QID)', 'dilarang', 'Farmasi & Resep', 'Tulis: "1x sehari" atau "setiap hari"', 'Risiko pemberian 4x sehari'],

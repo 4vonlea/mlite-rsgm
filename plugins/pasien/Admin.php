@@ -1389,14 +1389,46 @@ class Admin extends AdminModule
         $row['periksa_radiologi'][] = $radiologi_session;
       }
 
-      $row['mini_pacs'] = $this->db('mlite_mini_pacs_study')->where('no_rawat', $row['no_rawat'])->toArray();
       $mini_pacs_result = [];
-      foreach ($row['mini_pacs'] as $mp) {
-        $mp['series'] = $this->db('mlite_mini_pacs_series')->where('study_id', $mp['id'])->toArray();
-        foreach ($mp['series'] as &$series) {
-          $series['instances'] = $this->db('mlite_mini_pacs_instance')->where('series_id', $series['id'])->toArray();
+      try {
+        $pacsIsMonoVal = $this->settings->get('mini_pacs', 'is_mono');
+        $pacsIsMono = ($pacsIsMonoVal !== null && $pacsIsMonoVal !== '') ? (string)$pacsIsMonoVal : '1';
+        $pacsRemoteIp = rtrim((string)($this->settings->get('mini_pacs', 'remote_ip') ?? ''), '/');
+        $rawMiniPacs = $this->db('mlite_mini_pacs_study')
+          ->where('no_rawat', $row['no_rawat'])
+          ->desc('study_date')
+          ->toArray();
+        foreach ($rawMiniPacs as $mp) {
+          $mp['series'] = $this->db('mlite_mini_pacs_series')->where('study_id', $mp['id'])->toArray();
+          $instancesFlat = [];
+          foreach ($mp['series'] as &$series) {
+            $series['instances'] = $this->db('mlite_mini_pacs_instance')->where('series_id', $series['id'])->toArray();
+            foreach ($series['instances'] as &$ins) {
+              $sopUid = (string)($ins['sop_instance_uid'] ?? '');
+              $apiJpgUrl = url([ADMIN, 'api', 'mini_pacs', 'instancejpg', $ins['id']]);
+              $thumbUrl = $apiJpgUrl;
+              $fallbackUrl = '';
+              if ($sopUid !== '' && defined('UPLOADS') && file_exists(UPLOADS . '/pacs/' . $sopUid . '_thumb.jpg')) {
+                $thumbUrl = url('uploads/pacs/' . $sopUid . '_thumb.jpg');
+                $fallbackUrl = $apiJpgUrl;
+              } elseif ($pacsIsMono === '0' && $pacsRemoteIp !== '' && $sopUid !== '') {
+                $fallbackUrl = $pacsRemoteIp . '/uploads/pacs/' . $sopUid . '_thumb.jpg';
+              }
+              $ins['thumb_url'] = $thumbUrl;
+              $ins['full_url'] = $apiJpgUrl;
+              $ins['fallback_url'] = $fallbackUrl;
+              $ins['series_description'] = (string)($series['series_description'] ?? '');
+              $instancesFlat[] = $ins;
+            }
+            unset($ins);
+          }
+          unset($series);
+          $mp['instances_flat'] = $instancesFlat;
+          $mp['instance_count'] = count($instancesFlat);
+          $mini_pacs_result[] = $mp;
         }
-        $mini_pacs_result[] = $mp;
+      } catch (\Throwable $e) {
+        $mini_pacs_result = [];
       }
       $row['mini_pacs'] = $mini_pacs_result;
 
@@ -1573,7 +1605,8 @@ class Admin extends AdminModule
       $row['soap_count'] = count($row['pemeriksaan_ralan']) + count($row['pemeriksaan_ranap']);
       $row['obat_count'] = count($row['pemberian_obat']) + count($row['obat_operasi']);
       $row['tindakan_count'] = count($row['rawat_jl_dr']) + count($row['rawat_jl_pr']) + count($row['rawat_jl_drpr']) + count($row['rawat_inap_dr']) + count($row['rawat_inap_pr']) + count($row['rawat_inap_drpr']) + count($row['operasi']);
-      $row['penunjang_count'] = count($row['periksa_lab']) + count($row['periksa_radiologi']) + count($row['berkas_digital']) + count($row['mlite_odontogram']) + (!empty($row['lokalis']) ? 1 : 0);
+      $row['pacs_count'] = count($row['mini_pacs']);
+      $row['penunjang_count'] = count($row['periksa_lab']) + count($row['periksa_radiologi']) + $row['pacs_count'] + count($row['berkas_digital']) + count($row['mlite_odontogram']) + (!empty($row['lokalis']) ? 1 : 0);
       $row['asesmen_count'] = count($row['penilaian_medis_ralan']) + count($row['penilaian_medis_igd']) + count($row['penilaian_medis_ranap']) + count($row['triase_igd']) + count($row['penilaian_keperawatan_igd']) + count($row['penilaian_awal_keperawatan_ralan']) + count($row['penilaian_awal_keperawatan_ranap']) + count($row['catatan_adime_gizi']) + count($row['penilaian_ulang_nyeri']) + count($row['resume_pasien']) + count($row['laporan_operasi']) + count($row['rsgm_data']) + (!empty($row['catatan_perawatan']) ? 1 : 0);
 
       $diagSummaryParts = [];
@@ -2227,7 +2260,7 @@ class Admin extends AdminModule
   }
 
   /**
-   * Halaman Telusur e-RM berdasarkan kriteria perjalanan & status akhir pasien (MRMIK).
+   * Halaman Telusur e-RM berdasarkan kriteria perjalanan & status akhir pasien.
    */
   public function getTelusur()
   {
@@ -2444,7 +2477,7 @@ class Admin extends AdminModule
   }
 
   /**
-   * Single source of truth ekspresi SQL kriteria pasien Telusur e-RM (MRMIK).
+   * Single source of truth ekspresi SQL kriteria pasien Telusur e-RM.
    */
   private function _buildTelusurCriteriaSql(\PDO $pdo)
   {
@@ -2866,31 +2899,31 @@ class Admin extends AdminModule
   }
 
   /* =========================================================================
-   * MRMIK 11 — AUDIT LOG AKSES BACA & CETAK e-RM
+   * AUDIT LOG AKSES BACA & CETAK e-RM
    * ========================================================================= */
 
   public function getAkseslog()
   {
-    if (!\Systems\Lib\MrmikService::canManageMrmik($this->core)) {
+    if (!\Systems\Lib\RmeService::canManageRmeAudit($this->core)) {
       $this->notify('failure', 'Akses ditolak. Khusus Admin & Rekam Medis.');
       redirect(url([ADMIN, 'dashboard', 'main']));
       exit();
     }
     $this->_addHeaderFiles();
-    \Systems\Lib\MrmikService::ensureSchema($this->db()->pdo());
+    \Systems\Lib\RmeService::ensureSchema($this->db()->pdo());
 
     return $this->draw('akseslog.html', [
       'token'         => htmlspecialchars((string)($_SESSION['token'] ?? ''), ENT_QUOTES, 'UTF-8'),
       'tgl_awal'      => date('Y-m-d', strtotime('-7 days')),
       'tgl_akhir'     => date('Y-m-d'),
-      'action_labels' => \Systems\Lib\MrmikService::actionLabels(),
+      'action_labels' => \Systems\Lib\RmeService::actionLabels(),
     ]);
   }
 
   public function anyAkseslogdata()
   {
     header('Content-Type: application/json; charset=utf-8');
-    if (!\Systems\Lib\MrmikService::canManageMrmik($this->core)) {
+    if (!\Systems\Lib\RmeService::canManageRmeAudit($this->core)) {
       http_response_code(403);
       echo json_encode(['status' => 'error', 'message' => 'Akses ditolak.'], JSON_UNESCAPED_UNICODE);
       exit();
@@ -2906,7 +2939,7 @@ class Admin extends AdminModule
       ];
       $page = max(1, (int)($_REQUEST['page'] ?? 1));
       $perPage = max(10, min(100, (int)($_REQUEST['per_page'] ?? 25)));
-      $data = \Systems\Lib\MrmikService::listAccessLogs($this->db()->pdo(), $filters, $page, $perPage);
+      $data = \Systems\Lib\RmeService::listAccessLogs($this->db()->pdo(), $filters, $page, $perPage);
       echo json_encode(array_merge(['status' => 'success'], $data), JSON_UNESCAPED_UNICODE);
     } catch (\Throwable $e) {
       error_log('[pasien/akseslogdata] ' . $e->getMessage());
@@ -2918,7 +2951,7 @@ class Admin extends AdminModule
 
   public function getAkseslogcsv()
   {
-    if (!\Systems\Lib\MrmikService::canManageMrmik($this->core)) {
+    if (!\Systems\Lib\RmeService::canManageRmeAudit($this->core)) {
       http_response_code(403);
       exit('Akses ditolak.');
     }
@@ -2929,8 +2962,8 @@ class Admin extends AdminModule
       'user_role'   => trim((string)($_GET['user_role'] ?? 'all')),
       'search'      => trim((string)($_GET['q'] ?? '')),
     ];
-    \Systems\Lib\MrmikService::logAccess($this->core, 'EXPORT_DATA', 'pasien', 'pasien/akseslogcsv', '', '', 'Ekspor CSV Log Akses e-RM (' . $filters['tgl_awal'] . ' s.d. ' . $filters['tgl_akhir'] . ')');
-    $data = \Systems\Lib\MrmikService::listAccessLogs($this->db()->pdo(), $filters, 1, 200);
+    \Systems\Lib\RmeService::logAccess($this->core, 'EXPORT_DATA', 'pasien', 'pasien/akseslogcsv', '', '', 'Ekspor CSV Log Akses e-RM (' . $filters['tgl_awal'] . ' s.d. ' . $filters['tgl_akhir'] . ')');
+    $data = \Systems\Lib\RmeService::listAccessLogs($this->db()->pdo(), $filters, 1, 200);
 
     while (ob_get_level()) {
       ob_end_clean();
@@ -2952,20 +2985,20 @@ class Admin extends AdminModule
   }
 
   /* =========================================================================
-   * MRMIK 12 — DASHBOARD REVIEW KELENGKAPAN REKAM MEDIS (KLPCM)
+   * DASHBOARD REVIEW KELENGKAPAN REKAM MEDIS (KLPCM)
    * ========================================================================= */
 
   public function getKlpcm()
   {
-    if (!\Systems\Lib\MrmikService::canManageMrmik($this->core)) {
+    if (!\Systems\Lib\RmeService::canManageRmeAudit($this->core)) {
       $this->notify('failure', 'Akses ditolak. Khusus Admin & Tim Rekam Medis.');
       redirect(url([ADMIN, 'dashboard', 'main']));
       exit();
     }
     $this->_addHeaderFiles();
     $pdo = $this->db()->pdo();
-    \Systems\Lib\MrmikService::ensureSchema($pdo);
-    $opts = \Systems\Lib\MrmikService::getKlpcmFilterOptions($pdo);
+    \Systems\Lib\RmeService::ensureSchema($pdo);
+    $opts = \Systems\Lib\RmeService::getKlpcmFilterOptions($pdo);
 
     return $this->draw('klpcm.html', [
       'token'      => htmlspecialchars((string)($_SESSION['token'] ?? ''), ENT_QUOTES, 'UTF-8'),
@@ -2978,7 +3011,7 @@ class Admin extends AdminModule
   public function anyKlpcmdata()
   {
     header('Content-Type: application/json; charset=utf-8');
-    if (!\Systems\Lib\MrmikService::canManageMrmik($this->core)) {
+    if (!\Systems\Lib\RmeService::canManageRmeAudit($this->core)) {
       http_response_code(403);
       echo json_encode(['status' => 'error', 'message' => 'Akses ditolak.'], JSON_UNESCAPED_UNICODE);
       exit();
@@ -2998,7 +3031,7 @@ class Admin extends AdminModule
       $rmeFormMap = (isset($this->core->module->form_rme) && method_exists($this->core->module->form_rme, 'getRmeFormMap'))
         ? $this->core->module->form_rme->getRmeFormMap()
         : [];
-      $data = \Systems\Lib\MrmikService::evaluateKlpcm($this->db()->pdo(), $filters, $page, $perPage, $rmeFormMap);
+      $data = \Systems\Lib\RmeService::evaluateKlpcm($this->db()->pdo(), $filters, $page, $perPage, $rmeFormMap);
       echo json_encode(array_merge(['status' => 'success'], $data), JSON_UNESCAPED_UNICODE);
     } catch (\Throwable $e) {
       error_log('[pasien/klpcmdata] ' . $e->getMessage());
@@ -3011,7 +3044,7 @@ class Admin extends AdminModule
   public function postKlpcmsave()
   {
     header('Content-Type: application/json; charset=utf-8');
-    if (!\Systems\Lib\MrmikService::canManageMrmik($this->core)) {
+    if (!\Systems\Lib\RmeService::canManageRmeAudit($this->core)) {
       http_response_code(403);
       echo json_encode(['status' => 'error', 'message' => 'Akses ditolak.'], JSON_UNESCAPED_UNICODE);
       exit();
@@ -3024,7 +3057,7 @@ class Admin extends AdminModule
       exit();
     }
 
-    $res = \Systems\Lib\MrmikService::saveKlpcmReview($this->core, $_POST);
+    $res = \Systems\Lib\RmeService::saveKlpcmReview($this->core, $_POST);
     if (($res['status'] ?? '') !== 'success') {
       http_response_code(422);
     }
@@ -3034,7 +3067,7 @@ class Admin extends AdminModule
 
   public function getKlpcmcsv()
   {
-    if (!\Systems\Lib\MrmikService::canManageMrmik($this->core)) {
+    if (!\Systems\Lib\RmeService::canManageRmeAudit($this->core)) {
       http_response_code(403);
       exit('Akses ditolak.');
     }
@@ -3047,11 +3080,11 @@ class Admin extends AdminModule
       'search'        => trim((string)($_GET['q'] ?? '')),
       '_for_export'   => true,
     ];
-    \Systems\Lib\MrmikService::logAccess($this->core, 'EXPORT_DATA', 'pasien', 'pasien/klpcmcsv', '', '', 'Ekspor CSV Laporan KLPCM (' . $filters['tgl_awal'] . ' s.d. ' . $filters['tgl_akhir'] . ')');
+    \Systems\Lib\RmeService::logAccess($this->core, 'EXPORT_DATA', 'pasien', 'pasien/klpcmcsv', '', '', 'Ekspor CSV Laporan KLPCM (' . $filters['tgl_awal'] . ' s.d. ' . $filters['tgl_akhir'] . ')');
     $rmeFormMap = (isset($this->core->module->form_rme) && method_exists($this->core->module->form_rme, 'getRmeFormMap'))
       ? $this->core->module->form_rme->getRmeFormMap()
       : [];
-    $data = \Systems\Lib\MrmikService::evaluateKlpcm($this->db()->pdo(), $filters, 1, 20, $rmeFormMap);
+    $data = \Systems\Lib\RmeService::evaluateKlpcm($this->db()->pdo(), $filters, 1, 20, $rmeFormMap);
 
     while (ob_get_level()) {
       ob_end_clean();
@@ -3093,17 +3126,17 @@ class Admin extends AdminModule
   }
 
   /* =========================================================================
-   * MRMIK 2.1 — KAMUS SINGKATAN & SIMBOL TERSTANDAR (ALLOWED & DO NOT USE)
+   * KAMUS SINGKATAN & SIMBOL TERSTANDAR (ALLOWED & DO NOT USE)
    * ========================================================================= */
 
   public function getSingkatan()
   {
     $this->_addHeaderFiles();
-    \Systems\Lib\MrmikService::ensureSchema($this->db()->pdo());
+    \Systems\Lib\RmeService::ensureSchema($this->db()->pdo());
 
     return $this->draw('singkatan.html', [
       'token'      => htmlspecialchars((string)($_SESSION['token'] ?? ''), ENT_QUOTES, 'UTF-8'),
-      'can_manage' => \Systems\Lib\MrmikService::canManageMrmik($this->core),
+      'can_manage' => \Systems\Lib\RmeService::canManageRmeAudit($this->core),
     ]);
   }
 
@@ -3122,7 +3155,7 @@ class Admin extends AdminModule
         'kategori' => trim((string)($_REQUEST['kategori'] ?? 'all')),
         'search'   => trim((string)($_REQUEST['q'] ?? '')),
       ];
-      $data = \Systems\Lib\MrmikService::listSingkatan($this->db()->pdo(), $filters);
+      $data = \Systems\Lib\RmeService::listSingkatan($this->db()->pdo(), $filters);
       echo json_encode(array_merge(['status' => 'success'], $data), JSON_UNESCAPED_UNICODE);
     } catch (\Throwable $e) {
       error_log('[pasien/singkatandata] ' . $e->getMessage());
@@ -3135,7 +3168,7 @@ class Admin extends AdminModule
   public function postSingkatansave()
   {
     header('Content-Type: application/json; charset=utf-8');
-    if (!\Systems\Lib\MrmikService::canManageMrmik($this->core)) {
+    if (!\Systems\Lib\RmeService::canManageRmeAudit($this->core)) {
       http_response_code(403);
       echo json_encode(['status' => 'error', 'message' => 'Akses ditolak.'], JSON_UNESCAPED_UNICODE);
       exit();
@@ -3147,7 +3180,7 @@ class Admin extends AdminModule
       echo json_encode(['status' => 'error', 'message' => 'Token keamanan tidak valid.'], JSON_UNESCAPED_UNICODE);
       exit();
     }
-    $res = \Systems\Lib\MrmikService::saveSingkatan($this->core, $_POST);
+    $res = \Systems\Lib\RmeService::saveSingkatan($this->core, $_POST);
     if (($res['status'] ?? '') !== 'success') {
       http_response_code(422);
     }
@@ -3158,7 +3191,7 @@ class Admin extends AdminModule
   public function postSingkatanhapus()
   {
     header('Content-Type: application/json; charset=utf-8');
-    if (!\Systems\Lib\MrmikService::canManageMrmik($this->core)) {
+    if (!\Systems\Lib\RmeService::canManageRmeAudit($this->core)) {
       http_response_code(403);
       echo json_encode(['status' => 'error', 'message' => 'Akses ditolak.'], JSON_UNESCAPED_UNICODE);
       exit();
@@ -3171,7 +3204,7 @@ class Admin extends AdminModule
       exit();
     }
     $id = (int)($_POST['id'] ?? 0);
-    $res = \Systems\Lib\MrmikService::deleteSingkatan($this->core, $id);
+    $res = \Systems\Lib\RmeService::deleteSingkatan($this->core, $id);
     echo json_encode($res, JSON_UNESCAPED_UNICODE);
     exit();
   }
@@ -3183,7 +3216,7 @@ class Admin extends AdminModule
   public function anyKlpcmppas()
   {
     header('Content-Type: application/json; charset=utf-8');
-    if (!\Systems\Lib\MrmikService::canManageMrmik($this->core)) {
+    if (!\Systems\Lib\RmeService::canManageRmeAudit($this->core)) {
       http_response_code(403);
       echo json_encode(['status' => 'error', 'message' => 'Akses ditolak.'], JSON_UNESCAPED_UNICODE);
       exit();
@@ -3193,7 +3226,7 @@ class Admin extends AdminModule
       $rmeFormMap = (isset($this->core->module->form_rme) && method_exists($this->core->module->form_rme, 'getRmeFormMap'))
         ? $this->core->module->form_rme->getRmeFormMap()
         : [];
-      $items = \Systems\Lib\MrmikService::getVisitPpaCandidates($this->db()->pdo(), $noRawat, $rmeFormMap);
+      $items = \Systems\Lib\RmeService::getVisitPpaCandidates($this->db()->pdo(), $noRawat, $rmeFormMap);
       echo json_encode(['status' => 'success', 'items' => $items], JSON_UNESCAPED_UNICODE);
     } catch (\Throwable $e) {
       http_response_code(500);
@@ -3210,7 +3243,7 @@ class Admin extends AdminModule
       exit();
     }
     try {
-      $data = \Systems\Lib\MrmikService::listNavbarNotifications($this->core);
+      $data = \Systems\Lib\RmeService::listNavbarNotifications($this->core);
       echo json_encode(array_merge(['status' => 'success'], $data), JSON_UNESCAPED_UNICODE);
     } catch (\Throwable $e) {
       echo json_encode(['status' => 'success', 'count' => 0, 'items' => []], JSON_UNESCAPED_UNICODE);
@@ -3235,7 +3268,7 @@ class Admin extends AdminModule
     }
     $noRawat = trim((string)($_POST['no_rawat'] ?? ''));
     $note = trim((string)($_POST['note'] ?? ''));
-    $res = \Systems\Lib\MrmikService::resubmitKlpcmByPpa($this->core, $noRawat, $note);
+    $res = \Systems\Lib\RmeService::resubmitKlpcmByPpa($this->core, $noRawat, $note);
     if (($res['status'] ?? '') !== 'success') {
       http_response_code(422);
     }
@@ -3246,13 +3279,13 @@ class Admin extends AdminModule
   public function getRiwayatrme()
   {
     $this->_addHeaderFiles();
-    \Systems\Lib\MrmikService::ensureSchema($this->db()->pdo());
+    \Systems\Lib\RmeService::ensureSchema($this->db()->pdo());
 
     return $this->draw('riwayat_rme.html', [
       'token'      => htmlspecialchars((string)($_SESSION['token'] ?? ''), ENT_QUOTES, 'UTF-8'),
       'tgl_awal'   => date('Y-m-d', strtotime('-30 days')),
       'tgl_akhir'  => date('Y-m-d'),
-      'is_rm'      => \Systems\Lib\MrmikService::canManageMrmik($this->core),
+      'is_rm'      => \Systems\Lib\RmeService::canManageRmeAudit($this->core),
     ]);
   }
 
@@ -3278,7 +3311,7 @@ class Admin extends AdminModule
       $rmeFormMap = (isset($this->core->module->form_rme) && method_exists($this->core->module->form_rme, 'getRmeFormMap'))
         ? $this->core->module->form_rme->getRmeFormMap()
         : [];
-      $data = \Systems\Lib\MrmikService::listPpaRmeHistory($this->core, $filters, $page, $perPage, $rmeFormMap);
+      $data = \Systems\Lib\RmeService::listPpaRmeHistory($this->core, $filters, $page, $perPage, $rmeFormMap);
       echo json_encode(array_merge(['status' => 'success'], $data), JSON_UNESCAPED_UNICODE);
     } catch (\Throwable $e) {
       error_log('[pasien/riwayatrmedata] ' . $e->getMessage());

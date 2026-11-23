@@ -1,49 +1,49 @@
 <style>
-  .mrmik-wrap { padding: 4px 0 24px; }
-  .mrmik-hero {
+  .rme-log-wrap { padding: 4px 0 24px; }
+  .rme-log-hero {
     background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
     color: #fff; border-radius: 12px; padding: 18px 22px; margin-bottom: 18px;
     display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
     box-shadow: 0 8px 24px rgba(15, 23, 42, .14);
   }
-  .mrmik-hero h3 { margin: 0 0 4px; font-size: 18px; font-weight: 700; color: #fff; }
-  .mrmik-hero p { margin: 0; font-size: 12.5px; color: #cbd5e1; }
-  .mrmik-badge-std {
+  .rme-log-hero h3 { margin: 0 0 4px; font-size: 18px; font-weight: 700; color: #fff; }
+  .rme-log-hero p { margin: 0; font-size: 12.5px; color: #cbd5e1; }
+  .rme-log-badge-std {
     display: inline-flex; align-items: center; gap: 6px;
     background: rgba(56, 189, 248, .18); color: #bae6fd; border: 1px solid rgba(56, 189, 248, .35);
     padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: .3px;
   }
-  .mrmik-kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 16px; }
-  .mrmik-kpi {
+  .rme-log-kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .rme-log-kpi {
     background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 16px;
     display: flex; align-items: center; gap: 12px; box-shadow: 0 1px 3px rgba(15,23,42,.04);
   }
-  .mrmik-kpi-ico {
+  .rme-log-kpi-ico {
     width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;
   }
-  .mrmik-kpi-val { font-size: 22px; font-weight: 800; color: #0f172a; line-height: 1.1; }
-  .mrmik-kpi-lbl { font-size: 11.5px; color: #64748b; margin-top: 2px; font-weight: 600; }
-  .mrmik-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; box-shadow: 0 1px 3px rgba(15,23,42,.04); overflow: hidden; }
-  .mrmik-filter {
+  .rme-log-kpi-val { font-size: 22px; font-weight: 800; color: #0f172a; line-height: 1.1; }
+  .rme-log-kpi-lbl { font-size: 11.5px; color: #64748b; margin-top: 2px; font-weight: 600; }
+  .rme-log-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; box-shadow: 0 1px 3px rgba(15,23,42,.04); overflow: hidden; }
+  .rme-log-filter {
     padding: 14px 16px; background: #f8fafc; border-bottom: 1px solid #e2e8f0;
     display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end;
   }
-  .mrmik-filter .fg { display: flex; flex-direction: column; gap: 3px; }
-  .mrmik-filter label { font-size: 11px; font-weight: 700; color: #475569; margin: 0; text-transform: uppercase; letter-spacing: .3px; }
-  .mrmik-table { margin: 0; font-size: 12.5px; }
-  .mrmik-table thead th { background: #f1f5f9; color: #334155; font-weight: 700; font-size: 11.5px; text-transform: uppercase; letter-spacing: .3px; border-bottom: 1px solid #cbd5e1; white-space: nowrap; }
-  .mrmik-pill { display: inline-block; padding: 3px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+  .rme-log-filter .fg { display: flex; flex-direction: column; gap: 3px; }
+  .rme-log-filter label { font-size: 11px; font-weight: 700; color: #475569; margin: 0; text-transform: uppercase; letter-spacing: .3px; }
+  .rme-log-table { margin: 0; font-size: 12.5px; }
+  .rme-log-table thead th { background: #f1f5f9; color: #334155; font-weight: 700; font-size: 11.5px; text-transform: uppercase; letter-spacing: .3px; border-bottom: 1px solid #cbd5e1; white-space: nowrap; }
+  .rme-log-pill { display: inline-block; padding: 3px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; white-space: nowrap; }
   .pill-view { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
   .pill-print { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
   .pill-form { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
   .pill-export { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
-  .mrmik-foot { padding: 12px 16px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 12px; color: #475569; }
+  .rme-log-foot { padding: 12px 16px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 12px; color: #475569; }
 </style>
 
-<div class="mrmik-wrap">
-  <div class="mrmik-hero">
+<div class="rme-log-wrap">
+  <div class="rme-log-hero">
     <div>
-      <div class="mrmik-badge-std"><i class="fa fa-shield"></i> MRMIK 11 &bull; PMK 24/2022</div>
+      <div class="rme-log-badge-std"><i class="fa fa-shield"></i> Audit Akses &amp; Keamanan e-RM</div>
       <h3>Audit Log Akses Baca &amp; Cetak e-RM</h3>
       <p>Rekam jejak otomatis seluruh aktivitas pembukaan riwayat perawatan, formulir RME, telusur e-RM, serta cetak/ekspor PDF pasien untuk perlindungan kerahasiaan data.</p>
     </div>
@@ -54,27 +54,27 @@
     </div>
   </div>
 
-  <div class="mrmik-kpi-grid">
-    <div class="mrmik-kpi">
-      <div class="mrmik-kpi-ico" style="background:#eff6ff; color:#2563eb;"><i class="fa fa-eye"></i></div>
-      <div><div class="mrmik-kpi-val" id="kpiTotalAkses">-</div><div class="mrmik-kpi-lbl">Total Akses e-RM</div></div>
+  <div class="rme-log-kpi-grid">
+    <div class="rme-log-kpi">
+      <div class="rme-log-kpi-ico" style="background:#eff6ff; color:#2563eb;"><i class="fa fa-eye"></i></div>
+      <div><div class="rme-log-kpi-val" id="kpiTotalAkses">-</div><div class="rme-log-kpi-lbl">Total Akses e-RM</div></div>
     </div>
-    <div class="mrmik-kpi">
-      <div class="mrmik-kpi-ico" style="background:#fef2f2; color:#dc2626;"><i class="fa fa-print"></i></div>
-      <div><div class="mrmik-kpi-val" id="kpiTotalCetak">-</div><div class="mrmik-kpi-lbl">Cetak PDF / Form / Ekspor</div></div>
+    <div class="rme-log-kpi">
+      <div class="rme-log-kpi-ico" style="background:#fef2f2; color:#dc2626;"><i class="fa fa-print"></i></div>
+      <div><div class="rme-log-kpi-val" id="kpiTotalCetak">-</div><div class="rme-log-kpi-lbl">Cetak PDF / Form / Ekspor</div></div>
     </div>
-    <div class="mrmik-kpi">
-      <div class="mrmik-kpi-ico" style="background:#ecfdf5; color:#059669;"><i class="fa fa-user-md"></i></div>
-      <div><div class="mrmik-kpi-val" id="kpiPenggunaUnik">-</div><div class="mrmik-kpi-lbl">Pengguna Aktif</div></div>
+    <div class="rme-log-kpi">
+      <div class="rme-log-kpi-ico" style="background:#ecfdf5; color:#059669;"><i class="fa fa-user-md"></i></div>
+      <div><div class="rme-log-kpi-val" id="kpiPenggunaUnik">-</div><div class="rme-log-kpi-lbl">Pengguna Aktif</div></div>
     </div>
-    <div class="mrmik-kpi">
-      <div class="mrmik-kpi-ico" style="background:#f5f3ff; color:#7c3aed;"><i class="fa fa-users"></i></div>
-      <div><div class="mrmik-kpi-val" id="kpiPasienUnik">-</div><div class="mrmik-kpi-lbl">Pasien Diakses</div></div>
+    <div class="rme-log-kpi">
+      <div class="rme-log-kpi-ico" style="background:#f5f3ff; color:#7c3aed;"><i class="fa fa-users"></i></div>
+      <div><div class="rme-log-kpi-val" id="kpiPasienUnik">-</div><div class="rme-log-kpi-lbl">Pasien Diakses</div></div>
     </div>
   </div>
 
-  <div class="mrmik-card">
-    <div class="mrmik-filter">
+  <div class="rme-log-card">
+    <div class="rme-log-filter">
       <div class="fg">
         <label for="fTglAwal">Tanggal Awal</label>
         <input type="date" id="fTglAwal" class="form-control input-sm" value="{$tgl_awal}">
@@ -102,7 +102,7 @@
     </div>
 
     <div class="table-responsive">
-      <table class="table table-hover table-striped mrmik-table">
+      <table class="table table-hover table-striped rme-log-table">
         <thead>
           <tr>
             <th style="width:140px;">Waktu</th>
@@ -120,7 +120,7 @@
       </table>
     </div>
 
-    <div class="mrmik-foot">
+    <div class="rme-log-foot">
       <div id="aksesPagingInfo">Memuat...</div>
       <div class="btn-group btn-group-sm">
         <button type="button" class="btn btn-default" id="btnAksesPrev"><i class="fa fa-chevron-left"></i> Sebelumnya</button>
@@ -197,7 +197,7 @@
           html += '<tr>' +
             '<td style="white-space:nowrap;font-family:monospace;font-size:11.5px;">' + escHtml(r.created_at) + '</td>' +
             '<td><strong>' + escHtml(r.fullname || r.username) + '</strong><div style="font-size:11px;color:#64748b;">' + escHtml(r.username) + ' &bull; <span class="label label-default">' + escHtml(r.user_role || '-') + '</span></div></td>' +
-            '<td><span class="mrmik-pill ' + pillClass(r.action_type) + '">' + escHtml(r.action_label || r.action_type) + '</span></td>' +
+            '<td><span class="rme-log-pill ' + pillClass(r.action_type) + '">' + escHtml(r.action_label || r.action_type) + '</span></td>' +
             '<td>' + rmHtml + '</td>' +
             '<td style="white-space:nowrap;font-family:monospace;font-size:11.5px;">' + escHtml(r.no_rawat || '-') + '</td>' +
             '<td>' + escHtml(r.detail || '-') + '</td>' +

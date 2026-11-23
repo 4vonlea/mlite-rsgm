@@ -1,5 +1,5 @@
 /**
- * Shared Client Helper for MRMIK 8 SOAP Revision & Soft-Delete (Void)
+ * Shared Client Helper for SOAP & RME Revision & Soft-Delete (Void)
  * Handles Option B (15-minute typo grace period), field highlights, hover popover, & timeline modal.
  */
 (function(window, $) {
@@ -68,7 +68,7 @@
                 '<h4 class="modal-title" id="rsgmRevModalLabel" style="font-size:15.5px;font-weight:700;color:#ffffff !important;margin:0;display:flex;align-items:center;gap:8px;">' +
                   '<span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:7px;background:rgba(251,191,36,.18);color:#fbbf24;"><i class="fa fa-history"></i></span>' +
                   '<span>Riwayat Perubahan &amp; Koreksi Catatan SOAP</span>' +
-                  '<span style="font-size:10px;background:#334155;color:#fde68a;padding:2px 8px;border-radius:999px;font-weight:700;letter-spacing:.3px;">MRMIK 8</span>' +
+                  '<span style="font-size:10px;background:#334155;color:#fde68a;padding:2px 8px;border-radius:999px;font-weight:700;letter-spacing:.3px;">AUDIT REVISI</span>' +
                 '</h4>' +
                 '<div style="font-size:11.5px;color:#94a3b8;margin-top:4px;padding-left:36px;">Jejak audit versi sebelum &amp; sesudah koreksi beserta penanggung jawab PPA</div>' +
               '</div>' +
@@ -265,7 +265,7 @@
       '<div id="rsgm_modal_reason_err" class="text-danger" style="font-size:11.5px;margin-top:4px;display:none;"></div>';
 
     var dialog = bootbox.dialog({
-      title: opts.title || 'Konfirmasi Koreksi Rekam Medis (MRMIK 8)',
+      title: opts.title || 'Konfirmasi Koreksi Rekam Medis',
       message: msgHtml,
       buttons: {
         cancel: {
@@ -278,7 +278,7 @@
           callback: function() {
             var reason = $.trim($('#rsgm_modal_reason_input').val());
             if (opts.required && reason.length < 3) {
-              $('#rsgm_modal_reason_err').text('Alasan wajib diisi minimal 3 karakter untuk jejak audit MRMIK 8.').show();
+              $('#rsgm_modal_reason_err').text('Alasan wajib diisi minimal 3 karakter untuk jejak audit.').show();
               $('#rsgm_modal_reason_input').focus();
               return false;
             }
@@ -370,7 +370,7 @@
       $('#rsgm_soap_edit_banner').remove();
       var bannerCls = needsReason ? 'alert-warning' : 'alert-info';
       var bannerMsg = needsReason
-        ? '<strong>Mode Koreksi Catatan SOAP (MRMIK 8):</strong> ' + escapeHtml(graceWhy || 'Perubahan wajib menyertakan alasan koreksi dan akan tercatat dalam riwayat versi.')
+        ? '<strong>Mode Koreksi Catatan SOAP:</strong> ' + escapeHtml(graceWhy || 'Perubahan wajib menyertakan alasan koreksi dan akan tercatat dalam riwayat versi.')
         : '<strong>Mode Edit Cepat (Masa Tenggang Opsi B):</strong> Anda masih berada dalam jendela koreksi langsung 15 menit (tersisa ~' + (minutesLeft || 1) + ' menit).';
 
       var $banner = $(
@@ -443,7 +443,7 @@
 
           if (resp.status === 'needs_reason') {
             promptReasonModal({
-              title: 'Alasan Koreksi Catatan SOAP (MRMIK 8)',
+              title: 'Alasan Koreksi Catatan SOAP',
               infoText: resp.message || 'Perubahan catatan ini wajib disertai alasan koreksi.',
               changedFields: resp.changed_fields || {},
               required: true,
@@ -492,7 +492,7 @@
           var resp = parseJsonSafe(rawResp);
           if (resp && resp.status === 'needs_reason') {
             promptReasonModal({
-              title: 'Batalkan Catatan SOAP (VOID - MRMIK 8)',
+              title: 'Batalkan Catatan SOAP (VOID)',
               infoText: resp.message || 'Catatan tidak dihapus permanen, melainkan ditandai VOID dengan alasan.',
               required: true,
               label: 'Alasan Pembatalan Catatan',
@@ -673,7 +673,7 @@
 
         e.preventDefault();
         promptReasonModal({
-          title: 'Alasan Koreksi Formulir RME (MRMIK 8)',
+          title: 'Alasan Koreksi Formulir RME',
           infoText: meta.why || 'Perubahan formulir yang sudah lewat masa tenggang 15 menit / ber-TTE wajib disertai alasan koreksi.',
           required: true,
           label: 'Alasan Koreksi Formulir',
@@ -739,7 +739,7 @@
               badgesHtml += '<small style="color:#991b1b;font-size:10.5px;">Alasan: ' + escapeHtml(info.void_info.void_reason) + '</small>';
             }
           } else if (info.has_revisions) {
-            badgesHtml += '<button type="button" class="rsgm-soap-rev-badge js-soap-rev-open" data-module="form_rme" data-table="' + escapeHtml(tbl) + '" data-key="' + escapeHtml(rowId) + '" title="Lihat riwayat koreksi (MRMIK 8)"><i class="fa fa-history"></i> Dikoreksi ' + parseInt(info.revision_count, 10) + 'x</button>';
+            badgesHtml += '<button type="button" class="rsgm-soap-rev-badge js-soap-rev-open" data-module="form_rme" data-table="' + escapeHtml(tbl) + '" data-key="' + escapeHtml(rowId) + '" title="Lihat riwayat koreksi"><i class="fa fa-history"></i> Dikoreksi ' + parseInt(info.revision_count, 10) + 'x</button>';
           }
           if (info.is_tte_outdated) {
             badgesHtml += '<span class="rsgm-soap-tte-warn-badge" title="Formulir dikoreksi setelah TTE dibubuhkan — perlu TTE ulang"><i class="fa fa-exclamation-triangle"></i> TTE Sebelum Koreksi</span>';
@@ -750,7 +750,7 @@
           }
         }
 
-        // Upgrade delete link/button to capture void_reason (MRMIK 8)
+        // Upgrade delete link/button to capture void_reason
         $tr.find('a[href*="hapus"], a[href*="delete"], .btn-rj03-delete, .btn-rj04-delete').each(function() {
           var $del = $(this);
           if (info.is_voided) {
@@ -767,7 +767,7 @@
             if (!targetUrl) return;
 
             promptReasonModal({
-              title: 'Konfirmasi Pembatalan / VOID Formulir RME (MRMIK 8)',
+              title: 'Konfirmasi Pembatalan / VOID Formulir RME',
               infoText: info.needs_reason
                 ? (info.why + '. Data tidak dihapus permanen, melainkan ditandai VOID dengan alasan.')
                 : 'Formulir masih dalam masa tenggang 15 menit. Pembatalan akan tetap dicatat pada log audit (VOID).',
@@ -828,7 +828,7 @@
     }
   });
 
-  // Auto-init MRMIK 8 decorations when Rajal RME metadata scripts are present
+  // Auto-init revision decorations when Rajal RME metadata scripts are present
   $(document).ready(function() {
     var $formMeta = $('#rsgm-rme-rev-form-meta');
     if ($formMeta.length) {

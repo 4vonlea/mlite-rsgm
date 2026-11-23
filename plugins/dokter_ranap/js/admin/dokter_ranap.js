@@ -333,7 +333,7 @@ $("#soap").on("click",".copy_soap", function(event){
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
-// ketika tombol hapus ditekan (Soft-Delete VOID MRMIK 8)
+// ketika tombol hapus ditekan (Soft-Delete VOID)
 $("#soap").on("click",".hapus_soap", function(event){
   var baseURL = mlite.url + '/' + mlite.admin;
   event.preventDefault();

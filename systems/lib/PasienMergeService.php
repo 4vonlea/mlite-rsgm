@@ -4,7 +4,7 @@ namespace Systems\Lib;
 
 /**
  * Layanan Deteksi & Penggabungan Rekam Medis Duplikat (Soft Archive / Opsi A)
- * sesuai standar akreditasi MRMIK & PMK 24/2022.
+ * sesuai standar pengelolaan rekam medis elektronik & PMK 24/2022.
  */
 class PasienMergeService
 {
@@ -864,7 +864,7 @@ class PasienMergeService
             return ['status' => 'error', 'message' => 'RM Sumber dan RM Utama harus diisi dan berbeda.'];
         }
         if (mb_strlen($reason) < 5) {
-            return ['status' => 'error', 'message' => 'Alasan penggabungan wajib diisi minimal 5 karakter untuk jejak audit MRMIK 8.'];
+            return ['status' => 'error', 'message' => 'Alasan penggabungan wajib diisi minimal 5 karakter untuk jejak audit.'];
         }
 
         $stP = $pdo->prepare("SELECT * FROM `pasien` WHERE `no_rkm_medis` = ? LIMIT 1");

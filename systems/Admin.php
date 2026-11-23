@@ -115,14 +115,15 @@ class Admin extends Main
         if ($row && ($details = $this->getModuleInfo($name))) {
             $isSaveSignature = ($name === 'esignature' && strtolower($method) === 'savesignature' && !empty($_SESSION['mlite_user']));
             $isRadiologiLaporanPacs = ($name === 'laporan' && in_array(strtolower($method), ['laporanradiologipacs', 'hapusradiologipacs']) && in_array($this->getUserInfo('role'), ['radiologi', 'admin']));
-            $userAccess = explode(',', (string)$this->getUserInfo('access'));
+            $userAccess = array_filter(array_map('trim', explode(',', (string)$this->getUserInfo('access'))));
+            $hasAllAccess = (trim((string)$this->getUserInfo('access')) === 'all') || in_array('all', $userAccess, true);
             $isPasienRiwayat = ($name === 'pasien' && in_array(strtolower($method), ['riwayatperawatan', 'pdfriwayatperawatan']) && !empty($_SESSION['mlite_user']));
             $isPasienDuplikat = ($name === 'pasien' && strpos(strtolower((string)$method), 'duplikat') === 0 && \Systems\Lib\PasienMergeService::canManageMerge($this));
-            $isPasienMrmikAdmin = ($name === 'pasien' && (strpos(strtolower((string)$method), 'akseslog') === 0 || in_array(strtolower((string)$method), ['klpcm', 'klpcmdata', 'klpcmsave', 'klpcmcsv', 'klpcmppas'], true)) && \Systems\Lib\MrmikService::canManageMrmik($this));
+            $isPasienRmeAudit = ($name === 'pasien' && (strpos(strtolower((string)$method), 'akseslog') === 0 || in_array(strtolower((string)$method), ['klpcm', 'klpcmdata', 'klpcmsave', 'klpcmcsv', 'klpcmppas'], true)) && \Systems\Lib\RmeService::canManageRmeAudit($this));
             $isPasienSingkatan = ($name === 'pasien' && (strpos(strtolower((string)$method), 'singkatan') === 0 || in_array(strtolower((string)$method), ['klpcmnotif', 'klpcmresubmit', 'riwayatrme', 'riwayatrmedata'], true)) && !empty($_SESSION['mlite_user']));
             $isProfil = ($name === 'profil' && !empty($_SESSION['mlite_user']));
-            if (($this->getUserInfo('access') == 'all') || in_array($name, $userAccess) || ($name === 'form_rme' && in_array('update_bmt', $userAccess)) || ($name === 'update_bmt' && in_array('form_rme', $userAccess)) || $isSaveSignature || $isRadiologiLaporanPacs || $isPasienRiwayat || $isPasienDuplikat || $isPasienMrmikAdmin || $isPasienSingkatan || $isProfil) {
-                $rawMethodForMrmik = (string)$method;
+            if ($hasAllAccess || in_array($name, $userAccess, true) || ($name === 'form_rme' && in_array('update_bmt', $userAccess, true)) || ($name === 'update_bmt' && in_array('form_rme', $userAccess, true)) || $isSaveSignature || $isRadiologiLaporanPacs || $isPasienRiwayat || $isPasienDuplikat || $isPasienRmeAudit || $isPasienSingkatan || $isProfil) {
+                $rawMethodForAudit = (string)$method;
                 if ($name === 'laporan' && strtolower($method) === 'manage' && $this->getUserInfo('role') === 'radiologi' && !in_array('laporan', explode(',', $this->getUserInfo('access')))) {
                     redirect(url([ADMIN, 'laporan', 'laporanradiologipacs']));
                     exit;
@@ -174,7 +175,7 @@ class Admin extends Main
                         exit;
                     }
 
-                    // MRMIK 8: Perluasan revisi berjejak & soft-delete VOID ke seluruh form IGD, Rawat Inap, & Bedah
+                    // Perluasan revisi berjejak & soft-delete VOID ke seluruh form IGD, Rawat Inap, & Bedah
                     if (!$isPreviewMode && method_exists($this->module->form_rme, 'getRmeFormMap')) {
                         $rmeFormMap = $this->module->form_rme->getRmeFormMap();
                         \Systems\Lib\RmeFormRevision::setDynamicCatalog($rmeFormMap);
@@ -183,8 +184,8 @@ class Admin extends Main
                     }
                 }
 
-                // MRMIK 11: Catat otomatis akses baca & cetak e-RM ke mlite_rme_access_logs
-                \Systems\Lib\MrmikService::captureRequestAccess($this, $name, $rawMethodForMrmik, array_values($params));
+                // Catat otomatis akses baca & cetak e-RM ke mlite_rme_access_logs
+                \Systems\Lib\RmeService::captureRequestAccess($this, $name, $rawMethodForAudit, array_values($params));
 
                 $anyMethod = 'any'.ucfirst($method);
                 $method = strtolower($_SERVER['REQUEST_METHOD']).ucfirst($method);
@@ -243,7 +244,9 @@ class Admin extends Main
     protected function checkRmeFormAccess($method)
     {
         $userId = $_SESSION['mlite_user'] ?? 1;
-        $isAdmin = ($this->getUserInfo('access') == 'all') || ($this->getUserInfo('role', $userId) == 'admin') || ($userId == 1);
+        $rawAcc = trim((string)$this->getUserInfo('access'));
+        $accList = array_map('trim', explode(',', $rawAcc));
+        $isAdmin = ($rawAcc === 'all') || in_array('all', $accList, true) || ($this->getUserInfo('role', $userId) == 'admin') || ($userId == 1);
         if ($isAdmin) {
             return true;
         }
@@ -251,7 +254,8 @@ class Admin extends Main
         $methodLower = strtolower($method);
 
         // Halaman umum / lembar kerja RME pasien & riwayat revisi baca-saja yang dapat diakses oleh semua user yang punya akses modul form_rme
-        if (in_array($methodLower, ['pasien', 'cetakberkas', 'katalogrme', 'css', 'js', 'universalpatientinfo', 'rmehistory', 'rmedetail', 'soaphistory'])) {
+        // (batalkanisian melakukan validasi hak akses unit/cap per-form di dalam controller)
+        if (in_array($methodLower, ['pasien', 'cetakberkas', 'katalogrme', 'css', 'js', 'universalpatientinfo', 'rmehistory', 'rmedetail', 'soaphistory', 'batalkanisian'])) {
             return true;
         }
 
@@ -353,7 +357,7 @@ class Admin extends Main
         $this->assign['is_klpcm_rm']    = ($activeModule === 'pasien' && $actLower === 'klpcm');
         $this->assign['is_singkatan_rm']= ($activeModule === 'pasien' && $actLower === 'singkatan');
         $this->assign['is_riwayat_rme_ppa'] = ($activeModule === 'pasien' && $actLower === 'riwayatrme');
-        $this->assign['is_mrmik_pasien_page'] = (
+        $this->assign['is_rme_pasien_page'] = (
             $this->assign['is_telusur_erm'] ||
             $this->assign['is_duplikat_rm'] ||
             $this->assign['is_akseslog_rm'] ||

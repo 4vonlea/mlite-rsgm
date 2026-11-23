@@ -331,7 +331,7 @@
                         </div>
                         {if: !empty($value.has_revisions) && !empty($value.revisions_summary)}
                         <div class="rev-footnote">
-                            <strong>Riwayat Koreksi (MRMIK 8):</strong>
+                            <strong>Riwayat Koreksi:</strong>
                             {loop: $value.revisions_summary as $rev}
                             <br>&bull; <strong>v{$rev.revision_no}</strong> ({$rev.created_at}) oleh {$rev.actor_name}: <em>"{$rev.reason}"</em>
                             {/loop}

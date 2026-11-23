@@ -113,7 +113,8 @@ $core->router->set('api/(:str)/(:str)(:any)', function ($module, $method, $param
         $access = $urow['access'] ?? '';
     }
     $userAccess = explode(',', (string)$access);
-    if (!($access == 'all' || in_array($targetModule, $userAccess) || ($targetModule === 'form_rme' && in_array('update_bmt', $userAccess)))) {
+    $isPacsReadOnly = ($loggedIn && $targetModule === 'mini_pacs' && in_array(strtolower((string)$method), ['instancejpg', 'detail', 'ohifjson', 'dicomfile'], true));
+    if (!($access == 'all' || in_array($targetModule, $userAccess) || ($targetModule === 'form_rme' && in_array('update_bmt', $userAccess)) || $isPacsReadOnly)) {
         header('Content-Type: application/json');
         http_response_code(403);
         echo json_encode(['error' => 'Forbidden']);

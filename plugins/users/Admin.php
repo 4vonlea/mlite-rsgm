@@ -256,11 +256,17 @@ class Admin extends AdminModule
             $_POST['password'] = '12345678';
         }
         // access to modules
-        if ((count($_POST['access']) == count($this->_getModules())) || ($id == 1)) {
+        if ((count($_POST['access']) == count($this->_getModules())) || in_array('all', $_POST['access'], true) || ($id == 1)) {
             $_POST['access'] = 'all';
         } else {
             $_POST['access'][] = 'dashboard';
-            $_POST['access'] = implode(',', $_POST['access']);
+            $_POST['access'] = implode(',', array_unique(array_filter(array_map('trim', $_POST['access']))));
+            if (strlen($_POST['access']) > 490) {
+                try {
+                    $this->db()->pdo()->exec("ALTER TABLE `mlite_users` MODIFY COLUMN `access` VARCHAR(1000) NOT NULL DEFAULT 'dashboard'");
+                } catch (\Throwable $e) {
+                }
+            }
         }
 
         if($_POST['cap'] == '') {

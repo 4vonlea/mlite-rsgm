@@ -528,6 +528,109 @@
     color: #0f172a;
   }
 
+  .erm-mini-pill.has-pacs {
+    background: #e0f2fe;
+    color: #0369a1;
+    border-color: #7dd3fc;
+  }
+  .erm-pacs-study {
+    background: #0f172a;
+    border: 1px solid #1e293b;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+    color: #e2e8f0;
+  }
+  .erm-pacs-study-hdr {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #1e293b;
+  }
+  .erm-pacs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 10px;
+  }
+  .erm-pacs-thumb {
+    position: relative;
+    height: 112px;
+    border-radius: 6px;
+    overflow: hidden;
+    background: #020617;
+    border: 1px solid #334155;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color .15s, transform .15s;
+  }
+  .erm-pacs-thumb:hover {
+    border-color: #38bdf8;
+    transform: translateY(-1px);
+  }
+  .erm-pacs-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .erm-pacs-thumb-hover {
+    position: absolute;
+    inset: 0;
+    background: rgba(2, 6, 23, 0.58);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    opacity: 0;
+    transition: opacity .15s;
+  }
+  .erm-pacs-thumb:hover .erm-pacs-thumb-hover {
+    opacity: 1;
+  }
+  .erm-pacs-stage {
+    flex: 1 1 auto;
+    background: #020617;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+    min-height: 360px;
+  }
+  .erm-pacs-stage img {
+    max-width: 96%;
+    max-height: 96%;
+    object-fit: contain;
+    transition: transform .15s ease, filter .15s ease;
+    user-select: none;
+  }
+  .erm-pacs-nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(15, 23, 42, 0.78);
+    color: #fff;
+    border: 1px solid #475569;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 5;
+  }
+  .erm-pacs-nav-btn:hover { background: #0284c7; border-color: #38bdf8; }
+
   @media (max-width: 900px) {
     .erm-workspace { max-height: none; }
     .erm-sidebar { width: 100%; flex: 1 1 100%; max-height: 240px; border-right: none; border-bottom: 1px solid #e2e8f0; }
@@ -656,6 +759,7 @@
           <div class="erm-visit-badges">
             {if: $value.rme_count > 0}<span class="erm-mini-pill has-rme">{$value.rme_count} Form RME</span>{/if}
             {if: $value.soap_count > 0}<span class="erm-mini-pill has-soap">{$value.soap_count} SOAP</span>{/if}
+            {if: $value.pacs_count > 0}<span class="erm-mini-pill has-pacs"><i class="fa fa-film"></i> {$value.pacs_count} PACS</span>{/if}
             {if: $value.obat_count > 0}<span class="erm-mini-pill">{$value.obat_count} Obat</span>{/if}
             {if: $value.penunjang_count > 0}<span class="erm-mini-pill">{$value.penunjang_count} Penunjang</span>{/if}
           </div>
@@ -760,7 +864,7 @@
                             data-id="{$rf.id}"
                             data-norawat="{$value.no_rawat}"
                             data-title="{$rf.kode_form} - {$rf.nama_form}"
-                            title="Terakhir dikoreksi {$rf.last_revised_at} oleh {$rf.last_revised_by} — klik untuk lihat riwayat koreksi (MRMIK 8)">
+                            title="Terakhir dikoreksi {$rf.last_revised_at} oleh {$rf.last_revised_by} — klik untuk lihat riwayat koreksi">
                       <i class="fa fa-history"></i> Dikoreksi {$rf.revision_count}x
                     </button>
                     {/if}
@@ -1158,6 +1262,52 @@
             </div>
             {/if}
 
+            {if: !empty($value.mini_pacs)}
+            <div style="margin-bottom:12px;">
+              <div style="font-size:11px; font-weight:800; color:#64748b; text-transform:uppercase; margin-bottom:6px;">
+                <i class="fa fa-film text-primary"></i> Hasil Radiologi PACS (DICOM)
+              </div>
+              {loop: $value.mini_pacs as $mp}
+              <div class="erm-pacs-study">
+                <div class="erm-pacs-study-hdr">
+                  <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                    <span class="label" style="background:#0284c7; color:#fff; font-size:10.5px; padding:3px 7px; border-radius:4px;">{?=isset_or($mp.modality, 'DX')?}</span>
+                    <strong style="color:#f8fafc; font-size:12.5px;">{?=isset_or($mp.description, 'Pemeriksaan Radiografi Digital')?}</strong>
+                    <span style="font-size:11px; color:#94a3b8;">({$mp.instance_count} citra)</span>
+                  </div>
+                  <span style="font-size:11px; color:#94a3b8; background:#1e293b; padding:2px 8px; border-radius:4px;">
+                    <i class="fa fa-calendar-o"></i> {?=isset_or($mp.study_date, '-')?}
+                  </span>
+                </div>
+                {if: !empty($mp.instances_flat)}
+                <div class="erm-pacs-grid">
+                  {loop: $mp.instances_flat as $ins}
+                  <div class="erm-pacs-thumb js-erm-pacs-open"
+                       data-gallery="erm-pacs-study-{$mp.id}"
+                       data-full="{$ins.full_url}"
+                       data-fallback="{$ins.fallback_url}"
+                       data-title="{?=isset_or($mp.modality, 'DX')?} — {?=isset_or($mp.description, 'Citra PACS')?} ({?=isset_or($mp.study_date, '-')?})"
+                       title="Klik untuk memperbesar citra PACS">
+                    <img src="{$ins.thumb_url}"
+                         alt="Citra PACS"
+                         loading="lazy"
+                         onerror="if(!this.dataset.tried && this.dataset.fb){this.dataset.tried='1';this.src=this.dataset.fb;}else{this.style.display='none';}"
+                         data-fb="{$ins.fallback_url}">
+                    <div class="erm-pacs-thumb-hover">
+                      <i class="fa fa-search-plus" style="font-size:16px; margin-bottom:3px;"></i>
+                      <span>Lihat PACS</span>
+                    </div>
+                  </div>
+                  {/loop}
+                </div>
+                {else}
+                <div style="font-size:11.5px; color:#94a3b8; font-style:italic;">Belum ada file citra pada studi PACS ini.</div>
+                {/if}
+              </div>
+              {/loop}
+            </div>
+            {/if}
+
             {if: !empty($value.mlite_odontogram)}
             <div style="margin-bottom:12px;">
               <div style="font-size:11px; font-weight:800; color:#64748b; text-transform:uppercase; margin-bottom:4px;">Odontogram</div>
@@ -1408,6 +1558,33 @@
     </div>
   </div>
 
+  <!-- OVERLAY VIEWER CITRA PACS (ZOOM, ROTATE, INVERT, PREV/NEXT) -->
+  <div id="ermPacsOverlay" class="erm-overlay">
+    <div class="erm-overlay-card" style="background:#0f172a; border:1px solid #334155;">
+      <div class="erm-overlay-hdr" style="background:#0f172a; border-bottom:1px solid #1e293b; color:#f8fafc;">
+        <span style="font-size:13px; font-weight:700; color:#f8fafc;">
+          <i class="fa fa-film" style="color:#38bdf8;"></i>
+          <span id="ermPacsTitle">Citra Radiologi PACS</span>
+          <span id="ermPacsCounter" style="font-size:11.5px; color:#94a3b8; margin-left:6px;"></span>
+        </span>
+        <div style="display:flex; gap:5px; align-items:center; flex-wrap:wrap;">
+          <button type="button" id="ermPacsZoomIn" class="btn btn-xs btn-default" title="Perbesar"><i class="fa fa-search-plus"></i></button>
+          <button type="button" id="ermPacsZoomOut" class="btn btn-xs btn-default" title="Perkecil"><i class="fa fa-search-minus"></i></button>
+          <button type="button" id="ermPacsRotate" class="btn btn-xs btn-default" title="Putar 90°"><i class="fa fa-rotate-right"></i></button>
+          <button type="button" id="ermPacsInvert" class="btn btn-xs btn-default" title="Invert (Negatif X-Ray)"><i class="fa fa-adjust"></i> Invert</button>
+          <button type="button" id="ermPacsReset" class="btn btn-xs btn-default" title="Reset Tampilan"><i class="fa fa-refresh"></i></button>
+          <a href="#" id="ermPacsOpenTab" target="_blank" class="btn btn-xs btn-primary" title="Buka di Tab Baru"><i class="fa fa-external-link"></i> Tab Baru</a>
+          <button type="button" id="ermPacsClose" class="btn btn-xs btn-danger"><i class="fa fa-times"></i> Tutup</button>
+        </div>
+      </div>
+      <div class="erm-pacs-stage">
+        <button type="button" id="ermPacsPrev" class="erm-pacs-nav-btn" style="left:14px; display:none;" title="Citra Sebelumnya"><i class="fa fa-chevron-left"></i></button>
+        <img id="ermPacsImage" src="" alt="Citra Radiologi PACS">
+        <button type="button" id="ermPacsNext" class="erm-pacs-nav-btn" style="right:14px; display:none;" title="Citra Berikutnya"><i class="fa fa-chevron-right"></i></button>
+      </div>
+    </div>
+  </div>
+
   <!-- FOOTER MODAL (SERAGAM DENGAN RSGM MODAL THEME) -->
   <div class="modal-footer" style="background:#f8fafc; border-top:1px solid #e2e8f0; padding:11px 20px;">
     {if: !empty($riwayat.pasien.no_rkm_medis)}
@@ -1559,7 +1736,7 @@
       $('#ermQuickBtnCetak').hide();
     }
 
-    // Banner status MRMIK 8 / TTE
+    // Banner status revisi / TTE
     var statusStrip = makeEl('div', null);
     statusStrip.style.display = 'flex';
     statusStrip.style.flexWrap = 'wrap';
@@ -1675,10 +1852,10 @@
       body.appendChild(sTable);
     }
 
-    // Riwayat Koreksi MRMIK 8 bila ada koreksi/void
+    // Riwayat Koreksi bila ada koreksi/void
     var timeline = resp.timeline || [];
     if (timeline.length > 1) {
-      var rHdr = makeEl('div', null, 'Riwayat Koreksi Rekam Medis (MRMIK 8)');
+      var rHdr = makeEl('div', null, 'Riwayat Koreksi Rekam Medis');
       rHdr.style.fontWeight = '800';
       rHdr.style.margin = '12px 0 6px';
       rHdr.style.color = '#92400e';
@@ -1737,7 +1914,7 @@
       return;
     }
 
-    var hdr = makeEl('div', null, 'Timeline Versi & Koreksi Catatan SOAP (MRMIK 8)');
+    var hdr = makeEl('div', null, 'Timeline Versi & Koreksi Catatan SOAP');
     hdr.style.fontWeight = '800';
     hdr.style.marginBottom = '10px';
     hdr.style.color = '#0f172a';
@@ -1755,7 +1932,7 @@
   $('#erm-root').on('click', '.btn-erm-soap-history', function() {
     var table = $(this).attr('data-table') || 'pemeriksaan_ralan';
     var recKey = $(this).attr('data-key') || '';
-    var title = $(this).attr('data-title') || 'Riwayat Koreksi SOAP (MRMIK 8)';
+    var title = $(this).attr('data-title') || 'Riwayat Koreksi SOAP';
 
     var body = document.getElementById('ermQuickBody');
     if (body) {
@@ -1819,6 +1996,108 @@
         renderQuickDetailSafe({ status: 'error', message: 'Gagal terhubung ke server untuk memuat detail formulir.' });
       }
     });
+  });
+
+  // Viewer Lightbox Citra PACS di dalam Riwayat Pasien
+  var pacsState = { items: [], idx: 0, zoom: 1, rotate: 0, invert: false };
+
+  function applyErmPacsTransform() {
+    var img = document.getElementById('ermPacsImage');
+    if (!img) return;
+    img.style.transform = 'scale(' + pacsState.zoom + ') rotate(' + pacsState.rotate + 'deg)';
+    img.style.filter = pacsState.invert ? 'invert(1)' : 'none';
+  }
+
+  function renderErmPacsSlide() {
+    if (!pacsState.items.length) return;
+    var item = pacsState.items[pacsState.idx];
+    pacsState.zoom = 1;
+    pacsState.rotate = 0;
+    pacsState.invert = false;
+    applyErmPacsTransform();
+
+    var img = document.getElementById('ermPacsImage');
+    if (img) {
+      img.onerror = function() {
+        if (item.fallback && img.getAttribute('data-fb-tried') !== '1') {
+          img.setAttribute('data-fb-tried', '1');
+          img.src = item.fallback;
+        }
+      };
+      img.setAttribute('data-fb-tried', '0');
+      img.src = item.full;
+    }
+    $('#ermPacsTitle').text(item.title || 'Citra Radiologi PACS');
+    $('#ermPacsOpenTab').attr('href', item.full);
+    if (pacsState.items.length > 1) {
+      $('#ermPacsCounter').text('(' + (pacsState.idx + 1) + ' / ' + pacsState.items.length + ')');
+      $('#ermPacsPrev, #ermPacsNext').show();
+    } else {
+      $('#ermPacsCounter').text('');
+      $('#ermPacsPrev, #ermPacsNext').hide();
+    }
+  }
+
+  $('#erm-root').on('click', '.js-erm-pacs-open', function() {
+    var gallery = $(this).attr('data-gallery') || '';
+    var clickedFull = $(this).attr('data-full') || '';
+    pacsState.items = [];
+    $('#erm-root .js-erm-pacs-open[data-gallery="' + gallery + '"]').each(function() {
+      var u = $(this).attr('data-full') || '';
+      if (isSafeHttpUrl(u)) {
+        pacsState.items.push({
+          full: u,
+          fallback: $(this).attr('data-fallback') || '',
+          title: $(this).attr('data-title') || 'Citra Radiologi PACS'
+        });
+      }
+    });
+    if (!pacsState.items.length) return;
+    pacsState.idx = 0;
+    for (var i = 0; i < pacsState.items.length; i++) {
+      if (pacsState.items[i].full === clickedFull) {
+        pacsState.idx = i;
+        break;
+      }
+    }
+    renderErmPacsSlide();
+    $('#ermPacsOverlay').addClass('is-open');
+  });
+
+  $('#erm-root').on('click', '#ermPacsClose', function() {
+    $('#ermPacsOverlay').removeClass('is-open');
+  });
+  $('#erm-root').on('click', '#ermPacsZoomIn', function() {
+    pacsState.zoom = Math.min(4, +(pacsState.zoom + 0.25).toFixed(2));
+    applyErmPacsTransform();
+  });
+  $('#erm-root').on('click', '#ermPacsZoomOut', function() {
+    pacsState.zoom = Math.max(0.5, +(pacsState.zoom - 0.25).toFixed(2));
+    applyErmPacsTransform();
+  });
+  $('#erm-root').on('click', '#ermPacsRotate', function() {
+    pacsState.rotate = (pacsState.rotate + 90) % 360;
+    applyErmPacsTransform();
+  });
+  $('#erm-root').on('click', '#ermPacsInvert', function() {
+    pacsState.invert = !pacsState.invert;
+    applyErmPacsTransform();
+  });
+  $('#erm-root').on('click', '#ermPacsReset', function() {
+    pacsState.zoom = 1;
+    pacsState.rotate = 0;
+    pacsState.invert = false;
+    applyErmPacsTransform();
+  });
+  $('#erm-root').on('click', '#ermPacsPrev', function() {
+    if (pacsState.items.length <= 1) return;
+    pacsState.idx = (pacsState.idx - 1 + pacsState.items.length) % pacsState.items.length;
+    renderErmPacsSlide();
+  });
+  $('#erm-root').on('click', '#ermPacsNext', function() {
+    if (pacsState.items.length <= 1) return;
+    pacsState.idx = (pacsState.idx + 1) % pacsState.items.length;
+    renderErmPacsSlide();
   });
 })(window.jQuery);
 </script>

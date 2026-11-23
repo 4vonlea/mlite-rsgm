@@ -308,7 +308,7 @@
                               </span>
                               {/if}
                               {if: !empty($ff.has_revisions)}
-                              <button type="button" class="rsgm-soap-rev-badge js-soap-rev-open" style="font-size:9.5px; padding:1px 6px;" data-module="form_rme" data-table="{$ff.rev_table}" data-key="{$ff.rev_key}" title="Lihat penandaan koreksi (MRMIK 8)">
+                              <button type="button" class="rsgm-soap-rev-badge js-soap-rev-open" style="font-size:9.5px; padding:1px 6px;" data-module="form_rme" data-table="{$ff.rev_table}" data-key="{$ff.rev_key}" title="Lihat penandaan koreksi">
                                 <i class="fa fa-history"></i> Koreksi {$ff.revision_count}x
                               </button>
                               {/if}
@@ -346,6 +346,13 @@
                             <a href="{$ff.url_cetak}" target="_blank" class="btn btn-xs rsgm-btn-soft-success" title="Cetak Formulir PDF">
                               <i class="fa fa-print"></i> Cetak
                             </a>
+                            {if: !empty($ff.record_id)}
+                            <button type="button" class="btn btn-xs btn-danger js-btn-batal-rme" style="font-weight: 600; border-radius: 5px; padding: 3px 8px; font-size: 11px;"
+                              data-form-id="{$ff.id}" data-record-id="{$ff.record_id}" data-no-rawat="{$patient.no_rawat}" data-title="{$ff.kode_form} - {$ff.nama_form}"
+                              title="Batalkan / Hapus Pengisian Formulir Ini">
+                              <i class="fa fa-trash-o"></i> Batal
+                            </button>
+                            {/if}
                           </div>
 
                         </div>
@@ -754,6 +761,13 @@
                         <a href="{$f.url_cetak}" target="_blank" class="btn btn-success" title="Cetak Dokumen">
                           <i class="fa fa-print"></i>
                         </a>
+                        {if: !empty($f.record_id)}
+                        <button type="button" class="btn btn-danger js-btn-batal-rme"
+                          data-form-id="{$f.id}" data-record-id="{$f.record_id}" data-no-rawat="{$patient.no_rawat}" data-title="{$f.kode_form} - {$f.nama_form}"
+                          title="Batalkan / Hapus Pengisian Formulir Ini">
+                          <i class="fa fa-trash-o"></i>
+                        </button>
+                        {/if}
                       </div>
                       {else}
                       <a href="{$f.url_form}" target="_blank" class="btn btn-xs btn-success" style="font-weight: 600; padding: 2px 7px;">
@@ -835,6 +849,13 @@
                         <a href="{$f.url_cetak}" target="_blank" class="btn btn-success" title="Cetak PDF">
                           <i class="fa fa-print"></i> Cetak
                         </a>
+                        {if: !empty($f.record_id)}
+                        <button type="button" class="btn btn-danger js-btn-batal-rme"
+                          data-form-id="{$f.id}" data-record-id="{$f.record_id}" data-no-rawat="{$patient.no_rawat}" data-title="{$f.kode_form} - {$f.nama_form}"
+                          title="Batalkan / Hapus Pengisian Formulir Ini">
+                          <i class="fa fa-trash-o"></i>
+                        </button>
+                        {/if}
                       </div>
                       {else}
                       <a href="{$f.url_form}" target="_blank" class="btn btn-xs btn-success btn-block" style="font-weight: 600;">
@@ -896,6 +917,44 @@
         <iframe id="modalDocIframe" src="" style="width: 100%; height: 100%; border: none; display: block; background: #ffffff;"></iframe>
       </div>
 
+    </div>
+  </div>
+</div>
+
+<!-- ======================================================== -->
+<!-- MODAL KONFIRMASI PEMBATALAN / HAPUS PENGISIAN FORM RME  -->
+<!-- ======================================================== -->
+<div class="modal fade" id="modalBatalkanRme" tabindex="-1" role="dialog" aria-labelledby="modalBatalkanRmeLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content" style="border-radius: 10px; overflow: hidden; border: none; box-shadow: 0 12px 32px rgba(15,23,42,0.22);">
+      <div class="modal-header" style="background: #dc2626; color: #ffffff; padding: 12px 18px; border-bottom: none;">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: #fff; opacity: 0.9;"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="modalBatalkanRmeLabel" style="font-size: 14px; font-weight: 700;">
+          <i class="fa fa-trash-o"></i> Batalkan / Hapus Pengisian Formulir RME
+        </h4>
+      </div>
+      <div class="modal-body" style="padding: 18px;">
+        <p style="margin: 0 0 10px; font-size: 13px; color: #334155;">
+          Anda yakin ingin membatalkan pengisian formulir berikut?
+        </p>
+        <div id="batalRmeFormTitle" style="background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 8px 12px; border-radius: 6px; font-weight: 700; font-size: 12.5px; margin-bottom: 12px;"></div>
+        <div id="batalRmeAlert" class="alert alert-warning" style="display: none; font-size: 12px; padding: 8px 12px; margin-bottom: 10px;"></div>
+        <div class="form-group" style="margin-bottom: 4px;">
+          <label for="batalRmeReason" style="font-size: 12px; font-weight: 700; color: #334155;">
+            Alasan Pembatalan <span id="batalRmeReasonOpt" style="font-weight: 400; color: #64748b;">(opsional jika &le; 15 menit, wajib jika lewat masa tenggang / sudah TTE)</span>
+          </label>
+          <textarea id="batalRmeReason" class="form-control" rows="2" placeholder="Contoh: Salah pilih formulir / tidak jadi diisi"></textarea>
+        </div>
+        <p style="margin: 8px 0 0; font-size: 11px; color: #64748b;">
+          <i class="fa fa-info-circle"></i> Formulir yang dibatalkan akan kembali berstatus <strong>Belum &bull; 0%</strong> dan tidak ikut tercetak pada berkas PDF (jejak pembatalan tetap tercatat di log audit).
+        </p>
+      </div>
+      <div class="modal-footer" style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 10px 18px;">
+        <button type="button" class="btn btn-default btn-sm" data-dismiss="modal">Tutup</button>
+        <button type="button" class="btn btn-danger btn-sm" id="btnConfirmBatalkanRme" style="font-weight: 700;">
+          <i class="fa fa-trash-o"></i> Ya, Batalkan Pengisian
+        </button>
+      </div>
     </div>
   </div>
 </div>
@@ -1189,6 +1248,67 @@ jQuery(document).ready(function() {
     jQuery(this).addClass('active');
     jQuery('#viewContainerTable').hide();
     jQuery('#viewContainerCards').fadeIn(150);
+  });
+
+  // Pembatalan / Hapus Pengisian Formulir RME dari Lembar Kerja
+  var pendingCancelPayload = null;
+  var cancelEndpointUrl = '{?=url([ADMIN, "form_rme", "batalkanisian"])?}';
+
+  jQuery(document).on('click', '.js-btn-batal-rme', function() {
+    var $btn = jQuery(this);
+    pendingCancelPayload = {
+      form_id: $btn.attr('data-form-id'),
+      record_id: $btn.attr('data-record-id'),
+      no_rawat: $btn.attr('data-no-rawat')
+    };
+    jQuery('#batalRmeFormTitle').text($btn.attr('data-title') || 'Formulir RME');
+    jQuery('#batalRmeReason').val('');
+    jQuery('#batalRmeAlert').hide().text('');
+    jQuery('#btnConfirmBatalkanRme').prop('disabled', false).html('<i class="fa fa-trash-o"></i> Ya, Batalkan Pengisian');
+    jQuery('#modalBatalkanRme').modal('show');
+  });
+
+  jQuery('#btnConfirmBatalkanRme').on('click', function() {
+    if (!pendingCancelPayload) return;
+    var $confirmBtn = jQuery(this);
+    var reason = jQuery.trim(jQuery('#batalRmeReason').val());
+
+    $confirmBtn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Memproses...');
+    jQuery('#batalRmeAlert').hide();
+
+    jQuery.ajax({
+      url: cancelEndpointUrl,
+      type: 'POST',
+      dataType: 'json',
+      data: {
+        form_id: pendingCancelPayload.form_id,
+        record_id: pendingCancelPayload.record_id,
+        no_rawat: pendingCancelPayload.no_rawat,
+        void_reason: reason
+      },
+      success: function(res) {
+        if (res && res.status === 'success') {
+          jQuery('#modalBatalkanRme').modal('hide');
+          window.location.reload();
+        } else if (res && res.status === 'needs_reason') {
+          jQuery('#batalRmeAlert').text(res.message || 'Wajib mengisi alasan pembatalan terlebih dahulu.').show();
+          jQuery('#batalRmeReason').focus();
+          $confirmBtn.prop('disabled', false).html('<i class="fa fa-trash-o"></i> Ya, Batalkan Pengisian');
+        } else {
+          jQuery('#batalRmeAlert').text((res && res.message) ? res.message : 'Gagal membatalkan pengisian formulir.').show();
+          $confirmBtn.prop('disabled', false).html('<i class="fa fa-trash-o"></i> Ya, Batalkan Pengisian');
+        }
+      },
+      error: function(xhr) {
+        var msg = 'Terjadi kesalahan saat membatalkan pengisian formulir.';
+        try {
+          var j = JSON.parse(xhr.responseText || '{}');
+          if (j.message) msg = j.message;
+        } catch (e) {}
+        jQuery('#batalRmeAlert').text(msg).show();
+        $confirmBtn.prop('disabled', false).html('<i class="fa fa-trash-o"></i> Ya, Batalkan Pengisian');
+      }
+    });
   });
 });
 </script>

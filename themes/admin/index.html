@@ -643,7 +643,7 @@
               <li role="separator" class="rsgm-top-sep"></li>
 
               <!-- 1. Layanan -->
-              <li class="dropdown{if: isset_or($module.category) == 'layanan' && empty($mlite.is_mrmik_pasien_page)} active{/if}">
+              <li class="dropdown{if: isset_or($module.category) == 'layanan' && empty($mlite.is_rme_pasien_page)} active{/if}">
                 <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
                   <span>Layanan</span><i class="fa fa-angle-down rsgm-caret"></i>
                 </a>
@@ -709,7 +709,7 @@
               </li>
 
               <!-- 3. Rekam Medis (Form RME Dinamis + Modul Rekam Medik) -->
-              <li class="dropdown{if: isset_or($module.category) == 'rekammedik' || !empty($mlite.is_mrmik_pasien_page)} active{/if}">
+              <li class="dropdown{if: isset_or($module.category) == 'rekammedik' || !empty($mlite.is_rme_pasien_page)} active{/if}">
                 <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
                   <span>Rekam Medis</span><i class="fa fa-angle-down rsgm-caret"></i>
                 </a>
@@ -1042,7 +1042,7 @@
               {if: $mlite.module_pasien}
               <li role="separator" class="rsgm-qsep"></li>
               <li>
-                <a href="{?=url([ADMIN, 'pasien', 'manage'])?}" class="rsgm-qpill{if: isset_or($module.dir) == 'pasien' && empty($mlite.is_mrmik_pasien_page)} active{/if}{if: !$mlite.pasien_access} disabled{/if}">
+                <a href="{?=url([ADMIN, 'pasien', 'manage'])?}" class="rsgm-qpill{if: isset_or($module.dir) == 'pasien' && empty($mlite.is_rme_pasien_page)} active{/if}{if: !$mlite.pasien_access} disabled{/if}">
                   <i class="fa fa-users ico-pasien"></i><span>Pasien</span>
                 </a>
               </li>

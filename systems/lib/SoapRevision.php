@@ -2,7 +2,7 @@
 namespace Systems\Lib;
 
 /**
- * Shared helper for MRMIK 8 SOAP Revision & Soft-Delete (Void) Audit Trail
+ * Shared helper for SOAP Revision & Soft-Delete (Void) Audit Trail
  * Implements Option B (15-minute typo grace period for same creator before TTE/checkout).
  */
 class SoapRevision
@@ -407,7 +407,7 @@ class SoapRevision
                 'elapsed_minutes' => $grace['elapsed_minutes'],
                 'changed_fields'  => $diff,
                 'record_key'      => self::buildRecordKey($existing['no_rawat'], $existing['tgl_perawatan'], $existing['jam_rawat']),
-                'message'         => $grace['why'] . '. Wajib mengisi alasan koreksi catatan SOAP (MRMIK 8).',
+                'message'         => $grace['why'] . '. Wajib mengisi alasan koreksi catatan SOAP.',
             ];
         }
 
@@ -493,7 +493,7 @@ class SoapRevision
                 'minutes_left' => $grace['minutes_left'],
                 'message'      => $isGrace
                     ? 'Perubahan SOAP disimpan (koreksi langsung dalam masa tenggang 15 menit).'
-                    : "Koreksi SOAP berhasil disimpan (Revisi #{$newRevCount}) dengan jejak audit MRMIK 8.",
+                    : "Koreksi SOAP berhasil disimpan (Revisi #{$newRevCount}) dengan jejak audit.",
             ];
         } catch (\Throwable $e) {
             if ($pdo->inTransaction()) {
@@ -545,7 +545,7 @@ class SoapRevision
                 'status'  => 'needs_reason',
                 'action'  => 'void',
                 'why'     => $grace['why'],
-                'message' => $grace['why'] . '. Wajib mengisi alasan pembatalan catatan SOAP (MRMIK 8).',
+                'message' => $grace['why'] . '. Wajib mengisi alasan pembatalan catatan SOAP.',
             ];
         }
 
@@ -593,7 +593,7 @@ class SoapRevision
             return [
                 'status'  => 'success',
                 'mode'    => 'void',
-                'message' => 'Catatan SOAP dibatalkan (VOID). Riwayat asli tetap tersimpan untuk audit MRMIK 8.',
+                'message' => 'Catatan SOAP dibatalkan (VOID). Riwayat asli tetap tersimpan untuk jejak audit.',
             ];
         } catch (\Throwable $e) {
             if ($pdo->inTransaction()) {
