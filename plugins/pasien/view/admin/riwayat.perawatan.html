@@ -897,7 +897,7 @@
                     <i class="fa fa-file-pdf-o"></i> PDF
                   </a>
                   {/if}
-                  {if: !empty($rf.url_form)}
+                  {if: !empty($rf.url_form) && !empty($rf.can_write)}
                   <a href="{$rf.url_form}" target="_blank" class="btn btn-xs erm-btn-soft-edit" title="Edit / Koreksi di Form">
                     <i class="fa fa-pencil"></i>
                   </a>

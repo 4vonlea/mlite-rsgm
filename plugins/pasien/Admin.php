@@ -1208,6 +1208,7 @@ class Admin extends AdminModule
                 'kode_form'        => (string)($mf['kode_form'] ?? ''),
                 'nama_form'        => (string)($mf['nama_form'] ?? ''),
                 'kategori'         => (string)($mf['kategori'] ?? 'Umum'),
+                'target_aktor'     => (string)($mf['target_aktor'] ?? 'medis,paramedis'),
                 'nama_tabel'       => $tbl,
                 'fill_count'       => count($entries),
                 'revision_count'   => (int)($lastRow['revision_count'] ?? 0),
@@ -1579,7 +1580,16 @@ class Admin extends AdminModule
         $collectAlergi($pm['alergi'] ?? '');
       }
 
-      // Attach Form RME terisi untuk kunjungan ini
+      // Attach Form RME terisi untuk kunjungan ini (+ hak tulis berdasarkan IT Admin / unit kunjungan / target_aktor)
+      $curUid = $_SESSION['mlite_user'] ?? 0;
+      $curRole = strtolower(trim((string)$this->core->getUserInfo('role', $curUid)));
+      $curIsItAdmin = ($curRole === 'admin' || (int)$curUid === 1);
+      $curPoliCodes = array_filter(array_map('trim', explode(',', (string)$this->core->getUserInfo('cap', $curUid))));
+      $epUnits = [];
+      if (!empty($row['kd_poli'])) $epUnits[] = trim((string)$row['kd_poli']);
+      if (strtolower((string)($row['status_lanjut'] ?? '')) === 'ranap') $epUnits[] = 'RANAP';
+      $hasEpUnitAccess = $curIsItAdmin || (!empty($curPoliCodes) && (empty($epUnits) || !empty(array_intersect($curPoliCodes, $epUnits))));
+
       $visitRmeForms = [];
       foreach (($rmeFormsByRawat[$row['no_rawat']] ?? []) as $rfItem) {
         $rawRow = $rfItem['raw_row'] ?? [];
@@ -1592,6 +1602,16 @@ class Admin extends AdminModule
           $collectAlergi($rawRow['rp_alergi_ket'] ?? '');
         }
         unset($rfItem['raw_row']);
+        if ($curIsItAdmin) {
+          $rfItem['can_write'] = '1';
+        } elseif ($hasEpUnitAccess) {
+          $ta = trim((string)($rfItem['target_aktor'] ?? ''));
+          $taRoles = $ta !== '' ? array_filter(array_map(function ($x) { return strtolower(trim($x)); }, explode(',', $ta))) : ['medis', 'paramedis'];
+          $roleOk = in_array($curRole, $taRoles, true) || ($curRole === 'koas' && (in_array('koas', $taRoles, true) || in_array('medis', $taRoles, true)));
+          $rfItem['can_write'] = $roleOk ? '1' : '';
+        } else {
+          $rfItem['can_write'] = '';
+        }
         $visitRmeForms[] = $rfItem;
       }
       $row['rme_forms'] = $visitRmeForms;

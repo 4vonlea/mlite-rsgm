@@ -123,11 +123,13 @@ class Admin extends AdminModule
         }
         }
 
-        // Cek Hak Akses Pengisian Berdasarkan Aktor (Dokter / Perawat / Kolaboratif / Pasien)
+        // Cek Hak Akses Pengisian Berdasarkan Aktor (target_aktor) + Unit (cap & unit kunjungan)
+        // Hanya IT (role=admin / id=1) yang bypass; role lain (termasuk access='all') wajib cocok unit & target_aktor.
         if (strpos($file, 'form.html') !== false || strpos($file, '_form.html') !== false) {
             $dir = explode('/', $file)[0];
             $targetAktor = $this->getFormTargetAktor($dir);
-            $perm = $this->checkFormActorPermission($targetAktor);
+            $ctxNoRawat = trim((string)($_GET['no_rawat'] ?? ($_POST['no_rawat'] ?? ($variables['no_rawat'] ?? ($variables['data']['no_rawat'] ?? '')))));
+            $perm = $this->checkFormWritePermission($dir, $ctxNoRawat, $targetAktor);
             $variables['target_aktor'] = $targetAktor;
             $variables['user_role'] = $perm['user_role'];
             $variables['is_readonly_actor'] = !$perm['can_edit'];
@@ -247,15 +249,19 @@ class Admin extends AdminModule
                 . '<div style="display: flex; align-items: center; gap: 10px;">'
                 . '<i class="fa fa-lock fa-2x text-warning"></i>'
                 . '<div>'
-                . '<strong>Mode Pratinjau (Read-Only Aktor)</strong><br>'
+                . '<strong>Mode Baca Saja (Terkunci — Bukan Pengisi Berwenang)</strong><br>'
                 . htmlspecialchars($variables['actor_permission_message'])
                 . '</div>'
                 . '</div>'
                 . '</div>'
                 . '<script>'
+                . 'window.__RME_READONLY_LOCK = true;'
                 . 'jQuery(document).ready(function($){'
-                . '  $("form button[type=submit], form input[type=submit], form .btn-save, form .btn-simpan, form #btn_simpan").prop("disabled", true).addClass("disabled").attr("title", "Akses simpan dikunci untuk peran Anda");'
+                . '  $("form button[type=submit], form input[type=submit], form .btn-save, form .btn-simpan, form #btn_simpan").prop("disabled", true).hide();'
                 . '  $("form input, form textarea, form select").not("[type=hidden]").prop("disabled", true);'
+                . '  $("form").on("submit.rmelock", function(e){ e.preventDefault(); e.stopImmediatePropagation(); return false; });'
+                . '  $("#rme-sticky-bar .rme-autosave-toggle, #btn-rme-quick-save, #btn-rme-done").hide();'
+                . '  $("#rme-status-text").text("Mode Baca Saja (Terkunci)");'
                 . '});'
                 . '</script>';
             $rendered = $banner . $rendered;
@@ -546,17 +552,20 @@ class Admin extends AdminModule
         ];
     }
 
+    public function isItAdminUser($userId = null): bool
+    {
+        $userId = $userId ?? ($_SESSION['mlite_user'] ?? 1);
+        $role = strtolower(trim((string)$this->core->getUserInfo('role', $userId)));
+        return ((int)$userId === 1 || $role === 'admin');
+    }
+
     public function getCurrentUserClinicalRole()
     {
         $userId = $_SESSION['mlite_user'] ?? 1;
-        $access = trim((string)$this->core->getUserInfo('access', $userId));
-        $accList = array_map('trim', explode(',', $access));
-        $role   = strtolower(trim((string)$this->core->getUserInfo('role', $userId)));
-
-        if ($userId == 1 || $role === 'admin' || $access === 'all' || in_array('all', $accList, true)) {
+        if ($this->isItAdminUser($userId)) {
             return 'admin';
         }
-
+        $role = strtolower(trim((string)$this->core->getUserInfo('role', $userId)));
         return !empty($role) ? $role : 'pengguna';
     }
 
@@ -729,8 +738,77 @@ class Admin extends AdminModule
             'can_edit' => false,
             'user_role' => $userRole,
             'target_aktor' => $targetAktor,
-            'message' => "Formulir ini dikhususkan untuk hak akses: {$allowedStr}. Anda login sebagai {$myRoleLabel}, sehingga formulir dibuka dalam mode Pratinjau / Hanya Lihat."
+            'message' => "Formulir ini dikhususkan untuk hak akses: {$allowedStr}. Anda login sebagai {$myRoleLabel}, sehingga formulir dibuka dalam mode Baca Saja."
         ];
+    }
+
+    /**
+     * Cek menyeluruh hak tulis (C/U/D) saat membuka formulir:
+     * - IT Admin (role=admin / id=1) selalu full akses.
+     * - Non-IT wajib lolos 3 hal: target_aktor (role), capability unit (cap), dan kecocokan unit kunjungan (no_rawat).
+     */
+    public function checkFormWritePermission($dir, $noRawat = '', $targetAktor = null)
+    {
+        $userId = $_SESSION['mlite_user'] ?? 1;
+        if ($this->isItAdminUser($userId)) {
+            return [
+                'can_edit' => true,
+                'user_role' => 'admin',
+                'target_aktor' => (string)$targetAktor,
+                'message' => ''
+            ];
+        }
+
+        if ($targetAktor === null) {
+            $targetAktor = $this->getFormTargetAktor($dir);
+        }
+
+        // 1. Cek target_aktor berdasarkan peran klinis
+        $actorPerm = $this->checkFormActorPermission($targetAktor);
+        if (empty($actorPerm['can_edit'])) {
+            return $actorPerm;
+        }
+
+        // 2. Cek capability (cap) unit user
+        $userCap = (string)$this->core->getUserInfo('cap', $userId);
+        $poliCodes = array_filter(array_map('trim', explode(',', $userCap)));
+        if (empty($poliCodes)) {
+            return [
+                'can_edit' => false,
+                'user_role' => $actorPerm['user_role'],
+                'target_aktor' => $targetAktor,
+                'message' => 'Akun Anda belum memiliki hak akses unit/poliklinik (capability), sehingga formulir ini hanya dapat dibuka dalam mode Baca Saja.'
+            ];
+        }
+
+        // 3. Cek apakah unit kunjungan pasien (no_rawat) termasuk dalam capability (cap) user
+        $noRawat = trim((string)$noRawat);
+        if ($noRawat !== '') {
+            try {
+                $reg = $this->db('reg_periksa')->where('no_rawat', $noRawat)->select('kd_poli')->oneArray();
+                if ($reg) {
+                    $visitUnits = [];
+                    if (!empty($reg['kd_poli'])) {
+                        $visitUnits[] = trim((string)$reg['kd_poli']);
+                    }
+                    $hasRanap = $this->db('kamar_inap')->where('no_rawat', $noRawat)->oneArray();
+                    if ($hasRanap) {
+                        $visitUnits[] = 'RANAP';
+                    }
+                    if (!empty($visitUnits) && empty(array_intersect($poliCodes, $visitUnits))) {
+                        return [
+                            'can_edit' => false,
+                            'user_role' => $actorPerm['user_role'],
+                            'target_aktor' => $targetAktor,
+                            'message' => 'Kunjungan pasien ini berada di unit lain (' . implode('/', $visitUnits) . ') di luar capability unit Anda, sehingga formulir dibuka dalam mode Baca Saja.'
+                        ];
+                    }
+                }
+            } catch (\Throwable $e) {
+            }
+        }
+
+        return $actorPerm;
     }
 
     public function getCss()
@@ -2375,13 +2453,39 @@ public function getJs()
             }
         } catch (e) {}
 
-        if (rmeRevMeta && (rmeRevMeta.needs_reason || rmeRevMeta.is_voided)) {
+        var isReadOnlyLocked = !!window.__RME_READONLY_LOCK || $('.rsgm-actor-lock-banner').length > 0;
+        var hasExistingRecordId = (function() {
+            var idVal = $.trim($form.find('input[name="id"], input[name="id_triase"]').first().val() || '');
+            if (idVal && idVal !== '0') return true;
+            try {
+                var usp = new URLSearchParams(window.location.search);
+                var qId = $.trim(usp.get('id') || usp.get('id_triase') || '');
+                if (qId && qId !== '0') return true;
+            } catch (e) {}
+            return false;
+        })();
+
+        if (isReadOnlyLocked) {
+            autoSaveEnabled = false;
+            $('#rme-sticky-bar .rme-autosave-toggle, #btn-rme-quick-save, #btn-rme-done').hide();
+            setStatus('error', 'Mode Baca Saja (Terkunci)');
+        } else if (rmeRevMeta && (rmeRevMeta.needs_reason || rmeRevMeta.is_voided)) {
             autoSaveEnabled = false;
             $('#rme-toggle-autosave').prop('checked', false).closest('.rme-autosave-toggle').attr('title', 'Auto-Save dijeda: perubahan pada dokumen ini memerlukan alasan koreksi');
+        } else if (!isPreviewMode && !hasExistingRecordId) {
+            // Opsi 3A: Form baru belum pernah disimpan -> Auto-Save nonaktif sampai pengguna menekan Simpan pertama kali
+            autoSaveEnabled = false;
+            $('#rme-toggle-autosave').prop('checked', false).prop('disabled', true).closest('.rme-autosave-toggle').attr('title', 'Auto-Save otomatis aktif setelah Anda klik Simpan pertama kali');
+            setStatus('clean', 'Form baru — klik Simpan terlebih dahulu');
         }
 
         // Toggle Auto-Save
         $('#rme-toggle-autosave').on('change', function() {
+            if (isReadOnlyLocked || !hasExistingRecordId) {
+                $(this).prop('checked', false);
+                autoSaveEnabled = false;
+                return;
+            }
             autoSaveEnabled = $(this).is(':checked');
             if (autoSaveEnabled && isDirty) {
                 scheduleAutoSave();
@@ -2390,23 +2494,24 @@ public function getJs()
 
         // Deteksi perubahan input nyata dari pengguna (abaikan trigger programatik saat auto-fill pasien)
         $form.on('input change', 'input, textarea, select', function(e) {
+            if (isReadOnlyLocked) return;
             if ($(this).closest('.modal, .dataTables_filter').length) return;
             if (isHydratingPatient) return;
             if (!e.originalEvent && !hasUserInteracted) return;
             hasUserInteracted = true;
             isDirty = true;
-            setStatus('dirty', 'Ada perubahan...');
-            if (autoSaveEnabled) {
+            setStatus('dirty', hasExistingRecordId ? 'Ada perubahan...' : 'Belum disimpan — klik Simpan');
+            if (autoSaveEnabled && hasExistingRecordId) {
                 scheduleAutoSave();
             }
         });
 
         function scheduleAutoSave() {
-            if (isPreviewMode) return;
+            if (isPreviewMode || isReadOnlyLocked || !hasExistingRecordId) return;
             if (rmeRevMeta && (rmeRevMeta.needs_reason || rmeRevMeta.is_voided)) return;
             clearTimeout(autoSaveTimer);
             autoSaveTimer = setTimeout(function() {
-                if (isDirty && !isSaving && autoSaveEnabled) {
+                if (isDirty && !isSaving && autoSaveEnabled && hasExistingRecordId && !isReadOnlyLocked) {
                     performSave(true);
                 }
             }, 3000);
@@ -2430,6 +2535,16 @@ public function getJs()
 
         // Fungsi Simpan AJAX
         function performSave(isAuto, onComplete, extraReason) {
+            if (isReadOnlyLocked) {
+                if (!isAuto) {
+                    showToast('Mode Baca Saja: Anda tidak memiliki hak akses pengisian untuk formulir ini.', 'error');
+                }
+                if (typeof onComplete === 'function') onComplete(false, { status: 'readonly' });
+                return;
+            }
+            if (isAuto && !hasExistingRecordId) {
+                return;
+            }
             if (isPreviewMode) {
                 if (!isAuto) {
                     showToast('Mode Simulasi: data tidak disimpan ke DB. Gunakan tombol Lihat Output (Cetak).', 'success');
@@ -2508,9 +2623,18 @@ public function getJs()
                     setStatus('clean', 'Tersimpan (' + timeStr + ')');
                     
                     if (res && res.last_id) {
-                        var $idInput = $form.find('input[name="id"]');
+                        var $idInput = $form.find('input[name="id"], input[name="id_triase"]').first();
                         if ($idInput.length && !$idInput.val()) {
                             $idInput.val(res.last_id);
+                        }
+                    }
+
+                    // Opsi 3A: Setelah simpan pertama sukses, aktifkan Auto-Save untuk perubahan selanjutnya
+                    if (!hasExistingRecordId) {
+                        hasExistingRecordId = true;
+                        if (!(rmeRevMeta && (rmeRevMeta.needs_reason || rmeRevMeta.is_voided))) {
+                            autoSaveEnabled = true;
+                            $('#rme-toggle-autosave').prop('disabled', false).prop('checked', true).closest('.rme-autosave-toggle').attr('title', 'Simpan otomatis setiap 3 detik setelah ada perubahan');
                         }
                     }
 
@@ -2529,6 +2653,13 @@ public function getJs()
                     isSaving = false;
                     if (xhr.status === 200 || xhr.status === 302) {
                         isDirty = false;
+                        if (!hasExistingRecordId) {
+                            hasExistingRecordId = true;
+                            if (!(rmeRevMeta && (rmeRevMeta.needs_reason || rmeRevMeta.is_voided))) {
+                                autoSaveEnabled = true;
+                                $('#rme-toggle-autosave').prop('disabled', false).prop('checked', true).closest('.rme-autosave-toggle').attr('title', 'Simpan otomatis setiap 3 detik setelah ada perubahan');
+                            }
+                        }
                         var now = new Date();
                         var timeStr = ('0' + now.getHours()).slice(-2) + ':' + ('0' + now.getMinutes()).slice(-2) + ':' + ('0' + now.getSeconds()).slice(-2);
                         setStatus('clean', 'Tersimpan (' + timeStr + ')');
@@ -2539,8 +2670,13 @@ public function getJs()
                             onComplete(true);
                         }
                     } else {
-                        setStatus('error', 'Gagal menyimpan');
-                        showToast('Gagal menyimpan perubahan. Coba klik Simpan Cepat lagi.', 'error');
+                        var errMsg = 'Gagal menyimpan perubahan. Coba klik Simpan Cepat lagi.';
+                        try {
+                            var j = JSON.parse(xhr.responseText || '{}');
+                            if (j && j.message) errMsg = j.message;
+                        } catch (e) {}
+                        setStatus('error', xhr.status === 403 ? 'Akses ditolak (Read-Only)' : 'Gagal menyimpan');
+                        showToast(errMsg, 'error');
                         if (typeof onComplete === 'function') {
                             onComplete(false);
                         }
@@ -5555,15 +5691,24 @@ public function getPatientContext($no_rawat)
         $isRanap = (!empty($patient['nm_bangsal']) || !empty($patient['kd_kamar']));
 
         $userId = $_SESSION['mlite_user'] ?? 1;
-        $rawAcc = trim((string)$this->core->getUserInfo('access', $userId));
-        $accList = array_map('trim', explode(',', $rawAcc));
-        $isAdmin = ($rawAcc === 'all') || in_array('all', $accList, true) || ($this->core->getUserInfo('role', $userId) == 'admin') || ($userId == 1);
+        // Hanya IT Admin (role=admin / id=1) yang bypass; non-IT (termasuk access='all') wajib cocok unit kunjungan + cap + target_aktor.
+        $isItAdmin = $this->isItAdminUser($userId);
 
         // Pre-fetch daftar form_id yang boleh diakses berdasarkan capability (cap) unit user (1 query saja)
         $userAllowedFormIds = [];
-        if (!$isAdmin) {
+        $hasVisitUnitAccess = $isItAdmin;
+        if (!$isItAdmin) {
             $userCap = (string)$this->core->getUserInfo('cap', $userId);
             $userPoliCodes = array_filter(array_map('trim', explode(',', $userCap)));
+            $visitUnits = [];
+            if (!empty($kd_poli)) {
+                $visitUnits[] = trim((string)$kd_poli);
+            }
+            if ($isRanap) {
+                $visitUnits[] = 'RANAP';
+            }
+            $hasVisitUnitAccess = !empty($userPoliCodes) && (empty($visitUnits) || !empty(array_intersect($userPoliCodes, $visitUnits)));
+
             if (!empty($userPoliCodes)) {
                 try {
                     $uForms = $this->db('mlite_rme_unit_form')
@@ -5731,8 +5876,8 @@ public function getPatientContext($no_rawat)
             }
             $pf['assigned_roles_meta'] = $assigned;
             $actorPerm = $this->checkFormActorPermission($pf['target_aktor']);
-            $hasUnitAccess = $isAdmin || isset($userAllowedFormIds[(int)($pf['id'] ?? 0)]);
-            $pf['can_write'] = $isAdmin || ($hasUnitAccess && !empty($actorPerm['can_edit']));
+            $hasUnitAccess = $isItAdmin || ($hasVisitUnitAccess && isset($userAllowedFormIds[(int)($pf['id'] ?? 0)]));
+            $pf['can_write'] = $isItAdmin || ($hasUnitAccess && !empty($actorPerm['can_edit']));
         }
         unset($pf);
 
@@ -5780,7 +5925,7 @@ public function getPatientContext($no_rawat)
             'available_roles' => $rolesMeta,
             'role_counts' => $roleCounts,
             'user_role' => $this->getCurrentUserClinicalRole(),
-            'is_admin' => $isAdmin,
+            'is_admin' => $isItAdmin,
             'is_ranap' => $isRanap,
             'token' => $_SESSION['token'] ?? ''
         ]);
@@ -6074,11 +6219,7 @@ public function getPatientContext($no_rawat)
         }
 
         $userId = $_SESSION['mlite_user'] ?? 0;
-        $rawAcc = trim((string)$this->core->getUserInfo('access', $userId));
-        $accList = array_map('trim', explode(',', $rawAcc));
-        $isAdmin = ($rawAcc === 'all') || in_array('all', $accList, true)
-            || ($this->core->getUserInfo('role', $userId) == 'admin')
-            || ((int)$userId === 1);
+        $isItAdmin = $this->isItAdminUser($userId);
 
         $formRow = $this->db('mlite_rme_form')->where('id', $formId)->oneArray();
         if (!$formRow || empty($formRow['nama_tabel'])) {
@@ -6086,8 +6227,8 @@ public function getPatientContext($no_rawat)
             exit();
         }
 
-        // Validasi hak akses unit/cap & target_aktor untuk non-admin (berlaku seragam untuk semua role)
-        if (!$isAdmin) {
+        // Validasi hak akses unit/cap, unit kunjungan, & target_aktor untuk non-IT (berlaku seragam untuk semua role)
+        if (!$isItAdmin) {
             $userCap = (string)$this->core->getUserInfo('cap', $userId);
             $poliCodes = array_filter(array_map('trim', explode(',', $userCap)));
             $allowedUnit = !empty($poliCodes) ? $this->db('mlite_rme_unit_form')
@@ -6099,6 +6240,21 @@ public function getPatientContext($no_rawat)
                 http_response_code(403);
                 echo json_encode(['status' => 'error', 'message' => 'Anda tidak memiliki hak akses unit untuk membatalkan formulir RME ini.']);
                 exit();
+            }
+            // Pastikan unit kunjungan pasien termasuk dalam capability (cap) user
+            try {
+                $reg = $this->db('reg_periksa')->where('no_rawat', $noRawat)->select('kd_poli')->oneArray();
+                if ($reg) {
+                    $visitUnits = [];
+                    if (!empty($reg['kd_poli'])) $visitUnits[] = trim((string)$reg['kd_poli']);
+                    if ($this->db('kamar_inap')->where('no_rawat', $noRawat)->oneArray()) $visitUnits[] = 'RANAP';
+                    if (!empty($visitUnits) && empty(array_intersect($poliCodes, $visitUnits))) {
+                        http_response_code(403);
+                        echo json_encode(['status' => 'error', 'message' => 'Kunjungan pasien ini berada di unit lain di luar capability (cap) Anda.']);
+                        exit();
+                    }
+                }
+            } catch (\Throwable $e) {
             }
             $actorPerm = $this->checkFormActorPermission($formRow['target_aktor'] ?? '');
             if (empty($actorPerm['can_edit'])) {

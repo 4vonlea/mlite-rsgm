@@ -244,10 +244,11 @@ class Admin extends Main
     protected function checkRmeFormAccess($method)
     {
         $userId = $_SESSION['mlite_user'] ?? 1;
-        $rawAcc = trim((string)$this->getUserInfo('access'));
-        $accList = array_map('trim', explode(',', $rawAcc));
-        $isAdmin = ($rawAcc === 'all') || in_array('all', $accList, true) || ($this->getUserInfo('role', $userId) == 'admin') || ($userId == 1);
-        if ($isAdmin) {
+        $userRole = strtolower(trim((string)$this->getUserInfo('role', $userId)));
+        // Hanya IT / Superadmin (role=admin atau user_id=1) yang punya full akses lintas unit & peran;
+        // akun non-admin (medis, paramedis, RM, manajemen, dll.) tetap tunduk pada unit (cap) & target_aktor meski access='all'.
+        $isItAdmin = ($userRole === 'admin') || ((int)$userId === 1);
+        if ($isItAdmin) {
             return true;
         }
 
@@ -317,15 +318,49 @@ class Admin extends Main
 
         $isWriteAction = (bool)preg_match('/(save|simpan|hapus|delete|void|tteverifysave)$/i', $methodLower);
 
-        // Ambil unit yang terkait dengan user dari capability (cap) di Manajemen Pengguna
+        // Pembukaan form / daftar (non-tulis) diperbolehkan untuk dilihat secara aman:
+        // plugins/form_rme/Admin.php::draw() otomatis mengunci ke Mode Baca Saja (Read-Only + Auto-Save mati)
+        // apabila peran / unit (cap) / unit kunjungan bukan pengisi yang berwenang.
+        if (!$isWriteAction) {
+            return true;
+        }
+
+        // === PENEGAKAN KETAT DI BACKEND UNTUK SELURUH AKSI TULIS / HAPUS ===
+        // 1. Ambil unit yang terkait dengan user dari capability (cap) di Manajemen Pengguna
         $userCap = $this->getUserInfo('cap', $userId);
         $poliCodes = !empty($userCap) ? array_filter(array_map('trim', explode(',', $userCap))) : [];
 
         if (empty($poliCodes)) {
-            $denyRmeAccess('Anda belum memiliki hak akses unit poliklinik (capability) untuk formulir RME ini.');
+            $denyRmeAccess('Anda belum memiliki hak akses unit poliklinik (capability) untuk mengisi atau mengubah formulir RME ini.');
         }
 
-        // Ambil rute-rute & target_aktor form yang diizinkan untuk unit user
+        // 2. Bila ada konteks kunjungan (no_rawat), pastikan unit kunjungan pasien termasuk dalam capability (cap) user
+        $reqNoRawat = trim((string)($_POST['no_rawat'] ?? ($_GET['no_rawat'] ?? '')));
+        $visitUnitMismatch = false;
+        if ($reqNoRawat !== '') {
+            try {
+                $reg = $this->db('reg_periksa')->where('no_rawat', $reqNoRawat)->select('kd_poli')->oneArray();
+                if ($reg) {
+                    $visitUnits = [];
+                    if (!empty($reg['kd_poli'])) {
+                        $visitUnits[] = trim((string)$reg['kd_poli']);
+                    }
+                    $hasRanap = $this->db('kamar_inap')->where('no_rawat', $reqNoRawat)->oneArray();
+                    if ($hasRanap) {
+                        $visitUnits[] = 'RANAP';
+                    }
+                    if (!empty($visitUnits) && empty(array_intersect($poliCodes, $visitUnits))) {
+                        $visitUnitMismatch = true;
+                    }
+                }
+            } catch (\Throwable $e) {
+            }
+        }
+        if ($visitUnitMismatch) {
+            $denyRmeAccess('Kunjungan pasien ini berada di unit lain di luar capability (cap) Anda. Hanya pengisi dari unit terkait yang dapat menyimpan/mengubah.');
+        }
+
+        // 3. Ambil rute-rute & target_aktor form yang diizinkan untuk unit user
         try {
             $allowedForms = $this->db('mlite_rme_unit_form')
                 ->join('mlite_rme_form', 'mlite_rme_form.id = mlite_rme_unit_form.form_id')
@@ -361,12 +396,11 @@ class Admin extends Main
         }
 
         if (empty($matchedForms)) {
-            $denyRmeAccess('Anda tidak memiliki hak akses unit untuk formulir RME ini.');
+            $denyRmeAccess('Anda tidak memiliki hak akses unit untuk menyimpan/mengubah formulir RME ini.');
         }
 
-        // Penegakan CRUD di backend untuk SEMUA role: aksi tulis/hapus wajib cocok dengan target_aktor formulir
-        if ($isWriteAction && $methodLower !== 'tteverifysave') {
-            $userRole = strtolower(trim((string)$this->getUserInfo('role', $userId)));
+        // 4. Penegakan target_aktor di backend untuk SEMUA role non-IT
+        if ($methodLower !== 'tteverifysave') {
             $canWriteForm = false;
             foreach ($matchedForms as $mf) {
                 $rawTarget = trim((string)($mf['target_aktor'] ?? ''));
