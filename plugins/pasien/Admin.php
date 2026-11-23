@@ -2211,7 +2211,8 @@ class Admin extends AdminModule
     try {
       $saved = $this->db('pasien')->save($input);
       if ($saved) {
-        $this->db()->pdo()->exec("UPDATE set_no_rkm_medis SET no_rkm_medis='{$input['no_rkm_medis']}'");
+        $stmtSetRm = $this->db()->pdo()->prepare("UPDATE set_no_rkm_medis SET no_rkm_medis = ?");
+        $stmtSetRm->execute([(string)$input['no_rkm_medis']]);
         return ['status' => 'success', 'data' => $input];
       } else {
         $errorInfo = $this->db()->pdo()->errorInfo();

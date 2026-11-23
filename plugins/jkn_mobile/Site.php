@@ -261,6 +261,15 @@ class Site extends SiteModule
                 $_h7 = date('d-m-Y', strtotime($h7));
 
                 $data_pasien = ($nomorkartu !== '') ? $this->db('pasien')->where('no_peserta', $nomorkartu)->oneArray() : null;
+                if (empty($data_pasien) && $nik !== '') {
+                    $data_pasien = $this->db('pasien')->where('no_ktp', $nik)->oneArray();
+                    if (!empty($data_pasien) && $nomorkartu !== '' && (empty($data_pasien['no_peserta']) || $data_pasien['no_peserta'] === '-')) {
+                        $this->db('pasien')->where('no_rkm_medis', $data_pasien['no_rkm_medis'])->save([
+                            'no_peserta' => $nomorkartu
+                        ]);
+                        $data_pasien['no_peserta'] = $nomorkartu;
+                    }
+                }
                 $poli = ($kodepoli !== '') ? $this->db('maping_poli_bpjs')->where('kd_poli_bpjs', $kodepoli)->oneArray() : null;
                 $dokter = ($kodedokter !== '') ? $this->db('maping_dokter_dpjpvclaim')->where('kd_dokter_bpjs', $kodedokter)->oneArray() : null;
 
@@ -1428,7 +1437,15 @@ class Site extends SiteModule
                 } else if (!isset($decode['rt']) || trim((string)$decode['rt']) === '') {
                     $response = array('metadata' => array('message' => 'RT tidak boleh kosong', 'code' => 201));
                 } else {
-                    if ($this->db('pasien')->where('no_peserta', $decode['nomorkartu'])->oneArray()) {
+                    $existingByNoka = $this->db('pasien')->where('no_peserta', $decode['nomorkartu'])->oneArray();
+                    $existingByNik = $this->db('pasien')->where('no_ktp', $decode['nik'])->oneArray();
+                    if ($existingByNoka || $existingByNik) {
+                        // Jika pasien sudah terdaftar lewat NIK (mis. eks pasien umum) tetapi no_peserta kosong/'-', lengkapi no_peserta tanpa membuat RM baru
+                        if (!$existingByNoka && $existingByNik && (empty($existingByNik['no_peserta']) || $existingByNik['no_peserta'] === '-')) {
+                            $this->db('pasien')->where('no_rkm_medis', $existingByNik['no_rkm_medis'])->save([
+                                'no_peserta' => $decode['nomorkartu']
+                            ]);
+                        }
                         $response = array(
                             'metadata' => array(
                                 'message' => 'Data pasien ini sudah terdaftar',

@@ -30,9 +30,9 @@ class Site extends SiteModule
         header('Access-Control-Allow-Methods: GET, POST');
         header("Access-Control-Allow-Headers: X-Requested-With");
 
-        $key = $this->settings->get('api.apam_key');
-        $token = trim(isset($_REQUEST['token'])? $_REQUEST['token'] : null);
-        if($token == $key) {
+        $key = trim((string)$this->settings->get('api.apam_key'));
+        $token = trim(isset($_REQUEST['token']) ? (string)$_REQUEST['token'] : '');
+        if ($key !== '' && $token !== '' && hash_equals($key, $token)) {
           $action = isset($_REQUEST['action']) ? $_REQUEST['action'] : "";
           switch($action){
             case "signin":
@@ -1138,10 +1138,10 @@ class Site extends SiteModule
         $dir    = WEBAPPS_PATH.'/berkasrawat/pages/upload';
         $cntr   = 0;
 
-        $key = $this->settings->get('api.berkasdigital_key');
+        $key = trim((string)$this->settings->get('api.berkasdigital_key'));
         $token = trim(isset($_POST['token']) ? (string)$_POST['token'] : '');
 
-        if($token == $key) {
+        if ($key !== '' && $token !== '' && hash_equals($key, $token)) {
 
           $image = $_FILES['file']['tmp_name'];
           $img = new \Systems\Lib\Image();

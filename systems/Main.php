@@ -854,6 +854,7 @@ abstract class Main
                          }
                     }
 
+                    \Systems\Lib\QueryWrapper::setAuditActor('api:' . $user['username']);
                     return $user['username'];
                 } else {
                     http_response_code(401);
@@ -862,6 +863,7 @@ abstract class Main
                 }
             }
             
+            \Systems\Lib\QueryWrapper::setAuditActor('api:' . $keyRecord['username']);
             return $keyRecord['username'];
         }
         

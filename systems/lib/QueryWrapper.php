@@ -40,6 +40,19 @@ class QueryWrapper
 
     protected static $last_error_binds = [];
 
+    protected static $audit_actor = null;
+
+    public static function setAuditActor($actor)
+    {
+        $actor = trim((string)$actor);
+        static::$audit_actor = ($actor !== '') ? substr($actor, 0, 100) : null;
+    }
+
+    public static function getAuditActor()
+    {
+        return static::$audit_actor;
+    }
+
     public function __construct($table = null)
     {
         if ($table) {
@@ -642,23 +655,92 @@ class QueryWrapper
         return $st;
     } 
     
-    protected static function logQueryToDatabase($sql, $binds = [], $error = null)
+    protected static function resolveAuditActor()
     {
-
-        // Ambil username dari session login, default 'unknown'
-        $username = 'unknown';
+        // 1. Session login admin
         if (!empty($_SESSION['mlite_user'])) {
             try {
                 $user = (new self('mlite_users'))
                     ->where('id', $_SESSION['mlite_user'])
                     ->oneArray();
-                if (isset($user['username'])) {
-                    $username = $user['username'];
+                if (!empty($user['username'])) {
+                    return substr((string)$user['username'], 0, 100);
                 }
             } catch (\Exception $e) {
                 error_log('Gagal mendapatkan username: ' . $e->getMessage());
             }
         }
+
+        // 2. Explicit actor (mis. dari Main::checkAuth REST API -> api:<username>)
+        if (!empty(static::$audit_actor)) {
+            return substr((string)static::$audit_actor, 0, 100);
+        }
+
+        // 3. CLI / Cron
+        if (PHP_SAPI === 'cli') {
+            return 'cli';
+        }
+
+        // 4. Inferensi endpoint non-session (Mobile JKN, Anjungan, APAM, API, dll)
+        $segments = [];
+        if (function_exists('parseURL') && !empty($_SERVER['REQUEST_URI']) && !empty($_SERVER['SCRIPT_NAME'])) {
+            $parsed = parseURL();
+            if (is_array($parsed)) {
+                $segments = array_values(array_filter(array_map('strtolower', $parsed), function ($s) {
+                    return $s !== '';
+                }));
+            }
+        } elseif (!empty($_SERVER['REQUEST_URI'])) {
+            $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+            $segments = array_values(array_filter(explode('/', strtolower((string)$path)), function ($s) {
+                return $s !== '';
+            }));
+        }
+
+        if (isset($segments[0]) && $segments[0] === 'index.php') {
+            array_shift($segments);
+        }
+
+        $first = $segments[0] ?? '';
+        $second = $segments[1] ?? '';
+
+        if ($first === 'jknmobile' || $first === 'jknmobile_v2' || $first === 'jkn_mobile'
+            || in_array('jknmobile', $segments, true) || in_array('jknmobile_v2', $segments, true) || in_array('jkn_mobile', $segments, true)) {
+            return 'jkn_mobile';
+        }
+        if ($first === 'jknmobilefktp' || $first === 'jkn_mobile_fktp'
+            || in_array('jknmobilefktp', $segments, true) || in_array('jkn_mobile_fktp', $segments, true)) {
+            return 'jkn_mobile_fktp';
+        }
+        if ($first === 'anjungan' || in_array('anjungan', $segments, true)) {
+            return 'anjungan';
+        }
+        if ($first === 'api') {
+            if ($second === 'apam') {
+                return 'apam';
+            }
+            if ($second === 'berkasdigital') {
+                return 'api:berkasdigital';
+            }
+            $cleanSecond = preg_replace('/[^a-z0-9_.-]/', '', $second);
+            return ($cleanSecond !== '') ? substr('api:' . $cleanSecond, 0, 100) : 'api';
+        }
+        if ($first === 'satusehat' || in_array('satusehat', $segments, true)) {
+            return 'satusehat';
+        }
+        if ($first !== '') {
+            $cleanFirst = preg_replace('/[^a-z0-9_.-]/', '', $first);
+            if ($cleanFirst !== '') {
+                return substr('public:' . $cleanFirst, 0, 100);
+            }
+        }
+
+        return 'unknown';
+    }
+
+    protected static function logQueryToDatabase($sql, $binds = [], $error = null)
+    {
+        $username = static::resolveAuditActor();
 
         try {
             $driver = static::$db->getAttribute(\PDO::ATTR_DRIVER_NAME);
@@ -787,20 +869,7 @@ class QueryWrapper
     {
         if (!static::$db) return;
 
-        // Ambil username dari session login, default 'unknown'
-        $username = 'unknown';
-        if (!empty($_SESSION['mlite_user'])) {
-            try {
-                $user = (new self('mlite_users'))
-                    ->where('id', $_SESSION['mlite_user'])
-                    ->oneArray();
-                if (isset($user['username'])) {
-                    $username = $user['username'];
-                }
-            } catch (\Exception $e) {
-                error_log('Gagal mendapatkan username: ' . $e->getMessage());
-            }
-        }
+        $username = static::resolveAuditActor();
     
         try {
             $driver = static::$db->getAttribute(\PDO::ATTR_DRIVER_NAME);

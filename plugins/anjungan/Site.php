@@ -4383,12 +4383,16 @@ class Site extends SiteModule
       $tanggal       = getDayIndonesia(date('Y-m-d')).', '.dateIndonesia(date('Y-m-d'));
       $username      = !empty($_username) ? $_username : $__username;
 
-      $pasien = $this->db('pasien')->where('no_ktp', $nik)->oneArray();
-      $no_peserta = $pasien['no_peserta'];
-      $no_rkm_medis = $pasien['no_rkm_medis'];
+      $nik = trim((string)$nik);
+      $pasien = ($nik !== '') ? $this->db('pasien')->where('no_ktp', $nik)->oneArray() : null;
+      $no_peserta = $pasien['no_peserta'] ?? '';
+      $no_rkm_medis = $pasien['no_rkm_medis'] ?? '';
       if($pasien) {
         $this->notify('failure', 'Anda sudah terdaftar sebagai pasien. Halaman akan beralih dalam 3 detik.');
         $redirect = url().'/anjungan/sep/'.$no_peserta.'/'.$no_rkm_medis;
+      } else if(!preg_match('/^[0-9]{16}$/', $nik)) {
+        $this->notify('failure', 'Format NIK tidak valid (harus 16 digit angka). Halaman akan beralih dalam 3 detik.');
+        $redirect = url().'/anjungan/sep';
       } else if(!$pasien) {
         date_default_timezone_set('UTC');
         $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
@@ -4399,77 +4403,96 @@ class Site extends SiteModule
         $output = BpjsService::get($url, NULL, $this->consid, $this->secretkey, $this->user_key, $tStamp);
         $json = json_decode($output, true);
         //echo json_encode(htmlspecialchars_array($json));
-        $code = $json['metaData']['code'];
-        $message = $json['metaData']['message'];
-        $stringDecrypt = stringDecrypt($key, $json['response']);
+        $code = $json['metaData']['code'] ?? null;
+        $message = $json['metaData']['message'] ?? '';
+        $stringDecrypt = !empty($json['response']) ? stringDecrypt($key, $json['response']) : '';
         $decompress = '""';
         if (!empty($stringDecrypt)) {
           $decompress = \LZCompressor\LZString::decompressFromEncodedURIComponent(($stringDecrypt));
         }
-        if ($json != null) {
-          $data = '{
-            "metaData": {
-              "code": "'.$code.'",
-              "message": "'.$message.'"
-            },
-            "response": '.$decompress.'}';
 
-          $data = json_decode($data, true);
-
-          $no_rkm_medis = $this->core->setNoRM();
-          $nm_pasien = $data['response']['peserta']['nama'];
-          $nik = $data['response']['peserta']['nik'];
-          $noKartu = $data['response']['peserta']['noKartu'];
-          $sex = $data['response']['peserta']['sex'];
-          $tglLahir = $data['response']['peserta']['tglLahir'];
-          $umurPasien = $this->hitungUmur($tglLahir);
-
-        } else {
-          $this->notify('failure', 'Pendaftaran periksa gagal. Silahkan coba lagi. Halaman akan beralih dalam 3 detik.');
-          $redirect = url().'/anjungan/sep';
+        $data = null;
+        if (is_array($json) && (string)$code === '200' && $decompress !== '""') {
+          $decodedResponse = json_decode($decompress, true);
+          if (is_array($decodedResponse)) {
+            $data = [
+              'metaData' => [
+                'code' => $code,
+                'message' => $message
+              ],
+              'response' => $decodedResponse
+            ];
+          }
         }
 
-        $simpanPasien = $this->db('pasien')->save([
-          'no_rkm_medis' => $no_rkm_medis,
-          'nm_pasien' => $nm_pasien,
-          'no_ktp' => $nik,
-          'jk' => $sex,
-          'tmp_lahir' => '-',
-          'tgl_lahir' => $tglLahir,
-          'nm_ibu' => '-',
-          'alamat' => '-',
-          'gol_darah' => '-',
-          'pekerjaan' => '-',
-          'stts_nikah' => 'BELUM MENIKAH',
-          'agama' => 'ISLAM',
-          'tgl_daftar' => date('Y-m-d'),
-          'no_tlp' => '000000000000',
-          'umur' => $umurPasien,
-          'pnd' => '-',
-          'keluarga' => 'SAUDARA',
-          'namakeluarga' => '',
-          'kd_pj' => 'BPJ',
-          'no_peserta' => $noKartu,
-          'kd_kel' => '1',
-          'kd_kec' => '1',
-          'kd_kab' => '1',
-          'pekerjaanpj' => '',
-          'alamatpj' => 'ALAMAT',
-          'kelurahanpj' => 'KELURAHAN',
-          'kecamatanpj' => 'KECAMATAN',
-          'kabupatenpj' => 'KABUPATEN',
-          'perusahaan_pasien' => '-',
-          'suku_bangsa' => '1',
-          'bahasa_pasien' => '1',
-          'cacat_fisik' => '1',
-          'email' => '',
-          'nip' => '',
-          'kd_prop' => '1',
-          'propinsipj' => 'PROPINSI'
-        ]);
-        if($this->db('pasien')->where('no_ktp', $nik)->oneArray()) {
-          $this->notify('success', 'Pendaftaran periksa sukses. Halaman akan beralih dalam 3 detik.');
-          $redirect = url().'/anjungan/sep/'.$noKartu.'/'.$no_rkm_medis;
+        $peserta = $data['response']['peserta'] ?? null;
+        $nm_pasien = trim((string)($peserta['nama'] ?? ''));
+        $nikPeserta = trim((string)($peserta['nik'] ?? ''));
+        $noKartu = trim((string)($peserta['noKartu'] ?? ''));
+        $sex = trim((string)($peserta['sex'] ?? ''));
+        $tglLahir = trim((string)($peserta['tglLahir'] ?? ''));
+
+        if ($nm_pasien !== '' && $nikPeserta !== '' && $noKartu !== '' && $tglLahir !== '') {
+          // Cek ulang berdasarkan no_peserta untuk menghindari RM ganda
+          $existingByNoka = $this->db('pasien')->where('no_peserta', $noKartu)->oneArray();
+          if ($existingByNoka) {
+            $this->notify('failure', 'Anda sudah terdaftar sebagai pasien. Halaman akan beralih dalam 3 detik.');
+            $redirect = url().'/anjungan/sep/'.$noKartu.'/'.$existingByNoka['no_rkm_medis'];
+          } else {
+            $no_rkm_medis = $this->core->setNoRM();
+            $umurPasien = $this->hitungUmur($tglLahir);
+
+            $simpanPasien = $this->db('pasien')->save([
+              'no_rkm_medis' => $no_rkm_medis,
+              'nm_pasien' => $nm_pasien,
+              'no_ktp' => $nikPeserta,
+              'jk' => $sex,
+              'tmp_lahir' => '-',
+              'tgl_lahir' => $tglLahir,
+              'nm_ibu' => '-',
+              'alamat' => '-',
+              'gol_darah' => '-',
+              'pekerjaan' => '-',
+              'stts_nikah' => 'BELUM MENIKAH',
+              'agama' => 'ISLAM',
+              'tgl_daftar' => date('Y-m-d'),
+              'no_tlp' => '000000000000',
+              'umur' => $umurPasien,
+              'pnd' => '-',
+              'keluarga' => 'SAUDARA',
+              'namakeluarga' => '',
+              'kd_pj' => 'BPJ',
+              'no_peserta' => $noKartu,
+              'kd_kel' => '1',
+              'kd_kec' => '1',
+              'kd_kab' => '1',
+              'pekerjaanpj' => '',
+              'alamatpj' => 'ALAMAT',
+              'kelurahanpj' => 'KELURAHAN',
+              'kecamatanpj' => 'KECAMATAN',
+              'kabupatenpj' => 'KABUPATEN',
+              'perusahaan_pasien' => '-',
+              'suku_bangsa' => '1',
+              'bahasa_pasien' => '1',
+              'cacat_fisik' => '1',
+              'email' => '',
+              'nip' => '',
+              'kd_prop' => '1',
+              'propinsipj' => 'PROPINSI'
+            ]);
+            if ($simpanPasien) {
+              $stmtSetRm = $this->db()->pdo()->prepare("UPDATE set_no_rkm_medis SET no_rkm_medis = ?");
+              $stmtSetRm->execute([(string)$no_rkm_medis]);
+              $this->notify('success', 'Pendaftaran periksa sukses. Halaman akan beralih dalam 3 detik.');
+              $redirect = url().'/anjungan/sep/'.$noKartu.'/'.$no_rkm_medis;
+            } else {
+              $this->notify('failure', 'Pendaftaran periksa gagal disimpan. Silahkan coba lagi. Halaman akan beralih dalam 3 detik.');
+              $redirect = url().'/anjungan/sep';
+            }
+          }
+        } else {
+          $this->notify('failure', 'Pendaftaran periksa gagal. Data peserta BPJS tidak ditemukan. Halaman akan beralih dalam 3 detik.');
+          $redirect = url().'/anjungan/sep';
         }
       } else {
         $this->notify('failure', 'Ada kegagalan sistem. Halaman akan beralih dalam 3 detik.');
