@@ -788,6 +788,45 @@ $("#form_rincian").on("click", "#simpan_rincian", function(event){
   var diagnosa_klinis = $('input:text[name=diagnosa_klinis]').val();
   var informasi_tambahan = $('textarea[name=informasi_tambahan]').val();
 
+  if ((kat === 'obat' || kat === 'racikan')) {
+    var aturanTrim = $.trim(aturan_pakai || '');
+    var jmlTrim = $.trim(jml || '');
+    var jmlNum = parseFloat(jmlTrim.replace(',', '.'));
+    var hasResepErr = false;
+
+    if (aturanTrim === '') {
+      $('#err_aturan_pakai').show();
+      $('#form_rincian input[name=aturan_pakai]').css('border-color', '#dc2626');
+      hasResepErr = true;
+    } else {
+      $('#err_aturan_pakai').hide();
+      $('#form_rincian input[name=aturan_pakai]').css('border-color', '');
+    }
+
+    if (jmlTrim === '' || isNaN(jmlNum) || jmlNum <= 0) {
+      $('#err_jml').show();
+      $('#form_rincian input[name=jml]').css('border-color', '#dc2626');
+      hasResepErr = true;
+    } else {
+      $('#err_jml').hide();
+      $('#form_rincian input[name=jml]').css('border-color', '');
+    }
+
+    if (hasResepErr) {
+      if (aturanTrim === '') {
+        $('#form_rincian input[name=aturan_pakai]').focus();
+        bootbox.alert('Aturan Pakai wajib diisi untuk input obat (e-Resep).');
+      } else {
+        $('#form_rincian input[name=jml]').focus();
+        bootbox.alert('Jumlah (Jml) obat wajib diisi dan harus lebih dari 0.');
+      }
+      return;
+    }
+  } else {
+    $('#err_aturan_pakai, #err_jml').hide();
+    $('#form_rincian input[name=aturan_pakai], #form_rincian input[name=jml]').css('border-color', '');
+  }
+
   if ((kat === 'radiologi' || kat === 'laboratorium') && $.trim(diagnosa_klinis || '') === '') {
     $('#err_diagnosa_klinis').show();
     $('#form_rincian input[name=diagnosa_klinis]').css('border-color', '#dc2626').focus();

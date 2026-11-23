@@ -780,6 +780,45 @@ $("#form_rincian").on("click", "#simpan_rincian", function(event){
   var diagnosa_klinis = $('input:text[name=diagnosa_klinis]').val();
   var informasi_tambahan = $('textarea[name=informasi_tambahan]').val();
 
+  if (kat === 'obat' || kat === 'racikan') {
+    var aturanTrim = $.trim(aturan_pakai || '');
+    var jmlTrim = $.trim(jml || '');
+    var jmlNum = parseFloat(jmlTrim.replace(',', '.'));
+    var hasResepErr = false;
+
+    if (aturanTrim === '') {
+      $('#err_aturan_pakai').show();
+      $('#form_rincian input[name=aturan_pakai]').css('border-color', '#dc2626');
+      hasResepErr = true;
+    } else {
+      $('#err_aturan_pakai').hide();
+      $('#form_rincian input[name=aturan_pakai]').css('border-color', '');
+    }
+
+    if (jmlTrim === '' || isNaN(jmlNum) || jmlNum <= 0) {
+      $('#err_jml').show();
+      $('#form_rincian input[name=jml]').css('border-color', '#dc2626');
+      hasResepErr = true;
+    } else {
+      $('#err_jml').hide();
+      $('#form_rincian input[name=jml]').css('border-color', '');
+    }
+
+    if (hasResepErr) {
+      if (aturanTrim === '') {
+        $('#form_rincian input[name=aturan_pakai]').focus();
+        bootbox.alert('Aturan Pakai wajib diisi untuk input obat (e-Resep).');
+      } else {
+        $('#form_rincian input[name=jml]').focus();
+        bootbox.alert('Jumlah (Jml) obat wajib diisi dan harus lebih dari 0.');
+      }
+      return;
+    }
+  } else {
+    $('#err_aturan_pakai, #err_jml').hide();
+    $('#form_rincian input[name=aturan_pakai], #form_rincian input[name=jml]').css('border-color', '');
+  }
+
   var url = baseURL + '/dokter_ranap/savedetail?t=' + mlite.token;
   $.post(url, {no_rawat : no_rawat,
   kd_jenis_prw   : kd_jenis_prw,
@@ -799,6 +838,17 @@ $("#form_rincian").on("click", "#simpan_rincian", function(event){
   informasi_tambahan : informasi_tambahan,
   diagnosa_klinis      : diagnosa_klinis
   }, function(data) {
+    if (typeof data === 'string' && data.indexOf('"status":"error"') !== -1) {
+      try { data = $.parseJSON(data); } catch (e) {}
+    }
+    if (data && data.status === 'error') {
+      $('#notif').html("<div class=\"alert alert-danger alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
+      (data.message || 'Gagal menyimpan data rincian.')+
+      "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
+      "</div>").show();
+      bootbox.alert(data.message || 'Gagal menyimpan data rincian.');
+      return;
+    }
     // tampilkan data
     $("#display").hide();
     var url = baseURL + '/dokter_ranap/rincian?t=' + mlite.token;

@@ -880,8 +880,48 @@ $("#form_rincian").on("click", "#simpan_rincian", function(event){
   var biaya           = $('input:text[name=biaya]').val();
   var aturan_pakai    = $('input:text[name=aturan_pakai]').val();
   var kat             = $('input:hidden[name=kat]').val();
-  var jml             = $('input:text[name=jml_tindakan]').val();
+  var jml_obat        = $('input:text[name=jml]').val();
   var jml_tindakan    = $('input:text[name=jml_tindakan]').val();
+  var jml             = (kat === 'obat') ? jml_obat : jml_tindakan;
+
+  if (kat === 'obat') {
+    var aturanTrim = $.trim(aturan_pakai || '');
+    var jmlTrim = $.trim(jml_obat || '');
+    var jmlNum = parseFloat(jmlTrim.replace(',', '.'));
+    var hasErr = false;
+
+    if (aturanTrim === '') {
+      $('#err_aturan_pakai').show();
+      $('#form_rincian input[name=aturan_pakai]').css('border-color', '#dc2626');
+      hasErr = true;
+    } else {
+      $('#err_aturan_pakai').hide();
+      $('#form_rincian input[name=aturan_pakai]').css('border-color', '');
+    }
+
+    if (jmlTrim === '' || isNaN(jmlNum) || jmlNum <= 0) {
+      $('#err_jml').show();
+      $('#form_rincian input[name=jml]').css('border-color', '#dc2626');
+      hasErr = true;
+    } else {
+      $('#err_jml').hide();
+      $('#form_rincian input[name=jml]').css('border-color', '');
+    }
+
+    if (hasErr) {
+      if (aturanTrim === '') {
+        $('#form_rincian input[name=aturan_pakai]').focus();
+        bootbox.alert('Aturan Pakai wajib diisi untuk input obat (e-Resep).');
+      } else {
+        $('#form_rincian input[name=jml]').focus();
+        bootbox.alert('Jumlah (Jml) obat wajib diisi dan harus lebih dari 0.');
+      }
+      return;
+    }
+  } else {
+    $('#err_aturan_pakai, #err_jml').hide();
+    $('#form_rincian input[name=aturan_pakai], #form_rincian input[name=jml]').css('border-color', '');
+  }
 
   var url = baseURL + '/rawat_inap/savedetail?t=' + mlite.token;
   $.post(url, {no_rawat : no_rawat,
@@ -897,6 +937,17 @@ $("#form_rincian").on("click", "#simpan_rincian", function(event){
   jml            : jml,
   jml_tindakan   : jml_tindakan
   }, function(data) {
+    if (typeof data === 'string' && data.indexOf('"status":"error"') !== -1) {
+      try { data = $.parseJSON(data); } catch (e) {}
+    }
+    if (data && data.status === 'error') {
+      $('#notif').html("<div class=\"alert alert-danger alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
+      (data.message || 'Gagal menyimpan data rincian.')+
+      "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
+      "</div>").show();
+      bootbox.alert(data.message || 'Gagal menyimpan data rincian.');
+      return;
+    }
 
     // tampilkan data
     $("#display").hide();
