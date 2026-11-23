@@ -878,3 +878,17 @@ CREATE TABLE IF NOT EXISTS `mlite_klpcm_notifications` (
   KEY `idx_target_active` (`target_username`, `is_resolved`, `created_at`),
   KEY `idx_no_rawat` (`no_rawat`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- ----------------------------------------------------------------------------
+-- Index performa Web Service Mobile JKN (mencegah timeout 2s pada GetStatus/GetSisa/GetAntrean)
+-- ----------------------------------------------------------------------------
+ALTER TABLE `mlite_antrian_referensi`
+  ADD INDEX `idx_antref_kodebooking` (`kodebooking`),
+  ADD INDEX `idx_antref_ref_tgl` (`nomor_referensi`, `tanggal_periksa`),
+  ADD INDEX `idx_antref_kartu_tgl` (`nomor_kartu`, `tanggal_periksa`);
+ALTER TABLE `reg_periksa`
+  ADD INDEX `idx_reg_tgl_poli_dokter` (`tgl_registrasi`, `kd_poli`, `kd_dokter`);
+ALTER TABLE `booking_registrasi`
+  ADD INDEX `idx_book_tgl_poli_dokter` (`tanggal_periksa`, `kd_poli`, `kd_dokter`);
+ALTER TABLE `bridging_sep`
+  ADD INDEX `idx_bsep_no_rujukan` (`no_rujukan`);

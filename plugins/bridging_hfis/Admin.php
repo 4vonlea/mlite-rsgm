@@ -438,6 +438,10 @@ class Admin extends AdminModule
                                 ->where('kd_poli', $targetPoliRs)
                                 ->oneArray();
                             if ($checkJadwal) {
+                                $kuotaSimpan = intval($value['kuota'] ?? 0);
+                                if ($kuotaSimpan <= 0 && !empty($checkJadwal['kuota']) && intval($checkJadwal['kuota']) > 0) {
+                                    $kuotaSimpan = intval($checkJadwal['kuota']);
+                                }
                                 $this->db('jadwal')
                                     ->where('kd_dokter', $dokterrs['kd_dokter'])
                                     ->where('hari_kerja', $namahari)
@@ -445,7 +449,7 @@ class Admin extends AdminModule
                                     ->update([
                                         'jam_mulai' => $value['buka'] . (strlen($value['buka']) == 5 ? ':00' : ''),
                                         'jam_selesai' => $value['tutup'] . (strlen($value['tutup']) == 5 ? ':00' : ''),
-                                        'kuota' => intval($value['kuota'] ?? 0),
+                                        'kuota' => $kuotaSimpan,
                                     ]);
                             } else {
                                 $this->db('jadwal')->save([
@@ -647,21 +651,19 @@ class Admin extends AdminModule
             if ($dayNum !== false && $dayNum > 0 && $dayNum < 7) {
                 $jamMulai = substr($j['jam_mulai'], 0, 5);
                 $jamSelesai = substr($j['jam_selesai'], 0, 5);
-                $isSore = intval(substr($jamMulai, 0, 2)) >= 14;
-                $sesi = $isSore ? 'sore' : 'pagi';
                 $jadwalBpjs[] = [
-                    'hari' => $dayNum . '|' . $sesi,
+                    'hari' => (string)$dayNum,
                     'buka' => $jamMulai,
-                    'tutup' => $jamSelesai,
-                    'kuota' => intval($j['kuota'] ?? 0)
+                    'tutup' => $jamSelesai
                 ];
             }
         }
 
-        // Kirim update jadwal ke server BPJS HFIS
+        // Kirim update jadwal ke server BPJS HFIS sesuai spesifikasi API BPJS
         $payload = [
-            'kd_dokter' => $kd_dokter,
-            'kd_poli' => $kd_poli,
+            'kodepoli' => $kd_poli,
+            'kodesubspesialis' => $kd_poli,
+            'kodedokter' => (int)$kd_dokter,
             'jadwal' => $jadwalBpjs
         ];
 
@@ -805,21 +807,19 @@ class Admin extends AdminModule
             if ($dayNum && $dayNum > 0 && $dayNum < 7) {
                 $jamMulai = substr($j['jam_mulai'], 0, 5);
                 $jamSelesai = substr($j['jam_selesai'], 0, 5);
-                $isSore = intval(substr($jamMulai, 0, 2)) >= 14;
-                $sesi = $isSore ? 'sore' : 'pagi';
                 $jadwalBpjs[] = [
-                    'hari' => $dayNum . '|' . $sesi,
+                    'hari' => (string)$dayNum,
                     'buka' => $jamMulai,
-                    'tutup' => $jamSelesai,
-                    'kuota' => intval($j['kuota'] ?? 0)
+                    'tutup' => $jamSelesai
                 ];
                 $hariDipulihkan[] = $hk;
             }
         }
 
         $payload = [
-            'kd_dokter' => $kd_dokter,
-            'kd_poli' => $kd_poli,
+            'kodepoli' => $kd_poli,
+            'kodesubspesialis' => $kd_poli,
+            'kodedokter' => (int)$kd_dokter,
             'jadwal' => $jadwalBpjs
         ];
 

@@ -108,6 +108,45 @@ class Site extends SiteModule
         exit();
     }
 
+    private function _getRequestHeader($name)
+    {
+        $target = strtolower(trim((string)$name));
+        if ($target === '') {
+            return null;
+        }
+        $headers = [];
+        if (function_exists('apache_request_headers')) {
+            $raw = apache_request_headers();
+            if (is_array($raw)) {
+                $headers = $raw;
+            }
+        } elseif (function_exists('getallheaders')) {
+            $raw = getallheaders();
+            if (is_array($raw)) {
+                $headers = $raw;
+            }
+        }
+        foreach ($headers as $k => $v) {
+            if (strtolower(trim((string)$k)) === $target) {
+                return $v;
+            }
+        }
+        $serverKey = 'HTTP_' . strtoupper(str_replace('-', '_', $target));
+        if (isset($_SERVER[$serverKey])) {
+            return $_SERVER[$serverKey];
+        }
+        return null;
+    }
+
+    private function _jsonResponse(array $response, $httpCode = 200)
+    {
+        if (!headers_sent()) {
+            header("Content-Type: application/json; charset=utf-8");
+            http_response_code((int)$httpCode);
+        }
+        echo json_encode($response, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    }
+
     public function getToken()
     {
         echo $this->_resultToken();
@@ -116,9 +155,7 @@ class Site extends SiteModule
 
     private function _resultToken()
     {
-        header("Content-Type: application/json");
-        $konten = trim(file_get_contents("php://input"));
-        $header = apache_request_headers();
+        header("Content-Type: application/json; charset=utf-8");
         $response = array();
 
         $usernameHeader = $this->settings->get('jkn_mobile.header_username');
@@ -126,16 +163,11 @@ class Site extends SiteModule
         $usernameValue = $this->settings->get('jkn_mobile.x_username');
         $passwordValue = $this->settings->get('jkn_mobile.x_password');
 
-        $usernameMatch = false;
-        $passwordMatch = false;
+        $reqUser = $this->_getRequestHeader($usernameHeader);
+        $reqPass = $this->_getRequestHeader($passwordHeader);
 
-        if (isset($header[$usernameHeader]) && $header[$usernameHeader] == $usernameValue) {
-            $usernameMatch = true;
-        }
-
-        if (isset($header[$passwordHeader]) && $header[$passwordHeader] == $passwordValue) {
-            $passwordMatch = true;
-        }
+        $usernameMatch = ($reqUser !== null && (string)$reqUser === (string)$usernameValue);
+        $passwordMatch = ($reqPass !== null && (string)$reqPass === (string)$passwordValue);
 
         if ($usernameMatch && $passwordMatch) {
             $response = array(
@@ -147,6 +179,7 @@ class Site extends SiteModule
                     'code' => 200
                 )
             );
+            $this->_jsonResponse($response, 200);
         } else {
             $response = array(
                 'metadata' => array(
@@ -154,8 +187,8 @@ class Site extends SiteModule
                     'code' => 201
                 )
             );
+            $this->_jsonResponse($response, 201);
         }
-        echo json_encode(htmlspecialchars_array($response));
     }
 
     public function getAmbilAntrian()
@@ -166,292 +199,341 @@ class Site extends SiteModule
 
     private function _resultAmbilAntrian()
     {
-        date_default_timezone_set('UTC');
-        $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
-        $key = $this->consid.$this->secretkey.$tStamp;
+        date_default_timezone_set($this->settings->get('settings.timezone') ?: 'Asia/Makassar');
 
-        date_default_timezone_set($this->settings->get('settings.timezone'));
-
-        header("Content-Type: application/json");
-        $header = apache_request_headers();
+        header("Content-Type: application/json; charset=utf-8");
         $konten = trim(file_get_contents("php://input"));
         $decode = json_decode($konten, true);
+        if (!is_array($decode)) {
+            $decode = [];
+        }
         $response = array();
-        
+        $httpCode = 201;
+
         $tokenHeader = $this->settings->get('jkn_mobile.header_token');
         $usernameHeader = $this->settings->get('jkn_mobile.header_username');
+        $reqToken = $this->_getRequestHeader($tokenHeader);
+        $reqUser = $this->_getRequestHeader($usernameHeader);
 
-        if(!isset($header[$tokenHeader]) || $header[$tokenHeader] == false) {
-            $response = array(
-                'metadata' => array(
-                    'message' => 'Token expired or missing',
-                    'code' => 201
-                )
-            );
-            http_response_code(201);
-        } else if ($header[$tokenHeader] == $this->_getToken() && isset($header[$usernameHeader]) && $header[$usernameHeader] == $this->settings->get('jkn_mobile.x_username')) {
-
-            $tanggal=$decode['tanggalperiksa'];
-            $tentukan_hari=date('D',strtotime($tanggal));
-            $day = array(
-              'Sun' => 'AKHAD',
-              'Mon' => 'SENIN',
-              'Tue' => 'SELASA',
-              'Wed' => 'RABU',
-              'Thu' => 'KAMIS',
-              'Fri' => 'JUMAT',
-              'Sat' => 'SABTU'
-            );
-            $hari=$day[$tentukan_hari];
-            $cek_rujukan = $this->db('bridging_sep')->where('no_rujukan', $decode['nomorreferensi'])->group('tglrujukan')->oneArray();
-
-            $h1 = date('Y-m-d');
-            $_h1 = date('d-m-Y', strtotime($h1));
-            $h7 = strtotime('+8 days', strtotime(date('Y-m-d'))) ;
-            if(!empty($cek_rujukan['tglrujukan'])) {
-              $h7 = strtotime('+90 days', strtotime($cek_rujukan['tglrujukan']));
-            }
-            $h7 = date('Y-m-d', $h7);
-            $_h7 = date('d-m-Y', strtotime($h7));
-
-            $data_pasien = $this->db('pasien')->where('no_peserta', $decode['nomorkartu'])->oneArray();
-            $poli = $this->db('maping_poli_bpjs')->where('kd_poli_bpjs', $decode['kodepoli'])->oneArray();
-            
-            // Check if kodedokter is present before using it
-            $kodedokter = isset($decode['kodedokter']) ? $decode['kodedokter'] : '';
-            if (!empty($kodedokter)) {
-                $dokter = $this->db('maping_dokter_dpjpvclaim')->where('kd_dokter_bpjs', $kodedokter)->oneArray();
-            } else {
-                $dokter = null;
-            }
-
-            if(strtotime($decode['tanggalperiksa']) == strtotime(date('Y-m-d'))) {
-              $sql = "SELECT jadwal.kuota - (SELECT COUNT(reg_periksa.tgl_registrasi)
-              FROM reg_periksa WHERE reg_periksa.tgl_registrasi='$decode[tanggalperiksa]'
-              AND reg_periksa.kd_dokter=jadwal.kd_dokter) as sisa_kuota, jadwal.kd_dokter, jadwal.kd_poli, jadwal.jam_mulai as jam_mulai, poliklinik.nm_poli, dokter.nm_dokter, jadwal.kuota
-              FROM jadwal INNER JOIN maping_poli_bpjs ON maping_poli_bpjs.kd_poli_rs=jadwal.kd_poli INNER JOIN maping_dokter_dpjpvclaim ON maping_dokter_dpjpvclaim.kd_dokter=jadwal.kd_dokter INNER JOIN poliklinik ON poliklinik.kd_poli=jadwal.kd_poli INNER JOIN dokter ON dokter.kd_dokter=jadwal.kd_dokter
-              WHERE jadwal.hari_kerja='$hari' AND maping_poli_bpjs.kd_poli_bpjs='$decode[kodepoli]'";
-              
-              if (!empty($kodedokter)) {
-                  $sql .= " AND maping_dokter_dpjpvclaim.kd_dokter_bpjs='$kodedokter'";
-              }
-              
-              $sql .= " GROUP BY jadwal.kd_dokter, jadwal.kd_poli, jadwal.jam_mulai, jadwal.kuota, poliklinik.nm_poli, dokter.nm_dokter HAVING sisa_kuota > 0 ORDER BY sisa_kuota DESC LIMIT 1";
-              
-              $cek_kuota = $this->db()->pdo()->prepare($sql);
-            } else {
-              $sql = "SELECT jadwal.kuota - (SELECT COUNT(booking_registrasi.tanggal_periksa)
-              FROM booking_registrasi WHERE booking_registrasi.tanggal_periksa='$decode[tanggalperiksa]'
-              AND booking_registrasi.kd_dokter=jadwal.kd_dokter) as sisa_kuota, jadwal.kd_dokter, jadwal.kd_poli, jadwal.jam_mulai as jam_mulai, poliklinik.nm_poli, dokter.nm_dokter, jadwal.kuota
-              FROM jadwal INNER JOIN maping_poli_bpjs ON maping_poli_bpjs.kd_poli_rs=jadwal.kd_poli INNER JOIN maping_dokter_dpjpvclaim ON maping_dokter_dpjpvclaim.kd_dokter=jadwal.kd_dokter INNER JOIN poliklinik ON poliklinik.kd_poli=jadwal.kd_poli INNER JOIN dokter ON dokter.kd_dokter=jadwal.kd_dokter
-              WHERE jadwal.hari_kerja='$hari' AND maping_poli_bpjs.kd_poli_bpjs='$decode[kodepoli]'";
-              
-              if (!empty($kodedokter)) {
-                  $sql .= " AND maping_dokter_dpjpvclaim.kd_dokter_bpjs='$kodedokter'";
-              }
-              
-              $sql .= " GROUP BY jadwal.kd_dokter, jadwal.kd_poli, jadwal.jam_mulai, jadwal.kuota, poliklinik.nm_poli, dokter.nm_dokter HAVING sisa_kuota > 0 ORDER BY sisa_kuota DESC LIMIT 1";
-              
-              $cek_kuota = $this->db()->pdo()->prepare($sql);
-            }
-
-            $cek_kuota->execute();
-            $cek_kuota = $cek_kuota->fetch();
-            
-            $jadwal_q = $this->db('jadwal')
-                ->join('maping_dokter_dpjpvclaim', 'maping_dokter_dpjpvclaim.kd_dokter=jadwal.kd_dokter')
-                ->where('hari_kerja', $hari);
-                
-            if (!empty($kodedokter)) {
-                $jadwal_q->where('maping_dokter_dpjpvclaim.kd_dokter_bpjs', $kodedokter);
-            }
-            
-            $jadwal = $jadwal_q->oneArray();
-
-            $cek_referensi = $this->db('mlite_antrian_referensi')->where('nomor_referensi', $decode['nomorreferensi'])->where('tanggal_periksa', $decode['tanggalperiksa'])->oneArray();
-            $cek_referensi_noka = $this->db('mlite_antrian_referensi')->where('nomor_kartu', $decode['nomorkartu'])->where('tanggal_periksa', $decode['tanggalperiksa'])->oneArray();
-
-            if(!empty($cek_referensi['tanggal_periksa'])) {
-               $errors[] = 'Anda sudah terdaftar dalam antrian menggunakan nomor rujukan yang sama ditanggal '.$decode['tanggalperiksa'];
-            }
-            if(!empty($cek_referensi_noka['tanggal_periksa'])) {
-               $errors[] = 'Anda sudah terdaftar dalam antrian ditanggal '.$cek_referensi_noka['tanggal_periksa'].'. Silahkan pilih tanggal lain.';
-            }
-            if(empty($decode['nomorkartu'])) {
-               $errors[] = 'Nomor kartu tidak boleh kosong';
-            }
-            if (!empty($decode['nomorkartu']) && mb_strlen($decode['nomorkartu'], 'UTF-8') < 13){
-               $errors[] = 'Nomor kartu harus 13 digit';
-            }
-            if (!empty($decode['nomorkartu']) && !ctype_digit($decode['nomorkartu']) ){
-               $errors[] = 'Nomor kartu harus mengandung angka saja!!';
-            }
-            if(empty($decode['nik'])) {
-               $errors[] = 'Nomor kartu tidak boleh kosong';
-            }
-            if(!empty($decode['nik']) && mb_strlen($decode['nik'], 'UTF-8') < 16){
-               $errors[] = 'Nomor KTP harus 16 digiti atau format tidak sesuai';
-            }
-            if (!empty($decode['nik']) && !ctype_digit($decode['nik']) ){
-               $errors[] = 'Nomor kartu harus mengandung angka saja!!';
-            }
-            if(empty($decode['tanggalperiksa'])) {
-               $errors[] = 'Anda belum memilih tanggal periksa';
-            }
-            if(!empty($decode['tanggalperiksa']) && $decode['tanggalperiksa'] < $h1 || $decode['tanggalperiksa'] > $h7) {
-               $errors[] = 'Tanggal periksa bisa dilakukan tanggal '.$_h1.' hingga tanggal '.$_h7;
-            }
-            if (!empty($decode['tanggalperiksa']) && !preg_match("/^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/",$decode['tanggalperiksa'])) {
-               $errors[] = 'Format tanggal periksa tidak sesuai';
-            }
-            if(!empty($decode['tanggalperiksa']) && isset($cek_referensi['tanggal_periksa']) && $decode['tanggalperiksa'] == $cek_referensi['tanggal_periksa']) {
-               $errors[] = 'Anda sudah terdaftar dalam antrian ditanggal '.$decode['tanggalperiksa'];
-            }
-            if(empty($decode['kodepoli'])) {
-               $errors[] = 'Kode poli tidak boleh kosong';
-            }
-            if(!empty($decode['kodepoli']) && $poli == 0) {
-               $errors[] = 'Kode poli tidak ditemukan';
-            }
-            if(empty($decode['kodedokter'])) {
-               $errors[] = 'Kode dokter tidak boleh kosong';
-            }
-            if(!empty($decode['kodedokter']) && $dokter == 0) {
-               $errors[] = 'Kode dokter tidak ditemukan';
-            }
-            if(isset($decode['jeniskunjungan']) && ($decode['jeniskunjungan'] < 1 || $decode['jeniskunjungan'] > 4)) {
-               $errors[] = 'Jenis kunjungan tidak ditemukan';
-            }
-
-            if(!empty($errors)) {
-                $errorMessage = implode(', ', $errors);
+        try {
+            if ($reqToken === null || $reqToken === '' || $reqToken === false) {
                 $response = array(
                     'metadata' => array(
-                        'message' => $errorMessage,
+                        'message' => 'Token expired or missing',
                         'code' => 201
                     )
                 );
-                http_response_code(201);
-            } else {
+                $httpCode = 201;
+            } else if ((string)$reqToken === (string)$this->_getToken() && $reqUser !== null && (string)$reqUser === (string)$this->settings->get('jkn_mobile.x_username')) {
 
-                if (isset($cek_kuota['sisa_kuota']) > 0) {
-                    if(!$data_pasien) {
-                        $response = array(
-                            'metadata' => array(
-                                'message' =>  'Data pasien ini tidak ditemukan',
-                                'code' => 202
-                            )
-                        );
-                        http_response_code(202);
+                $nomorkartu = trim((string)($decode['nomorkartu'] ?? ''));
+                $nik = trim((string)($decode['nik'] ?? ''));
+                $tanggal = trim((string)($decode['tanggalperiksa'] ?? ''));
+                $kodepoli = trim((string)($decode['kodepoli'] ?? ''));
+                $kodedokter = trim((string)($decode['kodedokter'] ?? ''));
+                $nomorreferensi = trim((string)($decode['nomorreferensi'] ?? ''));
+                $jeniskunjungan = isset($decode['jeniskunjungan']) ? (int)$decode['jeniskunjungan'] : 1;
+
+                $day = array(
+                    'Sun' => 'AKHAD',
+                    'Mon' => 'SENIN',
+                    'Tue' => 'SELASA',
+                    'Wed' => 'RABU',
+                    'Thu' => 'KAMIS',
+                    'Fri' => 'JUMAT',
+                    'Sat' => 'SABTU'
+                );
+                $validDateFormat = ($tanggal !== '' && preg_match("/^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/", $tanggal));
+                $hari = $validDateFormat ? ($day[date('D', strtotime($tanggal))] ?? '') : '';
+
+                $cek_rujukan = null;
+                if ($nomorreferensi !== '') {
+                    $cek_rujukan = $this->db('bridging_sep')->where('no_rujukan', $nomorreferensi)->group('tglrujukan')->oneArray();
+                }
+
+                $h1 = date('Y-m-d');
+                $_h1 = date('d-m-Y', strtotime($h1));
+                $h7 = strtotime('+8 days', strtotime($h1));
+                if (!empty($cek_rujukan['tglrujukan'])) {
+                    $h7 = strtotime('+90 days', strtotime($cek_rujukan['tglrujukan']));
+                }
+                $h7 = date('Y-m-d', $h7);
+                $_h7 = date('d-m-Y', strtotime($h7));
+
+                $data_pasien = ($nomorkartu !== '') ? $this->db('pasien')->where('no_peserta', $nomorkartu)->oneArray() : null;
+                $poli = ($kodepoli !== '') ? $this->db('maping_poli_bpjs')->where('kd_poli_bpjs', $kodepoli)->oneArray() : null;
+                $dokter = ($kodedokter !== '') ? $this->db('maping_dokter_dpjpvclaim')->where('kd_dokter_bpjs', $kodedokter)->oneArray() : null;
+
+                $cek_kuota = false;
+                if ($validDateFormat && $kodepoli !== '') {
+                    if (strtotime($tanggal) == strtotime(date('Y-m-d'))) {
+                        $sql = "SELECT jadwal.kuota - (SELECT COUNT(reg_periksa.tgl_registrasi)
+                            FROM reg_periksa WHERE reg_periksa.tgl_registrasi = :tgl
+                            AND reg_periksa.kd_dokter = jadwal.kd_dokter AND reg_periksa.kd_poli = jadwal.kd_poli AND reg_periksa.stts != 'Batal') as sisa_kuota,
+                            jadwal.kd_dokter, jadwal.kd_poli, jadwal.jam_mulai as jam_mulai, poliklinik.nm_poli, dokter.nm_dokter, jadwal.kuota
+                            FROM jadwal
+                            INNER JOIN maping_poli_bpjs ON maping_poli_bpjs.kd_poli_rs = jadwal.kd_poli
+                            INNER JOIN maping_dokter_dpjpvclaim ON maping_dokter_dpjpvclaim.kd_dokter = jadwal.kd_dokter
+                            INNER JOIN poliklinik ON poliklinik.kd_poli = jadwal.kd_poli
+                            INNER JOIN dokter ON dokter.kd_dokter = jadwal.kd_dokter
+                            WHERE jadwal.hari_kerja = :hari AND maping_poli_bpjs.kd_poli_bpjs = :kdpoli";
                     } else {
-                        // Get antrian poli
-                        $no_reg = $this->core->setNoBooking($dokter['kd_dokter'], $decode['tanggalperiksa'], $poli['kd_poli_rs']);
-                        $no_urut_reg = substr($no_reg, 0, 3);
-                        $minutes = $no_urut_reg * 10;
-                        $cek_kuota['jam_mulai'] = date('H:i:s',strtotime('+'.$minutes.' minutes',strtotime($cek_kuota['jam_mulai'])));
-                        $keterangan = 'Peserta harap datang 30 menit lebih awal.';
-                        $estimasi = strtotime($decode['tanggalperiksa'].' '.$cek_kuota['jam_mulai']) * 1000;
-                        $pasienbaru = '1';
-                        if ($data_pasien['tgl_daftar'] != $decode['tanggalperiksa']) {
-                            $pasienbaru = '0';
-                        }
-                        if(strtotime($decode['tanggalperiksa']) == strtotime(date('Y-m-d'))) {
-                            $jam = date('H:i:s',strtotime('+'.$minutes.' minutes',strtotime(date('H:i:s'))));
-                            $estimasi = strtotime($decode['tanggalperiksa'].' '.$jam) * 1000;
-                            $no_reg = $this->core->setNoReg($jadwal['kd_dokter'], $jadwal['kd_poli']);
-                            $query = $this->db('booking_registrasi')->save([
-                                'tanggal_booking' => date('Y-m-d'),
-                                'jam_booking' => date('H:i:s'),
-                                'no_rkm_medis' => $data_pasien['no_rkm_medis'],
-                                'tanggal_periksa' => $decode['tanggalperiksa'],
-                                'kd_dokter' => $jadwal['kd_dokter'],
-                                'kd_poli' => $jadwal['kd_poli'],
-                                'no_reg' => $no_reg,
-                                'kd_pj' => $this->settings->get('jkn_mobile.kd_pj_bpjs'),
-                                'limit_reg' => 1,
-                                'waktu_kunjungan' => $decode['tanggalperiksa'].' '.$cek_kuota['jam_mulai'],
-                                'status' => 'Belum'
-                            ]);
-                        } else {
-                          $query = $this->db('booking_registrasi')->save([
-                              'tanggal_booking' => date('Y-m-d'),
-                              'jam_booking' => date('H:i:s'),
-                              'no_rkm_medis' => $data_pasien['no_rkm_medis'],
-                              'tanggal_periksa' => $decode['tanggalperiksa'],
-                              'kd_dokter' => $jadwal['kd_dokter'],
-                              'kd_poli' => $jadwal['kd_poli'],
-                              'no_reg' => $no_reg,
-                              'kd_pj' => $this->settings->get('jkn_mobile.kd_pj_bpjs'),
-                              'limit_reg' => 1,
-                              'waktu_kunjungan' => $decode['tanggalperiksa'].' '.$cek_kuota['jam_mulai'],
-                              'status' => 'Belum'
-                          ]);
-                        }
-                        if ($query) {
-                            $kodebooking = $this->settings->get('settings.ppk_bpjs').''.date('Ymdhis').''.$decode['kodepoli'].''.$no_reg.'MJKN';
-                            $response = array(
-                                'response' => array(
-                                    'nomorantrean' => $decode['kodepoli'].'-'.$no_reg,
-                                    'angkaantrean' => $no_reg,
-                                    'kodebooking' => $kodebooking,
-                                    'pasienbaru' => $pasienbaru,
-                                    'norm' => $data_pasien['no_rkm_medis'],
-                                    'namapoli' => $cek_kuota['nm_poli'],
-                                    'namadokter' => $jadwal['nm_dokter_bpjs'],
-                                    'estimasidilayani' => $estimasi,
-                                    'sisakuotajkn' => ($cek_kuota['sisa_kuota']-1),
-                                    'kuotajkn' => ($cek_kuota['sisa_kuota']-1),
-                                    'sisakuotanonjkn' => ($cek_kuota['sisa_kuota']-1),
-                                    'kuotanonjkn' => ($cek_kuota['sisa_kuota']-1),
-                                    'keterangan' => $keterangan
-                                ),
-                                'metadata' => array(
-                                    'message' => 'Ok',
-                                    'code' => 200
-                                )
-                            );
-                            http_response_code(200);
-
-                            if(!empty($decode['nomorreferensi'])) {
-                              $this->db('mlite_antrian_referensi')->save([
-                                  'tanggal_periksa' => $decode['tanggalperiksa'],
-                                  'no_rkm_medis' => $data_pasien['no_rkm_medis'],
-                                  'nomor_kartu' => $decode['nomorkartu'],
-                                  'nomor_referensi' => $decode['nomorreferensi'],
-                                  'kodebooking' => $kodebooking,
-                                  'jenis_kunjungan' => isset($decode['jeniskunjungan']) ? $decode['jeniskunjungan'] : 1, // Default to 1 (Rujukan FKTP) if missing
-                                  'status_kirim' => 'Belum',
-                                  'keterangan' => ''
-                              ]);
-                            }
-                        } else {
-                            $response = array(
-                                'metadata' => array(
-                                    'message' => "Maaf Terjadi Kesalahan, Hubungi layanan pelanggang Rumah Sakit..",
-                                    'code' => 201
-                                )
-                            );
-                        }
+                        $sql = "SELECT jadwal.kuota - (SELECT COUNT(booking_registrasi.tanggal_periksa)
+                            FROM booking_registrasi WHERE booking_registrasi.tanggal_periksa = :tgl
+                            AND booking_registrasi.kd_dokter = jadwal.kd_dokter AND booking_registrasi.kd_poli = jadwal.kd_poli AND booking_registrasi.status != 'Batal') as sisa_kuota,
+                            jadwal.kd_dokter, jadwal.kd_poli, jadwal.jam_mulai as jam_mulai, poliklinik.nm_poli, dokter.nm_dokter, jadwal.kuota
+                            FROM jadwal
+                            INNER JOIN maping_poli_bpjs ON maping_poli_bpjs.kd_poli_rs = jadwal.kd_poli
+                            INNER JOIN maping_dokter_dpjpvclaim ON maping_dokter_dpjpvclaim.kd_dokter = jadwal.kd_dokter
+                            INNER JOIN poliklinik ON poliklinik.kd_poli = jadwal.kd_poli
+                            INNER JOIN dokter ON dokter.kd_dokter = jadwal.kd_dokter
+                            WHERE jadwal.hari_kerja = :hari AND maping_poli_bpjs.kd_poli_bpjs = :kdpoli";
                     }
-                } else {
+
+                    $params = [':tgl' => $tanggal, ':hari' => $hari, ':kdpoli' => $kodepoli];
+                    if ($kodedokter !== '') {
+                        $sql .= " AND maping_dokter_dpjpvclaim.kd_dokter_bpjs = :kddokter";
+                        $params[':kddokter'] = $kodedokter;
+                    }
+                    $sql .= " GROUP BY jadwal.kd_dokter, jadwal.kd_poli, jadwal.jam_mulai, jadwal.kuota, poliklinik.nm_poli, dokter.nm_dokter HAVING sisa_kuota > 0 ORDER BY sisa_kuota DESC LIMIT 1";
+
+                    $stmtKuota = $this->db()->pdo()->prepare($sql);
+                    $stmtKuota->execute($params);
+                    $cek_kuota = $stmtKuota->fetch(\PDO::FETCH_ASSOC);
+                }
+
+                $jadwal = null;
+                if ($validDateFormat && $kodepoli !== '') {
+                    $jadwal_q = $this->db('jadwal')
+                        ->join('maping_dokter_dpjpvclaim', 'maping_dokter_dpjpvclaim.kd_dokter=jadwal.kd_dokter')
+                        ->join('maping_poli_bpjs', 'maping_poli_bpjs.kd_poli_rs=jadwal.kd_poli')
+                        ->where('maping_poli_bpjs.kd_poli_bpjs', $kodepoli)
+                        ->where('hari_kerja', $hari);
+                    if ($kodedokter !== '') {
+                        $jadwal_q->where('maping_dokter_dpjpvclaim.kd_dokter_bpjs', $kodedokter);
+                    }
+                    $jadwal = $jadwal_q->oneArray();
+                }
+
+                $cek_referensi = ($nomorreferensi !== '' && $tanggal !== '')
+                    ? $this->db('mlite_antrian_referensi')->where('nomor_referensi', $nomorreferensi)->where('tanggal_periksa', $tanggal)->oneArray()
+                    : null;
+                $cek_referensi_noka = ($nomorkartu !== '' && $tanggal !== '')
+                    ? $this->db('mlite_antrian_referensi')->where('nomor_kartu', $nomorkartu)->where('tanggal_periksa', $tanggal)->oneArray()
+                    : null;
+
+                $errors = [];
+                if (!empty($cek_referensi['tanggal_periksa'])) {
+                    $errors[] = 'Anda sudah terdaftar dalam antrian menggunakan nomor rujukan yang sama ditanggal ' . $tanggal;
+                }
+                if (!empty($cek_referensi_noka['tanggal_periksa'])) {
+                    $errors[] = 'Anda sudah terdaftar dalam antrian ditanggal ' . $cek_referensi_noka['tanggal_periksa'] . '. Silahkan pilih tanggal lain.';
+                }
+                if ($nomorkartu === '') {
+                    $errors[] = 'Nomor kartu tidak boleh kosong';
+                }
+                if ($nomorkartu !== '' && mb_strlen($nomorkartu, 'UTF-8') < 13) {
+                    $errors[] = 'Nomor kartu harus 13 digit';
+                }
+                if ($nomorkartu !== '' && !ctype_digit($nomorkartu)) {
+                    $errors[] = 'Nomor kartu harus mengandung angka saja!!';
+                }
+                if ($nik === '') {
+                    $errors[] = 'NIK tidak boleh kosong';
+                }
+                if ($nik !== '' && mb_strlen($nik, 'UTF-8') < 16) {
+                    $errors[] = 'Nomor KTP harus 16 digit atau format tidak sesuai';
+                }
+                if ($nik !== '' && !ctype_digit($nik)) {
+                    $errors[] = 'NIK harus mengandung angka saja!!';
+                }
+                if ($tanggal === '') {
+                    $errors[] = 'Anda belum memilih tanggal periksa';
+                }
+                if ($tanggal !== '' && !$validDateFormat) {
+                    $errors[] = 'Format tanggal periksa tidak sesuai';
+                }
+                if ($validDateFormat && ($tanggal < $h1 || $tanggal > $h7)) {
+                    $errors[] = 'Tanggal periksa bisa dilakukan tanggal ' . $_h1 . ' hingga tanggal ' . $_h7;
+                }
+                if ($kodepoli === '') {
+                    $errors[] = 'Kode poli tidak boleh kosong';
+                }
+                if ($kodepoli !== '' && empty($poli)) {
+                    $errors[] = 'Kode poli tidak ditemukan';
+                }
+                if ($kodedokter === '') {
+                    $errors[] = 'Kode dokter tidak boleh kosong';
+                }
+                if ($kodedokter !== '' && empty($dokter)) {
+                    $errors[] = 'Kode dokter tidak ditemukan';
+                }
+                if (isset($decode['jeniskunjungan']) && ($jeniskunjungan < 1 || $jeniskunjungan > 4)) {
+                    $errors[] = 'Jenis kunjungan tidak ditemukan';
+                }
+
+                if (!empty($errors)) {
                     $response = array(
                         'metadata' => array(
-                            'message' => "Jadwal tidak tersedia atau kuota penuh! Silahkan pilih tanggal lain!",
+                            'message' => implode(', ', $errors),
                             'code' => 201
                         )
                     );
+                    $httpCode = 201;
+                } else {
+                    if (!empty($cek_kuota) && (int)$cek_kuota['sisa_kuota'] > 0) {
+                        if (empty($data_pasien)) {
+                            $response = array(
+                                'metadata' => array(
+                                    'message' => 'Data pasien ini tidak ditemukan',
+                                    'code' => 202
+                                )
+                            );
+                            $httpCode = 202;
+                        } else {
+                            // Cek apakah pasien sudah terdaftar di booking_registrasi pada tanggal yang sama
+                            $existingBooking = $this->db('booking_registrasi')
+                                ->where('no_rkm_medis', $data_pasien['no_rkm_medis'])
+                                ->where('tanggal_periksa', $tanggal)
+                                ->oneArray();
+
+                            if (!empty($existingBooking) && ($existingBooking['status'] ?? '') === 'Batal') {
+                                $this->db('booking_registrasi')
+                                    ->where('no_rkm_medis', $data_pasien['no_rkm_medis'])
+                                    ->where('tanggal_periksa', $tanggal)
+                                    ->delete();
+                                $existingBooking = null;
+                            }
+
+                            if (!empty($existingBooking)) {
+                                $response = array(
+                                    'metadata' => array(
+                                        'message' => 'Anda sudah terdaftar dalam antrian ditanggal ' . $tanggal . '. Silahkan pilih tanggal lain.',
+                                        'code' => 201
+                                    )
+                                );
+                                $httpCode = 201;
+                            } else {
+                                $kdDokterRs = $cek_kuota['kd_dokter'] ?: ($jadwal['kd_dokter'] ?? $dokter['kd_dokter']);
+                                $kdPoliRs = $cek_kuota['kd_poli'] ?: ($jadwal['kd_poli'] ?? $poli['kd_poli_rs']);
+
+                                $no_reg = $this->core->setNoBooking($kdDokterRs, $tanggal, $kdPoliRs);
+                                if (strtotime($tanggal) == strtotime(date('Y-m-d'))) {
+                                    $no_reg_today = $this->core->setNoReg($kdDokterRs, $kdPoliRs);
+                                    if ((int)$no_reg_today > (int)$no_reg) {
+                                        $no_reg = $no_reg_today;
+                                    }
+                                }
+
+                                $no_urut_reg = (int)substr((string)$no_reg, 0, 3);
+                                $minutes = $no_urut_reg * 10;
+                                $jamMulaiEst = date('H:i:s', strtotime('+' . $minutes . ' minutes', strtotime($cek_kuota['jam_mulai'])));
+                                $keterangan = 'Peserta harap datang 30 menit lebih awal.';
+                                $estimasi = strtotime($tanggal . ' ' . $jamMulaiEst) * 1000;
+                                if (strtotime($tanggal) == strtotime(date('Y-m-d'))) {
+                                    $jamNowEst = date('H:i:s', strtotime('+' . $minutes . ' minutes', strtotime(date('H:i:s'))));
+                                    $estimasi = strtotime($tanggal . ' ' . $jamNowEst) * 1000;
+                                }
+
+                                $pasienbaru = ($data_pasien['tgl_daftar'] == $tanggal) ? 1 : 0;
+
+                                $query = $this->db('booking_registrasi')->save([
+                                    'tanggal_booking' => date('Y-m-d'),
+                                    'jam_booking' => date('H:i:s'),
+                                    'no_rkm_medis' => $data_pasien['no_rkm_medis'],
+                                    'tanggal_periksa' => $tanggal,
+                                    'kd_dokter' => $kdDokterRs,
+                                    'kd_poli' => $kdPoliRs,
+                                    'no_reg' => $no_reg,
+                                    'kd_pj' => $this->settings->get('jkn_mobile.kd_pj_bpjs'),
+                                    'limit_reg' => 1,
+                                    'waktu_kunjungan' => $tanggal . ' ' . $jamMulaiEst,
+                                    'status' => 'Belum'
+                                ]);
+
+                                if ($query) {
+                                    $kodebooking = $this->settings->get('settings.ppk_bpjs') . date('YmdHis') . $kodepoli . $no_reg . 'MJKN';
+                                    $sisaKuota = max(0, (int)$cek_kuota['sisa_kuota'] - 1);
+                                    $totalKuota = (int)$cek_kuota['kuota'];
+                                    $namaDokter = !empty($jadwal['nm_dokter_bpjs']) ? $jadwal['nm_dokter_bpjs'] : ($dokter['nm_dokter_bpjs'] ?? $cek_kuota['nm_dokter']);
+
+                                    $response = array(
+                                        'response' => array(
+                                            'nomorantrean' => $kodepoli . '-' . $no_reg,
+                                            'angkaantrean' => (int)$no_reg,
+                                            'kodebooking' => $kodebooking,
+                                            'pasienbaru' => (int)$pasienbaru,
+                                            'norm' => (string)$data_pasien['no_rkm_medis'],
+                                            'namapoli' => (string)$cek_kuota['nm_poli'],
+                                            'namadokter' => (string)$namaDokter,
+                                            'estimasidilayani' => (int)$estimasi,
+                                            'sisakuotajkn' => $sisaKuota,
+                                            'kuotajkn' => $totalKuota,
+                                            'sisakuotanonjkn' => $sisaKuota,
+                                            'kuotanonjkn' => $totalKuota,
+                                            'keterangan' => $keterangan
+                                        ),
+                                        'metadata' => array(
+                                            'message' => 'Ok',
+                                            'code' => 200
+                                        )
+                                    );
+                                    $httpCode = 200;
+
+                                    if ($nomorreferensi !== '') {
+                                        $this->db('mlite_antrian_referensi')->save([
+                                            'tanggal_periksa' => $tanggal,
+                                            'no_rkm_medis' => $data_pasien['no_rkm_medis'],
+                                            'nomor_kartu' => $nomorkartu,
+                                            'nomor_referensi' => $nomorreferensi,
+                                            'kodebooking' => $kodebooking,
+                                            'jenis_kunjungan' => $jeniskunjungan,
+                                            'status_kirim' => 'Belum',
+                                            'keterangan' => ''
+                                        ]);
+                                    }
+                                } else {
+                                    $response = array(
+                                        'metadata' => array(
+                                            'message' => 'Maaf Terjadi Kesalahan, Hubungi layanan pelanggan Rumah Sakit..',
+                                            'code' => 201
+                                        )
+                                    );
+                                    $httpCode = 201;
+                                }
+                            }
+                        }
+                    } else {
+                        $response = array(
+                            'metadata' => array(
+                                'message' => 'Jadwal tidak tersedia atau kuota penuh! Silahkan pilih tanggal lain!',
+                                'code' => 201
+                            )
+                        );
+                        $httpCode = 201;
+                    }
                 }
+            } else {
+                $response = array(
+                    'metadata' => array(
+                        'message' => 'Access denied',
+                        'code' => 201
+                    )
+                );
+                $httpCode = 201;
             }
-        } else {
+        } catch (\Throwable $e) {
+            error_log('JKN Mobile AmbilAntrian error: ' . $e->getMessage());
             $response = array(
                 'metadata' => array(
-                    'message' => 'Access denied',
+                    'message' => 'Terjadi kesalahan saat memproses antrean. Silakan hubungi petugas Faskes.',
                     'code' => 201
                 )
             );
-            http_response_code(201);
+            $httpCode = 201;
         }
-        echo json_encode(htmlspecialchars_array($response));
+
+        $this->_jsonResponse($response, $httpCode);
     }
 
     public function getStatusAntrian()
@@ -462,178 +544,197 @@ class Site extends SiteModule
 
     private function _resultStatusAntrian()
     {
-        header("Content-Type: application/json");
-        $header = apache_request_headers();
+        date_default_timezone_set($this->settings->get('settings.timezone') ?: 'Asia/Makassar');
+        header("Content-Type: application/json; charset=utf-8");
         $konten = trim(file_get_contents("php://input"));
         $decode = json_decode($konten, true);
+        if (!is_array($decode)) {
+            $decode = [];
+        }
         $response = array();
+        $httpCode = 201;
 
-        $tentukan_hari=date('D',strtotime($decode['tanggalperiksa']));
-        $day = array(
-          'Sun' => 'AKHAD',
-          'Mon' => 'SENIN',
-          'Tue' => 'SELASA',
-          'Wed' => 'RABU',
-          'Thu' => 'KAMIS',
-          'Fri' => 'JUMAT',
-          'Sat' => 'SABTU'
-        );
-        $hari=$day[$tentukan_hari];
-
-        $kdpoli = $this->db('maping_poli_bpjs')->where('kd_poli_bpjs', $decode['kodepoli'])->oneArray();
-        $kodedokter = isset($decode['kodedokter']) ? $decode['kodedokter'] : '';
-        $kddokter = $this->db('maping_dokter_dpjpvclaim')->where('kd_dokter_bpjs', $kodedokter)->oneArray();
-        
         $tokenHeader = $this->settings->get('jkn_mobile.header_token');
         $usernameHeader = $this->settings->get('jkn_mobile.header_username');
-        
-        if(!isset($header[$tokenHeader]) || $header[$tokenHeader] == false) {
-            $response = array(
-                'metadata' => array(
-                    'message' => 'Token expired or missing',
-                    'code' => 201
-                )
-            );
-            http_response_code(201);
-        } else if ($header[$tokenHeader] == $this->_getToken() && isset($header[$usernameHeader]) && $header[$usernameHeader] == $this->settings->get('jkn_mobile.x_username')) {
-            if(!$kdpoli){
+        $reqToken = $this->_getRequestHeader($tokenHeader);
+        $reqUser = $this->_getRequestHeader($usernameHeader);
+
+        try {
+            if ($reqToken === null || $reqToken === '' || $reqToken === false) {
                 $response = array(
                     'metadata' => array(
-                        'message' => 'Poli Tidak Ditemukan',
+                        'message' => 'Token expired or missing',
                         'code' => 201
                     )
                 );
-                http_response_code(201);
-            }else if(!empty($kodedokter) && !$kddokter){
-                $response = array(
-                    'metadata' => array(
-                        'message' => 'Dokter Tidak Ditemukan',
-                        'code' => 201
-                    )
+                $httpCode = 201;
+            } else if ((string)$reqToken === (string)$this->_getToken() && $reqUser !== null && (string)$reqUser === (string)$this->settings->get('jkn_mobile.x_username')) {
+                $tanggalperiksa = trim((string)($decode['tanggalperiksa'] ?? ''));
+                $kodepoli = trim((string)($decode['kodepoli'] ?? ''));
+                $kodedokter = trim((string)($decode['kodedokter'] ?? ''));
+
+                $day = array(
+                    'Sun' => 'AKHAD',
+                    'Mon' => 'SENIN',
+                    'Tue' => 'SELASA',
+                    'Wed' => 'RABU',
+                    'Thu' => 'KAMIS',
+                    'Fri' => 'JUMAT',
+                    'Sat' => 'SABTU'
                 );
-                http_response_code(201);
-            }else if(!preg_match("/^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/",$decode['tanggalperiksa'])){
-                $response = array(
-                    'metadata' => array(
-                        'message' => 'Format Tanggal Tidak Sesuai, format yang benar adalah yyyy-mm-dd',
-                        'code' => 201
-                    )
-                );
-                http_response_code(201);
-            }else if(!$this->db('jadwal')
-                ->join('maping_dokter_dpjpvclaim', 'maping_dokter_dpjpvclaim.kd_dokter=jadwal.kd_dokter')
-                ->where('maping_dokter_dpjpvclaim.kd_dokter_bpjs', $kodedokter)
-                ->where('hari_kerja', $hari)
-                ->oneArray()){
-                $response = array(
-                    'metadata' => array(
-                        'message' => 'Jadwal Praktek Tidak Ditemukan Pada Hari '.$hari.' Tanggal '.$decode['tanggalperiksa'],
-                        'code' => 201
-                    )
-                );
-                http_response_code(201);
-            }else if(strtotime(date("Y-m-d")) > strtotime($decode['tanggalperiksa'])){
-                $response = array(
-                    'metadata' => array(
-                        'message' => 'Tanggal Periksa Tidak Berlaku Mundur',
-                        'code' => 201
-                    )
-                );
-                http_response_code(201);
-            }else{
-                $kuota = $this->db()->pdo()->prepare("SELECT jadwal.kuota - (SELECT COUNT(booking_registrasi.tanggal_periksa) FROM booking_registrasi WHERE booking_registrasi.tanggal_periksa='$decode[tanggalperiksa]' AND booking_registrasi.kd_dokter=jadwal.kd_dokter) as sisa_kuota, jadwal.kd_dokter, jadwal.kd_poli, jadwal.jam_mulai as jam_mulai, poliklinik.nm_poli, dokter.nm_dokter, jadwal.kuota FROM jadwal INNER JOIN maping_poli_bpjs ON maping_poli_bpjs.kd_poli_rs=jadwal.kd_poli INNER JOIN poliklinik ON poliklinik.kd_poli=jadwal.kd_poli INNER JOIN dokter ON dokter.kd_dokter=jadwal.kd_dokter WHERE jadwal.hari_kerja='$hari' AND maping_poli_bpjs.kd_poli_bpjs='$decode[kodepoli]' GROUP BY jadwal.kd_dokter, jadwal.kd_poli, jadwal.jam_mulai, jadwal.kuota, poliklinik.nm_poli, dokter.nm_dokter HAVING sisa_kuota > 0 ORDER BY sisa_kuota DESC LIMIT 1");
-                $kuota->execute();
-                $kuota = $kuota->fetch();
 
-                $table = ($decode['tanggalperiksa'] == date('Y-m-d'))
-                    ? 'reg_periksa'
-                    : 'booking_registrasi';
+                $kdpoli = ($kodepoli !== '') ? $this->db('maping_poli_bpjs')->where('kd_poli_bpjs', $kodepoli)->oneArray() : null;
+                $kddokter = ($kodedokter !== '') ? $this->db('maping_dokter_dpjpvclaim')->where('kd_dokter_bpjs', $kodedokter)->oneArray() : null;
 
-                $q = $this->db($table)
-                    ->select(['no_reg'])
-                    ->where('stts', 'Belum')
-                    ->where('kd_dokter', $kddokter['kd_dokter'])
-                    ->where('kd_poli', $kdpoli['kd_poli_rs']);
-
-                if ($table === 'reg_periksa') {
-                    $q->where('tgl_registrasi', $decode['tanggalperiksa']);
-                } else {
-                    $q->where('tanggal_periksa', $decode['tanggalperiksa']);
-                }
-
-                $max_antrian = $q
-                    ->orderBy('no_reg', 'ASC')
-                    ->limit(1)
-                    ->oneArray();
-
-
-                if(strtotime($decode['tanggalperiksa']) == strtotime(date('Y-m-d'))) {
-                  $data = $this->db()->pdo()->prepare("SELECT poliklinik.nm_poli,COUNT(reg_periksa.kd_poli) as total_antrean,dokter.nm_dokter,
-                      IFNULL(SUM(CASE WHEN reg_periksa.stts ='Belum' THEN 1 ELSE 0 END),0) as sisa_antrean,
-                      ('Datanglah Minimal 30 Menit, jika no antrian anda terlewat, silakan konfirmasi ke layanan pelanggan, Terima Kasih ..') as keterangan
-                      FROM reg_periksa INNER JOIN poliklinik ON poliklinik.kd_poli=reg_periksa.kd_poli INNER JOIN dokter ON reg_periksa.kd_dokter=dokter.kd_dokter
-                      WHERE reg_periksa.tgl_registrasi='$decode[tanggalperiksa]' AND reg_periksa.kd_poli='$kdpoli[kd_poli_rs]' and reg_periksa.kd_dokter='$kddokter[kd_dokter]'");
-                } else {
-                  $data = $this->db()->pdo()->prepare("SELECT poliklinik.nm_poli,COUNT(booking_registrasi.kd_poli) as total_antrean,dokter.nm_dokter,
-                      IFNULL(SUM(CASE WHEN booking_registrasi.status ='Belum' THEN 1 ELSE 0 END),0) as sisa_antrean,
-                      ('Datanglah Minimal 30 Menit, jika no antrian anda terlewat, silakan konfirmasi ke bagian layanan pelanggan, Terima Kasih ..') as keterangan
-                      FROM booking_registrasi INNER JOIN poliklinik ON poliklinik.kd_poli=booking_registrasi.kd_poli INNER JOIN dokter ON booking_registrasi.kd_dokter=dokter.kd_dokter
-                      WHERE booking_registrasi.tanggal_periksa='$decode[tanggalperiksa]' AND booking_registrasi.kd_poli='$kdpoli[kd_poli_rs]' and booking_registrasi.kd_dokter='$kddokter[kd_dokter]'");
-                }
-                $data->execute();
-                $data = $data->fetch();
-
-                if ($data['sisa_antrean'] >0) {
+                if (empty($kdpoli)) {
                     $response = array(
-                        'response' => array(
-                            'namapoli' => $data['nm_poli'],
-                            'namadokter' => $kddokter['nm_dokter'],
-                            'totalantrean' => $data['total_antrean'],
-                            'sisaantrean' => (int)$data['sisa_antrean'],
-                            'antreanpanggil' => "A-".$max_antrian['no_reg'],
-                            'sisakuotajkn' => ($kuota['kuota']-$data['total_antrean']),
-                            'kuotajkn' => ($kuota['kuota']-$data['total_antrean']),
-                            'sisakuotanonjkn' => ($kuota['kuota']-$data['total_antrean']),
-                            'kuotanonjkn' => ($kuota['kuota']-$data['total_antrean']),
-                            'keterangan' => $data['keterangan']
-                        ),
                         'metadata' => array(
-                            'message' => 'Ok',
-                            'code' => 200
+                            'message' => 'Poli Tidak Ditemukan',
+                            'code' => 201
                         )
                     );
-                    http_response_code(200);
-                } else {
+                    $httpCode = 201;
+                } else if ($kodedokter !== '' && empty($kddokter)) {
                     $response = array(
-                        'response' => array(
-                            'namapoli' => $kdpoli['nm_poli_bpjs'],
-                            'namadokter' => $data['nm_dokter'],
-                            'totalantrean' => $data['total_antrean'],
-                            'sisaantrean' => (int)$data['sisa_antrean'],
-                            'antreanpanggil' => "A-0",
-                            'sisakuotajkn' => ($kuota['kuota']-$data['total_antrean']),
-                            'kuotajkn' => ($kuota['kuota']-$data['total_antrean']),
-                            'sisakuotanonjkn' => ($kuota['kuota']-$data['total_antrean']),
-                            'kuotanonjkn' => ($kuota['kuota']-$data['total_antrean']),
-                            'keterangan' => $data['keterangan']
-                        ),
                         'metadata' => array(
-                            'message' => 'Ok',
-                            'code' => 200
+                            'message' => 'Dokter Tidak Ditemukan',
+                            'code' => 201
                         )
                     );
-                    http_response_code(200);
+                    $httpCode = 201;
+                } else if (!preg_match("/^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/", $tanggalperiksa)) {
+                    $response = array(
+                        'metadata' => array(
+                            'message' => 'Format Tanggal Tidak Sesuai, format yang benar adalah yyyy-mm-dd',
+                            'code' => 201
+                        )
+                    );
+                    $httpCode = 201;
+                } else {
+                    $hari = $day[date('D', strtotime($tanggalperiksa))] ?? '';
+                    $jadwalCheck = $this->db('jadwal')
+                        ->join('maping_dokter_dpjpvclaim', 'maping_dokter_dpjpvclaim.kd_dokter=jadwal.kd_dokter')
+                        ->join('maping_poli_bpjs', 'maping_poli_bpjs.kd_poli_rs=jadwal.kd_poli')
+                        ->where('maping_poli_bpjs.kd_poli_bpjs', $kodepoli)
+                        ->where('hari_kerja', $hari);
+                    if ($kodedokter !== '') {
+                        $jadwalCheck->where('maping_dokter_dpjpvclaim.kd_dokter_bpjs', $kodedokter);
+                    }
+                    $jadwalRow = $jadwalCheck->oneArray();
+
+                    if (empty($jadwalRow)) {
+                        $response = array(
+                            'metadata' => array(
+                                'message' => 'Jadwal Praktek Tidak Ditemukan Pada Hari ' . $hari . ' Tanggal ' . $tanggalperiksa,
+                                'code' => 201
+                            )
+                        );
+                        $httpCode = 201;
+                    } else if (strtotime(date("Y-m-d")) > strtotime($tanggalperiksa)) {
+                        $response = array(
+                            'metadata' => array(
+                                'message' => 'Tanggal Periksa Tidak Berlaku Mundur',
+                                'code' => 201
+                            )
+                        );
+                        $httpCode = 201;
+                    } else {
+                        $kdDokterRs = !empty($kddokter['kd_dokter']) ? $kddokter['kd_dokter'] : $jadwalRow['kd_dokter'];
+                        $kdPoliRs = !empty($jadwalRow['kd_poli']) ? $jadwalRow['kd_poli'] : $kdpoli['kd_poli_rs'];
+                        $totalKuota = (int)($jadwalRow['kuota'] ?? 0);
+
+                        $isToday = ($tanggalperiksa === date('Y-m-d'));
+                        $table = $isToday ? 'reg_periksa' : 'booking_registrasi';
+
+                        $q = $this->db($table)
+                            ->select(['no_reg'])
+                            ->where('kd_dokter', $kdDokterRs)
+                            ->where('kd_poli', $kdPoliRs);
+
+                        if ($isToday) {
+                            $q->where('stts', 'Belum')
+                              ->where('tgl_registrasi', $tanggalperiksa);
+                        } else {
+                            $q->where('status', 'Belum')
+                              ->where('tanggal_periksa', $tanggalperiksa);
+                        }
+
+                        $max_antrian = $q
+                            ->asc('no_reg')
+                            ->limit(1)
+                            ->oneArray();
+
+                        if ($isToday) {
+                            $stmtData = $this->db()->pdo()->prepare(
+                                "SELECT poliklinik.nm_poli, COUNT(reg_periksa.kd_poli) as total_antrean, dokter.nm_dokter,
+                                IFNULL(SUM(CASE WHEN reg_periksa.stts = 'Belum' THEN 1 ELSE 0 END), 0) as sisa_antrean
+                                FROM reg_periksa
+                                INNER JOIN poliklinik ON poliklinik.kd_poli = reg_periksa.kd_poli
+                                INNER JOIN dokter ON reg_periksa.kd_dokter = dokter.kd_dokter
+                                WHERE reg_periksa.tgl_registrasi = :tgl AND reg_periksa.kd_poli = :kdpoli AND reg_periksa.kd_dokter = :kddokter AND reg_periksa.stts != 'Batal'"
+                            );
+                        } else {
+                            $stmtData = $this->db()->pdo()->prepare(
+                                "SELECT poliklinik.nm_poli, COUNT(booking_registrasi.kd_poli) as total_antrean, dokter.nm_dokter,
+                                IFNULL(SUM(CASE WHEN booking_registrasi.status = 'Belum' THEN 1 ELSE 0 END), 0) as sisa_antrean
+                                FROM booking_registrasi
+                                INNER JOIN poliklinik ON poliklinik.kd_poli = booking_registrasi.kd_poli
+                                INNER JOIN dokter ON booking_registrasi.kd_dokter = dokter.kd_dokter
+                                WHERE booking_registrasi.tanggal_periksa = :tgl AND booking_registrasi.kd_poli = :kdpoli AND booking_registrasi.kd_dokter = :kddokter AND booking_registrasi.status != 'Batal'"
+                            );
+                        }
+                        $stmtData->execute([':tgl' => $tanggalperiksa, ':kdpoli' => $kdPoliRs, ':kddokter' => $kdDokterRs]);
+                        $data = $stmtData->fetch(\PDO::FETCH_ASSOC) ?: [];
+
+                        $totalAntrean = (int)($data['total_antrean'] ?? 0);
+                        $sisaAntrean = (int)($data['sisa_antrean'] ?? 0);
+                        $sisaKuota = max(0, $totalKuota - $totalAntrean);
+                        $namaPoli = !empty($data['nm_poli']) ? $data['nm_poli'] : ($kdpoli['nm_poli_bpjs'] ?? '');
+                        $namaDokter = !empty($kddokter['nm_dokter_bpjs']) ? $kddokter['nm_dokter_bpjs'] : ($data['nm_dokter'] ?? ($jadwalRow['nm_dokter_bpjs'] ?? ''));
+                        $antreanPanggil = ($sisaAntrean > 0 && !empty($max_antrian['no_reg'])) ? ('A-' . $max_antrian['no_reg']) : 'A-0';
+
+                        $response = array(
+                            'response' => array(
+                                'namapoli' => (string)$namaPoli,
+                                'namadokter' => (string)$namaDokter,
+                                'totalantrean' => $totalAntrean,
+                                'sisaantrean' => $sisaAntrean,
+                                'antreanpanggil' => $antreanPanggil,
+                                'sisakuotajkn' => $sisaKuota,
+                                'kuotajkn' => $totalKuota,
+                                'sisakuotanonjkn' => $sisaKuota,
+                                'kuotanonjkn' => $totalKuota,
+                                'keterangan' => 'Datanglah Minimal 30 Menit, jika no antrian anda terlewat, silakan konfirmasi ke layanan pelanggan, Terima Kasih ..'
+                            ),
+                            'metadata' => array(
+                                'message' => 'Ok',
+                                'code' => 200
+                            )
+                        );
+                        $httpCode = 200;
+                    }
                 }
+            } else {
+                $response = array(
+                    'metadata' => array(
+                        'message' => 'Access denied',
+                        'code' => 201
+                    )
+                );
+                $httpCode = 201;
             }
-        } else {
+        } catch (\Throwable $e) {
+            error_log('JKN Mobile StatusAntrian error: ' . $e->getMessage());
             $response = array(
                 'metadata' => array(
-                    'message' => 'Access denied',
+                    'message' => 'Terjadi kesalahan saat mengecek status antrean. Silakan hubungi petugas Faskes.',
                     'code' => 201
                 )
             );
+            $httpCode = 201;
         }
-        echo json_encode(htmlspecialchars_array($response));
+
+        $this->_jsonResponse($response, $httpCode);
     }
 
     public function getAmbilAntrianFarmasi()
@@ -644,109 +745,106 @@ class Site extends SiteModule
 
     private function _resultAmbilAntrianFarmasi()
     {
-        header("Content-Type: application/json");
-        $header = apache_request_headers();
+        header("Content-Type: application/json; charset=utf-8");
         $konten = trim(file_get_contents("php://input"));
         $decode = json_decode($konten, true);
+        if (!is_array($decode)) {
+            $decode = [];
+        }
         $response = array();
-        
+        $httpCode = 201;
+
         $tokenHeader = $this->settings->get('jkn_mobile.header_token');
         $usernameHeader = $this->settings->get('jkn_mobile.header_username');
+        $reqToken = $this->_getRequestHeader($tokenHeader);
+        $reqUser = $this->_getRequestHeader($usernameHeader);
 
-        if(!isset($header[$tokenHeader]) || $header[$tokenHeader] == false) {
+        if ($reqToken === null || $reqToken === '' || $reqToken === false) {
             $response = array(
                 'metadata' => array(
                     'message' => 'Token expired or missing',
                     'code' => 201
                 )
             );
-            http_response_code(201);
-        } else if ($header[$tokenHeader] == $this->_getToken() && isset($header[$usernameHeader]) && $header[$usernameHeader] == $this->settings->get('jkn_mobile.x_username')) {
-            if(empty($decode['kodebooking'])) {
+            $httpCode = 201;
+        } else if ((string)$reqToken === (string)$this->_getToken() && $reqUser !== null && (string)$reqUser === (string)$this->settings->get('jkn_mobile.x_username')) {
+            if (empty($decode['kodebooking'])) {
                 $response = array(
                     'metadata' => array(
                         'message' => 'Kode Booking tidak boleh kosong',
                         'code' => 201
                     )
                 );
-                http_response_code(201);
-            }else if(strpos($decode['kodebooking'],"'")||strpos($decode['kodebooking'],"\\")){
+                $httpCode = 201;
+            } else if (strpos($decode['kodebooking'], "'") !== false || strpos($decode['kodebooking'], "\\") !== false) {
                 $response = array(
                     'metadata' => array(
                         'message' => 'Format Kode Booking salah',
                         'code' => 201
                     )
                 );
-                http_response_code(201);
-            }else{
+                $httpCode = 201;
+            } else {
                 $referensi = $this->db('mlite_antrian_referensi')->where('kodebooking', $decode['kodebooking'])->oneArray();
                 $booking_registrasi = [];
                 $pasien = [];
-                if($referensi) {
-                  $pasien = $this->db('pasien')->where('no_peserta', $referensi['nomor_kartu'])->oneArray();
-                  $booking_registrasi = $this->db('booking_registrasi')
-                    ->where('no_rkm_medis', $pasien['no_rkm_medis'])
-                    ->where('tanggal_periksa', $referensi['tanggal_periksa'])
-                    ->oneArray();
+                if ($referensi) {
+                    $pasien = $this->db('pasien')->where('no_peserta', $referensi['nomor_kartu'])->oneArray();
+                    if (!empty($pasien['no_rkm_medis'])) {
+                        $booking_registrasi = $this->db('booking_registrasi')
+                            ->where('no_rkm_medis', $pasien['no_rkm_medis'])
+                            ->where('tanggal_periksa', $referensi['tanggal_periksa'])
+                            ->oneArray();
+                    }
                 }
-                if(!$booking_registrasi) {
+                if (!$booking_registrasi) {
                     $response = array(
                         'metadata' => array(
                             'message' => 'Data Booking tidak ditemukan',
                             'code' => 201
                         )
                     );
-                    http_response_code(201);
-                }else{
-                    if($booking_registrasi['status']=='Batal'){
+                    $httpCode = 201;
+                } else {
+                    if ($booking_registrasi['status'] == 'Batal') {
                         $response = array(
                             'metadata' => array(
                                 'message' => 'Booking Anda Sudah Dibatalkan.',
                                 'code' => 201
                             )
                         );
-                        http_response_code(201);
-                    }else if($booking_registrasi['status']=='Belum'){
+                        $httpCode = 201;
+                    } else if ($booking_registrasi['status'] == 'Belum') {
                         $response = array(
                             'metadata' => array(
                                 'message' => 'Anda Belum Melakukan Checkin.',
                                 'code' => 201
                             )
                         );
-                        http_response_code(201);
-                    }else if($booking_registrasi['status']=='Terdaftar'){
-
+                        $httpCode = 201;
+                    } else if ($booking_registrasi['status'] == 'Terdaftar') {
                         $reg_periksa = $this->db('reg_periksa')->where('no_rkm_medis', $pasien['no_rkm_medis'])->where('tgl_registrasi', $booking_registrasi['tanggal_periksa'])->oneArray();
-                        $resep = $this->db('resep_obat')->where('no_rawat', $reg_periksa['no_rawat'])->where('status', 'ralan')->oneArray();
-
-                        $mlite_antrian_loket = $this->db('mlite_antrian_loket')
-                        ->select([
-                            'count' => 'COUNT(DISTINCT noantrian)',
-                        ])
-                        ->where('type', 'Apotek')
-                        ->where('postdate', $booking_registrasi['tanggal_periksa'])
-                        ->oneArray();
+                        $resep = !empty($reg_periksa['no_rawat'])
+                            ? $this->db('resep_obat')->where('no_rawat', $reg_periksa['no_rawat'])->where('status', 'ralan')->oneArray()
+                            : null;
 
                         $get_mlite_antrian_loket = $this->db('mlite_antrian_loket')->where('type', 'Apotek')->where('postdate', $booking_registrasi['tanggal_periksa'])->where('no_rkm_medis', $pasien['no_rkm_medis'])->oneArray();
 
-                        if(!$resep){
+                        if (!$resep) {
                             $response = array(
                                 'metadata' => array(
                                     'message' => 'Anda tidak memiliki resep dari dokter yang anda tuju, silahkan konfirmasi petugas poli',
                                     'code' => 201
                                 )
                             );
-                            http_response_code(201);
-                        }else{
+                            $httpCode = 201;
+                        } else {
                             $resep_racikan = $this->db('resep_dokter_racikan')->where('no_resep', $resep['no_resep'])->oneArray();
-                            $jenis_resep = 'Non Racikan';
-                            if($resep_racikan) {
-                              $jenis_resep = 'Racikan';
-                            }
+                            $jenis_resep = $resep_racikan ? 'Racikan' : 'Non Racikan';
                             $response = array(
                                 'response' => array(
                                     'jenisresep' => $jenis_resep,
-                                    'nomorantrean' => $get_mlite_antrian_loket['noantrian'],
+                                    'nomorantrean' => (int)($get_mlite_antrian_loket['noantrian'] ?? 0),
                                     'keterangan' => "Resep dibuat secara elektronik di poli"
                                 ),
                                 'metadata' => array(
@@ -754,7 +852,7 @@ class Site extends SiteModule
                                     'code' => 200
                                 )
                             );
-                            http_response_code(200);
+                            $httpCode = 200;
                         }
                     }
                 }
@@ -766,9 +864,9 @@ class Site extends SiteModule
                     'code' => 201
                 )
             );
-            http_response_code(201);
+            $httpCode = 201;
         }
-        echo json_encode(htmlspecialchars_array($response));
+        $this->_jsonResponse($response, $httpCode);
     }
 
     public function getStatusAntrianFarmasi()
@@ -779,120 +877,121 @@ class Site extends SiteModule
 
     private function _resultStatusAntrianFarmasi()
     {
-        header("Content-Type: application/json");
-        $header = apache_request_headers();
+        header("Content-Type: application/json; charset=utf-8");
         $konten = trim(file_get_contents("php://input"));
         $decode = json_decode($konten, true);
+        if (!is_array($decode)) {
+            $decode = [];
+        }
         $response = array();
-        
+        $httpCode = 201;
+
         $tokenHeader = $this->settings->get('jkn_mobile.header_token');
         $usernameHeader = $this->settings->get('jkn_mobile.header_username');
+        $reqToken = $this->_getRequestHeader($tokenHeader);
+        $reqUser = $this->_getRequestHeader($usernameHeader);
 
-        if(!isset($header[$tokenHeader]) || $header[$tokenHeader] == false) {
+        if ($reqToken === null || $reqToken === '' || $reqToken === false) {
             $response = array(
                 'metadata' => array(
                     'message' => 'Token expired or missing',
                     'code' => 201
                 )
             );
-            http_response_code(201);
-        } else if ($header[$tokenHeader] == $this->_getToken() && isset($header[$usernameHeader]) && $header[$usernameHeader] == $this->settings->get('jkn_mobile.x_username')) {
-            if(empty($decode['kodebooking'])) {
+            $httpCode = 201;
+        } else if ((string)$reqToken === (string)$this->_getToken() && $reqUser !== null && (string)$reqUser === (string)$this->settings->get('jkn_mobile.x_username')) {
+            if (empty($decode['kodebooking'])) {
                 $response = array(
                     'metadata' => array(
                         'message' => 'Kode Booking tidak boleh kosong',
                         'code' => 201
                     )
                 );
-                http_response_code(201);
-            }else if(strpos($decode['kodebooking'],"'")||strpos($decode['kodebooking'],"\\")){
+                $httpCode = 201;
+            } else if (strpos($decode['kodebooking'], "'") !== false || strpos($decode['kodebooking'], "\\") !== false) {
                 $response = array(
                     'metadata' => array(
                         'message' => 'Format Kode Booking salah',
                         'code' => 201
                     )
                 );
-                http_response_code(201);
-            }else{
+                $httpCode = 201;
+            } else {
                 $referensi = $this->db('mlite_antrian_referensi')->where('kodebooking', $decode['kodebooking'])->oneArray();
                 $booking_registrasi = [];
                 $pasien = [];
-                if($referensi) {
-                  $pasien = $this->db('pasien')->where('no_peserta', $referensi['nomor_kartu'])->oneArray();
-                  $booking_registrasi = $this->db('booking_registrasi')
-                    ->where('no_rkm_medis', $pasien['no_rkm_medis'])
-                    ->where('tanggal_periksa', $referensi['tanggal_periksa'])
-                    ->oneArray();
+                if ($referensi) {
+                    $pasien = $this->db('pasien')->where('no_peserta', $referensi['nomor_kartu'])->oneArray();
+                    if (!empty($pasien['no_rkm_medis'])) {
+                        $booking_registrasi = $this->db('booking_registrasi')
+                            ->where('no_rkm_medis', $pasien['no_rkm_medis'])
+                            ->where('tanggal_periksa', $referensi['tanggal_periksa'])
+                            ->oneArray();
+                    }
                 }
-                if(!$booking_registrasi) {
+                if (!$booking_registrasi) {
                     $response = array(
                         'metadata' => array(
                             'message' => 'Data Booking tidak ditemukan',
                             'code' => 201
                         )
                     );
-                    http_response_code(201);
-                }else{
-                    if($booking_registrasi['status']=='Batal'){
+                    $httpCode = 201;
+                } else {
+                    if ($booking_registrasi['status'] == 'Batal') {
                         $response = array(
                             'metadata' => array(
                                 'message' => 'Booking Anda Sudah Dibatalkan.',
                                 'code' => 201
                             )
                         );
-                        http_response_code(201);
-                    }else if($booking_registrasi['status']=='Belum'){
+                        $httpCode = 201;
+                    } else if ($booking_registrasi['status'] == 'Belum') {
                         $response = array(
                             'metadata' => array(
                                 'message' => 'Anda Belum Melakukan Checkin.',
                                 'code' => 201
                             )
                         );
-                        http_response_code(201);
-                    }else if($booking_registrasi['status']=='Terdaftar'){
-
+                        $httpCode = 201;
+                    } else if ($booking_registrasi['status'] == 'Terdaftar') {
                         $reg_periksa = $this->db('reg_periksa')->where('no_rkm_medis', $pasien['no_rkm_medis'])->where('tgl_registrasi', $booking_registrasi['tanggal_periksa'])->oneArray();
-                        $resep = $this->db('resep_obat')->where('no_rawat', $reg_periksa['no_rawat'])->where('status', 'ralan')->oneArray();
+                        $resep = !empty($reg_periksa['no_rawat'])
+                            ? $this->db('resep_obat')->where('no_rawat', $reg_periksa['no_rawat'])->where('status', 'ralan')->oneArray()
+                            : null;
 
                         $mlite_antrian_loket = $this->db('mlite_antrian_loket')
-                        ->select([
-                            'count' => 'COUNT(DISTINCT noantrian)',
-                        ])
-                        ->where('type', 'Apotek')
-                        ->where('postdate', $booking_registrasi['tanggal_periksa'])
-                        ->oneArray();
+                            ->select(['count' => 'COUNT(DISTINCT noantrian)'])
+                            ->where('type', 'Apotek')
+                            ->where('postdate', $booking_registrasi['tanggal_periksa'])
+                            ->oneArray();
 
                         $mlite_antrian_loket_sisaantrean = $this->db('mlite_antrian_loket')
-                        ->select([
-                            'count' => 'COUNT(DISTINCT noantrian)',
-                        ])
-                        ->where('type', 'Apotek')
-                        ->where('postdate', $booking_registrasi['tanggal_periksa'])
-                        ->where('end_time', '<>', '00:00:00')
-                        ->oneArray();
+                            ->select(['count' => 'COUNT(DISTINCT noantrian)'])
+                            ->where('type', 'Apotek')
+                            ->where('postdate', $booking_registrasi['tanggal_periksa'])
+                            ->where('end_time', '<>', '00:00:00')
+                            ->oneArray();
 
-                        $get_mlite_antrian_loket = $this->db('mlite_antrian_loket')->where('type', 'Apotek')->where('postdate', $booking_registrasi['tanggal_periksa'])->where('no_rkm_medis', $pasien['no_rkm_medis'])->oneArray();
-
-                        if(!$resep){
+                        if (!$resep) {
                             $response = array(
                                 'metadata' => array(
                                     'message' => 'Anda tidak memiliki resep dari dokter yang anda tuju, silahkan konfirmasi petugas poli',
                                     'code' => 201
                                 )
                             );
-                            http_response_code(201);
-                        }else{
+                            $httpCode = 201;
+                        } else {
                             $resep_racikan = $this->db('resep_dokter_racikan')->where('no_resep', $resep['no_resep'])->oneArray();
-                            $jenis_resep = 'Non Racikan';
-                            if($resep_racikan) {
-                              $jenis_resep = 'Racikan';
-                            }
-                            $panggil = $mlite_antrian_loket['count'] - $mlite_antrian_loket_sisaantrean['count'];
+                            $jenis_resep = $resep_racikan ? 'Racikan' : 'Non Racikan';
+                            $totFarmasi = (int)($mlite_antrian_loket['count'] ?? 0);
+                            $sisaFarmasi = (int)($mlite_antrian_loket_sisaantrean['count'] ?? 0);
+                            $panggil = max(0, $totFarmasi - $sisaFarmasi);
                             $response = array(
                                 'response' => array(
                                     'jenisresep' => $jenis_resep,
-                                    'totalantrean' => $mlite_antrian_loket['count'],
-                                    'sisaantrean' => $mlite_antrian_loket_sisaantrean['count'],
+                                    'totalantrean' => $totFarmasi,
+                                    'sisaantrean' => $sisaFarmasi,
                                     'antreanpanggil' => $panggil,
                                     'keterangan' => ""
                                 ),
@@ -901,8 +1000,7 @@ class Site extends SiteModule
                                     'code' => 200
                                 )
                             );
-
-                            http_response_code(200);
+                            $httpCode = 200;
                         }
                     }
                 }
@@ -914,9 +1012,9 @@ class Site extends SiteModule
                     'code' => 201
                 )
             );
-            http_response_code(201);
+            $httpCode = 201;
         }
-        echo json_encode(htmlspecialchars_array($response));
+        $this->_jsonResponse($response, $httpCode);
     }
 
     public function getSisaAntrian()
@@ -927,137 +1025,163 @@ class Site extends SiteModule
 
     private function _resultSisaAntrian()
     {
-        header("Content-Type: application/json");
-        $header = apache_request_headers();
+        header("Content-Type: application/json; charset=utf-8");
         $konten = trim(file_get_contents("php://input"));
         $decode = json_decode($konten, true);
+        if (!is_array($decode)) {
+            $decode = [];
+        }
         $response = array();
+        $httpCode = 201;
 
         $tokenHeader = $this->settings->get('jkn_mobile.header_token');
         $usernameHeader = $this->settings->get('jkn_mobile.header_username');
+        $reqToken = $this->_getRequestHeader($tokenHeader);
+        $reqUser = $this->_getRequestHeader($usernameHeader);
 
-        if(!isset($header[$tokenHeader]) || $header[$tokenHeader] == false) {
-            $response = array(
-                'metadata' => array(
-                    'message' => 'Token expired or missing',
-                    'code' => 201
-                )
-            );
-            http_response_code(201);
-        } else if ($header[$tokenHeader] == $this->_getToken() && isset($header[$usernameHeader]) && $header[$usernameHeader] == $this->settings->get('jkn_mobile.x_username')) {
-            if(empty($decode['kodebooking'])) {
+        try {
+            if ($reqToken === null || $reqToken === '' || $reqToken === false) {
                 $response = array(
                     'metadata' => array(
-                        'message' => 'Kode Booking tidak boleh kosong',
+                        'message' => 'Token expired or missing',
                         'code' => 201
                     )
                 );
-                http_response_code(201);
-            }else if(strpos($decode['kodebooking'],"'")||strpos($decode['kodebooking'],"\\")){
-                $response = array(
-                    'metadata' => array(
-                        'message' => 'Format Kode Booking salah',
-                        'code' => 201
-                    )
-                );
-                http_response_code(201);
-            }else{
-                $referensi = $this->db('mlite_antrian_referensi')->where('kodebooking', $decode['kodebooking'])->oneArray();
-                $booking_registrasi = [];
-                $pasien = [];
-                if($referensi) {
-                  $pasien = $this->db('pasien')->where('no_peserta', $referensi['nomor_kartu'])->oneArray();
-                  $booking_registrasi = $this->db('booking_registrasi')
-                    ->where('no_rkm_medis', $pasien['no_rkm_medis'])
-                    ->where('tanggal_periksa', $referensi['tanggal_periksa'])
-                    ->oneArray();
-                }
-                if(!$booking_registrasi) {
+                $httpCode = 201;
+            } else if ((string)$reqToken === (string)$this->_getToken() && $reqUser !== null && (string)$reqUser === (string)$this->settings->get('jkn_mobile.x_username')) {
+                if (empty($decode['kodebooking'])) {
                     $response = array(
                         'metadata' => array(
-                            'message' => 'Data Booking tidak ditemukan',
+                            'message' => 'Kode Booking tidak boleh kosong',
                             'code' => 201
                         )
                     );
-                    http_response_code(201);
-                }else{
-                    if($booking_registrasi['status']=='Belum'){
+                    $httpCode = 201;
+                } else if (strpos($decode['kodebooking'], "'") !== false || strpos($decode['kodebooking'], "\\") !== false) {
+                    $response = array(
+                        'metadata' => array(
+                            'message' => 'Format Kode Booking salah',
+                            'code' => 201
+                        )
+                    );
+                    $httpCode = 201;
+                } else {
+                    $referensi = $this->db('mlite_antrian_referensi')->where('kodebooking', $decode['kodebooking'])->oneArray();
+                    $booking_registrasi = [];
+                    $pasien = [];
+                    if ($referensi) {
+                        $pasien = $this->db('pasien')->where('no_peserta', $referensi['nomor_kartu'])->oneArray();
+                        if (!empty($pasien['no_rkm_medis'])) {
+                            $booking_registrasi = $this->db('booking_registrasi')
+                                ->where('no_rkm_medis', $pasien['no_rkm_medis'])
+                                ->where('tanggal_periksa', $referensi['tanggal_periksa'])
+                                ->oneArray();
+                        }
+                    }
+                    if (!$booking_registrasi) {
                         $response = array(
                             'metadata' => array(
-                                'message' => 'Anda belum melakukan checkin, Silahkan checkin terlebih dahulu',
+                                'message' => 'Data Booking tidak ditemukan',
                                 'code' => 201
                             )
                         );
-                        http_response_code(201);
-                    }else if($booking_registrasi['status']=='Batal'){
-                        $response = array(
-                            'metadata' => array(
-                                'message' => 'Data Booking Sudah Dibatalkan',
-                                'code' => 201
-                            )
-                        );
-                        http_response_code(201);
-                    }else if($booking_registrasi['status']=='Terdaftar'){
-                        $noreg = $this->db('reg_periksa')->where('no_rkm_medis', $pasien['no_rkm_medis'])->where('tgl_registrasi', $booking_registrasi['tanggal_periksa'])->oneArray();
-
-                        $max_antrian = $this->db('reg_periksa')
-                            ->select(['no_reg'])
-                            ->where('stts', 'Belum')
-                            ->where('kd_dokter', $booking_registrasi['kd_dokter'])
-                            ->where('kd_poli', $booking_registrasi['kd_poli'])
-                            ->where('tgl_registrasi', $booking_registrasi['tanggal_periksa'])
-                            ->orderByRightNumber('no_reg', 3, 'ASC')
-                            ->limit(1)
-                            ->oneArray();
-
-                        $data = $this->db()->pdo()->prepare("SELECT reg_periksa.kd_poli,poliklinik.nm_poli,dokter.nm_dokter,
-                            reg_periksa.no_reg,COUNT(reg_periksa.no_rawat) as total_antrean,
-                            IFNULL(SUM(CASE WHEN reg_periksa.stts ='Belum' THEN 1 ELSE 0 END),0) as sisa_antrean
-                            FROM reg_periksa INNER JOIN poliklinik ON poliklinik.kd_poli=reg_periksa.kd_poli
-                            INNER JOIN dokter ON dokter.kd_dokter=reg_periksa.kd_dokter
-                            WHERE reg_periksa.kd_dokter='$booking_registrasi[kd_dokter]' and reg_periksa.kd_poli='$booking_registrasi[kd_poli]'and reg_periksa.tgl_registrasi='$booking_registrasi[tanggal_periksa]'");
-                        $data->execute();
-                        $data = $data->fetch();
-
-                        if ($data['nm_poli'] != '') {
-                            $response = array(
-                                'response' => array(
-                                    'nomorantrean' => "A-".$noreg['no_reg'],
-                                    'namapoli' => $data['nm_poli'],
-                                    'namadokter' => $data['nm_dokter'],
-                                    'sisaantrean' => ($data['sisa_antrean']>0?$data['sisa_antrean']:0),
-                                    'antreanpanggil' => "A-".$max_antrian['no_reg'] ?? '000',
-                                    'waktutunggu' => (($data['sisa_antrean']*10)*1000),
-                                    'keterangan' => "Datanglah Minimal 30 Menit, jika no antrian anda terlewat, silakan konfirmasi ke layanan pelanggan, Terima Kasih .."
-                                ),
-                                'metadata' => array(
-                                    'message' => 'Ok',
-                                    'code' => 200
-                                )
-                            );
-                            http_response_code(200);
-                        } else {
+                        $httpCode = 201;
+                    } else {
+                        if ($booking_registrasi['status'] == 'Belum') {
                             $response = array(
                                 'metadata' => array(
-                                    'message' => 'Antrean Tidak Ditemukan !',
+                                    'message' => 'Anda belum melakukan checkin, Silahkan checkin terlebih dahulu',
                                     'code' => 201
                                 )
                             );
-                            http_response_code(201);
+                            $httpCode = 201;
+                        } else if ($booking_registrasi['status'] == 'Batal') {
+                            $response = array(
+                                'metadata' => array(
+                                    'message' => 'Data Booking Sudah Dibatalkan',
+                                    'code' => 201
+                                )
+                            );
+                            $httpCode = 201;
+                        } else if ($booking_registrasi['status'] == 'Terdaftar') {
+                            $noreg = $this->db('reg_periksa')->where('no_rkm_medis', $pasien['no_rkm_medis'])->where('tgl_registrasi', $booking_registrasi['tanggal_periksa'])->oneArray();
+
+                            $max_antrian = $this->db('reg_periksa')
+                                ->select(['no_reg'])
+                                ->where('stts', 'Belum')
+                                ->where('kd_dokter', $booking_registrasi['kd_dokter'])
+                                ->where('kd_poli', $booking_registrasi['kd_poli'])
+                                ->where('tgl_registrasi', $booking_registrasi['tanggal_periksa'])
+                                ->orderByRightNumber('no_reg', 3, 'ASC')
+                                ->limit(1)
+                                ->oneArray();
+
+                            $stmtSisa = $this->db()->pdo()->prepare(
+                                "SELECT reg_periksa.kd_poli, poliklinik.nm_poli, dokter.nm_dokter,
+                                    reg_periksa.no_reg, COUNT(reg_periksa.no_rawat) as total_antrean,
+                                    IFNULL(SUM(CASE WHEN reg_periksa.stts = 'Belum' THEN 1 ELSE 0 END), 0) as sisa_antrean
+                                FROM reg_periksa
+                                INNER JOIN poliklinik ON poliklinik.kd_poli = reg_periksa.kd_poli
+                                INNER JOIN dokter ON dokter.kd_dokter = reg_periksa.kd_dokter
+                                WHERE reg_periksa.kd_dokter = :kddokter AND reg_periksa.kd_poli = :kdpoli AND reg_periksa.tgl_registrasi = :tgl"
+                            );
+                            $stmtSisa->execute([
+                                ':kddokter' => $booking_registrasi['kd_dokter'],
+                                ':kdpoli' => $booking_registrasi['kd_poli'],
+                                ':tgl' => $booking_registrasi['tanggal_periksa']
+                            ]);
+                            $data = $stmtSisa->fetch(\PDO::FETCH_ASSOC);
+
+                            if (!empty($data['nm_poli'])) {
+                                $sisaAntrean = max(0, (int)($data['sisa_antrean'] ?? 0));
+                                $response = array(
+                                    'response' => array(
+                                        'nomorantrean' => 'A-' . ($noreg['no_reg'] ?? $booking_registrasi['no_reg']),
+                                        'namapoli' => (string)$data['nm_poli'],
+                                        'namadokter' => (string)$data['nm_dokter'],
+                                        'sisaantrean' => $sisaAntrean,
+                                        'antreanpanggil' => 'A-' . (!empty($max_antrian['no_reg']) ? $max_antrian['no_reg'] : '000'),
+                                        'waktutunggu' => (int)($sisaAntrean * 10 * 60),
+                                        'keterangan' => "Datanglah Minimal 30 Menit, jika no antrian anda terlewat, silakan konfirmasi ke layanan pelanggan, Terima Kasih .."
+                                    ),
+                                    'metadata' => array(
+                                        'message' => 'Ok',
+                                        'code' => 200
+                                    )
+                                );
+                                $httpCode = 200;
+                            } else {
+                                $response = array(
+                                    'metadata' => array(
+                                        'message' => 'Antrean Tidak Ditemukan !',
+                                        'code' => 201
+                                    )
+                                );
+                                $httpCode = 201;
+                            }
                         }
                     }
                 }
+            } else {
+                $response = array(
+                    'metadata' => array(
+                        'message' => 'Access denied',
+                        'code' => 201
+                    )
+                );
+                $httpCode = 201;
             }
-        } else {
+        } catch (\Throwable $e) {
+            error_log('JKN Mobile SisaAntrian error: ' . $e->getMessage());
             $response = array(
                 'metadata' => array(
-                    'message' => 'Access denied',
+                    'message' => 'Terjadi kesalahan saat mengecek sisa antrean.',
                     'code' => 201
                 )
             );
-            http_response_code(201);
+            $httpCode = 201;
         }
-        echo json_encode(htmlspecialchars_array($response));
+        $this->_jsonResponse($response, $httpCode);
     }
 
     public function getBatalAntrian()
@@ -1068,131 +1192,149 @@ class Site extends SiteModule
 
     private function _resultBatalAntrian()
     {
-        header("Content-Type: application/json");
-        $header = apache_request_headers();
+        header("Content-Type: application/json; charset=utf-8");
         $konten = trim(file_get_contents("php://input"));
         $decode = json_decode($konten, true);
+        if (!is_array($decode)) {
+            $decode = [];
+        }
         $response = array();
+        $httpCode = 201;
 
         $tokenHeader = $this->settings->get('jkn_mobile.header_token');
         $usernameHeader = $this->settings->get('jkn_mobile.header_username');
+        $reqToken = $this->_getRequestHeader($tokenHeader);
+        $reqUser = $this->_getRequestHeader($usernameHeader);
 
-        if(!isset($header[$tokenHeader]) || $header[$tokenHeader] == false) {
-            $response = array(
-                'metadata' => array(
-                    'message' => 'Token expired or missing',
-                    'code' => 201
-                )
-            );
-            http_response_code(201);
-        } else if ($header[$tokenHeader] == $this->_getToken() && isset($header[$usernameHeader]) && $header[$usernameHeader] == $this->settings->get('jkn_mobile.x_username')) {
-            if(empty($decode['kodebooking'])) {
+        try {
+            if ($reqToken === null || $reqToken === '' || $reqToken === false) {
                 $response = array(
                     'metadata' => array(
-                        'message' => 'Kode Booking tidak boleh kosong',
+                        'message' => 'Token expired or missing',
                         'code' => 201
                     )
                 );
-                http_response_code(201);
-            }else if(strpos($decode['kodebooking'],"'")||strpos($decode['kodebooking'],"\\")){
-                $response = array(
-                    'metadata' => array(
-                        'message' => 'Format Kode Booking salah',
-                        'code' => 201
-                    )
-                );
-                http_response_code(201);
-            }else if(empty($decode['keterangan'])) {
-                $response = array(
-                    'metadata' => array(
-                        'message' => 'Keterangan tidak boleh kosong',
-                        'code' => 201
-                    )
-                );
-                http_response_code(201);
-            }else if(strpos($decode['keterangan'],"'")||strpos($decode['keterangan'],"\\")){
-                $response = array(
-                    'metadata' => array(
-                        'message' => 'Format Keterangan salah',
-                        'code' => 201
-                    )
-                );
-                http_response_code(201);
-            }else{
-                $referensi = $this->db('mlite_antrian_referensi')->where('kodebooking', $decode['kodebooking'])->oneArray();
-                $booking_registrasi = [];
-                $pasien = [];
-                if($referensi) {
-                  $pasien = $this->db('pasien')->where('no_peserta', $referensi['nomor_kartu'])->oneArray();
-                  $booking_registrasi = $this->db('booking_registrasi')
-                    ->where('no_rkm_medis', $pasien['no_rkm_medis'])
-                    ->where('tanggal_periksa', $referensi['tanggal_periksa'])
-                    ->oneArray();
-                }
-                if(!$booking_registrasi) {
+                $httpCode = 201;
+            } else if ((string)$reqToken === (string)$this->_getToken() && $reqUser !== null && (string)$reqUser === (string)$this->settings->get('jkn_mobile.x_username')) {
+                if (empty($decode['kodebooking'])) {
                     $response = array(
                         'metadata' => array(
-                            'message' => 'Data Booking tidak ditemukan',
+                            'message' => 'Kode Booking tidak boleh kosong',
                             'code' => 201
                         )
                     );
-                    http_response_code(201);
-                }else{
-                    if(strtotime(date("Y-m-d")) > strtotime($booking_registrasi['tanggal_periksa'])){
+                    $httpCode = 201;
+                } else if (strpos($decode['kodebooking'], "'") !== false || strpos($decode['kodebooking'], "\\") !== false) {
+                    $response = array(
+                        'metadata' => array(
+                            'message' => 'Format Kode Booking salah',
+                            'code' => 201
+                        )
+                    );
+                    $httpCode = 201;
+                } else if (empty($decode['keterangan'])) {
+                    $response = array(
+                        'metadata' => array(
+                            'message' => 'Keterangan tidak boleh kosong',
+                            'code' => 201
+                        )
+                    );
+                    $httpCode = 201;
+                } else if (strpos($decode['keterangan'], "'") !== false || strpos($decode['keterangan'], "\\") !== false) {
+                    $response = array(
+                        'metadata' => array(
+                            'message' => 'Format Keterangan salah',
+                            'code' => 201
+                        )
+                    );
+                    $httpCode = 201;
+                } else {
+                    $referensi = $this->db('mlite_antrian_referensi')->where('kodebooking', $decode['kodebooking'])->oneArray();
+                    $booking_registrasi = [];
+                    $pasien = [];
+                    if ($referensi) {
+                        $pasien = $this->db('pasien')->where('no_peserta', $referensi['nomor_kartu'])->oneArray();
+                        if (!empty($pasien['no_rkm_medis'])) {
+                            $booking_registrasi = $this->db('booking_registrasi')
+                                ->where('no_rkm_medis', $pasien['no_rkm_medis'])
+                                ->where('tanggal_periksa', $referensi['tanggal_periksa'])
+                                ->oneArray();
+                        }
+                    }
+                    if (!$booking_registrasi) {
                         $response = array(
                             'metadata' => array(
-                                'message' => 'Pembatalan Antrean tidak berlaku mundur',
+                                'message' => 'Data Booking tidak ditemukan',
                                 'code' => 201
                             )
                         );
-                        http_response_code(201);
-                    }else if($booking_registrasi['status']=='Terdaftar'){
-                        $response = array(
-                            'metadata' => array(
-                                'message' => 'Anda Sudah Checkin, Pendaftaran Tidak Bisa Dibatalkan',
-                                'code' => 201
-                            )
-                        );
-                        http_response_code(201);
-                    }else if($booking_registrasi['status']=='Belum'){
-                        $batal = $this->db('booking_registrasi')->where('no_rkm_medis', $pasien['no_rkm_medis'])->where('tanggal_periksa', $referensi['tanggal_periksa'])->delete();
-                        if(!$this->db('booking_registrasi')->where('no_rkm_medis', $pasien['no_rkm_medis'])->where('tanggal_periksa', $referensi['tanggal_periksa'])->oneArray()){
+                        $httpCode = 201;
+                    } else {
+                        if (strtotime(date("Y-m-d")) > strtotime($booking_registrasi['tanggal_periksa'])) {
                             $response = array(
                                 'metadata' => array(
-                                    'message' => 'Ok',
-                                    'code' => 200
-                                )
-                            );
-                            $this->db('mlite_antrian_referensi_batal')->save([
-                                'tanggal_batal' => date('Y-m-d'),
-                                'nomor_referensi' => $referensi['nomor_referensi'],
-                                'kodebooking' => $decode['kodebooking'],
-                                'keterangan' => $decode['keterangan']
-                            ]);
-                            $this->db('mlite_antrian_referensi')->where('kodebooking', $decode['kodebooking'])->delete();
-                            http_response_code(200);
-                        }else{
-                            $response = array(
-                                'metadata' => array(
-                                    'message' => "Maaf Terjadi Kesalahan, Hubungi Admnistrator..",
+                                    'message' => 'Pembatalan Antrean tidak berlaku mundur',
                                     'code' => 201
                                 )
                             );
-                            http_response_code(201);
+                            $httpCode = 201;
+                        } else if ($booking_registrasi['status'] == 'Terdaftar') {
+                            $response = array(
+                                'metadata' => array(
+                                    'message' => 'Anda Sudah Checkin, Pendaftaran Tidak Bisa Dibatalkan',
+                                    'code' => 201
+                                )
+                            );
+                            $httpCode = 201;
+                        } else if ($booking_registrasi['status'] == 'Belum') {
+                            $this->db('booking_registrasi')->where('no_rkm_medis', $pasien['no_rkm_medis'])->where('tanggal_periksa', $referensi['tanggal_periksa'])->delete();
+                            if (!$this->db('booking_registrasi')->where('no_rkm_medis', $pasien['no_rkm_medis'])->where('tanggal_periksa', $referensi['tanggal_periksa'])->oneArray()) {
+                                $response = array(
+                                    'metadata' => array(
+                                        'message' => 'Ok',
+                                        'code' => 200
+                                    )
+                                );
+                                $this->db('mlite_antrian_referensi_batal')->save([
+                                    'tanggal_batal' => date('Y-m-d'),
+                                    'nomor_referensi' => $referensi['nomor_referensi'],
+                                    'kodebooking' => $decode['kodebooking'],
+                                    'keterangan' => $decode['keterangan']
+                                ]);
+                                $this->db('mlite_antrian_referensi')->where('kodebooking', $decode['kodebooking'])->delete();
+                                $httpCode = 200;
+                            } else {
+                                $response = array(
+                                    'metadata' => array(
+                                        'message' => "Maaf Terjadi Kesalahan, Hubungi Administrator..",
+                                        'code' => 201
+                                    )
+                                );
+                                $httpCode = 201;
+                            }
                         }
                     }
                 }
+            } else {
+                $response = array(
+                    'metadata' => array(
+                        'message' => 'Access denied',
+                        'code' => 201
+                    )
+                );
+                $httpCode = 201;
             }
-        } else {
+        } catch (\Throwable $e) {
+            error_log('JKN Mobile BatalAntrian error: ' . $e->getMessage());
             $response = array(
                 'metadata' => array(
-                    'message' => 'Access denied',
+                    'message' => 'Terjadi kesalahan saat membatalkan antrean.',
                     'code' => 201
                 )
             );
-            http_response_code(201);
+            $httpCode = 201;
         }
-        echo json_encode(htmlspecialchars_array($response));
+        $this->_jsonResponse($response, $httpCode);
     }
 
     public function getPasienBaru()
@@ -1203,422 +1345,185 @@ class Site extends SiteModule
 
     private function _resultPasienBaru()
     {
-        header("Content-Type: application/json");
-        $header = apache_request_headers();
+        header("Content-Type: application/json; charset=utf-8");
         $konten = trim(file_get_contents("php://input"));
         $decode = json_decode($konten, true);
+        if (!is_array($decode)) {
+            $decode = [];
+        }
         $response = array();
+        $httpCode = 201;
 
         $tokenHeader = $this->settings->get('jkn_mobile.header_token');
         $usernameHeader = $this->settings->get('jkn_mobile.header_username');
+        $reqToken = $this->_getRequestHeader($tokenHeader);
+        $reqUser = $this->_getRequestHeader($usernameHeader);
 
-        if(!isset($header[$tokenHeader]) || $header[$tokenHeader] == false) {
-            $response = array(
-                'metadata' => array(
-                    'message' => 'Token expired or missing',
-                    'code' => 201
-                )
-            );
-            http_response_code(201);
-        } else if ($header[$tokenHeader] == $this->_getToken() && isset($header[$usernameHeader]) && $header[$usernameHeader] == $this->settings->get('jkn_mobile.x_username')) {
-            if (empty($decode['nomorkartu'])){
+        try {
+            if ($reqToken === null || $reqToken === '' || $reqToken === false) {
                 $response = array(
                     'metadata' => array(
-                        'message' => 'Nomor Kartu tidak boleh kosong',
+                        'message' => 'Token expired or missing',
                         'code' => 201
                     )
                 );
-                http_response_code(201);
-            }else if (mb_strlen($decode['nomorkartu'], 'UTF-8') <> 13){
-                $response = array(
-                    'metadata' => array(
-                        'message' => 'Nomor Kartu harus 13 digit',
-                        'code' => 201
-                    )
-                );
-                http_response_code(201);
-            }else if (!preg_match("/^[0-9]{13}$/",$decode['nomorkartu'])){
-                $response = array(
-                    'metadata' => array(
-                        'message' => 'Format Nomor Kartu tidak sesuai',
-                        'code' => 201
-                    )
-                );
-                http_response_code(201);
-            }elseif (empty($decode['nik'])) {
-                $response = array(
-                    'metadata' => array(
-                        'message' => 'NIK tidak boleh kosong ',
-                        'code' => 201
-                    )
-                );
-                http_response_code(201);
-            }elseif (strlen($decode['nik']) <> 16) {
-                $response = array(
-                    'metadata' => array(
-                        'message' => 'NIK harus 16 digit ',
-                        'code' => 201
-                    )
-                );
-                http_response_code(201);
-            }else if (!preg_match("/^[0-9]{16}$/",$decode['nik'])){
-                $response = array(
-                    'metadata' => array(
-                        'message' => 'Format NIK tidak sesuai',
-                        'code' => 201
-                    )
-                );
-                http_response_code(201);
-            }elseif (empty($decode['nomorkk'])) {
-                $response = array(
-                    'metadata' => array(
-                        'message' => 'Nomor KK tidak boleh kosong ',
-                        'code' => 201
-                    )
-                );
-                http_response_code(201);
-            }elseif (strlen($decode['nomorkk']) <> 16) {
-                $response = array(
-                    'metadata' => array(
-                        'message' => 'Nomor KK harus 16 digit ',
-                        'code' => 201
-                    )
-                );
-                http_response_code(201);
-            }else if (!preg_match("/^[0-9]{16}$/",$decode['nomorkk'])){
-                $response = array(
-                    'metadata' => array(
-                        'message' => 'Format Nomor KK tidak sesuai',
-                        'code' => 201
-                    )
-                );
-                http_response_code(201);
-            }else if(empty($decode['nama'])) {
-                $response = array(
-                    'metadata' => array(
-                        'message' => 'Nama tidak boleh kosong',
-                        'code' => 201
-                    )
-                );
-                http_response_code(201);
-            }else if(strpos($decode['nama'],"'")||strpos($decode['nama'],"\\")){
-                $response = array(
-                    'metadata' => array(
-                        'message' => 'Format Nama salah',
-                        'code' => 201
-                    )
-                );
-                http_response_code(201);
-            }else if(empty($decode['jeniskelamin'])) {
-                $response = array(
-                    'metadata' => array(
-                        'message' => 'Jenis Kelamin tidak boleh kosong',
-                        'code' => 201
-                    )
-                );
-                http_response_code(201);
-            }else if(strpos($decode['jeniskelamin'],"'")||strpos($decode['jeniskelamin'],"\\")){
-                $response = array(
-                    'metadata' => array(
-                        'message' => 'Jenis Kelamin tidak ditemukan',
-                        'code' => 201
-                    )
-                );
-                http_response_code(201);
-            }else if(!(($decode['jeniskelamin']=="L")||($decode['jeniskelamin']=="P"))){
-                $response = array(
-                    'metadata' => array(
-                        'message' => 'Jenis Kelmain tidak ditemukan',
-                        'code' => 201
-                    )
-                );
-                http_response_code(201);
-            }else if(empty($decode['tanggallahir'])) {
-                $response = array(
-                    'metadata' => array(
-                        'message' => 'Tanggal Lahir tidak boleh kosong',
-                        'code' => 201
-                    )
-                );
-                http_response_code(201);
-            }else if(!preg_match("/^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/",$decode['tanggallahir'])){
-                $response = array(
-                    'metadata' => array(
-                        'message' => 'Format Tanggal Lahir tidak sesuai, format yang benar adalah yyyy-mm-dd',
-                        'code' => 201
-                    )
-                );
-                http_response_code(201);
-            }else if(empty($decode['nohp'])) {
-                $response = array(
-                    'metadata' => array(
-                        'message' => 'No.HP tidak boleh kosong',
-                        'code' => 201
-                    )
-                );
-                http_response_code(201);
-            }else if(strpos($decode['nohp'],"'")||strpos($decode['nohp'],"\\")){
-                $response = array(
-                    'metadata' => array(
-                        'message' => 'Format No.HP salah',
-                        'code' => 201
-                    )
-                );
-                http_response_code(201);
-            }else if(empty($decode['alamat'])) {
-                $response = array(
-                    'metadata' => array(
-                        'message' => 'Alamat tidak boleh kosong',
-                        'code' => 201
-                    )
-                );
-                http_response_code(201);
-            }else if(strpos($decode['alamat'],"'")||strpos($decode['alamat'],"\\")){
-                $response = array(
-                    'metadata' => array(
-                        'message' => 'Format Alamat salah',
-                        'code' => 201
-                    )
-                );
-                http_response_code(201);
-            }else if(empty($decode['kodeprop'])) {
-                $response = array(
-                    'metadata' => array(
-                        'message' => 'Kode Propinsi tidak boleh kosong',
-                        'code' => 201
-                    )
-                );
-                http_response_code(201);
-            }else if(strpos($decode['kodeprop'],"'")||strpos($decode['kodeprop'],"\\")){
-                $response = array(
-                    'metadata' => array(
-                        'message' => 'Format Kode Propinsi salah',
-                        'code' => 201
-                    )
-                );
-                http_response_code(201);
-            }else if(empty($decode['namaprop'])) {
-                $response = array(
-                    'metadata' => array(
-                        'message' => 'Nama Propinsi tidak boleh kosong',
-                        'code' => 201
-                    )
-                );
-                http_response_code(201);
-            }else if(strpos($decode['namaprop'],"'")||strpos($decode['namaprop'],"\\")){
-                $response = array(
-                    'metadata' => array(
-                        'message' => 'Format Nama Propinsi salah',
-                        'code' => 201
-                    )
-                );
-                http_response_code(201);
-            }else if(empty($decode['kodedati2'])) {
-                $response = array(
-                    'metadata' => array(
-                        'message' => 'Kode Dati II tidak boleh kosong',
-                        'code' => 201
-                    )
-                );
-                http_response_code(201);
-            }else if(strpos($decode['kodedati2'],"'")||strpos($decode['kodedati2'],"\\")){
-                $response = array(
-                    'metadata' => array(
-                        'message' => 'Format Kode Dati II salah',
-                        'code' => 201
-                    )
-                );
-                http_response_code(201);
-            }else if(empty($decode['namadati2'])) {
-                $response = array(
-                    'metadata' => array(
-                        'message' => 'Nama Dati II tidak boleh kosong',
-                        'code' => 201
-                    )
-                );
-                http_response_code(201);
-            }else if(strpos($decode['namadati2'],"'")||strpos($decode['namadati2'],"\\")){
-                $response = array(
-                    'metadata' => array(
-                        'message' => 'Format Nama Dati II salah',
-                        'code' => 201
-                    )
-                );
-                http_response_code(201);
-            }else if(empty($decode['kodekec'])) {
-                $response = array(
-                    'metadata' => array(
-                        'message' => 'Kode Kecamatan tidak boleh kosong',
-                        'code' => 201
-                    )
-                );
-                http_response_code(201);
-            }else if(strpos($decode['kodekec'],"'")||strpos($decode['kodekec'],"\\")){
-                $response = array(
-                    'metadata' => array(
-                        'message' => 'Format Kode Kecamatan salah',
-                        'code' => 201
-                    )
-                );
-                http_response_code(201);
-            }else if(empty($decode['namakec'])) {
-                $response = array(
-                    'metadata' => array(
-                        'message' => 'Nama Kecamatan tidak boleh kosong',
-                        'code' => 201
-                    )
-                );
-                http_response_code(201);
-            }else if(strpos($decode['namakec'],"'")||strpos($decode['namakec'],"\\")){
-                $response = array(
-                    'metadata' => array(
-                        'message' => 'Format Nama Kecamatan salah',
-                        'code' => 201
-                    )
-                );
-                http_response_code(201);
-            }else if(empty($decode['kodekel'])) {
-                $response = array(
-                    'metadata' => array(
-                        'message' => 'Kode Kelurahan tidak boleh kosong',
-                        'code' => 201
-                    )
-                );
-                http_response_code(201);
-            }else if(strpos($decode['kodekel'],"'")||strpos($decode['kodekel'],"\\")){
-                $response = array(
-                    'metadata' => array(
-                        'message' => 'Format Kode Kelurahan salah',
-                        'code' => 201
-                    )
-                );
-                http_response_code(201);
-            }else if(empty($decode['namakel'])) {
-                $response = array(
-                    'metadata' => array(
-                        'message' => 'Nama Kelurahan tidak boleh kosong',
-                        'code' => 201
-                    )
-                );
-                http_response_code(201);
-            }else if(strpos($decode['namakel'],"'")||strpos($decode['namakel'],"\\")){
-                $response = array(
-                    'metadata' => array(
-                        'message' => 'Format Nama Kelurahan salah',
-                        'code' => 201
-                    )
-                );
-                http_response_code(201);
-            }else if(empty(isset($decode['rw']))) { 
-                $response = array(
-                    'metadata' => array(
-                        'message' => 'RW tidak boleh kosong',
-                        'code' => 201
-                    )
-                );
-                http_response_code(201);
-            }else if(strpos($decode['rw'],"'")||strpos($decode['rw'],"\\")){
-                $response = array(
-                    'metadata' => array(
-                        'message' => 'Format RW salah',
-                        'code' => 201
-                    )
-                );
-                http_response_code(201);
-            }else if(empty(isset($decode['rt']))) { 
-                $response = array(
-                    'metadata' => array(
-                        'message' => 'RT tidak boleh kosong',
-                        'code' => 201
-                    )
-                );
-                http_response_code(201);
-            }else if(strpos($decode['rt'],"'")||strpos($decode['rt'],"\\")){
-                $response = array(
-                    'metadata' => array(
-                        'message' => 'Format RT salah',
-                        'code' => 201
-                    )
-                );
-                http_response_code(201);
-            }else{
-                if($this->db('pasien')->where('no_peserta', $decode['nomorkartu'])->oneArray()) {
-                    $response = array(
-                        'metadata' => array(
-                            'message' => 'Data pasien ini sudah terdaftar',
-                            'code' => 201
-                        )
-                    );
-                    http_response_code(201);
+                $httpCode = 201;
+            } else if ((string)$reqToken === (string)$this->_getToken() && $reqUser !== null && (string)$reqUser === (string)$this->settings->get('jkn_mobile.x_username')) {
+                if (empty($decode['nomorkartu'])) {
+                    $response = array('metadata' => array('message' => 'Nomor Kartu tidak boleh kosong', 'code' => 201));
+                } else if (mb_strlen($decode['nomorkartu'], 'UTF-8') <> 13) {
+                    $response = array('metadata' => array('message' => 'Nomor Kartu harus 13 digit', 'code' => 201));
+                } else if (!preg_match("/^[0-9]{13}$/", $decode['nomorkartu'])) {
+                    $response = array('metadata' => array('message' => 'Format Nomor Kartu tidak sesuai', 'code' => 201));
+                } else if (empty($decode['nik'])) {
+                    $response = array('metadata' => array('message' => 'NIK tidak boleh kosong', 'code' => 201));
+                } else if (strlen($decode['nik']) <> 16) {
+                    $response = array('metadata' => array('message' => 'NIK harus 16 digit', 'code' => 201));
+                } else if (!preg_match("/^[0-9]{16}$/", $decode['nik'])) {
+                    $response = array('metadata' => array('message' => 'Format NIK tidak sesuai', 'code' => 201));
+                } else if (empty($decode['nomorkk'])) {
+                    $response = array('metadata' => array('message' => 'Nomor KK tidak boleh kosong', 'code' => 201));
+                } else if (strlen($decode['nomorkk']) <> 16) {
+                    $response = array('metadata' => array('message' => 'Nomor KK harus 16 digit', 'code' => 201));
+                } else if (!preg_match("/^[0-9]{16}$/", $decode['nomorkk'])) {
+                    $response = array('metadata' => array('message' => 'Format Nomor KK tidak sesuai', 'code' => 201));
+                } else if (empty($decode['nama'])) {
+                    $response = array('metadata' => array('message' => 'Nama tidak boleh kosong', 'code' => 201));
+                } else if (strpos($decode['nama'], "'") !== false || strpos($decode['nama'], "\\") !== false) {
+                    $response = array('metadata' => array('message' => 'Format Nama salah', 'code' => 201));
+                } else if (empty($decode['jeniskelamin'])) {
+                    $response = array('metadata' => array('message' => 'Jenis Kelamin tidak boleh kosong', 'code' => 201));
+                } else if (!in_array($decode['jeniskelamin'], ['L', 'P'], true)) {
+                    $response = array('metadata' => array('message' => 'Jenis Kelamin tidak ditemukan', 'code' => 201));
+                } else if (empty($decode['tanggallahir'])) {
+                    $response = array('metadata' => array('message' => 'Tanggal Lahir tidak boleh kosong', 'code' => 201));
+                } else if (!preg_match("/^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/", $decode['tanggallahir'])) {
+                    $response = array('metadata' => array('message' => 'Format Tanggal Lahir tidak sesuai, format yang benar adalah yyyy-mm-dd', 'code' => 201));
+                } else if (empty($decode['nohp'])) {
+                    $response = array('metadata' => array('message' => 'No.HP tidak boleh kosong', 'code' => 201));
+                } else if (strpos($decode['nohp'], "'") !== false || strpos($decode['nohp'], "\\") !== false) {
+                    $response = array('metadata' => array('message' => 'Format No.HP salah', 'code' => 201));
+                } else if (empty($decode['alamat'])) {
+                    $response = array('metadata' => array('message' => 'Alamat tidak boleh kosong', 'code' => 201));
+                } else if (strpos($decode['alamat'], "'") !== false || strpos($decode['alamat'], "\\") !== false) {
+                    $response = array('metadata' => array('message' => 'Format Alamat salah', 'code' => 201));
+                } else if (empty($decode['kodeprop'])) {
+                    $response = array('metadata' => array('message' => 'Kode Propinsi tidak boleh kosong', 'code' => 201));
+                } else if (empty($decode['namaprop'])) {
+                    $response = array('metadata' => array('message' => 'Nama Propinsi tidak boleh kosong', 'code' => 201));
+                } else if (empty($decode['kodedati2'])) {
+                    $response = array('metadata' => array('message' => 'Kode Dati II tidak boleh kosong', 'code' => 201));
+                } else if (empty($decode['namadati2'])) {
+                    $response = array('metadata' => array('message' => 'Nama Dati II tidak boleh kosong', 'code' => 201));
+                } else if (empty($decode['kodekec'])) {
+                    $response = array('metadata' => array('message' => 'Kode Kecamatan tidak boleh kosong', 'code' => 201));
+                } else if (empty($decode['namakec'])) {
+                    $response = array('metadata' => array('message' => 'Nama Kecamatan tidak boleh kosong', 'code' => 201));
+                } else if (empty($decode['kodekel'])) {
+                    $response = array('metadata' => array('message' => 'Kode Kelurahan tidak boleh kosong', 'code' => 201));
+                } else if (empty($decode['namakel'])) {
+                    $response = array('metadata' => array('message' => 'Nama Kelurahan tidak boleh kosong', 'code' => 201));
+                } else if (!isset($decode['rw']) || trim((string)$decode['rw']) === '') {
+                    $response = array('metadata' => array('message' => 'RW tidak boleh kosong', 'code' => 201));
+                } else if (!isset($decode['rt']) || trim((string)$decode['rt']) === '') {
+                    $response = array('metadata' => array('message' => 'RT tidak boleh kosong', 'code' => 201));
                 } else {
-                    $date = date('Y-m-d');
+                    if ($this->db('pasien')->where('no_peserta', $decode['nomorkartu'])->oneArray()) {
+                        $response = array(
+                            'metadata' => array(
+                                'message' => 'Data pasien ini sudah terdaftar',
+                                'code' => 201
+                            )
+                        );
+                        $httpCode = 201;
+                    } else {
+                        $date = date('Y-m-d');
+                        $noRmBaru = $this->core->setNoRM();
+                        $patientData = [
+                            'no_rkm_medis' => $noRmBaru,
+                            'nm_pasien' => $decode['nama'],
+                            'no_ktp' => $decode['nik'],
+                            'jk' => $decode['jeniskelamin'],
+                            'tmp_lahir' => '-',
+                            'tgl_lahir' => $decode['tanggallahir'],
+                            'nm_ibu' => '-',
+                            'alamat' => $decode['alamat'],
+                            'gol_darah' => '-',
+                            'pekerjaan' => '-',
+                            'stts_nikah' => 'JOMBLO',
+                            'agama' => '-',
+                            'tgl_daftar' => $date,
+                            'no_tlp' => $decode['nohp'],
+                            'umur' => $this->_setUmur($decode['tanggallahir']),
+                            'pnd' => '-',
+                            'keluarga' => 'AYAH',
+                            'namakeluarga' => '-',
+                            'kd_pj' => $this->settings->get('jkn_mobile.kd_pj_bpjs') ?: 'BPJ',
+                            'no_peserta' => $decode['nomorkartu'],
+                            'kd_kel' => $this->settings->get('jkn_mobile.kdkel'),
+                            'kd_kec' => $this->settings->get('jkn_mobile.kdkec'),
+                            'kd_kab' => $this->settings->get('jkn_mobile.kdkab'),
+                            'pekerjaanpj' => '-',
+                            'alamatpj' => '-',
+                            'kelurahanpj' => '-',
+                            'kecamatanpj' => '-',
+                            'kabupatenpj' => '-',
+                            'perusahaan_pasien' => $this->settings->get('jkn_mobile.perusahaan_pasien'),
+                            'suku_bangsa' => $this->settings->get('jkn_mobile.suku_bangsa'),
+                            'bahasa_pasien' => $this->settings->get('jkn_mobile.bahasa_pasien'),
+                            'cacat_fisik' => $this->settings->get('jkn_mobile.cacat_fisik'),
+                            'email' => '',
+                            'nip' => '',
+                            'kd_prop' => $this->settings->get('jkn_mobile.kdprop'),
+                            'propinsipj' => '-'
+                        ];
 
-                    $_POST['no_rkm_medis'] = $this->core->setNoRM();
-                    $_POST['nm_pasien'] = $decode['nama'];
-                    $_POST['no_ktp'] = $decode['nik'];
-                    $_POST['jk'] = $decode['jeniskelamin'];
-                    $_POST['tmp_lahir'] = '-';
-                    $_POST['tgl_lahir'] = $decode['tanggallahir'];
-                    $_POST['nm_ibu'] = '-';
-                    $_POST['alamat'] = $decode['alamat'];
-                    $_POST['gol_darah'] = '-';
-                    $_POST['pekerjaan'] = '-';
-                    $_POST['stts_nikah'] = 'JOMBLO';
-                    $_POST['agama'] = '-';
-                    $_POST['tgl_daftar'] = $date;
-                    $_POST['no_tlp'] = $decode['nohp'];
-                    $_POST['umur'] = $this->_setUmur($decode['tanggallahir']);;
-                    $_POST['pnd'] = '-';
-                    $_POST['keluarga'] = 'AYAH';
-                    $_POST['namakeluarga'] = '-';
-                    $_POST['kd_pj'] = 'BPJ';
-                    $_POST['no_peserta'] = $decode['nomorkartu'];
-                    $_POST['kd_kel'] = $this->settings->get('jkn_mobile.kdkel');
-                    $_POST['kd_kec'] = $this->settings->get('jkn_mobile.kdkec');
-                    $_POST['kd_kab'] = $this->settings->get('jkn_mobile.kdkab');
-                    $_POST['pekerjaanpj'] = '-';
-                    $_POST['alamatpj'] = '-';
-                    $_POST['kelurahanpj'] = '-';
-                    $_POST['kecamatanpj'] = '-';
-                    $_POST['kabupatenpj'] = '-';
-                    $_POST['perusahaan_pasien'] = $this->settings->get('jkn_mobile.perusahaan_pasien');
-                    $_POST['suku_bangsa'] = $this->settings->get('jkn_mobile.suku_bangsa');
-                    $_POST['bahasa_pasien'] = $this->settings->get('jkn_mobile.bahasa_pasien');
-                    $_POST['cacat_fisik'] = $this->settings->get('jkn_mobile.cacat_fisik');
-                    $_POST['email'] = '';
-                    $_POST['nip'] = '';
-                    $_POST['kd_prop'] = $this->settings->get('jkn_mobile.kdprop');
-                    $_POST['propinsipj'] = '-';
+                        $query = $this->db('pasien')->save($patientData);
 
-                    $query = $this->db('pasien')->save($_POST);
-
-                    if($query) {
-                        $this->db()->pdo()->exec("UPDATE set_no_rkm_medis SET no_rkm_medis='$_POST[no_rkm_medis]'");
+                        if ($query) {
+                            $stmtSetRm = $this->db()->pdo()->prepare("UPDATE set_no_rkm_medis SET no_rkm_medis = ?");
+                            $stmtSetRm->execute([$noRmBaru]);
+                            $response = array(
+                                'response' => array(
+                                    'norm' => (string)$noRmBaru
+                                ),
+                                'metadata' => array(
+                                    'message' => 'Pasien berhasil mendapatkan nomor RM, silahkan lanjutkan ke booking. Pasien tidak perlu ke admisi.',
+                                    'code' => 200
+                                )
+                            );
+                            $httpCode = 200;
+                        } else {
+                            $response = array(
+                                'metadata' => array(
+                                    'message' => 'Gagal menyimpan data pasien baru, silahkan hubungi petugas Faskes.',
+                                    'code' => 201
+                                )
+                            );
+                            $httpCode = 201;
+                        }
                     }
-
-                    $pasien = $this->db('pasien')->where('no_peserta', $decode['nomorkartu'])->oneArray();
-                    $response = array(
-                        'response' => array(
-                            'norm' => $_POST['no_rkm_medis']
-                        ),
-                        'metadata' => array(
-                            'message' => 'Pasien berhasil mendapatkan nomor RM, silahkan lanjutkan ke booking. Pasien tidak perlu ke admisi.',
-                            'code' => 200
-                        )
-                    );
-                    http_response_code(200);
                 }
+            } else {
+                $response = array(
+                    'metadata' => array(
+                        'message' => 'Access denied',
+                        'code' => 201
+                    )
+                );
+                $httpCode = 201;
             }
-        } else {
+        } catch (\Throwable $e) {
+            error_log('JKN Mobile PasienBaru error: ' . $e->getMessage());
             $response = array(
                 'metadata' => array(
-                    'message' => 'Access denied',
+                    'message' => 'Terjadi kesalahan saat mendaftarkan pasien baru.',
                     'code' => 201
                 )
             );
-            http_response_code(201);
+            $httpCode = 201;
         }
-        echo json_encode(htmlspecialchars_array($response));
+        $this->_jsonResponse($response, $httpCode);
     }
 
     public function getPasienCheckIn()
@@ -1629,168 +1534,126 @@ class Site extends SiteModule
 
     private function _resultPasienCheckIn()
     {
-        header("Content-Type: application/json");
-        $header = apache_request_headers();
+        date_default_timezone_set($this->settings->get('settings.timezone') ?: 'Asia/Makassar');
+        header("Content-Type: application/json; charset=utf-8");
         $konten = trim(file_get_contents("php://input"));
         $decode = json_decode($konten, true);
+        if (!is_array($decode)) {
+            $decode = [];
+        }
         $response = array();
+        $httpCode = 201;
 
         $tokenHeader = $this->settings->get('jkn_mobile.header_token');
         $usernameHeader = $this->settings->get('jkn_mobile.header_username');
+        $reqToken = $this->_getRequestHeader($tokenHeader);
+        $reqUser = $this->_getRequestHeader($usernameHeader);
 
-        if(!isset($header[$tokenHeader]) || $header[$tokenHeader] == false) {
-            $response = array(
-                'metadata' => array(
-                    'message' => 'Token expired or missing',
-                    'code' => 201
-                )
-            );
-            http_response_code(201);
-        } else if ($header[$tokenHeader] == $this->_getToken() && isset($header[$usernameHeader]) && $header[$usernameHeader] == $this->settings->get('jkn_mobile.x_username')) {
-            $tanggal=date("Y-m-d", ($decode['waktu']/1000));
-            $jam = date("H:i:s",($decode['waktu']/1000));
-            if(empty($decode['kodebooking'])) {
+        try {
+            if ($reqToken === null || $reqToken === '' || $reqToken === false) {
                 $response = array(
                     'metadata' => array(
-                        'message' => 'Kode Booking tidak boleh kosong',
+                        'message' => 'Token expired or missing',
                         'code' => 201
                     )
                 );
-                http_response_code(201);
-            }else if(strpos($decode['kodebooking'],"'")||strpos($decode['kodebooking'],"\\")){
-                $response = array(
-                    'metadata' => array(
-                        'message' => 'Format Kode Booking salah',
-                        'code' => 201
-                    )
-                );
-                http_response_code(201);
-            }elseif(empty($decode['waktu'])) {
-                $response = array(
-                    'metadata' => array(
-                        'message' => 'Waktu tidak boleh kosong',
-                        'code' => 201
-                    )
-                );
-                http_response_code(201);
-            }else if(!preg_match("/^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/",$tanggal)){
-                $response = array(
-                    'metadata' => array(
-                        'message' => 'Format Tanggal Checkin tidak sesuai, format yang benar adalah yyyy-mm-dd',
-                        'code' => 201
-                    )
-                );
-                http_response_code(201);
-            }else if(strtotime(date("Y-m-d")) > strtotime($tanggal)){
-                $response = array(
-                    'metadata' => array(
-                        'message' => 'Waktu Checkin tidak berlaku mundur',
-                        'code' => 201
-                    )
-                );
-                http_response_code(201);
-            }else{
-                $referensi = $this->db('mlite_antrian_referensi')->where('kodebooking', $decode['kodebooking'])->oneArray();
-                $booking_registrasi = [];
-                $pasien = [];
-                if($referensi) {
-                  $pasien = $this->db('pasien')->where('no_peserta', $referensi['nomor_kartu'])->oneArray();
-                  $booking_registrasi = $this->db('booking_registrasi')
-                    ->where('no_rkm_medis', $pasien['no_rkm_medis'])
-                    ->where('tanggal_periksa', $referensi['tanggal_periksa'])
-                    ->oneArray();
-                }
-                if(!$booking_registrasi) {
-                    $response = array(
-                        'metadata' => array(
-                            'message' => 'Data Booking tidak ditemukan',
-                            'code' => 201
-                        )
-                    );
-                    http_response_code(201);
-                }else{
-                    if($booking_registrasi['status']=='Terdaftar'){
-                        $response = array(
-                            'metadata' => array(
-                                'message' => 'Anda Sudah Checkin',
-                                'code' => 201
-                            )
-                        );
-                        http_response_code(201);
-                    }else if($booking_registrasi['status']=='Belum'){
-                        $tentukan_hari=date('D',strtotime($tanggal));
-                        $day = array(
-                        'Sun' => 'AKHAD',
-                        'Mon' => 'SENIN',
-                        'Tue' => 'SELASA',
-                        'Wed' => 'RABU',
-                        'Thu' => 'KAMIS',
-                        'Fri' => 'JUMAT',
-                        'Sat' => 'SABTU'
-                        );
-                        $hari=$day[$tentukan_hari];
+                $httpCode = 201;
+            } else if ((string)$reqToken === (string)$this->_getToken() && $reqUser !== null && (string)$reqUser === (string)$this->settings->get('jkn_mobile.x_username')) {
+                if (empty($decode['kodebooking'])) {
+                    $response = array('metadata' => array('message' => 'Kode Booking tidak boleh kosong', 'code' => 201));
+                } else if (strpos($decode['kodebooking'], "'") !== false || strpos($decode['kodebooking'], "\\") !== false) {
+                    $response = array('metadata' => array('message' => 'Format Kode Booking salah', 'code' => 201));
+                } else if (empty($decode['waktu']) || !is_numeric($decode['waktu'])) {
+                    $response = array('metadata' => array('message' => 'Waktu tidak boleh kosong', 'code' => 201));
+                } else {
+                    $waktuSec = (int)floor(((float)$decode['waktu']) / 1000);
+                    $tanggal = date("Y-m-d", $waktuSec);
+                    $jam = date("H:i:s", $waktuSec);
 
-                        $cekjam = $this->db("jadwal")->where("kd_poli",$booking_registrasi['kd_poli'])
-                        ->where('kd_dokter',$booking_registrasi['kd_dokter'])->where('hari_kerja',$hari)->oneArray();
-                        $interval = $this->db()->pdo()->prepare("SELECT (TO_DAYS('$booking_registrasi[tanggal_periksa]')-TO_DAYS('$tanggal'))");
-                        $interval->execute();
-                        $interval = $interval->fetch();
+                    if (!preg_match("/^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/", $tanggal)) {
+                        $response = array('metadata' => array('message' => 'Format Tanggal Checkin tidak sesuai, format yang benar adalah yyyy-mm-dd', 'code' => 201));
+                    } else if (strtotime(date("Y-m-d")) > strtotime($tanggal)) {
+                        $response = array('metadata' => array('message' => 'Waktu Checkin tidak berlaku mundur', 'code' => 201));
+                    } else {
+                        $referensi = $this->db('mlite_antrian_referensi')->where('kodebooking', $decode['kodebooking'])->oneArray();
+                        $booking_registrasi = [];
+                        $pasien = [];
+                        if ($referensi) {
+                            $pasien = $this->db('pasien')->where('no_peserta', $referensi['nomor_kartu'])->oneArray();
+                            if (!empty($pasien['no_rkm_medis'])) {
+                                $booking_registrasi = $this->db('booking_registrasi')
+                                    ->where('no_rkm_medis', $pasien['no_rkm_medis'])
+                                    ->where('tanggal_periksa', $referensi['tanggal_periksa'])
+                                    ->oneArray();
+                            }
+                        }
+                        if (!$booking_registrasi) {
+                            $response = array('metadata' => array('message' => 'Data Booking tidak ditemukan', 'code' => 201));
+                        } else if ($booking_registrasi['status'] == 'Terdaftar') {
+                            $response = array('metadata' => array('message' => 'Anda Sudah Checkin', 'code' => 201));
+                        } else if ($booking_registrasi['status'] == 'Belum') {
+                            $day = array(
+                                'Sun' => 'AKHAD', 'Mon' => 'SENIN', 'Tue' => 'SELASA',
+                                'Wed' => 'RABU', 'Thu' => 'KAMIS', 'Fri' => 'JUMAT', 'Sat' => 'SABTU'
+                            );
+                            $hari = $day[date('D', strtotime($tanggal))] ?? '';
+                            $cekjam = $this->db("jadwal")
+                                ->where("kd_poli", $booking_registrasi['kd_poli'])
+                                ->where('kd_dokter', $booking_registrasi['kd_dokter'])
+                                ->where('hari_kerja', $hari)
+                                ->oneArray();
+                            $stmtInt = $this->db()->pdo()->prepare("SELECT (TO_DAYS(?) - TO_DAYS(?))");
+                            $stmtInt->execute([$booking_registrasi['tanggal_periksa'], $tanggal]);
+                            $interval = $stmtInt->fetch(\PDO::FETCH_NUM);
 
-                        if($interval[0]<=0){
-                            if (strtotime($jam) >= strtotime($cekjam['jam_selesai'])) {
-                                # code...
+                            $isExpired = ($interval && (int)$interval[0] <= 0 && !empty($cekjam['jam_selesai']) && strtotime($jam) >= strtotime($cekjam['jam_selesai']));
+                            if ($isExpired) {
                                 $response = array(
                                     'metadata' => array(
-                                        'message' => 'Chekin Anda sudah expired, maksimal 1 hari sebelum tanggal periksa dan 1 jam sebelum jam pelayanan berakhir. Silahkan konfirmasi ke layanan pelanggan',
+                                        'message' => 'Checkin Anda sudah expired, maksimal 1 hari sebelum tanggal periksa dan sebelum jam pelayanan berakhir. Silahkan konfirmasi ke layanan pelanggan',
                                         'code' => 201
                                     )
                                 );
-                                http_response_code(201);
                             } else {
                                 $cek_stts_daftar = $this->db('reg_periksa')->where('no_rkm_medis', $booking_registrasi['no_rkm_medis'])->count();
-                                $_POST['stts_daftar'] = 'Baru';
-                                if($cek_stts_daftar > 0) {
-                                $_POST['stts_daftar'] = 'Lama';
-                                }
+                                $stts_daftar = ($cek_stts_daftar > 0) ? 'Lama' : 'Baru';
 
-                                $biaya_reg = $this->db('poliklinik')->where('kd_poli', $booking_registrasi['kd_poli'])->oneArray();
-                                $_POST['biaya_reg'] = $biaya_reg['registrasi'];
-                                if($_POST['stts_daftar'] == 'Lama') {
-                                $_POST['biaya_reg'] = $biaya_reg['registrasilama'];
-                                }
+                                $biaya_reg_row = $this->db('poliklinik')->where('kd_poli', $booking_registrasi['kd_poli'])->oneArray();
+                                $biaya_reg = ($stts_daftar === 'Lama')
+                                    ? ($biaya_reg_row['registrasilama'] ?? 0)
+                                    : ($biaya_reg_row['registrasi'] ?? 0);
 
-                                $cek_status_poli = $this->db('reg_periksa')->where('no_rkm_medis', $booking_registrasi['no_rkm_medis'])->where('kd_poli', $booking_registrasi['kd_poli'])->count();
-                                $_POST['status_poli'] = 'Baru';
-                                if($cek_status_poli > 0) {
-                                $_POST['status_poli'] = 'Lama';
-                                }
+                                $cek_status_poli = $this->db('reg_periksa')
+                                    ->where('no_rkm_medis', $booking_registrasi['no_rkm_medis'])
+                                    ->where('kd_poli', $booking_registrasi['kd_poli'])
+                                    ->count();
+                                $status_poli = ($cek_status_poli > 0) ? 'Lama' : 'Baru';
 
-                                // set umur
-                                $tanggal = new \DateTime($this->core->getPasienInfo('tgl_lahir', $booking_registrasi['no_rkm_medis']));
-                                $today = new \DateTime(date('Y-m-d'));
-                                $y = $today->diff($tanggal)->y;
-                                $m = $today->diff($tanggal)->m;
-                                $d = $today->diff($tanggal)->d;
-
-                                $umur="0";
-                                $sttsumur="Th";
-                                if($y>0){
-                                    $umur=$y;
-                                    $sttsumur="Th";
-                                }else if($y==0){
-                                    if($m>0){
-                                        $umur=$m;
-                                        $sttsumur="Bl";
-                                    }else if($m==0){
-                                        $umur=$d;
-                                        $sttsumur="Hr";
+                                $tglLahirStr = $this->core->getPasienInfo('tgl_lahir', $booking_registrasi['no_rkm_medis']);
+                                $umur = "0";
+                                $sttsumur = "Th";
+                                if (!empty($tglLahirStr) && $tglLahirStr !== '0000-00-00') {
+                                    $tglLahirObj = new \DateTime($tglLahirStr);
+                                    $todayObj = new \DateTime(date('Y-m-d'));
+                                    $diff = $todayObj->diff($tglLahirObj);
+                                    if ($diff->y > 0) {
+                                        $umur = (string)$diff->y;
+                                        $sttsumur = "Th";
+                                    } elseif ($diff->m > 0) {
+                                        $umur = (string)$diff->m;
+                                        $sttsumur = "Bl";
+                                    } else {
+                                        $umur = (string)$diff->d;
+                                        $sttsumur = "Hr";
                                     }
                                 }
 
-                                $tanggalupdate=date("Y-m-d H:i:s", ($decode['waktu']/1000));
-                                $update = $this->db('booking_registrasi')->where('no_rkm_medis', $pasien['no_rkm_medis'])->where('tanggal_periksa', $referensi['tanggal_periksa'])->update(['status' => 'Terdaftar']);
-                                $insert = $this->db('reg_periksa')
-                                ->save([
+                                $this->db('booking_registrasi')
+                                    ->where('no_rkm_medis', $pasien['no_rkm_medis'])
+                                    ->where('tanggal_periksa', $referensi['tanggal_periksa'])
+                                    ->update(['status' => 'Terdaftar']);
+
+                                $insert = $this->db('reg_periksa')->save([
                                     'no_reg' => $booking_registrasi['no_reg'],
                                     'no_rawat' => $this->core->setNoRawat($booking_registrasi['tanggal_periksa']),
                                     'tgl_registrasi' => $booking_registrasi['tanggal_periksa'],
@@ -1801,169 +1664,101 @@ class Site extends SiteModule
                                     'p_jawab' => $this->core->getPasienInfo('namakeluarga', $booking_registrasi['no_rkm_medis']),
                                     'almt_pj' => $this->core->getPasienInfo('alamatpj', $booking_registrasi['no_rkm_medis']),
                                     'hubunganpj' => $this->core->getPasienInfo('keluarga', $booking_registrasi['no_rkm_medis']),
-                                    'biaya_reg' => $_POST['biaya_reg'],
+                                    'biaya_reg' => $biaya_reg,
                                     'stts' => 'Belum',
-                                    'stts_daftar' => $_POST['stts_daftar'],
+                                    'stts_daftar' => $stts_daftar,
                                     'status_lanjut' => 'Ralan',
                                     'kd_pj' => $booking_registrasi['kd_pj'],
                                     'umurdaftar' => $umur,
                                     'sttsumur' => $sttsumur,
                                     'status_bayar' => 'Belum Bayar',
-                                    'status_poli' => $_POST['status_poli']
+                                    'status_poli' => $status_poli
                                 ]);
-                                if($insert){
-                                    $reg_periksa = $this->db('reg_periksa')->where('no_rkm_medis',$booking_registrasi['no_rkm_medis'])->where('tgl_registrasi',$booking_registrasi['tanggal_periksa'])->oneArray();
-                                    $mlite_antrian_loket = $this->db('mlite_antrian_loket')->where('no_rkm_medis', $booking_registrasi['no_rkm_medis'])->where('postdate', $booking_registrasi['tanggal_periksa'])->oneArray();
-                                    if ($_POST['stts_daftar'] == 'Baru') {
-                                        $result = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'Loket')->where('postdate', date('Y-m-d'))->desc('start_time')->oneArray();
-                                        $noantrian = '';
-                                        if($result) {
-                                            $noantrian = $result['noantrian'];
-                                        }
-                                            if($noantrian > 0) {
-                                                $next_antrian = $noantrian + 1;
-                                            } else {
-                                                $next_antrian = 1;
+
+                                if ($insert) {
+                                    if ($interval && (int)$interval[0] <= 0) {
+                                        $reg_periksa = $this->db('reg_periksa')
+                                            ->where('no_rkm_medis', $booking_registrasi['no_rkm_medis'])
+                                            ->where('tgl_registrasi', $booking_registrasi['tanggal_periksa'])
+                                            ->oneArray();
+                                        $mlite_antrian_loket = $this->db('mlite_antrian_loket')
+                                            ->where('no_rkm_medis', $booking_registrasi['no_rkm_medis'])
+                                            ->where('postdate', $booking_registrasi['tanggal_periksa'])
+                                            ->oneArray();
+                                        if ($stts_daftar === 'Baru') {
+                                            $result = $this->db('mlite_antrian_loket')
+                                                ->select('noantrian')
+                                                ->where('type', 'Loket')
+                                                ->where('postdate', date('Y-m-d'))
+                                                ->desc('start_time')
+                                                ->oneArray();
+                                            $noantrian = !empty($result['noantrian']) ? (int)$result['noantrian'] : 0;
+                                            $next_antrian = $noantrian + 1;
+                                            if (empty($mlite_antrian_loket['postdate'])) {
+                                                $this->db('mlite_antrian_loket')->save([
+                                                    'type' => 'Loket',
+                                                    'noantrian' => $next_antrian,
+                                                    'no_rkm_medis' => $booking_registrasi['no_rkm_medis'],
+                                                    'postdate' => date('Y-m-d'),
+                                                    'start_time' => date('H:i:s'),
+                                                    'end_time' => '00:00:00',
+                                                    'status' => '0',
+                                                    'loket' => '0'
+                                                ]);
                                             }
-                                        if (!$mlite_antrian_loket['postdate']) {
-                                            $this->db('mlite_antrian_loket')
-                                            ->save([
-                                            'type' => 'Loket',
-                                            'noantrian' => $next_antrian,
-                                            'no_rkm_medis' => $booking_registrasi['no_rkm_medis'],
-                                            'postdate' => date('Y-m-d'),
-                                            'start_time' => date('H:i:s'),
-                                            'end_time' => '00:00:00',
-                                            'status' => '0',
-                                            'loket' => '0'
+                                        }
+                                        if (!empty($reg_periksa['no_rawat']) && !$this->db('mutasi_berkas')->where('no_rawat', $reg_periksa['no_rawat'])->oneArray()) {
+                                            $this->db('mutasi_berkas')->save([
+                                                'no_rawat' => $reg_periksa['no_rawat'],
+                                                'status' => 'Sudah Dikirim',
+                                                'dikirim' => date('Y-m-d H:i:s'),
+                                                'diterima' => '0000-00-00 00:00:00',
+                                                'kembali' => '0000-00-00 00:00:00',
+                                                'tidakada' => '0000-00-00 00:00:00',
+                                                'ranap' => '0000-00-00 00:00:00'
                                             ]);
                                         }
                                     }
-                                    if(!$this->db('mutasi_berkas')->where('no_rawat', $reg_periksa['no_rawat'])->oneArray()) {
-                                        $datetime = date('Y-m-d H:i:s');
-                                        $this->db('mutasi_berkas')->save([
-                                          'no_rawat' => $reg_periksa['no_rawat'],
-                                          'status' => 'Sudah Dikirim',
-                                          'dikirim' => $datetime,
-                                          'diterima' => '0000-00-00 00:00:00',
-                                          'kembali' => '0000-00-00 00:00:00',
-                                          'tidakada' => '0000-00-00 00:00:00',
-                                          'ranap' => '0000-00-00 00:00:00'
-                                        ]);
-                                      }
                                     $response = array(
                                         'metadata' => array(
-                                            'message' => 'Ok 1',
+                                            'message' => 'Ok',
                                             'code' => 200
                                         )
                                     );
-                                    http_response_code(200);
-                                }else{
+                                    $httpCode = 200;
+                                } else {
                                     $response = array(
                                         'metadata' => array(
-                                            'message' => "Maaf terjadi kesalahan, hubungi Admnistrator..",
-                                            'code' => 401
+                                            'message' => "Maaf terjadi kesalahan, hubungi Administrator..",
+                                            'code' => 201
                                         )
                                     );
-                                    http_response_code(401);
+                                    $httpCode = 201;
                                 }
-                            }
-                        }else{
-                            $cek_stts_daftar = $this->db('reg_periksa')->where('no_rkm_medis', $booking_registrasi['no_rkm_medis'])->count();
-                            $_POST['stts_daftar'] = 'Baru';
-                            if($cek_stts_daftar > 0) {
-                              $_POST['stts_daftar'] = 'Lama';
-                            }
-
-                            $biaya_reg = $this->db('poliklinik')->where('kd_poli', $booking_registrasi['kd_poli'])->oneArray();
-                            $_POST['biaya_reg'] = $biaya_reg['registrasi'];
-                            if($_POST['stts_daftar'] == 'Lama') {
-                              $_POST['biaya_reg'] = $biaya_reg['registrasilama'];
-                            }
-
-                            $cek_status_poli = $this->db('reg_periksa')->where('no_rkm_medis', $booking_registrasi['no_rkm_medis'])->where('kd_poli', $booking_registrasi['kd_poli'])->count();
-                            $_POST['status_poli'] = 'Baru';
-                            if($cek_status_poli > 0) {
-                              $_POST['status_poli'] = 'Lama';
-                            }
-
-                            // set umur
-                            $tanggal = new \DateTime($this->core->getPasienInfo('tgl_lahir', $booking_registrasi['no_rkm_medis']));
-                            $today = new \DateTime(date('Y-m-d'));
-                            $y = $today->diff($tanggal)->y;
-                            $m = $today->diff($tanggal)->m;
-                            $d = $today->diff($tanggal)->d;
-
-                            $umur="0";
-                            $sttsumur="Th";
-                            if($y>0){
-                                $umur=$y;
-                                $sttsumur="Th";
-                            }else if($y==0){
-                                if($m>0){
-                                    $umur=$m;
-                                    $sttsumur="Bl";
-                                }else if($m==0){
-                                    $umur=$d;
-                                    $sttsumur="Hr";
-                                }
-                            }
-
-                            $tanggalupdate=date("Y-m-d H:i:s", ($decode['waktu']/1000));
-                            $update = $this->db('booking_registrasi')->where('no_rkm_medis', $pasien['no_rkm_medis'])->where('tanggal_periksa', $referensi['tanggal_periksa'])->update(['status' => 'Terdaftar']);
-                            $insert = $this->db('reg_periksa')
-                              ->save([
-                                'no_reg' => $booking_registrasi['no_reg'],
-                                'no_rawat' => $this->core->setNoRawat($booking_registrasi['tanggal_periksa']),
-                                'tgl_registrasi' => $booking_registrasi['tanggal_periksa'],
-                                'jam_reg' => date('H:i:s'),
-                                'kd_dokter' => $booking_registrasi['kd_dokter'],
-                                'no_rkm_medis' => $booking_registrasi['no_rkm_medis'],
-                                'kd_poli' => $booking_registrasi['kd_poli'],
-                                'p_jawab' => $this->core->getPasienInfo('namakeluarga', $booking_registrasi['no_rkm_medis']),
-                                'almt_pj' => $this->core->getPasienInfo('alamatpj', $booking_registrasi['no_rkm_medis']),
-                                'hubunganpj' => $this->core->getPasienInfo('keluarga', $booking_registrasi['no_rkm_medis']),
-                                'biaya_reg' => $_POST['biaya_reg'],
-                                'stts' => 'Belum',
-                                'stts_daftar' => $_POST['stts_daftar'],
-                                'status_lanjut' => 'Ralan',
-                                'kd_pj' => $booking_registrasi['kd_pj'],
-                                'umurdaftar' => $umur,
-                                'sttsumur' => $sttsumur,
-                                'status_bayar' => 'Belum Bayar',
-                                'status_poli' => $_POST['status_poli']
-                              ]);
-                            if($insert){
-                                $response = array(
-                                    'metadata' => array(
-                                        'message' => 'Ok 2',
-                                        'code' => 200
-                                    )
-                                );
-                                http_response_code(200);
-                            }else{
-                                $response = array(
-                                    'metadata' => array(
-                                        'message' => "Maaf terjadi kesalahan, hubungi Admnistrator..",
-                                        'code' => 401
-                                    )
-                                );
-                                http_response_code(401);
                             }
                         }
                     }
                 }
+            } else {
+                $response = array(
+                    'metadata' => array(
+                        'message' => 'Access denied',
+                        'code' => 201
+                    )
+                );
+                $httpCode = 201;
             }
-        } else {
+        } catch (\Throwable $e) {
+            error_log('JKN Mobile CheckIn error: ' . $e->getMessage());
             $response = array(
                 'metadata' => array(
-                    'message' => 'Access denied',
+                    'message' => 'Terjadi kesalahan saat memproses check-in.',
                     'code' => 201
                 )
             );
-            http_response_code(201);
+            $httpCode = 201;
         }
-        echo json_encode(htmlspecialchars_array($response));
+        $this->_jsonResponse($response, $httpCode);
     }
 
     public function getOperasiRS()
@@ -1974,79 +1769,85 @@ class Site extends SiteModule
 
     private function _resultOperasiRS()
     {
-        header("Content-Type: application/json");
-        $header = apache_request_headers();
+        header("Content-Type: application/json; charset=utf-8");
         $konten = trim(file_get_contents("php://input"));
         $decode = json_decode($konten, true);
+        if (!is_array($decode)) {
+            $decode = [];
+        }
         $response = array();
+        $httpCode = 201;
 
         $tokenHeader = $this->settings->get('jkn_mobile.header_token');
         $usernameHeader = $this->settings->get('jkn_mobile.header_username');
+        $reqToken = $this->_getRequestHeader($tokenHeader);
+        $reqUser = $this->_getRequestHeader($usernameHeader);
 
-        if(!isset($header[$tokenHeader]) || $header[$tokenHeader] == false) {
+        if ($reqToken === null || $reqToken === '' || $reqToken === false) {
             $response = array(
                 'metadata' => array(
                     'message' => 'Token expired or missing',
                     'code' => 201
                 )
             );
-            http_response_code(201);
-        } else if ($header[$tokenHeader] == $this->_getToken() && isset($header[$usernameHeader]) && $header[$usernameHeader] == $this->settings->get('jkn_mobile.x_username')) {
-            $data = array();
-            $sql = $this->db()->pdo()->prepare("SELECT booking_operasi.no_rawat AS kodebooking, booking_operasi.tanggal AS tanggaloperasi, paket_operasi.nm_perawatan AS jenistindakan,  maping_poli_bpjs.kd_poli_bpjs AS kodepoli, poliklinik.nm_poli AS namapoli, booking_operasi.status AS terlaksana, pasien.no_peserta AS nopeserta FROM pasien, booking_operasi, paket_operasi, reg_periksa, jadwal, poliklinik, maping_poli_bpjs WHERE booking_operasi.no_rawat = reg_periksa.no_rawat AND pasien.no_rkm_medis = reg_periksa.no_rkm_medis AND booking_operasi.kode_paket = paket_operasi.kode_paket AND booking_operasi.kd_dokter = jadwal.kd_dokter AND jadwal.kd_poli = poliklinik.kd_poli AND jadwal.kd_poli=maping_poli_bpjs.kd_poli_rs AND booking_operasi.tanggal BETWEEN '$decode[tanggalawal]' AND '$decode[tanggalakhir]' GROUP BY booking_operasi.no_rawat");
-            $sql->execute();
-            $sql = $sql->fetchAll();
+            $httpCode = 201;
+        } else if ((string)$reqToken === (string)$this->_getToken() && $reqUser !== null && (string)$reqUser === (string)$this->settings->get('jkn_mobile.x_username')) {
+            $tanggalawal = trim((string)($decode['tanggalawal'] ?? ''));
+            $tanggalakhir = trim((string)($decode['tanggalakhir'] ?? ''));
+            $errors = [];
 
-            if (!preg_match("/^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/",$decode['tanggalawal'])) {
-               $errors[] = 'Format tanggal awal jadwal operasi tidak sesuai';
+            if (!preg_match("/^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/", $tanggalawal)) {
+                $errors[] = 'Format tanggal awal jadwal operasi tidak sesuai';
             }
-            if (!preg_match("/^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/",$decode['tanggalakhir'])) {
-               $errors[] = 'Format tanggal akhir jadwal operasi tidak sesuai';
+            if (!preg_match("/^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/", $tanggalakhir)) {
+                $errors[] = 'Format tanggal akhir jadwal operasi tidak sesuai';
             }
-            if ($decode['tanggalawal'] > $decode['tanggalakhir']) {
-              $errors[] = 'Format tanggal awal harus lebih kecil dari tanggal akhir';
+            if (empty($errors) && $tanggalawal > $tanggalakhir) {
+                $errors[] = 'Format tanggal awal harus lebih kecil dari tanggal akhir';
             }
-            if(!empty($errors)) {
-                foreach($errors as $error) {
-                    $response = array(
-                        'metadata' => array(
-                            'message' => $this->_getErrors($error),
-                            'code' => 201
-                        )
-                    );
-                    http_response_code(201);
-                }
+            if (!empty($errors)) {
+                $response = array(
+                    'metadata' => array(
+                        'message' => implode(', ', $errors),
+                        'code' => 201
+                    )
+                );
+                $httpCode = 201;
             } else {
-                if (count($sql) > 0) {
-                    foreach ($sql as $data) {
-                        if($data['terlaksana'] == 'Menunggu') {
-                          $data['terlaksana'] = 0;
-                        } else {
-                          $data['terlaksana'] = 1;
-                        }
+                $stmtOp = $this->db()->pdo()->prepare(
+                    "SELECT booking_operasi.no_rawat AS kodebooking, booking_operasi.tanggal AS tanggaloperasi, paket_operasi.nm_perawatan AS jenistindakan, maping_poli_bpjs.kd_poli_bpjs AS kodepoli, poliklinik.nm_poli AS namapoli, booking_operasi.status AS terlaksana, pasien.no_peserta AS nopeserta
+                    FROM pasien, booking_operasi, paket_operasi, reg_periksa, jadwal, poliklinik, maping_poli_bpjs
+                    WHERE booking_operasi.no_rawat = reg_periksa.no_rawat
+                    AND pasien.no_rkm_medis = reg_periksa.no_rkm_medis
+                    AND booking_operasi.kode_paket = paket_operasi.kode_paket
+                    AND booking_operasi.kd_dokter = jadwal.kd_dokter
+                    AND jadwal.kd_poli = poliklinik.kd_poli
+                    AND jadwal.kd_poli = maping_poli_bpjs.kd_poli_rs
+                    AND booking_operasi.tanggal BETWEEN :tglawal AND :tglakhir
+                    GROUP BY booking_operasi.no_rawat"
+                );
+                $stmtOp->execute([':tglawal' => $tanggalawal, ':tglakhir' => $tanggalakhir]);
+                $rows = $stmtOp->fetchAll(\PDO::FETCH_ASSOC);
+
+                if (count($rows) > 0) {
+                    $data_array = [];
+                    foreach ($rows as $data) {
                         $data_array[] = array(
-                                'kodebooking' => $data['kodebooking'],
-                                'tanggaloperasi' => $data['tanggaloperasi'],
-                                'jenistindakan' => $data['jenistindakan'],
-                                'kodepoli' => $data['kodepoli'],
-                                'namapoli' => $data['namapoli'],
-                                'terlaksana' => $data['terlaksana'],
-                                'nopeserta' => $data['nopeserta'],
-                                'lastupdate' => strtotime(date('Y-m-d H:i:s')) * 1000
+                            'kodebooking' => (string)$data['kodebooking'],
+                            'tanggaloperasi' => (string)$data['tanggaloperasi'],
+                            'jenistindakan' => (string)$data['jenistindakan'],
+                            'kodepoli' => (string)$data['kodepoli'],
+                            'namapoli' => (string)$data['namapoli'],
+                            'terlaksana' => ($data['terlaksana'] == 'Menunggu') ? 0 : 1,
+                            'nopeserta' => (string)$data['nopeserta'],
+                            'lastupdate' => (int)(strtotime(date('Y-m-d H:i:s')) * 1000)
                         );
                     }
                     $response = array(
-                        'response' => array(
-                            'list' => (
-                                $data_array
-                            )
-                        ),
-                        'metadata' => array(
-                            'message' => 'Ok',
-                            'code' => 200
-                        )
+                        'response' => array('list' => $data_array),
+                        'metadata' => array('message' => 'Ok', 'code' => 200)
                     );
-                    http_response_code(200);
+                    $httpCode = 200;
                 } else {
                     $response = array(
                         'metadata' => array(
@@ -2054,7 +1855,7 @@ class Site extends SiteModule
                             'code' => 201
                         )
                     );
-                    http_response_code(201);
+                    $httpCode = 201;
                 }
             }
         } else {
@@ -2064,9 +1865,9 @@ class Site extends SiteModule
                     'code' => 201
                 )
             );
-            http_response_code(201);
+            $httpCode = 201;
         }
-        echo json_encode(htmlspecialchars_array($response));
+        $this->_jsonResponse($response, $httpCode);
     }
 
     public function getOperasiPasien()
@@ -2077,88 +1878,82 @@ class Site extends SiteModule
 
     private function _resultOperasiPasien()
     {
-        header("Content-Type: application/json");
-        $header = apache_request_headers();
+        header("Content-Type: application/json; charset=utf-8");
         $konten = trim(file_get_contents("php://input"));
         $decode = json_decode($konten, true);
+        if (!is_array($decode)) {
+            $decode = [];
+        }
         $response = array();
+        $httpCode = 201;
 
         $tokenHeader = $this->settings->get('jkn_mobile.header_token');
         $usernameHeader = $this->settings->get('jkn_mobile.header_username');
+        $reqToken = $this->_getRequestHeader($tokenHeader);
+        $reqUser = $this->_getRequestHeader($usernameHeader);
 
-        if(!isset($header[$tokenHeader]) || $header[$tokenHeader] == false) {
+        if ($reqToken === null || $reqToken === '' || $reqToken === false) {
             $response = array(
                 'metadata' => array(
                     'message' => 'Token expired or missing',
                     'code' => 201
                 )
             );
-            http_response_code(201);
-        } else if ($header[$tokenHeader] == $this->_getToken() && isset($header[$usernameHeader]) && $header[$usernameHeader] == $this->settings->get('jkn_mobile.x_username')) {
-            $data = array();
-            $cek_nopeserta = $this->db('pasien')->where('no_peserta', $decode['nopeserta'])->oneArray();
-            $sql = $this->db()->pdo()->prepare("SELECT booking_operasi.no_rawat AS kodebooking, booking_operasi.tanggal AS tanggaloperasi, paket_operasi.nm_perawatan AS jenistindakan, maping_poli_bpjs.kd_poli_bpjs AS kodepoli, poliklinik.nm_poli AS namapoli, booking_operasi.status AS terlaksana FROM pasien, booking_operasi, paket_operasi, reg_periksa, jadwal, poliklinik, maping_poli_bpjs WHERE booking_operasi.no_rawat = reg_periksa.no_rawat AND pasien.no_rkm_medis = reg_periksa.no_rkm_medis AND booking_operasi.kode_paket = paket_operasi.kode_paket AND booking_operasi.kd_dokter = jadwal.kd_dokter AND jadwal.kd_poli = poliklinik.kd_poli AND jadwal.kd_poli=maping_poli_bpjs.kd_poli_rs AND pasien.no_peserta = '$decode[nopeserta]'  GROUP BY booking_operasi.no_rawat");
-            $sql->execute();
-            $sql = $sql->fetchAll();
+            $httpCode = 201;
+        } else if ((string)$reqToken === (string)$this->_getToken() && $reqUser !== null && (string)$reqUser === (string)$this->settings->get('jkn_mobile.x_username')) {
+            $nopeserta = trim((string)($decode['nopeserta'] ?? ''));
+            $cek_nopeserta = ($nopeserta !== '') ? $this->db('pasien')->where('no_peserta', $nopeserta)->oneArray() : null;
+            $errors = [];
 
-            if($cek_nopeserta == 0) {
-               $errors[] = 'Nomor peserta tidak ditemukan';
+            if (empty($cek_nopeserta)) {
+                $errors[] = 'Nomor peserta tidak ditemukan';
             }
-            if (!empty($decode['nopeserta']) && !ctype_digit($decode['nopeserta']) ){
-               $errors[] = 'Nomor kartu harus mengandung angka saja!!';
+            if ($nopeserta !== '' && !ctype_digit($nopeserta)) {
+                $errors[] = 'Nomor kartu harus mengandung angka saja!!';
             }
-            if (!empty($decode['nomorkartu']) && mb_strlen($decode['nomorkartu'], 'UTF-8') < 13){
-               $errors[] = 'Nomor kartu harus 13 digit';
+            if ($nopeserta !== '' && mb_strlen($nopeserta, 'UTF-8') < 13) {
+                $errors[] = 'Nomor kartu harus 13 digit';
             }
-            if(!empty($errors)) {
-                foreach($errors as $error) {
-                    $response = array(
-                        'metadata' => array(
-                            'message' => $this->_getErrors($error),
-                            'code' => 201
-                        )
-                    );
-                    http_response_code(201);
-                }
+            if (!empty($errors)) {
+                $response = array(
+                    'metadata' => array(
+                        'message' => implode(', ', $errors),
+                        'code' => 201
+                    )
+                );
+                $httpCode = 201;
             } else {
-                if ($decode['nopeserta'] != '') {
-                    $data_array = [];
-                    foreach ($sql as $data) {
-                        if($data['terlaksana'] == 'Menunggu') {
-                          $data['terlaksana'] = 0;
-                        } else {
-                          $data['terlaksana'] = 1;
-                        }
-                        $data_array[] = array(
-                                'kodebooking' => $data['kodebooking'],
-                                'tanggaloperasi' => $data['tanggaloperasi'],
-                                'jenistindakan' => $data['jenistindakan'],
-                                'kodepoli' => $data['kodepoli'],
-                                'namapoli' => $data['namapoli'],
-                                'terlaksana' => $data['terlaksana']
-                        );
-                    }
-                    $response = array(
-                        'response' => array(
-                            'list' => (
-                                $data_array
-                            )
-                        ),
-                        'metadata' => array(
-                            'message' => 'Ok',
-                            'code' => 200
-                        )
+                $stmtOp = $this->db()->pdo()->prepare(
+                    "SELECT booking_operasi.no_rawat AS kodebooking, booking_operasi.tanggal AS tanggaloperasi, paket_operasi.nm_perawatan AS jenistindakan, maping_poli_bpjs.kd_poli_bpjs AS kodepoli, poliklinik.nm_poli AS namapoli, booking_operasi.status AS terlaksana
+                    FROM pasien, booking_operasi, paket_operasi, reg_periksa, jadwal, poliklinik, maping_poli_bpjs
+                    WHERE booking_operasi.no_rawat = reg_periksa.no_rawat
+                    AND pasien.no_rkm_medis = reg_periksa.no_rkm_medis
+                    AND booking_operasi.kode_paket = paket_operasi.kode_paket
+                    AND booking_operasi.kd_dokter = jadwal.kd_dokter
+                    AND jadwal.kd_poli = poliklinik.kd_poli
+                    AND jadwal.kd_poli = maping_poli_bpjs.kd_poli_rs
+                    AND pasien.no_peserta = :nopeserta
+                    GROUP BY booking_operasi.no_rawat"
+                );
+                $stmtOp->execute([':nopeserta' => $nopeserta]);
+                $rows = $stmtOp->fetchAll(\PDO::FETCH_ASSOC);
+
+                $data_array = [];
+                foreach ($rows as $data) {
+                    $data_array[] = array(
+                        'kodebooking' => (string)$data['kodebooking'],
+                        'tanggaloperasi' => (string)$data['tanggaloperasi'],
+                        'jenistindakan' => (string)$data['jenistindakan'],
+                        'kodepoli' => (string)$data['kodepoli'],
+                        'namapoli' => (string)$data['namapoli'],
+                        'terlaksana' => ($data['terlaksana'] == 'Menunggu') ? 0 : 1
                     );
-                    http_response_code(200);
-                } else {
-                    $response = array(
-                        'metadata' => array(
-                            'message' => 'Maaf tidak ada daftar booking operasi.',
-                            'code' => 201
-                        )
-                    );
-                    http_response_code(201);
                 }
+                $response = array(
+                    'response' => array('list' => $data_array),
+                    'metadata' => array('message' => 'Ok', 'code' => 200)
+                );
+                $httpCode = 200;
             }
         } else {
             $response = array(
@@ -2167,9 +1962,9 @@ class Site extends SiteModule
                     'code' => 201
                 )
             );
-            http_response_code(201);
+            $httpCode = 201;
         }
-        echo json_encode(htmlspecialchars_array($response));
+        $this->_jsonResponse($response, $httpCode);
     }
 
     public function _getJadwal($kodepoli, $tanggal)
