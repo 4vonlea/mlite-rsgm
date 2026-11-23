@@ -348,6 +348,29 @@ class Admin extends AdminModule
         ]);
       }
 
+      if(in_array($_POST['kat'] ?? '', ['obat', 'racikan'], true)) {
+        $aturanPakai = trim((string)($_POST['aturan_pakai'] ?? ''));
+        $jmlRaw = str_replace(',', '.', trim((string)($_POST['jml'] ?? '')));
+        if ($aturanPakai === '') {
+          header('Content-Type: application/json');
+          echo json_encode([
+            'status' => 'error',
+            'message' => 'Aturan Pakai wajib diisi untuk input obat (e-Resep).'
+          ]);
+          exit();
+        }
+        if ($jmlRaw === '' || !is_numeric($jmlRaw) || (float)$jmlRaw <= 0) {
+          header('Content-Type: application/json');
+          echo json_encode([
+            'status' => 'error',
+            'message' => 'Jumlah (Jml) obat wajib diisi dan harus lebih dari 0.'
+          ]);
+          exit();
+        }
+        $_POST['aturan_pakai'] = $aturanPakai;
+        $_POST['jml'] = $jmlRaw;
+      }
+
       if($_POST['kat'] == 'obat') {
         $maxRetries = 5;
         $retryCount = 0;
