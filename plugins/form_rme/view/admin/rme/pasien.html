@@ -340,13 +340,15 @@
                             <button type="button" class="btn btn-xs rsgm-btn-soft-info" onclick="openDocModal('{$ff.url_cetak}', '{$ff.kode_form} - {$ff.nama_form}')" title="Pratinjau Dokumen">
                               <i class="fa fa-eye"></i> Pratinjau
                             </button>
+                            {if: !empty($ff.can_write)}
                             <a href="{$ff.url_form}" target="_blank" class="btn btn-xs rsgm-btn-soft-primary" title="Buka / Edit Dokumen Ini">
                               <i class="fa fa-pencil"></i> Edit
                             </a>
+                            {/if}
                             <a href="{$ff.url_cetak}" target="_blank" class="btn btn-xs rsgm-btn-soft-success" title="Cetak Formulir PDF">
                               <i class="fa fa-print"></i> Cetak
                             </a>
-                            {if: !empty($ff.record_id)}
+                            {if: !empty($ff.can_write) && !empty($ff.record_id)}
                             <button type="button" class="btn btn-xs btn-danger js-btn-batal-rme" style="font-weight: 600; border-radius: 5px; padding: 3px 8px; font-size: 11px;"
                               data-form-id="{$ff.id}" data-record-id="{$ff.record_id}" data-no-rawat="{$patient.no_rawat}" data-title="{$ff.kode_form} - {$ff.nama_form}"
                               title="Batalkan / Hapus Pengisian Formulir Ini">
@@ -755,13 +757,15 @@
                         <button type="button" class="btn btn-info" onclick="openDocModal('{$f.url_cetak}', '{$f.kode_form} - {$f.nama_form}')" title="Pratinjau Dokumen">
                           <i class="fa fa-eye"></i>
                         </button>
+                        {if: !empty($f.can_write)}
                         <a href="{$f.url_form}" target="_blank" class="btn btn-primary" title="Buka / Edit Formulir Pasien Ini">
                           <i class="fa fa-pencil"></i>
                         </a>
+                        {/if}
                         <a href="{$f.url_cetak}" target="_blank" class="btn btn-success" title="Cetak Dokumen">
                           <i class="fa fa-print"></i>
                         </a>
-                        {if: !empty($f.record_id)}
+                        {if: !empty($f.can_write) && !empty($f.record_id)}
                         <button type="button" class="btn btn-danger js-btn-batal-rme"
                           data-form-id="{$f.id}" data-record-id="{$f.record_id}" data-no-rawat="{$patient.no_rawat}" data-title="{$f.kode_form} - {$f.nama_form}"
                           title="Batalkan / Hapus Pengisian Formulir Ini">
@@ -770,9 +774,15 @@
                         {/if}
                       </div>
                       {else}
-                      <a href="{$f.url_form}" target="_blank" class="btn btn-xs btn-success" style="font-weight: 600; padding: 2px 7px;">
-                        <i class="fa fa-plus"></i> Isi
-                      </a>
+                        {if: !empty($f.can_write)}
+                        <a href="{$f.url_form}" target="_blank" class="btn btn-xs btn-success" style="font-weight: 600; padding: 2px 7px;">
+                          <i class="fa fa-plus"></i> Isi
+                        </a>
+                        {else}
+                        <span class="rsgm-badge rsgm-badge-slate" style="font-size: 10px; padding: 2px 7px;" title="Peran / unit Anda hanya memiliki akses lihat & cetak (Read-Only) untuk formulir ini">
+                          <i class="fa fa-lock"></i> Baca Saja
+                        </span>
+                        {/if}
                       {/if}
                     </td>
 
@@ -843,13 +853,15 @@
                         <button type="button" class="btn btn-info" onclick="openDocModal('{$f.url_cetak}', '{$f.kode_form} - {$f.nama_form}')" title="Pratinjau Dokumen">
                           <i class="fa fa-eye"></i> Pratinjau
                         </button>
+                        {if: !empty($f.can_write)}
                         <a href="{$f.url_form}" target="_blank" class="btn btn-primary" title="Edit Form">
                           <i class="fa fa-pencil"></i> Edit
                         </a>
+                        {/if}
                         <a href="{$f.url_cetak}" target="_blank" class="btn btn-success" title="Cetak PDF">
                           <i class="fa fa-print"></i> Cetak
                         </a>
-                        {if: !empty($f.record_id)}
+                        {if: !empty($f.can_write) && !empty($f.record_id)}
                         <button type="button" class="btn btn-danger js-btn-batal-rme"
                           data-form-id="{$f.id}" data-record-id="{$f.record_id}" data-no-rawat="{$patient.no_rawat}" data-title="{$f.kode_form} - {$f.nama_form}"
                           title="Batalkan / Hapus Pengisian Formulir Ini">
@@ -858,9 +870,15 @@
                         {/if}
                       </div>
                       {else}
-                      <a href="{$f.url_form}" target="_blank" class="btn btn-xs btn-success btn-block" style="font-weight: 600;">
-                        <i class="fa fa-plus"></i> Isi Formulir
-                      </a>
+                        {if: !empty($f.can_write)}
+                        <a href="{$f.url_form}" target="_blank" class="btn btn-xs btn-success btn-block" style="font-weight: 600;">
+                          <i class="fa fa-plus"></i> Isi Formulir
+                        </a>
+                        {else}
+                        <span class="rsgm-badge rsgm-badge-slate" style="font-size: 10.5px; padding: 3px 10px;" title="Peran / unit Anda hanya memiliki akses lihat & cetak (Read-Only)">
+                          <i class="fa fa-lock"></i> Baca Saja
+                        </span>
+                        {/if}
                       {/if}
                     </div>
 

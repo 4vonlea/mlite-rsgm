@@ -301,48 +301,89 @@ class Admin extends Main
             }
         } catch (\Throwable $e) {}
 
+        $denyRmeAccess = function (string $msg) {
+            $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower((string)$_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')
+                || !empty($_POST['ajax_save']);
+            if ($isAjax) {
+                http_response_code(403);
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode(['status' => 'error', 'message' => $msg], JSON_UNESCAPED_UNICODE);
+                exit;
+            }
+            $this->setNotify('failure', $msg);
+            redirect(url([ADMIN, 'dashboard', 'main']));
+            exit;
+        };
+
+        $isWriteAction = (bool)preg_match('/(save|simpan|hapus|delete|void|tteverifysave)$/i', $methodLower);
+
         // Ambil unit yang terkait dengan user dari capability (cap) di Manajemen Pengguna
         $userCap = $this->getUserInfo('cap', $userId);
         $poliCodes = !empty($userCap) ? array_filter(array_map('trim', explode(',', $userCap))) : [];
 
         if (empty($poliCodes)) {
-            $this->setNotify('failure', 'Anda belum memiliki hak akses unit poliklinik (capability) untuk formulir RME ini.');
-            redirect(url([ADMIN, 'dashboard', 'main']));
-            exit;
+            $denyRmeAccess('Anda belum memiliki hak akses unit poliklinik (capability) untuk formulir RME ini.');
         }
 
-        // Ambil rute-rute form yang diizinkan untuk unit user
+        // Ambil rute-rute & target_aktor form yang diizinkan untuk unit user
         try {
             $allowedForms = $this->db('mlite_rme_unit_form')
                 ->join('mlite_rme_form', 'mlite_rme_form.id = mlite_rme_unit_form.form_id')
                 ->where('mlite_rme_unit_form.status', '1')
                 ->where('mlite_rme_form.status', '1')
                 ->where('mlite_rme_unit_form.kd_poli', 'IN', $poliCodes)
-                ->select('mlite_rme_form.route_manage, mlite_rme_form.route_form, mlite_rme_form.route_cetak')
+                ->select('mlite_rme_form.id, mlite_rme_form.kode_form, mlite_rme_form.route_manage, mlite_rme_form.route_form, mlite_rme_form.route_cetak, mlite_rme_form.target_aktor')
                 ->toArray();
         } catch (\Throwable $e) {
             $allowedForms = [];
         }
 
-        $allowedRoutes = [];
+        $methodStem = preg_replace('/(form|manage|cetak|save|simpan|hapus|delete|void)$/i', '', $methodLower);
+        $matchedForms = [];
         foreach ($allowedForms as $af) {
-            if (!empty($af['route_manage'])) $allowedRoutes[] = strtolower($af['route_manage']);
-            if (!empty($af['route_form'])) $allowedRoutes[] = strtolower($af['route_form']);
-            if (!empty($af['route_cetak'])) $allowedRoutes[] = strtolower($af['route_cetak']);
-        }
-
-        $isAllowed = false;
-        foreach ($allowedRoutes as $ar) {
-            if (strpos($methodLower, $ar) !== false || strpos($ar, $methodLower) !== false) {
-                $isAllowed = true;
-                break;
+            $candidates = array_filter([
+                strtolower((string)($af['route_manage'] ?? '')),
+                strtolower((string)($af['route_form'] ?? '')),
+                strtolower((string)($af['route_cetak'] ?? ''))
+            ]);
+            foreach ($candidates as $ar) {
+                $arStem = preg_replace('/(form|manage|cetak|save|simpan|hapus|delete|void)$/i', '', $ar);
+                if (
+                    $methodLower === $ar ||
+                    ($methodStem !== '' && $arStem !== '' && $methodStem === $arStem) ||
+                    strpos($methodLower, $ar) !== false ||
+                    strpos($ar, $methodLower) !== false
+                ) {
+                    $matchedForms[] = $af;
+                    break;
+                }
             }
         }
 
-        if (!$isAllowed) {
-            $this->setNotify('failure', 'Anda tidak memiliki hak akses untuk formulir RME ini.');
-            redirect(url([ADMIN, 'dashboard', 'main']));
-            exit;
+        if (empty($matchedForms)) {
+            $denyRmeAccess('Anda tidak memiliki hak akses unit untuk formulir RME ini.');
+        }
+
+        // Penegakan CRUD di backend untuk SEMUA role: aksi tulis/hapus wajib cocok dengan target_aktor formulir
+        if ($isWriteAction && $methodLower !== 'tteverifysave') {
+            $userRole = strtolower(trim((string)$this->getUserInfo('role', $userId)));
+            $canWriteForm = false;
+            foreach ($matchedForms as $mf) {
+                $rawTarget = trim((string)($mf['target_aktor'] ?? ''));
+                $allowedRoles = $rawTarget !== ''
+                    ? array_filter(array_map(function ($r) { return strtolower(trim($r)); }, explode(',', $rawTarget)))
+                    : ['medis', 'paramedis'];
+                if (
+                    in_array($userRole, $allowedRoles, true) ||
+                    ($userRole === 'koas' && (in_array('koas', $allowedRoles, true) || in_array('medis', $allowedRoles, true)))
+                ) {
+                    $canWriteForm = true;
+                    break;
+                }
+            }
+            if (!$canWriteForm) {
+                $denyRmeAccess('Hak akses peran Anda (' . ($userRole ?: 'pengguna') . ') hanya diperbolehkan untuk melihat/mencetak (Read-Only) formulir RME ini.');
+            }
         }
 
         return true;

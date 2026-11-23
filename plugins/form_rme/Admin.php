@@ -549,14 +549,15 @@ class Admin extends AdminModule
     public function getCurrentUserClinicalRole()
     {
         $userId = $_SESSION['mlite_user'] ?? 1;
-        $access = $this->core->getUserInfo('access', $userId);
-        $role   = $this->core->getUserInfo('role', $userId);
+        $access = trim((string)$this->core->getUserInfo('access', $userId));
+        $accList = array_map('trim', explode(',', $access));
+        $role   = strtolower(trim((string)$this->core->getUserInfo('role', $userId)));
 
-        if ($userId == 1 || $role === 'admin' || $access === 'all') {
+        if ($userId == 1 || $role === 'admin' || $access === 'all' || in_array('all', $accList, true)) {
             return 'admin';
         }
 
-        return !empty($role) ? strtolower(trim($role)) : 'pengguna';
+        return !empty($role) ? $role : 'pengguna';
     }
 
     public function getFormActorMap()
@@ -2249,6 +2250,13 @@ public function getJs()
 
         // 7. Universal Auto-Fill Data Pasien saat No. Rawat / No. RM diisi
         var lastFetchedNoRawat = '';
+        var isHydratingPatient = false;
+        var hasUserInteracted = false;
+
+        // Catat interaksi nyata dari pengguna agar auto-fill/inisialisasi halaman tidak pernah memicu Auto-Save
+        $form.on('keydown pointerdown mousedown touchstart select2:select', 'input, textarea, select, .select2-selection', function() {
+            hasUserInteracted = true;
+        });
 
         function fetchPatientInfo(val) {
             val = $.trim(val);
@@ -2290,19 +2298,24 @@ public function getJs()
                     'kd_dokter': res.kd_dokter
                 };
 
-                for (var key in fieldMap) {
-                    var $el = $form.find('input[name="' + key + '"], textarea[name="' + key + '"], select[name="' + key + '"], #' + key);
-                    if ($el.length && fieldMap[key]) {
-                        if (!$el.val() || key === 'nm_pasien' || key === 'nama_pasien' || key === 'no_rkm_medis') {
-                            $el.val(fieldMap[key]).trigger('change');
+                isHydratingPatient = true;
+                try {
+                    for (var key in fieldMap) {
+                        var $el = $form.find('input[name="' + key + '"], textarea[name="' + key + '"], select[name="' + key + '"], #' + key);
+                        if ($el.length && fieldMap[key]) {
+                            if (!$el.val() || key === 'nm_pasien' || key === 'nama_pasien' || key === 'no_rkm_medis') {
+                                $el.val(fieldMap[key]).trigger('change');
+                            }
                         }
                     }
-                }
 
-                var jk = res.jk || res.jenis_kelamin;
-                if (jk) {
-                    $form.find('input[name="jk"][value="' + jk + '"], input[name="jenis_kelamin"][value="' + jk + '"], input[name="pasien_jk_isian"][value="' + jk + '"]').prop('checked', true).trigger('change');
-                    $form.find('select[name="jk"], select[name="jenis_kelamin"]').val(jk).trigger('change');
+                    var jk = res.jk || res.jenis_kelamin;
+                    if (jk) {
+                        $form.find('input[name="jk"][value="' + jk + '"], input[name="jenis_kelamin"][value="' + jk + '"], input[name="pasien_jk_isian"][value="' + jk + '"]').prop('checked', true).trigger('change');
+                        $form.find('select[name="jk"], select[name="jenis_kelamin"]').val(jk).trigger('change');
+                    }
+                } finally {
+                    isHydratingPatient = false;
                 }
 
                 var bannerHtml = [
@@ -2375,9 +2388,12 @@ public function getJs()
             }
         });
 
-        // Deteksi perubahan input
+        // Deteksi perubahan input nyata dari pengguna (abaikan trigger programatik saat auto-fill pasien)
         $form.on('input change', 'input, textarea, select', function(e) {
             if ($(this).closest('.modal, .dataTables_filter').length) return;
+            if (isHydratingPatient) return;
+            if (!e.originalEvent && !hasUserInteracted) return;
+            hasUserInteracted = true;
             isDirty = true;
             setStatus('dirty', 'Ada perubahan...');
             if (autoSaveEnabled) {
@@ -5539,7 +5555,29 @@ public function getPatientContext($no_rawat)
         $isRanap = (!empty($patient['nm_bangsal']) || !empty($patient['kd_kamar']));
 
         $userId = $_SESSION['mlite_user'] ?? 1;
-        $isAdmin = ($this->core->getUserInfo('access') == 'all') || ($this->core->getUserInfo('role', $userId) == 'admin') || ($userId == 1);
+        $rawAcc = trim((string)$this->core->getUserInfo('access', $userId));
+        $accList = array_map('trim', explode(',', $rawAcc));
+        $isAdmin = ($rawAcc === 'all') || in_array('all', $accList, true) || ($this->core->getUserInfo('role', $userId) == 'admin') || ($userId == 1);
+
+        // Pre-fetch daftar form_id yang boleh diakses berdasarkan capability (cap) unit user (1 query saja)
+        $userAllowedFormIds = [];
+        if (!$isAdmin) {
+            $userCap = (string)$this->core->getUserInfo('cap', $userId);
+            $userPoliCodes = array_filter(array_map('trim', explode(',', $userCap)));
+            if (!empty($userPoliCodes)) {
+                try {
+                    $uForms = $this->db('mlite_rme_unit_form')
+                        ->where('status', '1')
+                        ->where('kd_poli', 'IN', $userPoliCodes)
+                        ->select('form_id')
+                        ->toArray();
+                    foreach ($uForms as $uf) {
+                        $userAllowedFormIds[(int)$uf['form_id']] = true;
+                    }
+                } catch (\Throwable $e) {
+                }
+            }
+        }
 
         // Ambil form sesuai unit poliklinik pasien
         $forms = [];
@@ -5596,23 +5634,18 @@ public function getPatientContext($no_rawat)
                     $q = $this->db()->pdo()->prepare("SELECT * FROM `{$f['nama_tabel']}` WHERE `no_rawat` = ?");
                     $q->execute([$patient['no_rawat']]);
                     $entries = $q->fetchAll(\PDO::FETCH_ASSOC);
-                    $fillCount = count($entries);
+                    // Hanya hitung entri aktif (non-VOID); entri yang dibatalkan tidak menandai form sebagai Terisi
+                    $activeEntries = array_values(array_filter($entries, function ($cand) {
+                        return empty($cand['deleted_at']);
+                    }));
+                    $fillCount = count($activeEntries);
                     if ($fillCount > 0) {
-                        if (isset($entries[0]['id'])) {
-                            usort($entries, function ($a, $b) {
+                        if (isset($activeEntries[0]['id'])) {
+                            usort($activeEntries, function ($a, $b) {
                                 return ($b['id'] ?? 0) <=> ($a['id'] ?? 0);
                             });
                         }
-                        // Prioritaskan entri aktif (non-VOID) terbaru jika tersedia
-                        foreach ($entries as $cand) {
-                            if (empty($cand['deleted_at'])) {
-                                $lastRow = $cand;
-                                break;
-                            }
-                        }
-                        if ($lastRow === null) {
-                            $lastRow = $entries[0];
-                        }
+                        $lastRow = $activeEntries[0];
                         // Evaluasi persentase kelengkapan isian dari row mentah (sebelum enrich metadata revisi)
                         if (is_array($lastRow) && class_exists('\Systems\Lib\RmeService')) {
                             $fillEval = \Systems\Lib\RmeService::evaluateRmeRowCompleteness(
@@ -5651,6 +5684,7 @@ public function getPatientContext($no_rawat)
 
             $f['is_filled'] = ($fillCount > 0);
             $f['fill_count'] = $fillCount;
+            $f['record_id'] = (int)($lastRow['id'] ?? ($lastRow['id_triase'] ?? 0));
             $f['fill_pct'] = $fillPct;
             $f['fill_filled'] = $fillFilledFields;
             $f['fill_total'] = $fillTotalFields;
@@ -5696,6 +5730,9 @@ public function getPatientContext($no_rawat)
                 }
             }
             $pf['assigned_roles_meta'] = $assigned;
+            $actorPerm = $this->checkFormActorPermission($pf['target_aktor']);
+            $hasUnitAccess = $isAdmin || isset($userAllowedFormIds[(int)($pf['id'] ?? 0)]);
+            $pf['can_write'] = $isAdmin || ($hasUnitAccess && !empty($actorPerm['can_edit']));
         }
         unset($pf);
 
@@ -5988,6 +6025,9 @@ public function getPatientContext($no_rawat)
                     $q = $this->db()->pdo()->prepare("SELECT * FROM `{$f['nama_tabel']}` WHERE `no_rawat` = ?");
                     $q->execute([$patient['no_rawat']]);
                     $entries = $q->fetchAll(\PDO::FETCH_ASSOC);
+                    $entries = array_values(array_filter($entries, function ($cand) {
+                        return empty($cand['deleted_at']);
+                    }));
                     if (!empty($entries)) {
                         if (isset($entries[0]['id'])) {
                             usort($entries, function ($a, $b) {
@@ -6012,6 +6052,107 @@ public function getPatientContext($no_rawat)
             'filled_forms' => $filledForms,
             'settings' => $settings
         ]);
+        exit();
+    }
+
+    /**
+     * Pembatalan / Penghapusan (Soft-Delete VOID berjejak audit) satu entri pengisian Form RME
+     * langsung dari Lembar Kerja Form RME Pasien.
+     */
+    public function postBatalkanisian()
+    {
+        header('Content-Type: application/json; charset=utf-8');
+
+        $formId   = (int)($_POST['form_id'] ?? 0);
+        $recordId = (int)($_POST['record_id'] ?? 0);
+        $noRawat  = trim((string)($_POST['no_rawat'] ?? ''));
+        $reason   = trim((string)($_POST['void_reason'] ?? ''));
+
+        if ($formId <= 0 || $recordId <= 0 || $noRawat === '') {
+            echo json_encode(['status' => 'error', 'message' => 'Parameter pembatalan pengisian formulir tidak lengkap.']);
+            exit();
+        }
+
+        $userId = $_SESSION['mlite_user'] ?? 0;
+        $rawAcc = trim((string)$this->core->getUserInfo('access', $userId));
+        $accList = array_map('trim', explode(',', $rawAcc));
+        $isAdmin = ($rawAcc === 'all') || in_array('all', $accList, true)
+            || ($this->core->getUserInfo('role', $userId) == 'admin')
+            || ((int)$userId === 1);
+
+        $formRow = $this->db('mlite_rme_form')->where('id', $formId)->oneArray();
+        if (!$formRow || empty($formRow['nama_tabel'])) {
+            echo json_encode(['status' => 'error', 'message' => 'Data master formulir RME tidak ditemukan.']);
+            exit();
+        }
+
+        // Validasi hak akses unit/cap & target_aktor untuk non-admin (berlaku seragam untuk semua role)
+        if (!$isAdmin) {
+            $userCap = (string)$this->core->getUserInfo('cap', $userId);
+            $poliCodes = array_filter(array_map('trim', explode(',', $userCap)));
+            $allowedUnit = !empty($poliCodes) ? $this->db('mlite_rme_unit_form')
+                ->where('form_id', $formId)
+                ->where('status', '1')
+                ->where('kd_poli', 'IN', $poliCodes)
+                ->oneArray() : null;
+            if (!$allowedUnit) {
+                http_response_code(403);
+                echo json_encode(['status' => 'error', 'message' => 'Anda tidak memiliki hak akses unit untuk membatalkan formulir RME ini.']);
+                exit();
+            }
+            $actorPerm = $this->checkFormActorPermission($formRow['target_aktor'] ?? '');
+            if (empty($actorPerm['can_edit'])) {
+                http_response_code(403);
+                echo json_encode(['status' => 'error', 'message' => 'Hak akses peran Anda hanya diperbolehkan untuk melihat/mencetak (Read-Only) formulir RME ini.']);
+                exit();
+            }
+        }
+
+        $table = (string)$formRow['nama_tabel'];
+        if (!preg_match('/^[a-zA-Z0-9_]+$/', $table)) {
+            echo json_encode(['status' => 'error', 'message' => 'Nama tabel formulir tidak valid.']);
+            exit();
+        }
+
+        $pdo = $this->db()->pdo();
+        $pkCol = ($table === 'mlite_triase_igd') ? 'id_triase' : 'id';
+
+        // Pastikan baris benar-benar milik no_rawat yang dimaksud
+        try {
+            $chk = $pdo->prepare("SELECT `{$pkCol}`, `no_rawat` FROM `{$table}` WHERE `{$pkCol}` = ? LIMIT 1");
+            $chk->execute([$recordId]);
+            $existing = $chk->fetch(\PDO::FETCH_ASSOC);
+        } catch (\Throwable $e) {
+            echo json_encode(['status' => 'error', 'message' => 'Gagal memeriksa data formulir: ' . $e->getMessage()]);
+            exit();
+        }
+
+        if (!$existing) {
+            echo json_encode(['status' => 'error', 'message' => 'Entri pengisian formulir tidak ditemukan.']);
+            exit();
+        }
+        if (trim((string)($existing['no_rawat'] ?? '')) !== $noRawat) {
+            http_response_code(403);
+            echo json_encode(['status' => 'error', 'message' => 'Nomor rawat tidak cocok dengan entri formulir yang dipilih.']);
+            exit();
+        }
+
+        // Daftarkan seluruh katalog form ke RmeFormRevision lalu lakukan VOID berjejak
+        \Systems\Lib\RmeFormRevision::setDynamicCatalog($this->getRmeFormMap());
+        if (\Systems\Lib\RmeFormRevision::isRegisteredTable($table)) {
+            $res = \Systems\Lib\RmeFormRevision::voidRecord($this->core, $table, $recordId, $reason);
+            echo json_encode($res, JSON_UNESCAPED_UNICODE);
+            exit();
+        }
+
+        // Fallback aman untuk tabel non-standar (mis. mlite_triase_igd)
+        try {
+            $del = $pdo->prepare("DELETE FROM `{$table}` WHERE `{$pkCol}` = ? AND `no_rawat` = ? LIMIT 1");
+            $del->execute([$recordId, $noRawat]);
+            echo json_encode(['status' => 'success', 'message' => 'Pengisian formulir berhasil dibatalkan.'], JSON_UNESCAPED_UNICODE);
+        } catch (\Throwable $e) {
+            echo json_encode(['status' => 'error', 'message' => 'Gagal membatalkan pengisian: ' . $e->getMessage()], JSON_UNESCAPED_UNICODE);
+        }
         exit();
     }
 
