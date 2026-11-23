@@ -2468,8 +2468,8 @@ class Admin extends AdminModule
       }
     }
 
-    if (!empty($tbls['formulir_rujukan_rs'])) {
-      $dirujukParts[] = "EXISTS (SELECT 1 FROM formulir_rujukan_rs fr WHERE fr.no_rawat = rp.no_rawat)";
+    if (!empty($tbls['rm_formulir_rujukan_rs'])) {
+      $dirujukParts[] = "EXISTS (SELECT 1 FROM rm_formulir_rujukan_rs fr WHERE fr.no_rawat = rp.no_rawat)";
     }
     if (!empty($tbls['rm_surat_pulang_aps'])) {
       $apsParts[] = "EXISTS (SELECT 1 FROM rm_surat_pulang_aps aps WHERE aps.no_rawat = rp.no_rawat)";
@@ -2480,8 +2480,8 @@ class Admin extends AdminModule
         $operasiParts[] = "EXISTS (SELECT 1 FROM `{$opTbl}` {$alias} WHERE {$alias}.no_rawat = rp.no_rawat)";
       }
     }
-    if (!empty($tbls['kriteria_masuk_keluar_icu'])) {
-      $icuParts[] = "EXISTS (SELECT 1 FROM kriteria_masuk_keluar_icu icu WHERE icu.no_rawat = rp.no_rawat)";
+    if (!empty($tbls['rm_kriteria_masuk_keluar_icu'])) {
+      $icuParts[] = "EXISTS (SELECT 1 FROM rm_kriteria_masuk_keluar_icu icu WHERE icu.no_rawat = rp.no_rawat)";
     }
 
     return [
@@ -2520,14 +2520,14 @@ class Admin extends AdminModule
       return $set;
     };
 
-    $dirujukSet = !empty($tbls['formulir_rujukan_rs'])
-      ? $fetchRawatSet("SELECT DISTINCT no_rawat FROM formulir_rujukan_rs WHERE no_rawat IN ({$ph})")
+    $dirujukSet = !empty($tbls['rm_formulir_rujukan_rs'])
+      ? $fetchRawatSet("SELECT DISTINCT no_rawat FROM rm_formulir_rujukan_rs WHERE no_rawat IN ({$ph})")
       : [];
     $apsSet = !empty($tbls['rm_surat_pulang_aps'])
       ? $fetchRawatSet("SELECT DISTINCT no_rawat FROM rm_surat_pulang_aps WHERE no_rawat IN ({$ph})")
       : [];
-    $icuSet = !empty($tbls['kriteria_masuk_keluar_icu'])
-      ? $fetchRawatSet("SELECT DISTINCT no_rawat FROM kriteria_masuk_keluar_icu WHERE no_rawat IN ({$ph})")
+    $icuSet = !empty($tbls['rm_kriteria_masuk_keluar_icu'])
+      ? $fetchRawatSet("SELECT DISTINCT no_rawat FROM rm_kriteria_masuk_keluar_icu WHERE no_rawat IN ({$ph})")
       : [];
 
     $operasiSet = [];

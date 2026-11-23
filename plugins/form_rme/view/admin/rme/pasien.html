@@ -34,7 +34,7 @@
         <div class="row" style="display: flex; flex-wrap: wrap; align-items: center; margin: 0;">
 
           <!-- Kiri: Identitas Pasien -->
-          <div class="col-md-5 col-sm-12" style="padding: 0 15px 0 0; border-right: 1px dashed #cbd5e1;">
+          <div class="col-md-7 col-sm-12" style="padding: 0 15px 0 0; border-right: 1px dashed #cbd5e1;">
             <div style="display: flex; align-items: center; gap: 14px;">
               <div style="width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; box-shadow: 0 2px 8px rgba(2,132,199,0.3);">
                 <i class="fa fa-user"></i>
@@ -61,8 +61,8 @@
             </div>
           </div>
 
-          <!-- Tengah: Konteks Pelayanan & Dokter DPJP -->
-          <div class="col-md-4 col-sm-12" style="padding: 0 15px; border-right: 1px dashed #cbd5e1;">
+          <!-- Kanan: Konteks Pelayanan & Dokter DPJP -->
+          <div class="col-md-5 col-sm-12" style="padding: 0 0 0 15px;">
             <div style="display: flex; flex-direction: column; gap: 4px; font-size: 12.5px;">
               <div>
                 <span class="text-muted" style="font-size: 11px; text-transform: uppercase; font-weight: 600;">Unit / Poliklinik:</span>
@@ -77,32 +77,6 @@
                 {if: !empty($patient.diagnosa)}
                 &bull; <span style="color: #b91c1c; font-weight: 600;"><i class="fa fa-stethoscope"></i> {$patient.diagnosa}</span>
                 {/if}
-              </div>
-            </div>
-          </div>
-
-          <!-- Kanan: Progress Kelengkapan Formulir RME Unit -->
-          <div class="col-md-3 col-sm-12" style="padding: 0 0 0 15px;">
-            <div>
-              <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px;">
-                <span style="font-size: 11.5px; font-weight: 700; color: #334155; text-transform: uppercase; letter-spacing: 0.3px;">Kelengkapan RME</span>
-                <span style="font-size: 16px; font-weight: 800; color: {if: $completion_pct == 100}#059669{elseif: $completion_pct >= 50}#0284c7{else}#d97706{/if};">
-                  {$completion_pct}%
-                </span>
-              </div>
-              <div class="progress" style="height: 9px; margin-bottom: 6px; border-radius: 5px; background: #e2e8f0; box-shadow: inset 0 1px 2px rgba(0,0,0,0.06);">
-                <div class="progress-bar {if: $completion_pct == 100}progress-bar-success{elseif: $completion_pct >= 50}progress-bar-info{else}progress-bar-warning{/if}" 
-                     role="progressbar" 
-                     aria-valuenow="{$completion_pct}" 
-                     aria-valuemin="0" 
-                     aria-valuemax="100" 
-                     style="width: {$completion_pct}%; border-radius: 5px;">
-                </div>
-              </div>
-              <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: 600; color: #64748b;">
-                <span style="color: #059669;"><i class="fa fa-check-circle"></i> {$total_filled} Terisi</span>
-                <span style="color: #d97706;"><i class="fa fa-circle-o"></i> {$total_unfilled} Belum Diisi</span>
-                <span style="color: #0284c7;">Total: {$total_forms} Form</span>
               </div>
             </div>
           </div>
@@ -329,8 +303,8 @@
                                 <i class="fa fa-ban"></i> VOID
                               </button>
                               {else}
-                              <span class="rsgm-badge rsgm-badge-emerald" style="font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 4px;">
-                                <i class="fa fa-check"></i> Terisi {if: $ff.fill_count > 1}({$ff.fill_count}x){/if}
+                              <span class="rsgm-badge {$ff.fill_badge_class}" style="font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 4px;" title="{$ff.fill_tooltip}">
+                                <i class="fa fa-check"></i> Terisi &bull; {$ff.fill_pct}% {if: $ff.fill_count > 1}({$ff.fill_count}x){/if}
                               </span>
                               {/if}
                               {if: !empty($ff.has_revisions)}
@@ -703,9 +677,7 @@
                     <th style="width: 40px; text-align: center;">No</th>
                     <th style="width: 80px; text-align: center;">Kode</th>
                     <th>Nama Formulir Rekam Medis</th>
-                    <th style="width: 120px; text-align: center;">Kategori</th>
-                    <th style="width: 100px; text-align: center;">Aktor</th>
-                    <th style="width: 125px; text-align: center;">Status</th>
+                    <th style="width: 155px; text-align: center;">Status</th>
                     <th style="width: 160px;">Entri Terakhir</th>
                     <th style="width: 110px; text-align: center;">Aksi</th>
                   </tr>
@@ -738,34 +710,20 @@
                       {/if}
                     </td>
 
-                    <td style="text-align: center;">
-                      <div style="display: flex; flex-wrap: wrap; gap: 3px; justify-content: center;">
-                        {loop: $f.kategori_badges as $kb}
-                        <span class="rsgm-badge {$kb.badge_class}" style="font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 4px;">
-                          {$kb.nama}
-                        </span>
-                        {/loop}
-                      </div>
-                    </td>
-
-                    <td style="text-align: center;">
-                      <div style="display: flex; flex-wrap: wrap; gap: 2px; justify-content: center;">
-                        {loop: $f.assigned_roles_meta}
-                        <span class="badge" style="background: {$value.bg}; color: {$value.color}; border: 1px solid {$value.border}; font-size: 9.5px; font-weight: 700; padding: 2px 5px;">
-                          <i class="{$value.icon}"></i> {$value.name}
-                        </span>
-                        {/loop}
-                      </div>
-                    </td>
-
-                    <td style="text-align: center;">
+                    <td style="text-align: center;" title="{$f.fill_tooltip}">
                       {if: $f.is_filled}
-                      <span class="rsgm-badge rsgm-badge-emerald" style="font-size: 10.5px; font-weight: 700; padding: 2px 6px; border-radius: 4px; display: inline-flex; align-items: center; gap: 3px;">
-                        <i class="fa fa-check"></i> Terisi {if: $f.fill_count > 1}({$f.fill_count}x){/if}
+                      <span class="rsgm-badge {$f.fill_badge_class}" style="font-size: 10.5px; font-weight: 700; padding: 2px 7px; border-radius: 4px; display: inline-flex; align-items: center; gap: 3px;">
+                        <i class="fa fa-check"></i> Terisi &bull; {$f.fill_pct}% {if: $f.fill_count > 1}({$f.fill_count}x){/if}
                       </span>
+                      <div style="width: 112px; height: 5px; background: #e2e8f0; border-radius: 99px; overflow: hidden; margin: 4px auto 2px;">
+                        <div style="width: {$f.fill_pct}%; height: 100%; background: {$f.fill_bar_color}; border-radius: 99px;"></div>
+                      </div>
+                      <div style="font-size: 9.5px; color: #64748b; font-weight: 600;">
+                        {$f.fill_filled}/{$f.fill_total} isian
+                      </div>
                       {else}
-                      <span class="rsgm-badge rsgm-badge-amber" style="font-size: 10.5px; font-weight: 600; padding: 2px 6px; border-radius: 4px; display: inline-flex; align-items: center; gap: 3px;">
-                        <i class="fa fa-circle-o"></i> Belum
+                      <span class="rsgm-badge rsgm-badge-amber" style="font-size: 10.5px; font-weight: 600; padding: 2px 7px; border-radius: 4px; display: inline-flex; align-items: center; gap: 3px;">
+                        <i class="fa fa-circle-o"></i> Belum &bull; 0%
                       </span>
                       {/if}
                     </td>
@@ -835,12 +793,12 @@
                         {/loop}
                       </div>
                       {if: $f.is_filled}
-                      <span class="rsgm-badge rsgm-badge-emerald" style="font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 3px;">
-                        <i class="fa fa-check"></i> Terisi
+                      <span class="rsgm-badge {$f.fill_badge_class}" style="font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 3px;" title="{$f.fill_tooltip}">
+                        <i class="fa fa-check"></i> Terisi &bull; {$f.fill_pct}%
                       </span>
                       {else}
                       <span class="rsgm-badge rsgm-badge-amber" style="font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 3px;">
-                        <i class="fa fa-circle-o"></i> Belum
+                        <i class="fa fa-circle-o"></i> Belum &bull; 0%
                       </span>
                       {/if}
                     </div>

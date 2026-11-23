@@ -228,10 +228,12 @@ class MrmikService
                     $actionType = 'VIEW_TIMELINE';
                     $noRawat = $candidateRawat;
                     $detail = 'Membuka lembar kerja / katalog RME (' . $act . ')';
-                } elseif (preg_match('/cetak$/i', $act) && ($candidateRawat !== '' || $candidateId > 0)) {
+                } elseif (($act === 'cetakberkas' || $act === 'cetak' || preg_match('/(cetak|pdf|print)$/i', $act)) && ($candidateRawat !== '' || $candidateId > 0)) {
                     $actionType = 'PRINT_RME_FORM';
                     $noRawat = $candidateRawat;
-                    $detail = 'Cetak formulir RME: ' . strtoupper(preg_replace('/cetak$/i', '', $act)) . ($candidateId > 0 ? ' (ID #' . $candidateId . ')' : '');
+                    $detail = $act === 'cetakberkas'
+                        ? 'Cetak berkas gabungan Form RME (PDF)'
+                        : 'Cetak formulir RME: ' . strtoupper(preg_replace('/(cetak|pdf|print)$/i', '', $act)) . ($candidateId > 0 ? ' (ID #' . $candidateId . ')' : '');
                 } elseif (preg_match('/form$/i', $act) && ($candidateRawat !== '' || $candidateId > 0)) {
                     $actionType = 'VIEW_RME_FORM';
                     $noRawat = $candidateRawat;
@@ -778,7 +780,7 @@ class MrmikService
                         if ($evalForm['has_tte']) {
                             $tteSet[$nr] = true;
                         }
-                        if (in_array($rtbl, ['ringkasan_riwayat_klinik', 'rm_lampiran_profil_ringkas_medis_rajal'], true)) {
+                        if (in_array($rtbl, ['rm_ringkasan_riwayat_klinik', 'rm_lampiran_profil_ringkas_medis_rajal'], true)) {
                             $resumeSet[$nr] = true;
                         }
                         $dtVal = $rr['entry_created_at'] ?? ($rr['created_at'] ?? ($rr['tanggal'] ?? null));

@@ -68,7 +68,7 @@ AFTER `deskripsi`;
 
 
 -- Tabel baru dari form-rme
-CREATE TABLE IF NOT EXISTS `ans5_status_anestesi` (
+CREATE TABLE IF NOT EXISTS `rm_ans5_status_anestesi` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `no_rawat` varchar(20) NOT NULL,
   `no_rkm_medis` varchar(15) DEFAULT NULL,
@@ -127,7 +127,7 @@ CREATE TABLE IF NOT EXISTS `ans5_status_anestesi` (
   KEY `tanggal` (`tanggal`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE IF NOT EXISTS `bm3_asesmen_pra_bedah_mayor` (
+CREATE TABLE IF NOT EXISTS `rm_bm3_asesmen_pra_bedah_mayor` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `no_rawat` varchar(17) NOT NULL,
   `no_rkm_medis` varchar(15) NOT NULL,
@@ -179,7 +179,7 @@ CREATE TABLE IF NOT EXISTS `bm3_asesmen_pra_bedah_mayor` (
   KEY `kd_dokter` (`kd_dokter`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE IF NOT EXISTS `bm5_checklist_keselamatan_operasi` (
+CREATE TABLE IF NOT EXISTS `rm_bm5_checklist_keselamatan_operasi` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `no_rawat` varchar(20) NOT NULL,
   `no_rkm_medis` varchar(15) DEFAULT NULL,
@@ -235,7 +235,7 @@ CREATE TABLE IF NOT EXISTS `bm5_checklist_keselamatan_operasi` (
   KEY `tanggal` (`tanggal`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE IF NOT EXISTS `bmi3_asesmen_bedah_minor` (
+CREATE TABLE IF NOT EXISTS `rm_bmi3_asesmen_bedah_minor` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `no_rawat` varchar(20) NOT NULL,
   `no_rkm_medis` varchar(15) DEFAULT NULL,
@@ -312,7 +312,7 @@ CREATE TABLE IF NOT EXISTS `bmi3_asesmen_bedah_minor` (
   KEY `tanggal_operasi` (`tanggal_operasi`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE IF NOT EXISTS `penandaan_lokasi_bedah_mulut` (
+CREATE TABLE IF NOT EXISTS `rm_penandaan_lokasi_bedah_mulut` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `no_rawat` varchar(20) NOT NULL,
   `no_rkm_medis` varchar(15) DEFAULT NULL,
@@ -336,7 +336,7 @@ CREATE TABLE IF NOT EXISTS `penandaan_lokasi_bedah_mulut` (
   KEY `tanggal` (`tanggal`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE IF NOT EXISTS `asesmen_medis_gigi_ugd` (
+CREATE TABLE IF NOT EXISTS `rm_asesmen_medis_gigi_ugd` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `no_rawat` varchar(20) NOT NULL,
   `no_rkm_medis` varchar(20) DEFAULT NULL,
@@ -553,7 +553,7 @@ CREATE TABLE IF NOT EXISTS `asesmen_medis_gigi_ugd` (
   KEY `no_rkm_medis` (`no_rkm_medis`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=DYNAMIC;
 
-CREATE TABLE IF NOT EXISTS `asesmen_medis_umum_ugd` (
+CREATE TABLE IF NOT EXISTS `rm_asesmen_medis_umum_ugd` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `no_rawat` varchar(20) NOT NULL,
   `no_rkm_medis` varchar(20) DEFAULT NULL,

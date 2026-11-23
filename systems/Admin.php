@@ -250,8 +250,8 @@ class Admin extends Main
 
         $methodLower = strtolower($method);
 
-        // Halaman umum / lembar kerja RME pasien yang dapat diakses oleh semua user medis
-        if (in_array($methodLower, ['pasien', 'cetakberkas', 'katalogrme', 'css', 'js', 'universalpatientinfo'])) {
+        // Halaman umum / lembar kerja RME pasien & riwayat revisi baca-saja yang dapat diakses oleh semua user yang punya akses modul form_rme
+        if (in_array($methodLower, ['pasien', 'cetakberkas', 'katalogrme', 'css', 'js', 'universalpatientinfo', 'rmehistory', 'rmedetail', 'soaphistory'])) {
             return true;
         }
 
@@ -264,6 +264,14 @@ class Admin extends Main
             $this->setNotify('failure', 'Anda tidak memiliki hak akses untuk Manajemen Form RME.');
             redirect(url([ADMIN, 'dashboard', 'main']));
             exit;
+        }
+
+        // Output cetak / PDF Form RME: setiap user yang memiliki akses modul form_rme
+        // diperbolehkan membuka & mencetak seluruh output PDF formulir RME lintas unit
+        // (tetap tercatat otomatis di Log Akses e-RM). Pembatasan cap unit tetap berlaku
+        // untuk pengisian, perubahan, dan penghapusan formulir.
+        if ($methodLower === 'cetak' || preg_match('/(cetak|pdf|print)$/i', $methodLower)) {
+            return true;
         }
 
         // Cek apakah formulir yang diminta sedang berstatus nonaktif (sedang dalam perbaikan/penambahan isian)

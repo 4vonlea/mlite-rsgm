@@ -277,8 +277,8 @@ class Admin extends AdminModule
             'rj11' => 'rm_rj11_pemberian_informasi',
             'lampiran_prmrj' => 'rm_lampiran_profil_ringkas_medis_rajal',
             'lampiran_persetujuan_tindakan_radiologi' => 'rm_lampiran_persetujuan_tindakan_radiologi',
-            'ringkasan_riwayat_klinik' => 'ringkasan_riwayat_klinik',
-            'rj_jatuh_nyeri_anak' => 'rj_asesmen_jatuh_nyeri_anak',
+            'ringkasan_riwayat_klinik' => 'rm_ringkasan_riwayat_klinik',
+            'rj_jatuh_nyeri_anak' => 'rm_rj_asesmen_jatuh_nyeri_anak',
         ];
         if (isset($map[$dir])) {
             return $map[$dir];
@@ -629,7 +629,7 @@ class Admin extends AdminModule
             'lampiran_stabilisasi_pasien' => 'paramedis',
             'lampiran_surat_pernyataan_bersedia_menunggu' => 'pasien,medis',
             'lampiran_vct_pra_testing_hiv' => 'laboratorium,medis,paramedis,pasien',
-            'penandaan_lokasi_bedah_mulut' => 'medis',
+            'rm_penandaan_lokasi_bedah_mulut' => 'medis',
             'persetujuan_umum' => 'pasien,medis,paramedis,rekammedis',
             'persetujuanumum' => 'pasien,medis,paramedis,rekammedis',
             'pulangaps' => 'pasien,medis',
@@ -3540,7 +3540,7 @@ public function getPatientContext($no_rawat)
   array (
     'kode' => 'AKGMU',
     'nama' => 'RM.GD 4 - Asesmen Keperawatan Gigi & Mulut UGD',
-    'table' => 'mlite_penilaian_awal_keperawatan_gigi_igd',
+    'table' => 'rm_asesmen_keperawatan_gigi_ugd',
     'route_form' => 'akgmuform',
     'route_cetak' => 'akgmucetak',
     'route_manage' => 'akgmumanage',
@@ -3870,7 +3870,7 @@ public function getPatientContext($no_rawat)
   array (
     'kode' => 'ANS5',
     'nama' => 'ANS5 - Status Anestesi',
-    'table' => 'ans5_status_anestesi',
+    'table' => 'rm_ans5_status_anestesi',
     'route_form' => 'ans5form',
     'route_cetak' => 'ans5cetak',
     'route_manage' => 'ans5manage',
@@ -3880,7 +3880,7 @@ public function getPatientContext($no_rawat)
   array (
     'kode' => 'BMI3',
     'nama' => 'BMI3 - Asesmen Bedah Minor',
-    'table' => 'bmi3_asesmen_bedah_minor',
+    'table' => 'rm_bmi3_asesmen_bedah_minor',
     'route_form' => 'bmi3form',
     'route_cetak' => 'bmi3cetak',
     'route_manage' => 'bmi3manage',
@@ -3890,7 +3890,7 @@ public function getPatientContext($no_rawat)
   array (
     'kode' => 'BM3',
     'nama' => 'BM3 - Asesmen Pra Bedah Mayor',
-    'table' => 'bm3_asesmen_pra_bedah_mayor',
+    'table' => 'rm_bm3_asesmen_pra_bedah_mayor',
     'route_form' => 'bm3form',
     'route_cetak' => 'bm3cetak',
     'route_manage' => 'bm3manage',
@@ -3900,7 +3900,7 @@ public function getPatientContext($no_rawat)
   array (
     'kode' => 'PENANDAAN',
     'nama' => 'Penandaan Tepat Lokasi Bedah Mulut',
-    'table' => 'penandaan_lokasi_bedah_mulut',
+    'table' => 'rm_penandaan_lokasi_bedah_mulut',
     'route_form' => 'penandaanlokasibedahform',
     'route_cetak' => 'penandaanlokasibedahcetak',
     'route_manage' => 'penandaanlokasibedahmanage',
@@ -3910,7 +3910,7 @@ public function getPatientContext($no_rawat)
   array (
     'kode' => 'BM5',
     'nama' => 'BM5 - Checklist Keselamatan Pasien Operasi',
-    'table' => 'bm5_checklist_keselamatan_operasi',
+    'table' => 'rm_bm5_checklist_keselamatan_operasi',
     'route_form' => 'bm5form',
     'route_cetak' => 'bm5cetak',
     'route_manage' => 'bm5manage',
@@ -3930,7 +3930,7 @@ public function getPatientContext($no_rawat)
   array (
     'kode' => 'RMGD5',
     'nama' => 'RM.GD 5 - Asesmen Medis Gigi UGD',
-    'table' => 'asesmen_medis_gigi_ugd',
+    'table' => 'rm_asesmen_medis_gigi_ugd',
     'route_form' => 'rmgd5form',
     'route_cetak' => 'rmgd5cetak',
     'route_manage' => 'rmgd5manage',
@@ -3940,7 +3940,7 @@ public function getPatientContext($no_rawat)
   array (
     'kode' => 'RMGD6',
     'nama' => 'RM.GD 6 - Asesmen Medis Umum UGD',
-    'table' => 'asesmen_medis_umum_ugd',
+    'table' => 'rm_asesmen_medis_umum_ugd',
     'route_form' => 'rmgd6form',
     'route_cetak' => 'rmgd6cetak',
     'route_manage' => 'rmgd6manage',
@@ -3960,7 +3960,7 @@ public function getPatientContext($no_rawat)
   array (
     'kode' => 'RUJUKAN',
     'nama' => 'Lampiran - Formulir Rujukan Komunikasi Antar RS',
-    'table' => 'formulir_rujukan_rs',
+    'table' => 'rm_formulir_rujukan_rs',
     'route_form' => 'formulirrujukanform',
     'route_cetak' => 'formulirrujukancetak',
     'route_manage' => 'formulirrujukanmanage',
@@ -3970,7 +3970,7 @@ public function getPatientContext($no_rawat)
   array (
     'kode' => 'GC_RANAP',
     'nama' => 'RM.RJ 02 - General Consent & Rincian Biaya Rawat Inap',
-    'table' => 'general_consent_ranap',
+    'table' => 'rm_general_consent_ranap',
     'route_form' => 'generalconsentform',
     'route_cetak' => 'generalconsentcetak',
     'route_manage' => 'generalconsentmanage',
@@ -3980,7 +3980,7 @@ public function getPatientContext($no_rawat)
   array (
     'kode' => 'KRITERIA_ICU',
     'nama' => 'Lampiran - Kriteria Masuk & Keluar Ruang Rawat Intensif (ICU)',
-    'table' => 'kriteria_masuk_keluar_icu',
+    'table' => 'rm_kriteria_masuk_keluar_icu',
     'route_form' => 'kriteriaicuform',
     'route_cetak' => 'kriteriaicucetak',
     'route_manage' => 'kriteriaicumanage',
@@ -3990,7 +3990,7 @@ public function getPatientContext($no_rawat)
   array (
     'kode' => 'RI04_KEP',
     'nama' => 'RM.RI 04 - Asesmen Keperawatan Rawat Inap',
-    'table' => 'ri04_asesmen_keperawatan_ranap',
+    'table' => 'rm_ri04_asesmen_keperawatan_ranap',
     'route_form' => 'rikeperawatanform',
     'route_cetak' => 'rikeperawatancetak',
     'route_manage' => 'rikeperawatanmanage',
@@ -4000,7 +4000,7 @@ public function getPatientContext($no_rawat)
   array (
     'kode' => 'RI05A',
     'nama' => 'RM.RI 05A - Asesmen Awal Medis Rawat Inap Gigi & Mulut',
-    'table' => 'ri05a_asesmen_medis_ranap_gigi',
+    'table' => 'rm_ri05a_asesmen_medis_ranap_gigi',
     'route_form' => 'rimedisgigiform',
     'route_cetak' => 'rimedisgigicetak',
     'route_manage' => 'rimedisgigimanage',
@@ -4010,7 +4010,7 @@ public function getPatientContext($no_rawat)
   array (
     'kode' => 'RI05C',
     'nama' => 'RM.RI 05C - Lembar Form Konsul / Alih Rawat DPJP',
-    'table' => 'ri05c_dokter_penanggung_jawab',
+    'table' => 'rm_ri05c_dokter_penanggung_jawab',
     'route_form' => 'ri05cform',
     'route_cetak' => 'ri05ccetak',
     'route_manage' => 'ri05cmanage',
@@ -4020,7 +4020,7 @@ public function getPatientContext($no_rawat)
   array (
     'kode' => 'RI06A',
     'nama' => 'RM.RI 06A - Asesmen Risiko Jatuh Pasien Dewasa & Geriatri',
-    'table' => 'ri06a_asesmen_jatuh_dewasa_geriatri',
+    'table' => 'rm_ri06a_asesmen_jatuh_dewasa_geriatri',
     'route_form' => 'jatuhdewasaform',
     'route_cetak' => 'jatuhdewasacetak',
     'route_manage' => 'jatuhdewasamanage',
@@ -4030,7 +4030,7 @@ public function getPatientContext($no_rawat)
   array (
     'kode' => 'RI07_OBS',
     'nama' => 'RM.RI 07 - Lembar Observasi Pasien Rawat Inap',
-    'table' => 'ri07_observasi_pasien',
+    'table' => 'rm_ri07_observasi_pasien',
     'route_form' => 'riobservasiform',
     'route_cetak' => 'riobservasicetak',
     'route_manage' => 'riobservasimanage',
@@ -4040,7 +4040,7 @@ public function getPatientContext($no_rawat)
   array (
     'kode' => 'RINGKASAN_KLINIK',
     'nama' => 'Lampiran - Ringkasan Riwayat Klinik (Evaluasi APS / FKTP)',
-    'table' => 'ringkasan_riwayat_klinik',
+    'table' => 'rm_ringkasan_riwayat_klinik',
     'route_form' => 'ringkasanriwayatklinikform',
     'route_cetak' => 'ringkasanriwayatklinikcetak',
     'route_manage' => 'ringkasanriwayatklinikmanage',
@@ -4050,7 +4050,7 @@ public function getPatientContext($no_rawat)
   array (
     'kode' => 'RJ_JATUH_ANAK',
     'nama' => 'Lampiran - Asesmen Risiko Jatuh & Nyeri Anak',
-    'table' => 'rj_asesmen_jatuh_nyeri_anak',
+    'table' => 'rm_rj_asesmen_jatuh_nyeri_anak',
     'route_form' => 'jatuhanakform',
     'route_cetak' => 'jatuhanakcetak',
     'route_manage' => 'jatuhanakmanage',
@@ -4060,7 +4060,7 @@ public function getPatientContext($no_rawat)
   array (
     'kode' => 'PENGANTAR_RANAP',
     'nama' => 'Lampiran - Surat Pengantar Rawat Inap (Admisi)',
-    'table' => 'surat_pengantar_ranap',
+    'table' => 'rm_surat_pengantar_ranap',
     'route_form' => 'pengantarranapform',
     'route_cetak' => 'pengantarranapcetak',
     'route_manage' => 'pengantarranapmanage',
@@ -4070,7 +4070,7 @@ public function getPatientContext($no_rawat)
   array (
     'kode' => 'JAMINAN_BIAYA',
     'nama' => 'Lampiran - Surat Pernyataan Jaminan Pembiayaan',
-    'table' => 'surat_pernyataan_jaminan_biaya',
+    'table' => 'rm_surat_pernyataan_jaminan_biaya',
     'route_form' => 'jaminanbiayaform',
     'route_cetak' => 'jaminanbiayacetak',
     'route_manage' => 'jaminanbiayamanage',
@@ -4686,7 +4686,7 @@ public function getPatientContext($no_rawat)
                     ];
                 }
             } elseif (!empty($reqId)) {
-                $detailLive = $this->db('edukasi_pasien_terintegrasi_detail')
+                $detailLive = $this->db('rm_edukasi_pasien_terintegrasi_detail')
                     ->where('id_edukasi', $reqId)
                     ->asc('tanggal_jam')
                     ->toArray();
@@ -5606,6 +5606,7 @@ public function getPatientContext($no_rawat)
         foreach ($forms as $f) {
             $fillCount = 0;
             $lastRow = null;
+            $fillEval = null;
             if (!empty($f['nama_tabel'])) {
                 try {
                     $q = $this->db()->pdo()->prepare("SELECT * FROM `{$f['nama_tabel']}` WHERE `no_rawat` = ?");
@@ -5628,6 +5629,19 @@ public function getPatientContext($no_rawat)
                         if ($lastRow === null) {
                             $lastRow = $entries[0];
                         }
+                        // Evaluasi persentase kelengkapan isian dari row mentah (sebelum enrich metadata revisi)
+                        if (is_array($lastRow) && class_exists('\Systems\Lib\MrmikService')) {
+                            $fillEval = \Systems\Lib\MrmikService::evaluateRmeRowCompleteness(
+                                (string)$f['nama_tabel'],
+                                $lastRow,
+                                [
+                                    'kode'        => (string)($f['kode_form'] ?? ''),
+                                    'nama'        => (string)($f['nama_form'] ?? ''),
+                                    'route_form'  => (string)($f['route_form'] ?? ''),
+                                    'route_cetak' => (string)($f['route_cetak'] ?? ''),
+                                ]
+                            );
+                        }
                         if (\Systems\Lib\RmeFormRevision::isRegisteredTable($f['nama_tabel']) && is_array($lastRow)) {
                             $lastRow = \Systems\Lib\RmeFormRevision::enrichSingleRow($this->core, $f['nama_tabel'], $lastRow);
                         }
@@ -5637,8 +5651,28 @@ public function getPatientContext($no_rawat)
                 }
             }
 
+            $fillPct = $fillEval !== null ? (int)($fillEval['pct'] ?? 0) : 0;
+            $fillFilledFields = $fillEval !== null ? (int)($fillEval['filled'] ?? 0) : 0;
+            $fillTotalFields = $fillEval !== null ? (int)($fillEval['total'] ?? 0) : 0;
+            $fillMissingList = ($fillEval !== null && is_array($fillEval['missing_fields'] ?? null)) ? $fillEval['missing_fields'] : [];
+            $fillMissingCount = $fillEval !== null ? (int)($fillEval['missing_count'] ?? 0) : 0;
+            $fillTooltip = '';
+            if ($fillCount > 0) {
+                $fillTooltip = !empty($fillMissingList)
+                    ? 'Terisi ' . $fillFilledFields . '/' . $fillTotalFields . ' isian (' . $fillPct . '%). Belum terisi: ' . implode(', ', $fillMissingList) . ($fillMissingCount > count($fillMissingList) ? ', ...' : '')
+                    : 'Terisi ' . $fillFilledFields . '/' . $fillTotalFields . ' isian (' . $fillPct . '%) — Lengkap';
+            }
+            $fillBarColor = $fillPct >= 80 ? '#059669' : ($fillPct >= 50 ? '#0284c7' : '#d97706');
+            $fillBadgeClass = $fillPct >= 80 ? 'rsgm-badge-emerald' : ($fillPct >= 50 ? 'rsgm-badge-sky' : 'rsgm-badge-amber');
+
             $f['is_filled'] = ($fillCount > 0);
             $f['fill_count'] = $fillCount;
+            $f['fill_pct'] = $fillPct;
+            $f['fill_filled'] = $fillFilledFields;
+            $f['fill_total'] = $fillTotalFields;
+            $f['fill_bar_color'] = $fillBarColor;
+            $f['fill_badge_class'] = $fillBadgeClass;
+            $f['fill_tooltip'] = htmlspecialchars($fillTooltip, ENT_QUOTES, 'UTF-8');
             $f['last_entry'] = $lastRow;
             $f['has_revisions'] = !empty($lastRow['has_revisions']);
             $f['revision_count'] = (int)($lastRow['revision_count'] ?? 0);
@@ -10058,7 +10092,7 @@ return [];
         if (!empty($id)) {
             $data = $this->db('rm_edukasi_pasien_terintegrasi')->where('id', $id)->oneArray();
             if ($data) {
-                $detail = $this->db('edukasi_pasien_terintegrasi_detail')
+                $detail = $this->db('rm_edukasi_pasien_terintegrasi_detail')
                     ->where('id_edukasi', $id)
                     ->asc('tanggal_jam')
                     ->toArray();
@@ -10209,7 +10243,7 @@ return [];
             $existingId = (int)$id;
             $prep = null;
             if ($existingId > 0) {
-                $oldDetails = $this->db('edukasi_pasien_terintegrasi_detail')
+                $oldDetails = $this->db('rm_edukasi_pasien_terintegrasi_detail')
                     ->where('id_edukasi', $existingId)
                     ->select('tanggal_jam, isi_kebutuhan_edukasi, kemampuan_pra_edukasi, sasaran_edukasi, metode_edukasi, evaluasi, nama_ttd_pemberi, tte_pemberi, nama_ttd_penerima, ttd_penerima_img')
                     ->asc('id')
@@ -10222,7 +10256,7 @@ return [];
                     ['old_detail_rows' => $oldDetails, 'new_detail_rows' => $newDetailRows]
                 );
                 $this->db('rm_edukasi_pasien_terintegrasi')->where('id', $existingId)->save($header);
-                $this->db('edukasi_pasien_terintegrasi_detail')->where('id_edukasi', $existingId)->delete();
+                $this->db('rm_edukasi_pasien_terintegrasi_detail')->where('id_edukasi', $existingId)->delete();
                 $id = $existingId;
             } else {
                 $this->db('rm_edukasi_pasien_terintegrasi')->save($header);
@@ -10234,7 +10268,7 @@ return [];
 
             foreach ($newDetailRows as $detailRow) {
                 $detailRow['id_edukasi'] = $id;
-                $this->db('edukasi_pasien_terintegrasi_detail')->save($detailRow);
+                $this->db('rm_edukasi_pasien_terintegrasi_detail')->save($detailRow);
             }
 
             $revHeader = $header;
@@ -10278,7 +10312,7 @@ return [];
                 return $this->renderLiveCetakPreview('edukasipasientercetak');
             }
 
-            $detail = $this->db('edukasi_pasien_terintegrasi_detail')
+            $detail = $this->db('rm_edukasi_pasien_terintegrasi_detail')
                 ->where('id_edukasi', $id)
                 ->asc('tanggal_jam')
                 ->toArray();
@@ -11592,7 +11626,7 @@ if (ob_get_length()) {
         if (isset($_GET['action']) && $_GET['action'] == 'delete' && !empty($_GET['id'])) {
             $id = $_GET['id'];
             $this->db('ans4_rencana_anestesi')->where('id', $id)->delete();
-            $this->db('ans4_evaluasi_premedikasi_detail')->where('id_ans4', $id)->delete();
+            $this->db('rm_ans4_evaluasi_premedikasi_detail')->where('id_ans4', $id)->delete();
             $this->notify('success', 'Data berhasil dihapus');
             redirect(url([ADMIN, 'form_rme', 'ans4manage']));
         }
@@ -11973,7 +12007,7 @@ if (ob_get_length()) {
                 ->select('ans6_status_post_anestesi.*, reg_periksa.no_rkm_medis, pasien.nm_pasien, pasien.nm_pasien as nama_pasien, pasien.jk, pasien.umur')
                 ->oneArray();
                 
-            $detail = $this->db('ans6_protokol_nyeri_detail')->where('id_ans6', $id)->toArray();
+            $detail = $this->db('rm_ans6_protokol_nyeri_detail')->where('id_ans6', $id)->toArray();
         } elseif (!empty($_GET['no_rawat'])) {
             $no_rawat = trim($_GET['no_rawat']);
             $reg = $this->db('reg_periksa')
@@ -12101,7 +12135,7 @@ if (ob_get_length()) {
 
         if ($id) {
             $this->db('ans6_status_post_anestesi')->where('id', $id)->save($data);
-            $this->db('ans6_protokol_nyeri_detail')->where('id_ans6', $id)->delete();
+            $this->db('rm_ans6_protokol_nyeri_detail')->where('id_ans6', $id)->delete();
         } else {
             $query = $this->db('ans6_status_post_anestesi')->save($data);
             $id = $this->resolveInsertedRecordId('ans6_status_post_anestesi', $data['no_rawat'] ?? ($_POST['no_rawat'] ?? ''), 'id');
@@ -12110,7 +12144,7 @@ if (ob_get_length()) {
         if (!empty($detail_obat)) {
             foreach ($detail_obat as $key => $val) {
                 if (!empty($val)) {
-                    $this->db('ans6_protokol_nyeri_detail')->save([
+                    $this->db('rm_ans6_protokol_nyeri_detail')->save([
                         'id_ans6' => $id,
                         'tanggal' => $detail_tanggal[$key] ?? '',
                         'obat' => $val,
@@ -12134,7 +12168,7 @@ if (ob_get_length()) {
         $id = $_GET['id'] ?? '';
         if ($id) {
             $this->db('ans6_status_post_anestesi')->where('id', $id)->delete();
-            $this->db('ans6_protokol_nyeri_detail')->where('id_ans6', $id)->delete();
+            $this->db('rm_ans6_protokol_nyeri_detail')->where('id_ans6', $id)->delete();
             $this->notify('success', 'Hapus berhasil');
         }
         redirect(url([ADMIN, 'form_rme', 'ans6manage']));
@@ -12165,7 +12199,7 @@ if (ob_get_length()) {
             return $this->renderLiveCetakPreview('ans6cetak');
         }
 
-        $detail = $this->db('ans6_protokol_nyeri_detail')->where('id_ans6', $id)->toArray();
+        $detail = $this->db('rm_ans6_protokol_nyeri_detail')->where('id_ans6', $id)->toArray();
 
         $bulan = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
         if (!empty($data['tanggal']) && $data['tanggal'] != '0000-00-00') {
@@ -20744,12 +20778,12 @@ if (ob_get_length()) {
             // Hapus pemetaan lama
             $this->db('mlite_rme_unit_form')->where('kd_poli', $kdPoli)->delete();
 
-            // Masukkan pemetaan baru
+            // Masukkan pemetaan baru (deduplikasi agar aman dari unique constraint)
             if (is_array($formIds)) {
-                foreach ($formIds as $fid) {
-                    $fid = (int)$fid;
+                $uniqueFormIds = array_unique(array_map('intval', $formIds));
+                foreach ($uniqueFormIds as $fid) {
                     if ($fid > 0) {
-                        $this->db('mlite_rme_unit_form')->insert([
+                        $this->db('mlite_rme_unit_form')->save([
                             'kd_poli' => $kdPoli,
                             'form_id' => $fid,
                             'status'  => '1'
@@ -20760,7 +20794,7 @@ if (ob_get_length()) {
             $this->notify('success', 'Hak akses formulir berhasil disimpan!');
         }
 
-        redirect(url([ADMIN, 'form_rme', 'manajemenrme']).'&action=permission&kd_poli='.$kdPoli);
+        redirect(url([ADMIN, 'form_rme', 'manajemenrme']).'&action=permission&kd_poli='.urlencode($kdPoli));
     }
 
     public function postTogglestatusform()
@@ -21059,7 +21093,7 @@ if (ob_get_length()) {
                 ]);
                 $this->notify('success', 'Data form berhasil diperbarui!');
             } else {
-                $this->db('mlite_rme_form')->insert([
+                $this->db('mlite_rme_form')->save([
                     'kode_form'    => $kode,
                     'nama_form'    => $nama,
                     'kategori'     => $kategori,
@@ -21076,7 +21110,7 @@ if (ob_get_length()) {
             $this->notify('danger', 'Kode, nama form, dan rute tidak boleh kosong!');
         }
 
-        redirect(url([ADMIN, 'form_rme', 'manajemenrme', '?tab=form']));
+        redirect(url([ADMIN, 'form_rme', 'manajemenrme']).'&tab=status');
     }
 
     public function getHapusformrme()
@@ -21087,7 +21121,7 @@ if (ob_get_length()) {
             $this->db('mlite_rme_unit_form')->where('form_id', $id)->delete();
             $this->notify('success', 'Form berhasil dihapus dari master katalog!');
         }
-        redirect(url([ADMIN, 'form_rme', 'manajemenrme', '?tab=form']));
+        redirect(url([ADMIN, 'form_rme', 'manajemenrme']).'&tab=status');
     }
 
     public function postSyncunitsimrs()
@@ -21103,7 +21137,7 @@ if (ob_get_length()) {
                     $kode = 'POLI_' . preg_replace('/[^A-Za-z0-9_]/', '', $p['kd_poli']);
                     $chk = $this->db('mlite_rme_unit')->where('kode_unit', $kode)->oneArray();
                     if (!$chk) {
-                        $this->db('mlite_rme_unit')->insert([
+                        $this->db('mlite_rme_unit')->save([
                             'kode_unit'  => $kode,
                             'nama_unit'  => 'Poli ' . $p['nm_poli'],
                             'kategori'   => 'Rajal',
@@ -21123,7 +21157,7 @@ if (ob_get_length()) {
                     $kode = 'BANGSAL_' . preg_replace('/[^A-Za-z0-9_]/', '', $b['kd_bangsal']);
                     $chk = $this->db('mlite_rme_unit')->where('kode_unit', $kode)->oneArray();
                     if (!$chk) {
-                        $this->db('mlite_rme_unit')->insert([
+                        $this->db('mlite_rme_unit')->save([
                             'kode_unit'  => $kode,
                             'nama_unit'  => 'Ruang ' . $b['nm_bangsal'],
                             'kategori'   => 'Ranap',
@@ -21137,7 +21171,7 @@ if (ob_get_length()) {
         }
 
         $this->notify('success', "Berhasil sinkronisasi $count unit baru dari SIMRS!");
-        redirect(url([ADMIN, 'form_rme', 'manajemenrme', '?tab=unit']));
+        redirect(url([ADMIN, 'form_rme', 'manajemenrme']).'&tab=akses');
     }
 
     public function anyKatalogrme()
@@ -21207,11 +21241,11 @@ if (ob_get_length()) {
         $this->core->addJS(url('assets/jscripts/jquery.dataTables.min.js'));
         $this->core->addJS(url('assets/jscripts/dataTables.bootstrap.min.js'));
 
-        $query = $this->db('ans5_status_anestesi')
-            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = ans5_status_anestesi.no_rawat')
-            ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(ans5_status_anestesi.no_rkm_medis, reg_periksa.no_rkm_medis)')
-            ->select('ans5_status_anestesi.*, COALESCE(ans5_status_anestesi.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur')
-            ->desc('ans5_status_anestesi.id')
+        $query = $this->db('rm_ans5_status_anestesi')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = rm_ans5_status_anestesi.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(rm_ans5_status_anestesi.no_rkm_medis, reg_periksa.no_rkm_medis)')
+            ->select('rm_ans5_status_anestesi.*, COALESCE(rm_ans5_status_anestesi.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur')
+            ->desc('rm_ans5_status_anestesi.id')
             ->toArray();
 
         $bulan = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
@@ -21634,11 +21668,11 @@ if (ob_get_length()) {
 
         $data = [];
         if ($id) {
-            $data = $this->db('ans5_status_anestesi')
-                ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = ans5_status_anestesi.no_rawat')
-                ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(ans5_status_anestesi.no_rkm_medis, reg_periksa.no_rkm_medis)')
-                ->where('ans5_status_anestesi.id', $id)
-                ->select('ans5_status_anestesi.*, COALESCE(ans5_status_anestesi.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur, pasien.tgl_lahir')
+            $data = $this->db('rm_ans5_status_anestesi')
+                ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = rm_ans5_status_anestesi.no_rawat')
+                ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(rm_ans5_status_anestesi.no_rkm_medis, reg_periksa.no_rkm_medis)')
+                ->where('rm_ans5_status_anestesi.id', $id)
+                ->select('rm_ans5_status_anestesi.*, COALESCE(rm_ans5_status_anestesi.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur, pasien.tgl_lahir')
                 ->oneArray();
         } elseif (!empty($_GET['no_rawat'])) {
             $no_rawat = trim($_GET['no_rawat']);
@@ -21817,13 +21851,13 @@ if (ob_get_length()) {
         }
 
         if ($id) {
-            $this->db('ans5_status_anestesi')->where('id', $id)->save($saveData);
+            $this->db('rm_ans5_status_anestesi')->where('id', $id)->save($saveData);
             $savedId = $id;
             $this->setNotify('success', 'Data Status Anestesi berhasil diperbarui.');
         } else {
             $saveData['created_at'] = $now;
-            $this->db('ans5_status_anestesi')->save($saveData);
-            $last = $this->db('ans5_status_anestesi')->where('no_rawat', $no_rawat)->desc('id')->oneArray();
+            $this->db('rm_ans5_status_anestesi')->save($saveData);
+            $last = $this->db('rm_ans5_status_anestesi')->where('no_rawat', $no_rawat)->desc('id')->oneArray();
             $savedId = $last['id'] ?? null;
             $this->setNotify('success', 'Data Status Anestesi berhasil disimpan.');
         }
@@ -21845,7 +21879,7 @@ if (ob_get_length()) {
     {
         $id = $id ?? ($_GET['id'] ?? null);
         if ($id) {
-            $this->db('ans5_status_anestesi')->where('id', $id)->delete();
+            $this->db('rm_ans5_status_anestesi')->where('id', $id)->delete();
             $this->setNotify('success', 'Data Status Anestesi berhasil dihapus.');
         }
         redirect(url([ADMIN, 'form_rme', 'ans5manage']));
@@ -21866,11 +21900,11 @@ if (ob_get_length()) {
             return $this->renderLiveCetakPreview('ans5cetak');
         }
 
-        $data = $this->db('ans5_status_anestesi')
-            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = ans5_status_anestesi.no_rawat')
-            ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(ans5_status_anestesi.no_rkm_medis, reg_periksa.no_rkm_medis)')
-            ->where('ans5_status_anestesi.id', $id)
-            ->select('ans5_status_anestesi.*, COALESCE(ans5_status_anestesi.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur, pasien.tgl_lahir')
+        $data = $this->db('rm_ans5_status_anestesi')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = rm_ans5_status_anestesi.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(rm_ans5_status_anestesi.no_rkm_medis, reg_periksa.no_rkm_medis)')
+            ->where('rm_ans5_status_anestesi.id', $id)
+            ->select('rm_ans5_status_anestesi.*, COALESCE(rm_ans5_status_anestesi.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur, pasien.tgl_lahir')
             ->oneArray();
 
         if (!$data) {
@@ -22098,11 +22132,11 @@ if (ob_get_length()) {
         $this->core->addJS(url('assets/jscripts/jquery.dataTables.min.js'));
         $this->core->addJS(url('assets/jscripts/dataTables.bootstrap.min.js'));
 
-        $query = $this->db('bmi3_asesmen_bedah_minor')
-            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = bmi3_asesmen_bedah_minor.no_rawat')
-            ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(bmi3_asesmen_bedah_minor.no_rkm_medis, reg_periksa.no_rkm_medis)')
-            ->select('bmi3_asesmen_bedah_minor.*, COALESCE(bmi3_asesmen_bedah_minor.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur')
-            ->desc('bmi3_asesmen_bedah_minor.id')
+        $query = $this->db('rm_bmi3_asesmen_bedah_minor')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = rm_bmi3_asesmen_bedah_minor.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(rm_bmi3_asesmen_bedah_minor.no_rkm_medis, reg_periksa.no_rkm_medis)')
+            ->select('rm_bmi3_asesmen_bedah_minor.*, COALESCE(rm_bmi3_asesmen_bedah_minor.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur')
+            ->desc('rm_bmi3_asesmen_bedah_minor.id')
             ->toArray();
 
         $bulan = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
@@ -22160,11 +22194,11 @@ if (ob_get_length()) {
 
         $data = [];
         if ($id) {
-            $data = $this->db('bmi3_asesmen_bedah_minor')
-                ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = bmi3_asesmen_bedah_minor.no_rawat')
-                ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(bmi3_asesmen_bedah_minor.no_rkm_medis, reg_periksa.no_rkm_medis)')
-                ->where('bmi3_asesmen_bedah_minor.id', $id)
-                ->select('bmi3_asesmen_bedah_minor.*, COALESCE(bmi3_asesmen_bedah_minor.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur, pasien.tgl_lahir')
+            $data = $this->db('rm_bmi3_asesmen_bedah_minor')
+                ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = rm_bmi3_asesmen_bedah_minor.no_rawat')
+                ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(rm_bmi3_asesmen_bedah_minor.no_rkm_medis, reg_periksa.no_rkm_medis)')
+                ->where('rm_bmi3_asesmen_bedah_minor.id', $id)
+                ->select('rm_bmi3_asesmen_bedah_minor.*, COALESCE(rm_bmi3_asesmen_bedah_minor.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur, pasien.tgl_lahir')
                 ->oneArray();
         }
 
@@ -22316,13 +22350,13 @@ if (ob_get_length()) {
         ];
 
         if ($id) {
-            $this->db('bmi3_asesmen_bedah_minor')->where('id', $id)->save($saveData);
+            $this->db('rm_bmi3_asesmen_bedah_minor')->where('id', $id)->save($saveData);
             $savedId = $id;
             $this->notify('success', 'Data BMI3 Asesmen Bedah Minor berhasil diperbarui.');
         } else {
             $saveData['created_at'] = $now;
-            $this->db('bmi3_asesmen_bedah_minor')->save($saveData);
-            $last = $this->db('bmi3_asesmen_bedah_minor')->where('no_rawat', $no_rawat)->desc('id')->oneArray();
+            $this->db('rm_bmi3_asesmen_bedah_minor')->save($saveData);
+            $last = $this->db('rm_bmi3_asesmen_bedah_minor')->where('no_rawat', $no_rawat)->desc('id')->oneArray();
             $savedId = $last['id'] ?? null;
             $this->notify('success', 'Data BMI3 Asesmen Bedah Minor berhasil disimpan.');
         }
@@ -22344,7 +22378,7 @@ if (ob_get_length()) {
     {
         $id = $id ?? ($_GET['id'] ?? null);
         if ($id) {
-            $this->db('bmi3_asesmen_bedah_minor')->where('id', $id)->delete();
+            $this->db('rm_bmi3_asesmen_bedah_minor')->where('id', $id)->delete();
             $this->notify('success', 'Data BMI3 Asesmen Bedah Minor berhasil dihapus.');
         }
         redirect(url([ADMIN, 'form_rme', 'bmi3manage']));
@@ -22368,11 +22402,11 @@ if (ob_get_length()) {
             return $this->renderLiveCetakPreview('bmi3cetak');
         }
 
-        $data = $this->db('bmi3_asesmen_bedah_minor')
-            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = bmi3_asesmen_bedah_minor.no_rawat')
-            ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(bmi3_asesmen_bedah_minor.no_rkm_medis, reg_periksa.no_rkm_medis)')
-            ->where('bmi3_asesmen_bedah_minor.id', $id)
-            ->select('bmi3_asesmen_bedah_minor.*, COALESCE(bmi3_asesmen_bedah_minor.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur, pasien.tgl_lahir')
+        $data = $this->db('rm_bmi3_asesmen_bedah_minor')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = rm_bmi3_asesmen_bedah_minor.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(rm_bmi3_asesmen_bedah_minor.no_rkm_medis, reg_periksa.no_rkm_medis)')
+            ->where('rm_bmi3_asesmen_bedah_minor.id', $id)
+            ->select('rm_bmi3_asesmen_bedah_minor.*, COALESCE(rm_bmi3_asesmen_bedah_minor.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur, pasien.tgl_lahir')
             ->oneArray();
 
         if (!$data) {
@@ -22465,12 +22499,12 @@ if (ob_get_length()) {
         $this->core->addJS(url('assets/js/jquery.dataTables.min.js'));
         $this->core->addJS(url('assets/js/dataTables.bootstrap.min.js'));
 
-        $rows = $this->db('bm3_asesmen_pra_bedah_mayor')
-            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = bm3_asesmen_pra_bedah_mayor.no_rawat')
-            ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(bm3_asesmen_pra_bedah_mayor.no_rkm_medis, reg_periksa.no_rkm_medis)')
-            ->leftJoin('dokter', 'dokter.kd_dokter = bm3_asesmen_pra_bedah_mayor.kd_dokter')
-            ->select('bm3_asesmen_pra_bedah_mayor.*, COALESCE(bm3_asesmen_pra_bedah_mayor.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur, dokter.nm_dokter')
-            ->desc('bm3_asesmen_pra_bedah_mayor.id')
+        $rows = $this->db('rm_bm3_asesmen_pra_bedah_mayor')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = rm_bm3_asesmen_pra_bedah_mayor.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(rm_bm3_asesmen_pra_bedah_mayor.no_rkm_medis, reg_periksa.no_rkm_medis)')
+            ->leftJoin('dokter', 'dokter.kd_dokter = rm_bm3_asesmen_pra_bedah_mayor.kd_dokter')
+            ->select('rm_bm3_asesmen_pra_bedah_mayor.*, COALESCE(rm_bm3_asesmen_pra_bedah_mayor.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur, dokter.nm_dokter')
+            ->desc('rm_bm3_asesmen_pra_bedah_mayor.id')
             ->toArray();
 
         $data = [];
@@ -22525,12 +22559,12 @@ if (ob_get_length()) {
 
         $data = [];
         if ($id) {
-            $data = $this->db('bm3_asesmen_pra_bedah_mayor')
-                ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = bm3_asesmen_pra_bedah_mayor.no_rawat')
-                ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(bm3_asesmen_pra_bedah_mayor.no_rkm_medis, reg_periksa.no_rkm_medis)')
-                ->leftJoin('dokter', 'dokter.kd_dokter = bm3_asesmen_pra_bedah_mayor.kd_dokter')
-                ->where('bm3_asesmen_pra_bedah_mayor.id', $id)
-                ->select('bm3_asesmen_pra_bedah_mayor.*, COALESCE(bm3_asesmen_pra_bedah_mayor.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur, pasien.tgl_lahir, dokter.nm_dokter')
+            $data = $this->db('rm_bm3_asesmen_pra_bedah_mayor')
+                ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = rm_bm3_asesmen_pra_bedah_mayor.no_rawat')
+                ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(rm_bm3_asesmen_pra_bedah_mayor.no_rkm_medis, reg_periksa.no_rkm_medis)')
+                ->leftJoin('dokter', 'dokter.kd_dokter = rm_bm3_asesmen_pra_bedah_mayor.kd_dokter')
+                ->where('rm_bm3_asesmen_pra_bedah_mayor.id', $id)
+                ->select('rm_bm3_asesmen_pra_bedah_mayor.*, COALESCE(rm_bm3_asesmen_pra_bedah_mayor.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur, pasien.tgl_lahir, dokter.nm_dokter')
                 ->oneArray();
         }
 
@@ -22689,13 +22723,13 @@ if (ob_get_length()) {
         ];
 
         if ($id) {
-            $this->db('bm3_asesmen_pra_bedah_mayor')->where('id', $id)->save($saveData);
+            $this->db('rm_bm3_asesmen_pra_bedah_mayor')->where('id', $id)->save($saveData);
             $savedId = $id;
             $this->notify('success', 'Data Asesmen Pra Bedah Mayor (BM3) berhasil diperbarui!');
         } else {
             $saveData['created_at'] = date('Y-m-d H:i:s');
-            $this->db('bm3_asesmen_pra_bedah_mayor')->save($saveData);
-            $last = $this->db('bm3_asesmen_pra_bedah_mayor')->where('no_rawat', $no_rawat)->desc('id')->oneArray();
+            $this->db('rm_bm3_asesmen_pra_bedah_mayor')->save($saveData);
+            $last = $this->db('rm_bm3_asesmen_pra_bedah_mayor')->where('no_rawat', $no_rawat)->desc('id')->oneArray();
             $savedId = $last['id'] ?? null;
             $this->notify('success', 'Data Asesmen Pra Bedah Mayor (BM3) berhasil ditambahkan!');
         }
@@ -22712,7 +22746,7 @@ if (ob_get_length()) {
     {
         $id = $id ?? ($_GET['id'] ?? null);
         if ($id) {
-            $this->db('bm3_asesmen_pra_bedah_mayor')->where('id', $id)->delete();
+            $this->db('rm_bm3_asesmen_pra_bedah_mayor')->where('id', $id)->delete();
             $this->notify('success', 'Data Asesmen Pra Bedah Mayor (BM3) berhasil dihapus!');
         }
         redirect(url([ADMIN, 'form_rme', 'bm3manage']));
@@ -22736,12 +22770,12 @@ if (ob_get_length()) {
             return $this->renderLiveCetakPreview('bm3cetak');
         }
 
-        $data = $this->db('bm3_asesmen_pra_bedah_mayor')
-            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = bm3_asesmen_pra_bedah_mayor.no_rawat')
-            ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(bm3_asesmen_pra_bedah_mayor.no_rkm_medis, reg_periksa.no_rkm_medis)')
-            ->leftJoin('dokter', 'dokter.kd_dokter = bm3_asesmen_pra_bedah_mayor.kd_dokter')
-            ->where('bm3_asesmen_pra_bedah_mayor.id', $id)
-            ->select('bm3_asesmen_pra_bedah_mayor.*, COALESCE(bm3_asesmen_pra_bedah_mayor.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur, pasien.tgl_lahir, dokter.nm_dokter')
+        $data = $this->db('rm_bm3_asesmen_pra_bedah_mayor')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = rm_bm3_asesmen_pra_bedah_mayor.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(rm_bm3_asesmen_pra_bedah_mayor.no_rkm_medis, reg_periksa.no_rkm_medis)')
+            ->leftJoin('dokter', 'dokter.kd_dokter = rm_bm3_asesmen_pra_bedah_mayor.kd_dokter')
+            ->where('rm_bm3_asesmen_pra_bedah_mayor.id', $id)
+            ->select('rm_bm3_asesmen_pra_bedah_mayor.*, COALESCE(rm_bm3_asesmen_pra_bedah_mayor.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur, pasien.tgl_lahir, dokter.nm_dokter')
             ->oneArray();
 
         if (!$data) {
@@ -22834,11 +22868,11 @@ if (ob_get_length()) {
         $this->core->addJS(url('assets/jscripts/jquery.dataTables.min.js'));
         $this->core->addJS(url('assets/jscripts/dataTables.bootstrap.min.js'));
 
-        $query = $this->db('penandaan_lokasi_bedah_mulut')
-            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = penandaan_lokasi_bedah_mulut.no_rawat')
-            ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(penandaan_lokasi_bedah_mulut.no_rkm_medis, reg_periksa.no_rkm_medis)')
-            ->select('penandaan_lokasi_bedah_mulut.*, COALESCE(penandaan_lokasi_bedah_mulut.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur')
-            ->desc('penandaan_lokasi_bedah_mulut.id')
+        $query = $this->db('rm_penandaan_lokasi_bedah_mulut')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = rm_penandaan_lokasi_bedah_mulut.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(rm_penandaan_lokasi_bedah_mulut.no_rkm_medis, reg_periksa.no_rkm_medis)')
+            ->select('rm_penandaan_lokasi_bedah_mulut.*, COALESCE(rm_penandaan_lokasi_bedah_mulut.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur')
+            ->desc('rm_penandaan_lokasi_bedah_mulut.id')
             ->toArray();
 
         foreach ($query as $k => $v) {
@@ -22887,11 +22921,11 @@ if (ob_get_length()) {
         $id = $_GET['id'] ?? '';
         $data = [];
         if ($id) {
-            $data = $this->db('penandaan_lokasi_bedah_mulut')
-                ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = penandaan_lokasi_bedah_mulut.no_rawat')
-                ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(penandaan_lokasi_bedah_mulut.no_rkm_medis, reg_periksa.no_rkm_medis)')
-                ->where('penandaan_lokasi_bedah_mulut.id', $id)
-                ->select('penandaan_lokasi_bedah_mulut.*, COALESCE(penandaan_lokasi_bedah_mulut.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur, pasien.tgl_lahir')
+            $data = $this->db('rm_penandaan_lokasi_bedah_mulut')
+                ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = rm_penandaan_lokasi_bedah_mulut.no_rawat')
+                ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(rm_penandaan_lokasi_bedah_mulut.no_rkm_medis, reg_periksa.no_rkm_medis)')
+                ->where('rm_penandaan_lokasi_bedah_mulut.id', $id)
+                ->select('rm_penandaan_lokasi_bedah_mulut.*, COALESCE(rm_penandaan_lokasi_bedah_mulut.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur, pasien.tgl_lahir')
                 ->oneArray();
         }
         if (empty($data) || !is_array($data)) {
@@ -23010,13 +23044,13 @@ if (ob_get_length()) {
         ];
 
         if ($id) {
-            $this->db('penandaan_lokasi_bedah_mulut')->where('id', $id)->save($data);
+            $this->db('rm_penandaan_lokasi_bedah_mulut')->where('id', $id)->save($data);
             $savedId = $id;
             $this->setNotify('success', 'Data Penandaan Tepat Lokasi Bedah Mulut berhasil diperbarui!');
         } else {
             $data['created_at'] = date('Y-m-d H:i:s');
-            $this->db('penandaan_lokasi_bedah_mulut')->save($data);
-            $last = $this->db('penandaan_lokasi_bedah_mulut')->where('no_rawat', $no_rawat)->desc('id')->oneArray();
+            $this->db('rm_penandaan_lokasi_bedah_mulut')->save($data);
+            $last = $this->db('rm_penandaan_lokasi_bedah_mulut')->where('no_rawat', $no_rawat)->desc('id')->oneArray();
             $savedId = $last['id'] ?? null;
             $this->setNotify('success', 'Data Penandaan Tepat Lokasi Bedah Mulut berhasil disimpan!');
         }
@@ -23028,7 +23062,7 @@ if (ob_get_length()) {
     {
         $id = $id ?? ($_GET['id'] ?? null);
         if ($id) {
-            $this->db('penandaan_lokasi_bedah_mulut')->where('id', $id)->delete();
+            $this->db('rm_penandaan_lokasi_bedah_mulut')->where('id', $id)->delete();
             $this->setNotify('success', 'Data penandaan lokasi bedah berhasil dihapus!');
         }
         redirect(url([ADMIN, 'form_rme', 'penandaanlokasibedahmanage']));
@@ -23049,11 +23083,11 @@ if (ob_get_length()) {
             return $this->renderLiveCetakPreview('penandaanlokasibedahcetak');
         }
 
-        $data = $this->db('penandaan_lokasi_bedah_mulut')
-            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = penandaan_lokasi_bedah_mulut.no_rawat')
-            ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(penandaan_lokasi_bedah_mulut.no_rkm_medis, reg_periksa.no_rkm_medis)')
-            ->where('penandaan_lokasi_bedah_mulut.id', $id)
-            ->select('penandaan_lokasi_bedah_mulut.*, COALESCE(penandaan_lokasi_bedah_mulut.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur')
+        $data = $this->db('rm_penandaan_lokasi_bedah_mulut')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = rm_penandaan_lokasi_bedah_mulut.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(rm_penandaan_lokasi_bedah_mulut.no_rkm_medis, reg_periksa.no_rkm_medis)')
+            ->where('rm_penandaan_lokasi_bedah_mulut.id', $id)
+            ->select('rm_penandaan_lokasi_bedah_mulut.*, COALESCE(rm_penandaan_lokasi_bedah_mulut.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.tgl_lahir, pasien.umur')
             ->oneArray();
 
         if (!$data) {
@@ -23305,11 +23339,11 @@ if (ob_get_length()) {
         $this->core->addJS(url('assets/jscripts/jquery.dataTables.min.js'));
         $this->core->addJS(url('assets/jscripts/dataTables.bootstrap.min.js'));
 
-        $query = $this->db('bm5_checklist_keselamatan_operasi')
-            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = bm5_checklist_keselamatan_operasi.no_rawat')
-            ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(bm5_checklist_keselamatan_operasi.no_rkm_medis, reg_periksa.no_rkm_medis)')
-            ->select('bm5_checklist_keselamatan_operasi.*, COALESCE(bm5_checklist_keselamatan_operasi.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur')
-            ->desc('bm5_checklist_keselamatan_operasi.id')
+        $query = $this->db('rm_bm5_checklist_keselamatan_operasi')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = rm_bm5_checklist_keselamatan_operasi.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(rm_bm5_checklist_keselamatan_operasi.no_rkm_medis, reg_periksa.no_rkm_medis)')
+            ->select('rm_bm5_checklist_keselamatan_operasi.*, COALESCE(rm_bm5_checklist_keselamatan_operasi.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur')
+            ->desc('rm_bm5_checklist_keselamatan_operasi.id')
             ->toArray();
 
         $bulan = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
@@ -23368,11 +23402,11 @@ if (ob_get_length()) {
 
         $data = [];
         if ($id) {
-            $data = $this->db('bm5_checklist_keselamatan_operasi')
-                ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = bm5_checklist_keselamatan_operasi.no_rawat')
-                ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(bm5_checklist_keselamatan_operasi.no_rkm_medis, reg_periksa.no_rkm_medis)')
-                ->where('bm5_checklist_keselamatan_operasi.id', $id)
-                ->select('bm5_checklist_keselamatan_operasi.*, COALESCE(bm5_checklist_keselamatan_operasi.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur, pasien.tgl_lahir')
+            $data = $this->db('rm_bm5_checklist_keselamatan_operasi')
+                ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = rm_bm5_checklist_keselamatan_operasi.no_rawat')
+                ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(rm_bm5_checklist_keselamatan_operasi.no_rkm_medis, reg_periksa.no_rkm_medis)')
+                ->where('rm_bm5_checklist_keselamatan_operasi.id', $id)
+                ->select('rm_bm5_checklist_keselamatan_operasi.*, COALESCE(rm_bm5_checklist_keselamatan_operasi.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur, pasien.tgl_lahir')
                 ->oneArray();
         }
 
@@ -23539,13 +23573,13 @@ if (ob_get_length()) {
         ];
 
         if ($id) {
-            $this->db('bm5_checklist_keselamatan_operasi')->where('id', $id)->save($saveData);
+            $this->db('rm_bm5_checklist_keselamatan_operasi')->where('id', $id)->save($saveData);
             $savedId = $id;
             $this->notify('success', 'Data BM5 Checklist Keselamatan Pasien Operasi berhasil diperbarui.');
         } else {
             $saveData['created_at'] = $now;
-            $this->db('bm5_checklist_keselamatan_operasi')->save($saveData);
-            $last = $this->db('bm5_checklist_keselamatan_operasi')->where('no_rawat', $no_rawat)->desc('id')->oneArray();
+            $this->db('rm_bm5_checklist_keselamatan_operasi')->save($saveData);
+            $last = $this->db('rm_bm5_checklist_keselamatan_operasi')->where('no_rawat', $no_rawat)->desc('id')->oneArray();
             $savedId = $last['id'] ?? null;
             $this->notify('success', 'Data BM5 Checklist Keselamatan Pasien Operasi berhasil disimpan.');
         }
@@ -23567,7 +23601,7 @@ if (ob_get_length()) {
     {
         $id = $id ?? ($_GET['id'] ?? null);
         if ($id) {
-            $this->db('bm5_checklist_keselamatan_operasi')->where('id', $id)->delete();
+            $this->db('rm_bm5_checklist_keselamatan_operasi')->where('id', $id)->delete();
             $this->notify('success', 'Data BM5 Checklist Keselamatan Pasien Operasi berhasil dihapus.');
         }
         redirect(url([ADMIN, 'form_rme', 'bm5manage']));
@@ -23591,11 +23625,11 @@ if (ob_get_length()) {
             return $this->renderLiveCetakPreview('bm5cetak');
         }
 
-        $data = $this->db('bm5_checklist_keselamatan_operasi')
-            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = bm5_checklist_keselamatan_operasi.no_rawat')
-            ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(bm5_checklist_keselamatan_operasi.no_rkm_medis, reg_periksa.no_rkm_medis)')
-            ->where('bm5_checklist_keselamatan_operasi.id', $id)
-            ->select('bm5_checklist_keselamatan_operasi.*, COALESCE(bm5_checklist_keselamatan_operasi.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur, pasien.tgl_lahir')
+        $data = $this->db('rm_bm5_checklist_keselamatan_operasi')
+            ->leftJoin('reg_periksa', 'reg_periksa.no_rawat = rm_bm5_checklist_keselamatan_operasi.no_rawat')
+            ->leftJoin('pasien', 'pasien.no_rkm_medis = COALESCE(rm_bm5_checklist_keselamatan_operasi.no_rkm_medis, reg_periksa.no_rkm_medis)')
+            ->where('rm_bm5_checklist_keselamatan_operasi.id', $id)
+            ->select('rm_bm5_checklist_keselamatan_operasi.*, COALESCE(rm_bm5_checklist_keselamatan_operasi.no_rkm_medis, reg_periksa.no_rkm_medis) as no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.umur, pasien.tgl_lahir')
             ->oneArray();
 
         if (!$data) {
@@ -24266,10 +24300,10 @@ if (ob_get_length()) {
         $this->core->addJS(url('assets/jscripts/jquery.dataTables.min.js'));
         $this->core->addJS(url('assets/jscripts/dataTables.bootstrap.min.js'));
 
-        $rows = $this->db('asesmen_medis_gigi_ugd')
-            ->leftJoin('dokter', 'dokter.kd_dokter = asesmen_medis_gigi_ugd.kd_dokter')
-            ->select('asesmen_medis_gigi_ugd.*, dokter.nm_dokter')
-            ->desc('asesmen_medis_gigi_ugd.id')
+        $rows = $this->db('rm_asesmen_medis_gigi_ugd')
+            ->leftJoin('dokter', 'dokter.kd_dokter = rm_asesmen_medis_gigi_ugd.kd_dokter')
+            ->select('rm_asesmen_medis_gigi_ugd.*, dokter.nm_dokter')
+            ->desc('rm_asesmen_medis_gigi_ugd.id')
             ->toArray();
 
         return $this->draw('rmgd5_medis_gigi/manage.html', ['data' => $rows]);
@@ -24549,12 +24583,12 @@ if (ob_get_length()) {
         ];
 
         if ($id) {
-            $row = $this->db('asesmen_medis_gigi_ugd')->where('id', $id)->oneArray();
+            $row = $this->db('rm_asesmen_medis_gigi_ugd')->where('id', $id)->oneArray();
             if ($row) {
                 $data = array_merge($data, $row);
             }
         } elseif (!empty($no_rawat_param)) {
-            $existing = $this->db('asesmen_medis_gigi_ugd')
+            $existing = $this->db('rm_asesmen_medis_gigi_ugd')
                 ->where('no_rawat', $no_rawat_param)
                 ->desc('id')
                 ->oneArray();
@@ -24755,14 +24789,14 @@ if (ob_get_length()) {
         if (empty($id)) {
             $post['created_at'] = $now;
         }
-        $post = $this->filterTableColumns('asesmen_medis_gigi_ugd', $post);
+        $post = $this->filterTableColumns('rm_asesmen_medis_gigi_ugd', $post);
 
         if (!empty($id)) {
-            $this->db('asesmen_medis_gigi_ugd')->where('id', $id)->save($post);
+            $this->db('rm_asesmen_medis_gigi_ugd')->where('id', $id)->save($post);
             $this->notify('success', 'Data Asesmen Medis Gigi UGD berhasil diperbarui.');
         } else {
-            $this->db('asesmen_medis_gigi_ugd')->save($post);
-            $id = $this->resolveInsertedRecordId('asesmen_medis_gigi_ugd', $post['no_rawat'] ?? ($_POST['no_rawat'] ?? ''), 'id');
+            $this->db('rm_asesmen_medis_gigi_ugd')->save($post);
+            $id = $this->resolveInsertedRecordId('rm_asesmen_medis_gigi_ugd', $post['no_rawat'] ?? ($_POST['no_rawat'] ?? ''), 'id');
             $this->notify('success', 'Data Asesmen Medis Gigi UGD berhasil disimpan.');
         }
 
@@ -24778,7 +24812,7 @@ if (ob_get_length()) {
     {
         $id = $id ?? ($_GET['id'] ?? null);
         if ($id) {
-            $this->db('asesmen_medis_gigi_ugd')->where('id', $id)->delete();
+            $this->db('rm_asesmen_medis_gigi_ugd')->where('id', $id)->delete();
             $this->notify('success', 'Data Asesmen Medis Gigi UGD berhasil dihapus.');
         }
         redirect(url([ADMIN, 'form_rme', 'rmgd5manage']));
@@ -24796,10 +24830,10 @@ if (ob_get_length()) {
         }
 
         $id = $id ?? ($_GET['id'] ?? null);
-        $data = $this->db('asesmen_medis_gigi_ugd')
-            ->leftJoin('dokter', 'dokter.kd_dokter = asesmen_medis_gigi_ugd.kd_dokter')
-            ->where('asesmen_medis_gigi_ugd.id', $id)
-            ->select('asesmen_medis_gigi_ugd.*, dokter.nm_dokter')
+        $data = $this->db('rm_asesmen_medis_gigi_ugd')
+            ->leftJoin('dokter', 'dokter.kd_dokter = rm_asesmen_medis_gigi_ugd.kd_dokter')
+            ->where('rm_asesmen_medis_gigi_ugd.id', $id)
+            ->select('rm_asesmen_medis_gigi_ugd.*, dokter.nm_dokter')
             ->oneArray();
 
         if (!$data) {
@@ -24872,10 +24906,10 @@ if (ob_get_length()) {
         $this->core->addJS(url('assets/jscripts/jquery.dataTables.min.js'));
         $this->core->addJS(url('assets/jscripts/dataTables.bootstrap.min.js'));
 
-        $rows = $this->db('asesmen_medis_umum_ugd')
-            ->leftJoin('dokter', 'dokter.kd_dokter = asesmen_medis_umum_ugd.kd_dokter')
-            ->select('asesmen_medis_umum_ugd.*, dokter.nm_dokter')
-            ->desc('asesmen_medis_umum_ugd.id')
+        $rows = $this->db('rm_asesmen_medis_umum_ugd')
+            ->leftJoin('dokter', 'dokter.kd_dokter = rm_asesmen_medis_umum_ugd.kd_dokter')
+            ->select('rm_asesmen_medis_umum_ugd.*, dokter.nm_dokter')
+            ->desc('rm_asesmen_medis_umum_ugd.id')
             ->toArray();
 
         return $this->draw('rmgd6_medis_umum/manage.html', ['data' => $rows]);
@@ -25126,12 +25160,12 @@ if (ob_get_length()) {
         ];
 
         if ($id) {
-            $row = $this->db('asesmen_medis_umum_ugd')->where('id', $id)->oneArray();
+            $row = $this->db('rm_asesmen_medis_umum_ugd')->where('id', $id)->oneArray();
             if ($row) {
                 $data = array_merge($data, $row);
             }
         } elseif (!empty($no_rawat_param)) {
-            $existing = $this->db('asesmen_medis_umum_ugd')
+            $existing = $this->db('rm_asesmen_medis_umum_ugd')
                 ->where('no_rawat', $no_rawat_param)
                 ->desc('id')
                 ->oneArray();
@@ -25370,14 +25404,14 @@ if (ob_get_length()) {
         if (empty($id)) {
             $post['created_at'] = $now;
         }
-        $post = $this->filterTableColumns('asesmen_medis_umum_ugd', $post);
+        $post = $this->filterTableColumns('rm_asesmen_medis_umum_ugd', $post);
 
         if (!empty($id)) {
-            $this->db('asesmen_medis_umum_ugd')->where('id', $id)->save($post);
+            $this->db('rm_asesmen_medis_umum_ugd')->where('id', $id)->save($post);
             $this->notify('success', 'Data Asesmen Medis Umum UGD berhasil diperbarui.');
         } else {
-            $this->db('asesmen_medis_umum_ugd')->save($post);
-            $id = $this->resolveInsertedRecordId('asesmen_medis_umum_ugd', $post['no_rawat'] ?? ($_POST['no_rawat'] ?? ''), 'id');
+            $this->db('rm_asesmen_medis_umum_ugd')->save($post);
+            $id = $this->resolveInsertedRecordId('rm_asesmen_medis_umum_ugd', $post['no_rawat'] ?? ($_POST['no_rawat'] ?? ''), 'id');
             $this->notify('success', 'Data Asesmen Medis Umum UGD berhasil disimpan.');
         }
 
@@ -25393,7 +25427,7 @@ if (ob_get_length()) {
     {
         $id = $id ?? ($_GET['id'] ?? null);
         if ($id) {
-            $this->db('asesmen_medis_umum_ugd')->where('id', $id)->delete();
+            $this->db('rm_asesmen_medis_umum_ugd')->where('id', $id)->delete();
             $this->notify('success', 'Data Asesmen Medis Umum UGD berhasil dihapus.');
         }
         redirect(url([ADMIN, 'form_rme', 'rmgd6manage']));
@@ -25411,10 +25445,10 @@ if (ob_get_length()) {
         }
 
         $id = $id ?? ($_GET['id'] ?? null);
-        $data = $this->db('asesmen_medis_umum_ugd')
-            ->leftJoin('dokter', 'dokter.kd_dokter = asesmen_medis_umum_ugd.kd_dokter')
-            ->where('asesmen_medis_umum_ugd.id', $id)
-            ->select('asesmen_medis_umum_ugd.*, dokter.nm_dokter')
+        $data = $this->db('rm_asesmen_medis_umum_ugd')
+            ->leftJoin('dokter', 'dokter.kd_dokter = rm_asesmen_medis_umum_ugd.kd_dokter')
+            ->where('rm_asesmen_medis_umum_ugd.id', $id)
+            ->select('rm_asesmen_medis_umum_ugd.*, dokter.nm_dokter')
             ->oneArray();
 
         if (!$data) {
@@ -25919,7 +25953,7 @@ if (ob_get_length()) {
     public function anyPengantarranapmanage()
     {
         $cari = trim($_GET['cari'] ?? '');
-        $query = $this->db('surat_pengantar_ranap');
+        $query = $this->db('rm_surat_pengantar_ranap');
 
         if (!empty($cari)) {
             $query->where('no_rawat', 'LIKE', '%' . $cari . '%')
@@ -25992,7 +26026,7 @@ if (ob_get_length()) {
         ];
 
         if (!empty($id)) {
-            $row = $this->db('surat_pengantar_ranap')->where('id', $id)->oneArray();
+            $row = $this->db('rm_surat_pengantar_ranap')->where('id', $id)->oneArray();
             if ($row) {
                 $data = array_merge($data, $row);
             }
@@ -26058,10 +26092,10 @@ if (ob_get_length()) {
         ];
 
         if (!empty($id)) {
-            $this->db('surat_pengantar_ranap')->where('id', $id)->save($data);
+            $this->db('rm_surat_pengantar_ranap')->where('id', $id)->save($data);
             $this->notify('success', 'Surat Pengantar Rawat Inap berhasil diperbarui.');
         } else {
-            $this->db('surat_pengantar_ranap')->save($data);
+            $this->db('rm_surat_pengantar_ranap')->save($data);
             $this->notify('success', 'Surat Pengantar Rawat Inap berhasil disimpan.');
         }
 
@@ -26077,7 +26111,7 @@ if (ob_get_length()) {
     {
         $id = trim($_GET['id'] ?? '');
         if (!empty($id)) {
-            $this->db('surat_pengantar_ranap')->where('id', $id)->delete();
+            $this->db('rm_surat_pengantar_ranap')->where('id', $id)->delete();
             $this->notify('success', 'Surat Pengantar Rawat Inap berhasil dihapus.');
         }
         redirect(url([ADMIN, 'form_rme', 'pengantarranapmanage']));
@@ -26095,7 +26129,7 @@ if (ob_get_length()) {
             return $this->renderLiveCetakPreview('pengantarranapcetak');
         }
 
-        $data = $this->db('surat_pengantar_ranap')->where('id', $id)->oneArray();
+        $data = $this->db('rm_surat_pengantar_ranap')->where('id', $id)->oneArray();
         if (!$data) {
             return $this->renderLiveCetakPreview('pengantarranapcetak');
         }
@@ -26157,7 +26191,7 @@ if (ob_get_length()) {
     public function anyKriteriaicumanage()
     {
         $cari = trim($_GET['cari'] ?? '');
-        $query = $this->db('kriteria_masuk_keluar_icu');
+        $query = $this->db('rm_kriteria_masuk_keluar_icu');
 
         if (!empty($cari)) {
             $query->where('no_rawat', 'LIKE', '%' . $cari . '%')
@@ -26184,9 +26218,9 @@ if (ob_get_length()) {
         $no_rawat = trim($_GET['no_rawat'] ?? '');
 
         if (!empty($id)) {
-            $data = $this->db('kriteria_masuk_keluar_icu')->where('id', $id)->oneArray();
+            $data = $this->db('rm_kriteria_masuk_keluar_icu')->where('id', $id)->oneArray();
         } elseif (!empty($no_rawat)) {
-            $data = $this->db('kriteria_masuk_keluar_icu')->where('no_rawat', $no_rawat)->oneArray();
+            $data = $this->db('rm_kriteria_masuk_keluar_icu')->where('no_rawat', $no_rawat)->oneArray();
             if (!$data) {
                 // Ambil data pasien dari reg_periksa
                 $pasien = $this->db('reg_periksa')
@@ -26637,10 +26671,10 @@ if (ob_get_length()) {
         ];
 
         if (!empty($id)) {
-            $this->db('kriteria_masuk_keluar_icu')->where('id', $id)->save($data);
+            $this->db('rm_kriteria_masuk_keluar_icu')->where('id', $id)->save($data);
             $this->notify('success', 'Formulir Kriteria Masuk dan Keluar ICU berhasil diperbarui.');
         } else {
-            $this->db('kriteria_masuk_keluar_icu')->save($data);
+            $this->db('rm_kriteria_masuk_keluar_icu')->save($data);
             $this->notify('success', 'Formulir Kriteria Masuk dan Keluar ICU berhasil disimpan.');
         }
 
@@ -26656,7 +26690,7 @@ if (ob_get_length()) {
     {
         $id = trim($_GET['id'] ?? '');
         if (!empty($id)) {
-            $this->db('kriteria_masuk_keluar_icu')->where('id', $id)->delete();
+            $this->db('rm_kriteria_masuk_keluar_icu')->where('id', $id)->delete();
             $this->notify('success', 'Data Penilaian Kriteria ICU berhasil dihapus.');
         }
         redirect(url([ADMIN, 'form_rme', 'kriteriaicumanage']));
@@ -26674,7 +26708,7 @@ if (ob_get_length()) {
             return $this->renderLiveCetakPreview('kriteriaicucetak');
         }
 
-        $data = $this->db('kriteria_masuk_keluar_icu')->where('id', $id)->oneArray();
+        $data = $this->db('rm_kriteria_masuk_keluar_icu')->where('id', $id)->oneArray();
         if (!$data) {
             return $this->renderLiveCetakPreview('kriteriaicucetak');
         }
@@ -26726,7 +26760,7 @@ if (ob_get_length()) {
     public function anyGeneralconsentmanage()
     {
         $cari = trim($_GET['cari'] ?? '');
-        $query = $this->db('general_consent_ranap');
+        $query = $this->db('rm_general_consent_ranap');
 
         if (!empty($cari)) {
             $query->where('no_rawat', 'LIKE', '%' . $cari . '%')
@@ -26753,9 +26787,9 @@ if (ob_get_length()) {
         $no_rawat = trim($_GET['no_rawat'] ?? '');
 
         if (!empty($id)) {
-            $data = $this->db('general_consent_ranap')->where('id', $id)->oneArray();
+            $data = $this->db('rm_general_consent_ranap')->where('id', $id)->oneArray();
         } elseif (!empty($no_rawat)) {
-            $data = $this->db('general_consent_ranap')->where('no_rawat', $no_rawat)->oneArray();
+            $data = $this->db('rm_general_consent_ranap')->where('no_rawat', $no_rawat)->oneArray();
             if (!$data) {
                 $pasien = $this->db('reg_periksa')
                     ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
@@ -26963,10 +26997,10 @@ if (ob_get_length()) {
         ];
 
         if (!empty($id)) {
-            $this->db('general_consent_ranap')->where('id', $id)->save($data);
+            $this->db('rm_general_consent_ranap')->where('id', $id)->save($data);
             $this->notify('success', 'Formulir General Consent & Perkiraan Biaya berhasil diperbarui.');
         } else {
-            $this->db('general_consent_ranap')->save($data);
+            $this->db('rm_general_consent_ranap')->save($data);
             $this->notify('success', 'Formulir General Consent & Perkiraan Biaya berhasil disimpan.');
         }
 
@@ -26982,7 +27016,7 @@ if (ob_get_length()) {
     {
         $id = trim($_GET['id'] ?? '');
         if (!empty($id)) {
-            $this->db('general_consent_ranap')->where('id', $id)->delete();
+            $this->db('rm_general_consent_ranap')->where('id', $id)->delete();
             $this->notify('success', 'Data General Consent berhasil dihapus.');
         }
         redirect(url([ADMIN, 'form_rme', 'generalconsentmanage']));
@@ -27000,7 +27034,7 @@ if (ob_get_length()) {
             return $this->renderLiveCetakPreview('generalconsentcetak');
         }
 
-        $data = $this->db('general_consent_ranap')->where('id', $id)->oneArray();
+        $data = $this->db('rm_general_consent_ranap')->where('id', $id)->oneArray();
         if (!$data) {
             return $this->renderLiveCetakPreview('generalconsentcetak');
         }
@@ -27071,7 +27105,7 @@ if (ob_get_length()) {
     public function anyJaminanbiayamanage()
     {
         $cari = trim($_GET['cari'] ?? '');
-        $query = $this->db('surat_pernyataan_jaminan_biaya');
+        $query = $this->db('rm_surat_pernyataan_jaminan_biaya');
 
         if (!empty($cari)) {
             $query->where('no_rawat', 'LIKE', '%' . $cari . '%')
@@ -27099,9 +27133,9 @@ if (ob_get_length()) {
         $no_rawat = trim($_GET['no_rawat'] ?? '');
 
         if (!empty($id)) {
-            $data = $this->db('surat_pernyataan_jaminan_biaya')->where('id', $id)->oneArray();
+            $data = $this->db('rm_surat_pernyataan_jaminan_biaya')->where('id', $id)->oneArray();
         } elseif (!empty($no_rawat)) {
-            $data = $this->db('surat_pernyataan_jaminan_biaya')->where('no_rawat', $no_rawat)->oneArray();
+            $data = $this->db('rm_surat_pernyataan_jaminan_biaya')->where('no_rawat', $no_rawat)->oneArray();
             if (!$data) {
                 $pasien = $this->db('reg_periksa')
                     ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
@@ -27254,10 +27288,10 @@ if (ob_get_length()) {
         ];
 
         if (!empty($id)) {
-            $this->db('surat_pernyataan_jaminan_biaya')->where('id', $id)->save($data);
+            $this->db('rm_surat_pernyataan_jaminan_biaya')->where('id', $id)->save($data);
             $this->notify('success', 'Surat Pernyataan Jaminan Pembiayaan berhasil diperbarui.');
         } else {
-            $this->db('surat_pernyataan_jaminan_biaya')->save($data);
+            $this->db('rm_surat_pernyataan_jaminan_biaya')->save($data);
             $this->notify('success', 'Surat Pernyataan Jaminan Pembiayaan berhasil disimpan.');
         }
 
@@ -27273,7 +27307,7 @@ if (ob_get_length()) {
     {
         $id = trim($_GET['id'] ?? '');
         if (!empty($id)) {
-            $this->db('surat_pernyataan_jaminan_biaya')->where('id', $id)->delete();
+            $this->db('rm_surat_pernyataan_jaminan_biaya')->where('id', $id)->delete();
             $this->notify('success', 'Data Surat Pernyataan Jaminan Pembiayaan berhasil dihapus.');
         }
         redirect(url([ADMIN, 'form_rme', 'jaminanbiayamanage']));
@@ -27291,7 +27325,7 @@ if (ob_get_length()) {
             return $this->renderLiveCetakPreview('jaminanbiayacetak');
         }
 
-        $data = $this->db('surat_pernyataan_jaminan_biaya')->where('id', $id)->oneArray();
+        $data = $this->db('rm_surat_pernyataan_jaminan_biaya')->where('id', $id)->oneArray();
         if (!$data) {
             return $this->renderLiveCetakPreview('jaminanbiayacetak');
         }
@@ -27364,18 +27398,18 @@ if (ob_get_length()) {
     public function anyRikeperawatanmanage()
     {
         $cari = trim($_GET["cari"] ?? "");
-        $query = $this->db("ri04_asesmen_keperawatan_ranap")
-            ->leftJoin("reg_periksa", "reg_periksa.no_rawat = ri04_asesmen_keperawatan_ranap.no_rawat")
+        $query = $this->db("rm_ri04_asesmen_keperawatan_ranap")
+            ->leftJoin("reg_periksa", "reg_periksa.no_rawat = rm_ri04_asesmen_keperawatan_ranap.no_rawat")
             ->leftJoin("pasien", "pasien.no_rkm_medis = reg_periksa.no_rkm_medis");
 
         if (!empty($cari)) {
-            $query->where("ri04_asesmen_keperawatan_ranap.no_rawat", "LIKE", "%" . $cari . "%")
+            $query->where("rm_ri04_asesmen_keperawatan_ranap.no_rawat", "LIKE", "%" . $cari . "%")
                   ->orWhere("reg_periksa.no_rkm_medis", "LIKE", "%" . $cari . "%")
                   ->orWhere("pasien.nm_pasien", "LIKE", "%" . $cari . "%");
         }
 
-        $rows = $query->select("ri04_asesmen_keperawatan_ranap.*, reg_periksa.no_rkm_medis, pasien.nm_pasien")
-            ->desc("ri04_asesmen_keperawatan_ranap.id")
+        $rows = $query->select("rm_ri04_asesmen_keperawatan_ranap.*, reg_periksa.no_rkm_medis, pasien.nm_pasien")
+            ->desc("rm_ri04_asesmen_keperawatan_ranap.id")
             ->limit(50)
             ->toArray();
 
@@ -27391,9 +27425,9 @@ if (ob_get_length()) {
         $data = [];
 
         if (!empty($id)) {
-            $data = $this->db("ri04_asesmen_keperawatan_ranap")->where("id", $id)->oneArray();
+            $data = $this->db("rm_ri04_asesmen_keperawatan_ranap")->where("id", $id)->oneArray();
         } elseif (!empty($no_rawat)) {
-            $data = $this->db("ri04_asesmen_keperawatan_ranap")->where("no_rawat", $no_rawat)->oneArray();
+            $data = $this->db("rm_ri04_asesmen_keperawatan_ranap")->where("no_rawat", $no_rawat)->oneArray();
         }
 
         if (empty($data)) {
@@ -27504,10 +27538,10 @@ if (ob_get_length()) {
         ];
 
         if (!empty($id)) {
-            $this->db("ri04_asesmen_keperawatan_ranap")->where("id", $id)->save($save);
+            $this->db("rm_ri04_asesmen_keperawatan_ranap")->where("id", $id)->save($save);
             $this->notify("success", "Asesmen Keperawatan Rawat Inap berhasil diperbarui.");
         } else {
-            $this->db("ri04_asesmen_keperawatan_ranap")->save($save);
+            $this->db("rm_ri04_asesmen_keperawatan_ranap")->save($save);
             $this->notify("success", "Asesmen Keperawatan Rawat Inap berhasil disimpan.");
         }
 
@@ -27518,7 +27552,7 @@ if (ob_get_length()) {
     {
         $id = $_GET["id"] ?? "";
         if (!empty($id)) {
-            $this->db("ri04_asesmen_keperawatan_ranap")->where("id", $id)->delete();
+            $this->db("rm_ri04_asesmen_keperawatan_ranap")->where("id", $id)->delete();
             $this->notify("success", "Data asesmen keperawatan berhasil dihapus.");
         }
         redirect(url([ADMIN, 'form_rme', "rikeperawatanmanage"]));
@@ -27533,7 +27567,7 @@ if (ob_get_length()) {
             return $this->renderLiveCetakPreview('rikeperawatancetak');
         }
 
-        $data = $this->db("ri04_asesmen_keperawatan_ranap")->where("id", $id)->oneArray();
+        $data = $this->db("rm_ri04_asesmen_keperawatan_ranap")->where("id", $id)->oneArray();
         if (empty($data)) {
             return $this->renderLiveCetakPreview('rikeperawatancetak');
         }
@@ -27621,18 +27655,18 @@ if (ob_get_length()) {
     public function anyRimedisgigimanage()
     {
         $cari = trim($_GET["cari"] ?? "");
-        $query = $this->db("ri05a_asesmen_medis_ranap_gigi")
-            ->leftJoin("reg_periksa", "reg_periksa.no_rawat = ri05a_asesmen_medis_ranap_gigi.no_rawat")
+        $query = $this->db("rm_ri05a_asesmen_medis_ranap_gigi")
+            ->leftJoin("reg_periksa", "reg_periksa.no_rawat = rm_ri05a_asesmen_medis_ranap_gigi.no_rawat")
             ->leftJoin("pasien", "pasien.no_rkm_medis = reg_periksa.no_rkm_medis");
 
         if (!empty($cari)) {
-            $query->where("ri05a_asesmen_medis_ranap_gigi.no_rawat", "LIKE", "%" . $cari . "%")
+            $query->where("rm_ri05a_asesmen_medis_ranap_gigi.no_rawat", "LIKE", "%" . $cari . "%")
                   ->orWhere("reg_periksa.no_rkm_medis", "LIKE", "%" . $cari . "%")
                   ->orWhere("pasien.nm_pasien", "LIKE", "%" . $cari . "%");
         }
 
-        $rows = $query->select("ri05a_asesmen_medis_ranap_gigi.*, reg_periksa.no_rkm_medis, pasien.nm_pasien")
-            ->desc("ri05a_asesmen_medis_ranap_gigi.id")
+        $rows = $query->select("rm_ri05a_asesmen_medis_ranap_gigi.*, reg_periksa.no_rkm_medis, pasien.nm_pasien")
+            ->desc("rm_ri05a_asesmen_medis_ranap_gigi.id")
             ->limit(50)
             ->toArray();
 
@@ -27648,9 +27682,9 @@ if (ob_get_length()) {
         $data = [];
 
         if (!empty($id)) {
-            $data = $this->db("ri05a_asesmen_medis_ranap_gigi")->where("id", $id)->oneArray();
+            $data = $this->db("rm_ri05a_asesmen_medis_ranap_gigi")->where("id", $id)->oneArray();
         } elseif (!empty($no_rawat)) {
-            $data = $this->db("ri05a_asesmen_medis_ranap_gigi")->where("no_rawat", $no_rawat)->oneArray();
+            $data = $this->db("rm_ri05a_asesmen_medis_ranap_gigi")->where("no_rawat", $no_rawat)->oneArray();
         }
 
         if (empty($data)) {
@@ -27751,10 +27785,10 @@ if (ob_get_length()) {
         ];
 
         if (!empty($id)) {
-            $this->db("ri05a_asesmen_medis_ranap_gigi")->where("id", $id)->save($save);
+            $this->db("rm_ri05a_asesmen_medis_ranap_gigi")->where("id", $id)->save($save);
             $this->notify("success", "Asesmen Medis Rawat Inap Gigi berhasil diperbarui.");
         } else {
-            $this->db("ri05a_asesmen_medis_ranap_gigi")->save($save);
+            $this->db("rm_ri05a_asesmen_medis_ranap_gigi")->save($save);
             $this->notify("success", "Asesmen Medis Rawat Inap Gigi berhasil disimpan.");
         }
 
@@ -27765,7 +27799,7 @@ if (ob_get_length()) {
     {
         $id = $_GET["id"] ?? "";
         if (!empty($id)) {
-            $this->db("ri05a_asesmen_medis_ranap_gigi")->where("id", $id)->delete();
+            $this->db("rm_ri05a_asesmen_medis_ranap_gigi")->where("id", $id)->delete();
             $this->notify("success", "Data asesmen medis rawat inap gigi berhasil dihapus.");
         }
         redirect(url([ADMIN, 'form_rme', "rimedisgigimanage"]));
@@ -27780,7 +27814,7 @@ if (ob_get_length()) {
             return $this->renderLiveCetakPreview('rimedisgigicetak');
         }
 
-        $data = $this->db("ri05a_asesmen_medis_ranap_gigi")->where("id", $id)->oneArray();
+        $data = $this->db("rm_ri05a_asesmen_medis_ranap_gigi")->where("id", $id)->oneArray();
         if (empty($data)) {
             return $this->renderLiveCetakPreview('rimedisgigicetak');
         }
@@ -27854,18 +27888,18 @@ if (ob_get_length()) {
     public function anyJatuhanakmanage()
     {
         $cari = trim($_GET["cari"] ?? "");
-        $query = $this->db("rj_asesmen_jatuh_nyeri_anak")
-            ->leftJoin("reg_periksa", "reg_periksa.no_rawat = rj_asesmen_jatuh_nyeri_anak.no_rawat")
+        $query = $this->db("rm_rj_asesmen_jatuh_nyeri_anak")
+            ->leftJoin("reg_periksa", "reg_periksa.no_rawat = rm_rj_asesmen_jatuh_nyeri_anak.no_rawat")
             ->leftJoin("pasien", "pasien.no_rkm_medis = reg_periksa.no_rkm_medis");
 
         if (!empty($cari)) {
-            $query->where("rj_asesmen_jatuh_nyeri_anak.no_rawat", "LIKE", "%" . $cari . "%")
+            $query->where("rm_rj_asesmen_jatuh_nyeri_anak.no_rawat", "LIKE", "%" . $cari . "%")
                   ->orWhere("reg_periksa.no_rkm_medis", "LIKE", "%" . $cari . "%")
                   ->orWhere("pasien.nm_pasien", "LIKE", "%" . $cari . "%");
         }
 
-        $rows = $query->select("rj_asesmen_jatuh_nyeri_anak.*, reg_periksa.no_rkm_medis, pasien.nm_pasien")
-            ->desc("rj_asesmen_jatuh_nyeri_anak.id")
+        $rows = $query->select("rm_rj_asesmen_jatuh_nyeri_anak.*, reg_periksa.no_rkm_medis, pasien.nm_pasien")
+            ->desc("rm_rj_asesmen_jatuh_nyeri_anak.id")
             ->limit(50)
             ->toArray();
 
@@ -27881,9 +27915,9 @@ if (ob_get_length()) {
         $data = [];
 
         if (!empty($id)) {
-            $data = $this->db("rj_asesmen_jatuh_nyeri_anak")->where("id", $id)->oneArray();
+            $data = $this->db("rm_rj_asesmen_jatuh_nyeri_anak")->where("id", $id)->oneArray();
         } elseif (!empty($no_rawat)) {
-            $data = $this->db("rj_asesmen_jatuh_nyeri_anak")->where("no_rawat", $no_rawat)->oneArray();
+            $data = $this->db("rm_rj_asesmen_jatuh_nyeri_anak")->where("no_rawat", $no_rawat)->oneArray();
         }
 
         if (empty($data)) {
@@ -27969,22 +28003,22 @@ if (ob_get_length()) {
         $existingId = (int)$id;
         $prep = null;
         if ($existingId > 0) {
-            $prep = $this->guardRajalUpdateOrRespond('rj_asesmen_jatuh_nyeri_anak', $existingId, $save, url([ADMIN, 'form_rme', 'jatuhanakform']) . '&id=' . $existingId);
-            $this->db("rj_asesmen_jatuh_nyeri_anak")->where("id", $existingId)->save($save);
+            $prep = $this->guardRajalUpdateOrRespond('rm_rj_asesmen_jatuh_nyeri_anak', $existingId, $save, url([ADMIN, 'form_rme', 'jatuhanakform']) . '&id=' . $existingId);
+            $this->db("rm_rj_asesmen_jatuh_nyeri_anak")->where("id", $existingId)->save($save);
             $savedId = $existingId;
             $this->notify("success", "Asesmen Anak berhasil diperbarui.");
         } else {
-            $this->db("rj_asesmen_jatuh_nyeri_anak")->save($save);
-            $savedId = (int)$this->resolveInsertedRecordId("rj_asesmen_jatuh_nyeri_anak", $save["no_rawat"] ?? "", "id");
+            $this->db("rm_rj_asesmen_jatuh_nyeri_anak")->save($save);
+            $savedId = (int)$this->resolveInsertedRecordId("rm_rj_asesmen_jatuh_nyeri_anak", $save["no_rawat"] ?? "", "id");
             $this->notify("success", "Asesmen Anak berhasil disimpan.");
         }
-        $revRes = $this->finalizeRajalSave("rj_asesmen_jatuh_nyeri_anak", $existingId, $savedId, $prep, $save);
+        $revRes = $this->finalizeRajalSave("rm_rj_asesmen_jatuh_nyeri_anak", $existingId, $savedId, $prep, $save);
         $this->respondAjaxOrRedirect(url([ADMIN, 'form_rme', "jatuhanakmanage"]), $savedId, "Asesmen Anak berhasil disimpan.", ['revision' => $revRes]);
     }
 
     public function anyJatuhanakhapus()
     {
-        $this->handleRajalVoidRedirect("rj_asesmen_jatuh_nyeri_anak", $_POST["id"] ?? ($_GET["id"] ?? 0), url([ADMIN, 'form_rme', "jatuhanakmanage"]));
+        $this->handleRajalVoidRedirect("rm_rj_asesmen_jatuh_nyeri_anak", $_POST["id"] ?? ($_GET["id"] ?? 0), url([ADMIN, 'form_rme', "jatuhanakmanage"]));
     }
 
     public function getJatuhanakhapus() { return $this->anyJatuhanakhapus(); }
@@ -27996,7 +28030,7 @@ if (ob_get_length()) {
             return $this->renderLiveCetakPreview('jatuhanakcetak');
         }
 
-        $data = $this->db("rj_asesmen_jatuh_nyeri_anak")->where("id", $id)->oneArray();
+        $data = $this->db("rm_rj_asesmen_jatuh_nyeri_anak")->where("id", $id)->oneArray();
         if (empty($data)) {
             return $this->renderLiveCetakPreview('jatuhanakcetak');
         }
@@ -28082,18 +28116,18 @@ if (ob_get_length()) {
     public function anyJatuhdewasamanage()
     {
         $cari = trim($_GET["cari"] ?? "");
-        $query = $this->db("ri06a_asesmen_jatuh_dewasa_geriatri")
-            ->leftJoin("reg_periksa", "reg_periksa.no_rawat = ri06a_asesmen_jatuh_dewasa_geriatri.no_rawat")
+        $query = $this->db("rm_ri06a_asesmen_jatuh_dewasa_geriatri")
+            ->leftJoin("reg_periksa", "reg_periksa.no_rawat = rm_ri06a_asesmen_jatuh_dewasa_geriatri.no_rawat")
             ->leftJoin("pasien", "pasien.no_rkm_medis = reg_periksa.no_rkm_medis");
 
         if (!empty($cari)) {
-            $query->where("ri06a_asesmen_jatuh_dewasa_geriatri.no_rawat", "LIKE", "%" . $cari . "%")
+            $query->where("rm_ri06a_asesmen_jatuh_dewasa_geriatri.no_rawat", "LIKE", "%" . $cari . "%")
                   ->orWhere("reg_periksa.no_rkm_medis", "LIKE", "%" . $cari . "%")
                   ->orWhere("pasien.nm_pasien", "LIKE", "%" . $cari . "%");
         }
 
-        $rows = $query->select("ri06a_asesmen_jatuh_dewasa_geriatri.*, reg_periksa.no_rkm_medis, pasien.nm_pasien")
-            ->desc("ri06a_asesmen_jatuh_dewasa_geriatri.id")
+        $rows = $query->select("rm_ri06a_asesmen_jatuh_dewasa_geriatri.*, reg_periksa.no_rkm_medis, pasien.nm_pasien")
+            ->desc("rm_ri06a_asesmen_jatuh_dewasa_geriatri.id")
             ->limit(50)
             ->toArray();
 
@@ -28109,9 +28143,9 @@ if (ob_get_length()) {
         $data = [];
 
         if (!empty($id)) {
-            $data = $this->db("ri06a_asesmen_jatuh_dewasa_geriatri")->where("id", $id)->oneArray();
+            $data = $this->db("rm_ri06a_asesmen_jatuh_dewasa_geriatri")->where("id", $id)->oneArray();
         } elseif (!empty($no_rawat)) {
-            $data = $this->db("ri06a_asesmen_jatuh_dewasa_geriatri")->where("no_rawat", $no_rawat)->oneArray();
+            $data = $this->db("rm_ri06a_asesmen_jatuh_dewasa_geriatri")->where("no_rawat", $no_rawat)->oneArray();
         }
 
         if (empty($data)) {
@@ -28194,10 +28228,10 @@ if (ob_get_length()) {
         ];
 
         if (!empty($id)) {
-            $this->db("ri06a_asesmen_jatuh_dewasa_geriatri")->where("id", $id)->save($save);
+            $this->db("rm_ri06a_asesmen_jatuh_dewasa_geriatri")->where("id", $id)->save($save);
             $this->notify("success", "Asesmen Risiko Jatuh Dewasa/Geriatri berhasil diperbarui.");
         } else {
-            $this->db("ri06a_asesmen_jatuh_dewasa_geriatri")->save($save);
+            $this->db("rm_ri06a_asesmen_jatuh_dewasa_geriatri")->save($save);
             $this->notify("success", "Asesmen Risiko Jatuh Dewasa/Geriatri berhasil disimpan.");
         }
 
@@ -28208,7 +28242,7 @@ if (ob_get_length()) {
     {
         $id = $_GET["id"] ?? "";
         if (!empty($id)) {
-            $this->db("ri06a_asesmen_jatuh_dewasa_geriatri")->where("id", $id)->delete();
+            $this->db("rm_ri06a_asesmen_jatuh_dewasa_geriatri")->where("id", $id)->delete();
             $this->notify("success", "Data berhasil dihapus.");
         }
         redirect(url([ADMIN, 'form_rme', "jatuhdewasamanage"]));
@@ -28223,7 +28257,7 @@ if (ob_get_length()) {
             return $this->renderLiveCetakPreview('jatuhdewasacetak');
         }
 
-        $data = $this->db("ri06a_asesmen_jatuh_dewasa_geriatri")->where("id", $id)->oneArray();
+        $data = $this->db("rm_ri06a_asesmen_jatuh_dewasa_geriatri")->where("id", $id)->oneArray();
         if (empty($data)) {
             return $this->renderLiveCetakPreview('jatuhdewasacetak');
         }
@@ -28308,18 +28342,18 @@ if (ob_get_length()) {
     public function anyRiobservasimanage()
     {
         $cari = trim($_GET["cari"] ?? "");
-        $query = $this->db("ri07_observasi_pasien")
-            ->leftJoin("reg_periksa", "reg_periksa.no_rawat = ri07_observasi_pasien.no_rawat")
+        $query = $this->db("rm_ri07_observasi_pasien")
+            ->leftJoin("reg_periksa", "reg_periksa.no_rawat = rm_ri07_observasi_pasien.no_rawat")
             ->leftJoin("pasien", "pasien.no_rkm_medis = reg_periksa.no_rkm_medis");
 
         if (!empty($cari)) {
-            $query->where("ri07_observasi_pasien.no_rawat", "LIKE", "%" . $cari . "%")
+            $query->where("rm_ri07_observasi_pasien.no_rawat", "LIKE", "%" . $cari . "%")
                   ->orWhere("reg_periksa.no_rkm_medis", "LIKE", "%" . $cari . "%")
                   ->orWhere("pasien.nm_pasien", "LIKE", "%" . $cari . "%");
         }
 
-        $rows = $query->select("ri07_observasi_pasien.*, reg_periksa.no_rkm_medis, pasien.nm_pasien")
-            ->desc("ri07_observasi_pasien.id")
+        $rows = $query->select("rm_ri07_observasi_pasien.*, reg_periksa.no_rkm_medis, pasien.nm_pasien")
+            ->desc("rm_ri07_observasi_pasien.id")
             ->limit(50)
             ->toArray();
 
@@ -28340,9 +28374,9 @@ if (ob_get_length()) {
         $data = [];
 
         if (!empty($id)) {
-            $data = $this->db("ri07_observasi_pasien")->where("id", $id)->oneArray();
+            $data = $this->db("rm_ri07_observasi_pasien")->where("id", $id)->oneArray();
         } elseif (!empty($no_rawat)) {
-            $data = $this->db("ri07_observasi_pasien")->where("no_rawat", $no_rawat)->oneArray();
+            $data = $this->db("rm_ri07_observasi_pasien")->where("no_rawat", $no_rawat)->oneArray();
         }
 
         if (empty($data)) {
@@ -28404,10 +28438,10 @@ if (ob_get_length()) {
         ];
 
         if (!empty($id)) {
-            $this->db("ri07_observasi_pasien")->where("id", $id)->save($save);
+            $this->db("rm_ri07_observasi_pasien")->where("id", $id)->save($save);
             $this->notify("success", "Lembar observasi berhasil diperbarui.");
         } else {
-            $this->db("ri07_observasi_pasien")->save($save);
+            $this->db("rm_ri07_observasi_pasien")->save($save);
             $this->notify("success", "Lembar observasi berhasil disimpan.");
         }
 
@@ -28418,7 +28452,7 @@ if (ob_get_length()) {
     {
         $id = $_GET["id"] ?? "";
         if (!empty($id)) {
-            $this->db("ri07_observasi_pasien")->where("id", $id)->delete();
+            $this->db("rm_ri07_observasi_pasien")->where("id", $id)->delete();
             $this->notify("success", "Data observasi berhasil dihapus.");
         }
         redirect(url([ADMIN, 'form_rme', "riobservasimanage"]));
@@ -28433,7 +28467,7 @@ if (ob_get_length()) {
             return $this->renderLiveCetakPreview('riobservasicetak');
         }
 
-        $data = $this->db("ri07_observasi_pasien")->where("id", $id)->oneArray();
+        $data = $this->db("rm_ri07_observasi_pasien")->where("id", $id)->oneArray();
         if (empty($data)) {
             return $this->renderLiveCetakPreview('riobservasicetak');
         }
@@ -28525,18 +28559,18 @@ if (ob_get_length()) {
     public function anyRi05cmanage()
     {
         $cari = trim($_GET["cari"] ?? "");
-        $query = $this->db("ri05c_dokter_penanggung_jawab")
-            ->leftJoin("reg_periksa", "reg_periksa.no_rawat = ri05c_dokter_penanggung_jawab.no_rawat")
+        $query = $this->db("rm_ri05c_dokter_penanggung_jawab")
+            ->leftJoin("reg_periksa", "reg_periksa.no_rawat = rm_ri05c_dokter_penanggung_jawab.no_rawat")
             ->leftJoin("pasien", "pasien.no_rkm_medis = reg_periksa.no_rkm_medis");
 
         if (!empty($cari)) {
-            $query->where("ri05c_dokter_penanggung_jawab.no_rawat", "LIKE", "%" . $cari . "%")
+            $query->where("rm_ri05c_dokter_penanggung_jawab.no_rawat", "LIKE", "%" . $cari . "%")
                   ->orWhere("reg_periksa.no_rkm_medis", "LIKE", "%" . $cari . "%")
                   ->orWhere("pasien.nm_pasien", "LIKE", "%" . $cari . "%");
         }
 
-        $rows = $query->select("ri05c_dokter_penanggung_jawab.*, reg_periksa.no_rkm_medis, pasien.nm_pasien")
-            ->desc("ri05c_dokter_penanggung_jawab.id")
+        $rows = $query->select("rm_ri05c_dokter_penanggung_jawab.*, reg_periksa.no_rkm_medis, pasien.nm_pasien")
+            ->desc("rm_ri05c_dokter_penanggung_jawab.id")
             ->limit(50)
             ->toArray();
 
@@ -28561,9 +28595,9 @@ if (ob_get_length()) {
         $data = [];
 
         if (!empty($id)) {
-            $data = $this->db("ri05c_dokter_penanggung_jawab")->where("id", $id)->oneArray();
+            $data = $this->db("rm_ri05c_dokter_penanggung_jawab")->where("id", $id)->oneArray();
         } elseif (!empty($no_rawat)) {
-            $data = $this->db("ri05c_dokter_penanggung_jawab")->where("no_rawat", $no_rawat)->oneArray();
+            $data = $this->db("rm_ri05c_dokter_penanggung_jawab")->where("no_rawat", $no_rawat)->oneArray();
         }
 
         if (empty($data)) {
@@ -28633,10 +28667,10 @@ if (ob_get_length()) {
         ];
 
         if (!empty($id)) {
-            $this->db("ri05c_dokter_penanggung_jawab")->where("id", $id)->save($save);
+            $this->db("rm_ri05c_dokter_penanggung_jawab")->where("id", $id)->save($save);
             $this->notify("success", "Form DPJP berhasil diperbarui.");
         } else {
-            $this->db("ri05c_dokter_penanggung_jawab")->save($save);
+            $this->db("rm_ri05c_dokter_penanggung_jawab")->save($save);
             $this->notify("success", "Form DPJP berhasil disimpan.");
         }
 
@@ -28647,7 +28681,7 @@ if (ob_get_length()) {
     {
         $id = $_GET["id"] ?? "";
         if (!empty($id)) {
-            $this->db("ri05c_dokter_penanggung_jawab")->where("id", $id)->delete();
+            $this->db("rm_ri05c_dokter_penanggung_jawab")->where("id", $id)->delete();
             $this->notify("success", "Data form DPJP berhasil dihapus.");
         }
         redirect(url([ADMIN, 'form_rme', "ri05cmanage"]));
@@ -28662,7 +28696,7 @@ if (ob_get_length()) {
             return $this->renderLiveCetakPreview('ri05ccetak');
         }
 
-        $data = $this->db("ri05c_dokter_penanggung_jawab")->where("id", $id)->oneArray();
+        $data = $this->db("rm_ri05c_dokter_penanggung_jawab")->where("id", $id)->oneArray();
         if (empty($data)) {
             return $this->renderLiveCetakPreview('ri05ccetak');
         }
@@ -28732,18 +28766,18 @@ if (ob_get_length()) {
     public function anyRingkasanriwayatklinikmanage()
     {
         $cari = $_GET["cari"] ?? "";
-        $query = $this->db("ringkasan_riwayat_klinik")
-            ->leftJoin("reg_periksa", "reg_periksa.no_rawat = ringkasan_riwayat_klinik.no_rawat")
+        $query = $this->db("rm_ringkasan_riwayat_klinik")
+            ->leftJoin("reg_periksa", "reg_periksa.no_rawat = rm_ringkasan_riwayat_klinik.no_rawat")
             ->leftJoin("pasien", "pasien.no_rkm_medis = reg_periksa.no_rkm_medis");
 
         if (!empty($cari)) {
-            $query->where("ringkasan_riwayat_klinik.no_rawat", "LIKE", "%" . $cari . "%")
+            $query->where("rm_ringkasan_riwayat_klinik.no_rawat", "LIKE", "%" . $cari . "%")
                   ->orWhere("reg_periksa.no_rkm_medis", "LIKE", "%" . $cari . "%")
                   ->orWhere("pasien.nm_pasien", "LIKE", "%" . $cari . "%");
         }
 
-        $rows = $query->select("ringkasan_riwayat_klinik.*, reg_periksa.no_rkm_medis, pasien.nm_pasien")
-            ->desc("ringkasan_riwayat_klinik.id")
+        $rows = $query->select("rm_ringkasan_riwayat_klinik.*, reg_periksa.no_rkm_medis, pasien.nm_pasien")
+            ->desc("rm_ringkasan_riwayat_klinik.id")
             ->limit(50)
             ->toArray();
 
@@ -28794,7 +28828,7 @@ if (ob_get_length()) {
         ];
 
         if (!empty($id)) {
-            $row = $this->db("ringkasan_riwayat_klinik")->where("id", $id)->oneArray();
+            $row = $this->db("rm_ringkasan_riwayat_klinik")->where("id", $id)->oneArray();
             if ($row) { $data = $row; }
         }
 
@@ -28845,22 +28879,22 @@ if (ob_get_length()) {
         $existingId = (int)$id;
         $prep = null;
         if ($existingId > 0) {
-            $prep = $this->guardRajalUpdateOrRespond('ringkasan_riwayat_klinik', $existingId, $save, url([ADMIN, 'form_rme', 'ringkasanriwayatklinikform']) . '&id=' . $existingId);
-            $this->db("ringkasan_riwayat_klinik")->where("id", $existingId)->save($save);
+            $prep = $this->guardRajalUpdateOrRespond('rm_ringkasan_riwayat_klinik', $existingId, $save, url([ADMIN, 'form_rme', 'ringkasanriwayatklinikform']) . '&id=' . $existingId);
+            $this->db("rm_ringkasan_riwayat_klinik")->where("id", $existingId)->save($save);
             $savedId = $existingId;
             $this->notify("success", "Ringkasan Riwayat Klinik berhasil diperbarui");
         } else {
-            $this->db("ringkasan_riwayat_klinik")->save($save);
-            $savedId = (int)$this->resolveInsertedRecordId("ringkasan_riwayat_klinik", $no_rawat, "id");
+            $this->db("rm_ringkasan_riwayat_klinik")->save($save);
+            $savedId = (int)$this->resolveInsertedRecordId("rm_ringkasan_riwayat_klinik", $no_rawat, "id");
             $this->notify("success", "Ringkasan Riwayat Klinik berhasil disimpan");
         }
-        $revRes = $this->finalizeRajalSave("ringkasan_riwayat_klinik", $existingId, $savedId, $prep, $save);
+        $revRes = $this->finalizeRajalSave("rm_ringkasan_riwayat_klinik", $existingId, $savedId, $prep, $save);
         $this->respondAjaxOrRedirect(url([ADMIN, 'form_rme', "ringkasanriwayatklinikmanage"]), $savedId, "Ringkasan Riwayat Klinik berhasil disimpan.", ['revision' => $revRes]);
     }
 
     public function getRingkasanriwayatklinikhapus()
     {
-        $this->handleRajalVoidRedirect("ringkasan_riwayat_klinik", $_POST["id"] ?? ($_GET["id"] ?? 0), url([ADMIN, 'form_rme', "ringkasanriwayatklinikmanage"]));
+        $this->handleRajalVoidRedirect("rm_ringkasan_riwayat_klinik", $_POST["id"] ?? ($_GET["id"] ?? 0), url([ADMIN, 'form_rme', "ringkasanriwayatklinikmanage"]));
     }
 
     public function postRingkasanriwayatklinikhapus()
@@ -28921,7 +28955,7 @@ if (ob_get_length()) {
         $id = $_GET["id"] ?? "";
         if (empty($id)) { return $this->renderLiveCetakPreview('ringkasanriwayatklinikcetak'); }
 
-        $data = $this->db("ringkasan_riwayat_klinik")->where("id", $id)->oneArray();
+        $data = $this->db("rm_ringkasan_riwayat_klinik")->where("id", $id)->oneArray();
         if (empty($data)) { return $this->renderLiveCetakPreview('ringkasanriwayatklinikcetak'); }
 
         $reg = $this->db("reg_periksa")
@@ -28978,19 +29012,19 @@ if (ob_get_length()) {
     public function anyFormulirrujukanmanage()
     {
         $cari = $_GET["cari"] ?? "";
-        $query = $this->db("formulir_rujukan_rs")
-            ->leftJoin("reg_periksa", "reg_periksa.no_rawat = formulir_rujukan_rs.no_rawat")
+        $query = $this->db("rm_formulir_rujukan_rs")
+            ->leftJoin("reg_periksa", "reg_periksa.no_rawat = rm_formulir_rujukan_rs.no_rawat")
             ->leftJoin("pasien", "pasien.no_rkm_medis = reg_periksa.no_rkm_medis");
 
         if (!empty($cari)) {
-            $query->where("formulir_rujukan_rs.no_rawat", "LIKE", "%" . $cari . "%")
+            $query->where("rm_formulir_rujukan_rs.no_rawat", "LIKE", "%" . $cari . "%")
                   ->orWhere("reg_periksa.no_rkm_medis", "LIKE", "%" . $cari . "%")
                   ->orWhere("pasien.nm_pasien", "LIKE", "%" . $cari . "%")
-                  ->orWhere("formulir_rujukan_rs.rs_instansi", "LIKE", "%" . $cari . "%");
+                  ->orWhere("rm_formulir_rujukan_rs.rs_instansi", "LIKE", "%" . $cari . "%");
         }
 
-        $rows = $query->select("formulir_rujukan_rs.*, reg_periksa.no_rkm_medis, pasien.nm_pasien")
-            ->desc("formulir_rujukan_rs.id")
+        $rows = $query->select("rm_formulir_rujukan_rs.*, reg_periksa.no_rkm_medis, pasien.nm_pasien")
+            ->desc("rm_formulir_rujukan_rs.id")
             ->limit(50)
             ->toArray();
 
@@ -29045,7 +29079,7 @@ if (ob_get_length()) {
         ];
 
         if (!empty($id)) {
-            $row = $this->db("formulir_rujukan_rs")->where("id", $id)->oneArray();
+            $row = $this->db("rm_formulir_rujukan_rs")->where("id", $id)->oneArray();
             if ($row) { $data = $row; }
         }
 
@@ -29129,10 +29163,10 @@ if (ob_get_length()) {
         ];
 
         if (!empty($id)) {
-            $this->db("formulir_rujukan_rs")->where("id", $id)->save($save);
+            $this->db("rm_formulir_rujukan_rs")->where("id", $id)->save($save);
             $this->notify("success", "Formulir Rujukan berhasil diperbarui");
         } else {
-            $this->db("formulir_rujukan_rs")->save($save);
+            $this->db("rm_formulir_rujukan_rs")->save($save);
             $this->notify("success", "Formulir Rujukan berhasil disimpan");
         }
 
@@ -29143,7 +29177,7 @@ if (ob_get_length()) {
     {
         $id = $_GET["id"] ?? "";
         if (!empty($id)) {
-            $this->db("formulir_rujukan_rs")->where("id", $id)->delete();
+            $this->db("rm_formulir_rujukan_rs")->where("id", $id)->delete();
             $this->notify("success", "Data rujukan berhasil dihapus");
         }
         redirect(url([ADMIN, 'form_rme', "formulirrujukanmanage"]));
@@ -29162,7 +29196,7 @@ if (ob_get_length()) {
         $id = $_GET["id"] ?? "";
         if (empty($id)) { return $this->renderLiveCetakPreview('formulirrujukancetak'); }
 
-        $data = $this->db("formulir_rujukan_rs")->where("id", $id)->oneArray();
+        $data = $this->db("rm_formulir_rujukan_rs")->where("id", $id)->oneArray();
         if (empty($data)) { return $this->renderLiveCetakPreview('formulirrujukancetak'); }
 
         $reg = $this->db("reg_periksa")

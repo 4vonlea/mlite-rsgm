@@ -241,9 +241,9 @@ CREATE TABLE IF NOT EXISTS `rm_ans3_assesmen_prasedasi_anestesi` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
--- Struktur tabel `ans4_evaluasi_premedikasi_detail`
+-- Struktur tabel `rm_ans4_evaluasi_premedikasi_detail`
 -- --------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `ans4_evaluasi_premedikasi_detail` (
+CREATE TABLE IF NOT EXISTS `rm_ans4_evaluasi_premedikasi_detail` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `id_ans4` int(11) NOT NULL,
   `obat_premedikasi` varchar(150) DEFAULT NULL,
@@ -373,9 +373,9 @@ CREATE TABLE IF NOT EXISTS `rm_ans4_rencana_anestesi` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
--- Struktur tabel `ans6_protokol_nyeri_detail`
+-- Struktur tabel `rm_ans6_protokol_nyeri_detail`
 -- --------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `ans6_protokol_nyeri_detail` (
+CREATE TABLE IF NOT EXISTS `rm_ans6_protokol_nyeri_detail` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `id_ans6` int(11) NOT NULL,
   `tanggal` varchar(50) DEFAULT NULL,
@@ -1013,9 +1013,9 @@ CREATE TABLE IF NOT EXISTS `rm_edukasi_pasien_terintegrasi` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
--- Struktur tabel `edukasi_pasien_terintegrasi_detail`
+-- Struktur tabel `rm_edukasi_pasien_terintegrasi_detail`
 -- --------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `edukasi_pasien_terintegrasi_detail` (
+CREATE TABLE IF NOT EXISTS `rm_edukasi_pasien_terintegrasi_detail` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `id_edukasi` int(11) NOT NULL,
   `tanggal_jam` datetime DEFAULT NULL,
@@ -2111,7 +2111,7 @@ CREATE TABLE IF NOT EXISTS `rm_lampiran_ews_anak` (
 
 
 -- Tabel baru dari form-rme
-CREATE TABLE IF NOT EXISTS `ans5_status_anestesi` (
+CREATE TABLE IF NOT EXISTS `rm_ans5_status_anestesi` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `no_rawat` varchar(20) NOT NULL,
   `no_rkm_medis` varchar(15) DEFAULT NULL,
@@ -2170,7 +2170,7 @@ CREATE TABLE IF NOT EXISTS `ans5_status_anestesi` (
   KEY `tanggal` (`tanggal`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE IF NOT EXISTS `bm3_asesmen_pra_bedah_mayor` (
+CREATE TABLE IF NOT EXISTS `rm_bm3_asesmen_pra_bedah_mayor` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `no_rawat` varchar(17) NOT NULL,
   `no_rkm_medis` varchar(15) NOT NULL,
@@ -2222,7 +2222,7 @@ CREATE TABLE IF NOT EXISTS `bm3_asesmen_pra_bedah_mayor` (
   KEY `kd_dokter` (`kd_dokter`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE IF NOT EXISTS `bm5_checklist_keselamatan_operasi` (
+CREATE TABLE IF NOT EXISTS `rm_bm5_checklist_keselamatan_operasi` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `no_rawat` varchar(20) NOT NULL,
   `no_rkm_medis` varchar(15) DEFAULT NULL,
@@ -2278,7 +2278,7 @@ CREATE TABLE IF NOT EXISTS `bm5_checklist_keselamatan_operasi` (
   KEY `tanggal` (`tanggal`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE IF NOT EXISTS `bmi3_asesmen_bedah_minor` (
+CREATE TABLE IF NOT EXISTS `rm_bmi3_asesmen_bedah_minor` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `no_rawat` varchar(20) NOT NULL,
   `no_rkm_medis` varchar(15) DEFAULT NULL,
@@ -2355,7 +2355,7 @@ CREATE TABLE IF NOT EXISTS `bmi3_asesmen_bedah_minor` (
   KEY `tanggal_operasi` (`tanggal_operasi`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE IF NOT EXISTS `penandaan_lokasi_bedah_mulut` (
+CREATE TABLE IF NOT EXISTS `rm_penandaan_lokasi_bedah_mulut` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `no_rawat` varchar(20) NOT NULL,
   `no_rkm_medis` varchar(15) DEFAULT NULL,
@@ -2379,7 +2379,7 @@ CREATE TABLE IF NOT EXISTS `penandaan_lokasi_bedah_mulut` (
   KEY `tanggal` (`tanggal`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE IF NOT EXISTS `asesmen_medis_gigi_ugd` (
+CREATE TABLE IF NOT EXISTS `rm_asesmen_medis_gigi_ugd` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `no_rawat` varchar(20) NOT NULL,
   `no_rkm_medis` varchar(20) DEFAULT NULL,
@@ -2596,7 +2596,7 @@ CREATE TABLE IF NOT EXISTS `asesmen_medis_gigi_ugd` (
   KEY `no_rkm_medis` (`no_rkm_medis`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=DYNAMIC;
 
-CREATE TABLE IF NOT EXISTS `asesmen_medis_umum_ugd` (
+CREATE TABLE IF NOT EXISTS `rm_asesmen_medis_umum_ugd` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `no_rawat` varchar(20) NOT NULL,
   `no_rkm_medis` varchar(20) DEFAULT NULL,
@@ -2845,7 +2845,7 @@ ALTER TABLE `rm_ans4_rencana_anestesi`
 CREATE OR REPLACE VIEW `ans4_rencana_anestesi` AS SELECT * FROM `rm_ans4_rencana_anestesi`;
 
 -- Update ANS5 Status Anestesi
-ALTER TABLE `ans5_status_anestesi`
+ALTER TABLE `rm_ans5_status_anestesi`
   ADD COLUMN IF NOT EXISTS `waktu_induksi` varchar(20) DEFAULT NULL,
   ADD COLUMN IF NOT EXISTS `waktu_insisi` varchar(20) DEFAULT NULL,
   ADD COLUMN IF NOT EXISTS `waktu_operasi_mulai` varchar(20) DEFAULT NULL,

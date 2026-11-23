@@ -273,7 +273,7 @@ class RmeFormRevision
                     'nama_saksi_2' => 'Saksi 2',
                 ],
             ],
-            'ringkasan_riwayat_klinik' => [
+            'rm_ringkasan_riwayat_klinik' => [
                 'type' => 'ringkasanriwayatklinik',
                 'form_code' => 'RINGKASAN_KLINIK',
                 'title' => 'Ringkasan Riwayat Klinik',
@@ -291,7 +291,7 @@ class RmeFormRevision
                     'catatan_fktp' => 'Catatan FKTP',
                 ],
             ],
-            'rj_asesmen_jatuh_nyeri_anak' => [
+            'rm_rj_asesmen_jatuh_nyeri_anak' => [
                 'type' => 'jatuhanak',
                 'form_code' => 'RJ_JATUH_ANAK',
                 'title' => 'Asesmen Jatuh & Nyeri Anak',
@@ -495,7 +495,7 @@ class RmeFormRevision
         // 3. Cek detail anak edukasi
         if ($table === 'rm_edukasi_pasien_terintegrasi' && !empty($existingRow['id'])) {
             try {
-                $q = $pdo->prepare("SELECT tte_pemberi FROM edukasi_pasien_terintegrasi_detail WHERE id_edukasi = ?");
+                $q = $pdo->prepare("SELECT tte_pemberi FROM rm_edukasi_pasien_terintegrasi_detail WHERE id_edukasi = ?");
                 $q->execute([$existingRow['id']]);
                 while ($h = $q->fetchColumn()) {
                     $h = trim((string)$h);
