@@ -84,6 +84,7 @@
           {if: $value.is_voided}
           <div class="alert alert-danger" style="padding:5px 8px;font-size:11px;margin-bottom:8px;"><strong>VOID:</strong> {?=isset_or($value.void_info.void_reason)?} ({?=isset_or($value.void_info.deleted_by)?})</div>
           {/if}
+          <div id="sign_container_{?=isset_or($value.sign_ref_id)?}">
           {if: isset($value.is_signed) && $value.is_signed}
             <a href="{?=url(['esignature', 'verify', $value.signature_hash])?}" target="_blank" style="cursor:default; text-decoration:none; color:inherit;">
               <div class="qrcodePetugasValid{?=isset_or($value.nomor)?}" style="margin-top:10px;width:40px;margin-right: 120px;"></div>
@@ -96,8 +97,17 @@
                 text: "{?=isset_or($value.signature_hash)?}"
               });
             </script>
+            {if: !empty($value.is_tte_outdated) && empty($value.is_voided) && (!empty($value.can_resign_tte) || $current_user == $value.nip)}
+            <div style="margin-top:6px;">
+              <button type="button" class="btn btn-warning btn-xs btn-tte"
+                 data-ref_type="soap_ralan"
+                 data-ref_id="{?=isset_or($value.sign_ref_id)?}"
+                 data-signer_name="{?=isset_or($value.nama_petugas)?}">
+                 <i class="fa fa-refresh"></i> TTE Ulang
+              </button>
+            </div>
+            {/if}
           {else}
-            <div id="sign_container_{?=isset_or($value.sign_ref_id)?}">
                 {if: $current_user == $value.nip}
                 <button type="button" class="btn btn-primary btn-xs btn-tte"
                    data-ref_type="soap_ralan"
@@ -107,8 +117,8 @@
                 </button><br><br>
                 {/if}
                 {?=isset_or($value.nama_petugas)?}
-            </div>
           {/if}
+          </div>
         </td>
       </tr>
       <tr>
@@ -236,6 +246,7 @@
         <td data-rev-field="alergi">{?=isset_or($data.alergi)?}</td>
         <td rowspan="6" style="vertical-align:top;">
           <div data-rev-field="instruksi">{?=isset_or($data.instruksi)?}</div><br>
+          <div id="sign_container_{?=isset_or($data.sign_ref_id)?}">
           {if: isset($data.is_signed) && $data.is_signed}
             <a href="{?=url(['esignature', 'verify', $data.signature_hash])?}" target="_blank" style="cursor:default; text-decoration:none; color:inherit;">
               <div class="qrcodePetugasValid{?=isset_or($data.nomor)?}" style="margin-top:10px;width:40px;margin-right: 120px;"></div>
@@ -248,8 +259,17 @@
                 text: "{?=isset_or($data.signature_hash)?}"
               });
             </script>
+            {if: !empty($data.is_tte_outdated) && empty($data.is_voided) && (!empty($data.can_resign_tte) || $current_user == $data.nip)}
+            <div style="margin-top:6px;">
+              <button type="button" class="btn btn-warning btn-xs btn-tte"
+                 data-ref_type="soap_ranap"
+                 data-ref_id="{?=isset_or($data.sign_ref_id)?}"
+                 data-signer_name="{?=isset_or($data.nama_petugas)?}">
+                 <i class="fa fa-refresh"></i> TTE Ulang
+              </button>
+            </div>
+            {/if}
           {else}
-            <div id="sign_container_{?=isset_or($data.sign_ref_id)?}">
                 {if: $current_user == $data.nip}
                 <button type="button" class="btn btn-primary btn-xs btn-tte"
                    data-ref_type="soap_ranap"
@@ -259,8 +279,8 @@
                 </button><br><br>
                 {/if}
                 {?=isset_or($data.nama_petugas)?}
-            </div>
           {/if}
+          </div>
         </td>
       </tr>
       <tr>

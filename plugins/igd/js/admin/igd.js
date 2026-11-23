@@ -1357,6 +1357,7 @@ $(document).on('click', '.btn-tte', function(e) {
                             });
                             var container = $('#sign_container_' + ref_id);
                             if (container.length) {
+                                container.closest('tr').find('.rsgm-soap-tte-warn-badge').remove();
                                 var verifyUrl = mlite.url + '/esignature/verify/' + res.hash;
                                 var qrClass = 'qr_' + res.hash.substring(0, 8);
                                 container.html(

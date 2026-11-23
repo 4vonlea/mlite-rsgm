@@ -1859,17 +1859,21 @@ $(document).on('click', '.btn-tte', function(e) {
                             });
                             var container = $('#sign_container_' + ref_id);
                             if (container.length) {
+                                container.closest('.rsgm-cppt-card, .rsgm-soap-entry, tr').find('.rsgm-soap-tte-warn-badge').remove();
                                 var verifyUrl = mlite.url + '/esignature/verify/' + res.hash;
                                 var qrClass = 'qr_' + res.hash.substring(0, 8);
                                 container.html(
-                                    '<a href="' + verifyUrl + '" target="_blank" style="cursor:default; text-decoration:none; color:inherit;">' +
-                                    '<div class="' + qrClass + '" style="margin-top:10px;width:120px;height:120px;"></div>' +
-                                    '</a>' +
-                                    signer_name
+                                    '<a href="' + verifyUrl + '" target="_blank" class="rsgm-cppt-qr-card">' +
+                                    '<div class="' + qrClass + ' rsgm-cppt-qr"></div>' +
+                                    '<div class="rsgm-cppt-qr-meta">' +
+                                    '<span class="rsgm-cppt-qr-ok"><i class="fa fa-check-circle"></i> Terverifikasi TTE</span>' +
+                                    '<span class="rsgm-cppt-qr-sub">Klik QR untuk cek validitas</span>' +
+                                    '</div>' +
+                                    '</a>'
                                 );
                                 $('.' + qrClass).qrcode({
-                                    width: 120,
-                                    height: 120,
+                                    width: 76,
+                                    height: 76,
                                     text: res.hash
                                 });
                             } else {

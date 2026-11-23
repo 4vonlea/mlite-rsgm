@@ -690,6 +690,7 @@ class SoapRevision
             $row['revision_count'] = count($formalAmends);
             $row['has_revisions'] = $row['revision_count'] > 0;
             $row['last_revised_by'] = $lastAmend ? ($lastAmend['actor_name'] ?: $lastAmend['actor_username']) : '';
+            $row['last_revised_by_username'] = $lastAmend ? (string)($lastAmend['actor_username'] ?? '') : '';
             $row['last_revised_at_fmt'] = ($lastAmend && !empty($lastAmend['created_at']))
                 ? date('d-m-Y H:i', strtotime($lastAmend['created_at']))
                 : (!empty($row['last_revised_at']) ? date('d-m-Y H:i', strtotime($row['last_revised_at'])) : '');
@@ -726,13 +727,32 @@ class SoapRevision
             }
             $row['revisions_summary'] = $revSummaryLines;
 
-            // TTE validity after correction
+            // TTE validity after correction (selalu ambil TTE terbaru & siapkan sign_ref_id untuk TTE ulang)
             $row['is_tte_outdated'] = false;
-            if (!empty($row['is_signed']) && !empty($row['last_revised_at'])) {
+            $row['can_resign_tte'] = false;
+            if (empty($row['sign_ref_id'])) {
+                $row['sign_ref_id'] = self::buildTteRefId($row['no_rawat'] ?? '', $row['tgl_perawatan'] ?? '', $row['jam_rawat'] ?? '');
+            }
+            if (!empty($row['is_signed'])) {
                 $tte = self::findActiveTte($pdo, $table, $row['no_rawat'] ?? '', $row['tgl_perawatan'] ?? '', $row['jam_rawat'] ?? '');
-                if ($tte && !empty($tte['signed_at']) && strtotime($row['last_revised_at']) > strtotime($tte['signed_at'])) {
-                    $row['is_tte_outdated'] = true;
+                if ($tte) {
+                    if (!empty($tte['signature_hash'])) {
+                        $row['signature_hash'] = $tte['signature_hash'];
+                    }
+                    if (!empty($row['last_revised_at']) && !empty($tte['signed_at']) && strtotime($row['last_revised_at']) > strtotime($tte['signed_at'])) {
+                        $row['is_tte_outdated'] = true;
+                    }
                 }
+            }
+            if ($row['is_tte_outdated'] && empty($row['is_voided'])) {
+                $rowNip = trim((string)($row['nip'] ?? ''));
+                $revActor = trim((string)($row['last_revised_by_username'] ?? ''));
+                $actUser = trim((string)$actorUsername);
+                $effNip = $effectiveCreatorNip !== null ? trim((string)$effectiveCreatorNip) : '';
+                $row['can_resign_tte'] = (
+                    ($actUser !== '' && ($actUser === $rowNip || $actUser === $revActor)) ||
+                    ($effNip !== '' && ($effNip === $rowNip || $effNip === $revActor))
+                );
             }
         }
         unset($row);

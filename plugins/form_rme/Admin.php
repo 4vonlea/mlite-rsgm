@@ -4654,9 +4654,9 @@ public function getPatientContext($no_rawat)
                 }
                 $row['dpjp_nama'] = !empty($patient['nm_dokter']) ? $patient['nm_dokter'] : 'Dokter Penanggung Jawab';
                 $ref_id = str_replace('/','',$row['no_rawat']) . str_replace('-','',$row['tgl_perawatan']) . str_replace(':','',$row['jam_rawat']);
-                $sig = $this->db('mlite_esignatures')->where('ref_type', 'soap_ralan')->where('ref_id', $ref_id)->oneArray();
+                $sig = $this->db('mlite_esignatures')->where('ref_type', 'soap_ralan')->where('ref_id', $ref_id)->desc('id')->oneArray();
                 if (!$sig) {
-                    $sig = $this->db('mlite_esignatures')->where('ref_type', 'cppt_verifikasi')->where('ref_id', $ref_id)->oneArray();
+                    $sig = $this->db('mlite_esignatures')->where('ref_type', 'cppt_verifikasi')->where('ref_id', $ref_id)->desc('id')->oneArray();
                 }
                 $row['is_signed'] = !empty($sig);
                 $row['signature_hash'] = !empty($sig) ? $sig['signature_hash'] : null;
@@ -4677,9 +4677,9 @@ public function getPatientContext($no_rawat)
                 }
                 $row['dpjp_nama'] = !empty($patient['nm_dokter']) ? $patient['nm_dokter'] : 'Dokter Penanggung Jawab';
                 $ref_id = str_replace('/','',$row['no_rawat']) . str_replace('-','',$row['tgl_perawatan']) . str_replace(':','',$row['jam_rawat']);
-                $sig = $this->db('mlite_esignatures')->where('ref_type', 'soap_ranap')->where('ref_id', $ref_id)->oneArray();
+                $sig = $this->db('mlite_esignatures')->where('ref_type', 'soap_ranap')->where('ref_id', $ref_id)->desc('id')->oneArray();
                 if (!$sig) {
-                    $sig = $this->db('mlite_esignatures')->where('ref_type', 'cppt_verifikasi')->where('ref_id', $ref_id)->oneArray();
+                    $sig = $this->db('mlite_esignatures')->where('ref_type', 'cppt_verifikasi')->where('ref_id', $ref_id)->desc('id')->oneArray();
                 }
                 $row['is_signed'] = !empty($sig);
                 $row['signature_hash'] = !empty($sig) ? $sig['signature_hash'] : null;
@@ -25888,9 +25888,9 @@ if (ob_get_length()) {
             $jbtn = $this->core->getPegawaiInfo('jbtn', $row['nip']);
             $row['profesi'] = !empty($jbtn) ? $jbtn : 'Tenaga Medis / Perawat';
             $ref_id = str_replace('/', '', $row['no_rawat']) . str_replace('-', '', $row['tgl_perawatan']) . str_replace(':', '', $row['jam_rawat']);
-            $sig = $this->db('mlite_esignatures')->where('ref_type', 'soap_ralan')->where('ref_id', $ref_id)->oneArray();
+            $sig = $this->db('mlite_esignatures')->where('ref_type', 'soap_ralan')->where('ref_id', $ref_id)->desc('id')->oneArray();
             if (!$sig) {
-                $sig = $this->db('mlite_esignatures')->where('ref_type', 'cppt_verifikasi')->where('ref_id', $ref_id)->oneArray();
+                $sig = $this->db('mlite_esignatures')->where('ref_type', 'cppt_verifikasi')->where('ref_id', $ref_id)->desc('id')->oneArray();
             }
             $row['ref_type'] = !empty($sig['ref_type']) ? $sig['ref_type'] : 'soap_ralan';
             $row['ref_id'] = $ref_id;
@@ -25910,9 +25910,9 @@ if (ob_get_length()) {
             $jbtn = $this->core->getPegawaiInfo('jbtn', $row['nip']);
             $row['profesi'] = !empty($jbtn) ? $jbtn : 'Tenaga Medis / Perawat';
             $ref_id = str_replace('/', '', $row['no_rawat']) . str_replace('-', '', $row['tgl_perawatan']) . str_replace(':', '', $row['jam_rawat']);
-            $sig = $this->db('mlite_esignatures')->where('ref_type', 'soap_ranap')->where('ref_id', $ref_id)->oneArray();
+            $sig = $this->db('mlite_esignatures')->where('ref_type', 'soap_ranap')->where('ref_id', $ref_id)->desc('id')->oneArray();
             if (!$sig) {
-                $sig = $this->db('mlite_esignatures')->where('ref_type', 'cppt_verifikasi')->where('ref_id', $ref_id)->oneArray();
+                $sig = $this->db('mlite_esignatures')->where('ref_type', 'cppt_verifikasi')->where('ref_id', $ref_id)->desc('id')->oneArray();
             }
             $row['ref_type'] = !empty($sig['ref_type']) ? $sig['ref_type'] : 'soap_ranap';
             $row['ref_id'] = $ref_id;
@@ -26132,9 +26132,9 @@ if (ob_get_length()) {
             
             // Periksa TTE
             $ref_id = str_replace('/','',$row['no_rawat']) . str_replace('-','',$row['tgl_perawatan']) . str_replace(':','',$row['jam_rawat']);
-            $sig = $this->db('mlite_esignatures')->where('ref_type', 'soap_ralan')->where('ref_id', $ref_id)->oneArray();
+            $sig = $this->db('mlite_esignatures')->where('ref_type', 'soap_ralan')->where('ref_id', $ref_id)->desc('id')->oneArray();
             if (!$sig) {
-                $sig = $this->db('mlite_esignatures')->where('ref_type', 'cppt_verifikasi')->where('ref_id', $ref_id)->oneArray();
+                $sig = $this->db('mlite_esignatures')->where('ref_type', 'cppt_verifikasi')->where('ref_id', $ref_id)->desc('id')->oneArray();
             }
             $row['is_signed'] = !empty($sig);
             $row['signature_hash'] = !empty($sig) ? $sig['signature_hash'] : null;
@@ -26158,9 +26158,9 @@ if (ob_get_length()) {
             $row['dpjp_nama'] = !empty($pasien['nm_dokter']) ? $pasien['nm_dokter'] : 'dr. Amalia Lestari';
 
             $ref_id = str_replace('/','',$row['no_rawat']) . str_replace('-','',$row['tgl_perawatan']) . str_replace(':','',$row['jam_rawat']);
-            $sig = $this->db('mlite_esignatures')->where('ref_type', 'soap_ranap')->where('ref_id', $ref_id)->oneArray();
+            $sig = $this->db('mlite_esignatures')->where('ref_type', 'soap_ranap')->where('ref_id', $ref_id)->desc('id')->oneArray();
             if (!$sig) {
-                $sig = $this->db('mlite_esignatures')->where('ref_type', 'cppt_verifikasi')->where('ref_id', $ref_id)->oneArray();
+                $sig = $this->db('mlite_esignatures')->where('ref_type', 'cppt_verifikasi')->where('ref_id', $ref_id)->desc('id')->oneArray();
             }
             $row['is_signed'] = !empty($sig);
             $row['signature_hash'] = !empty($sig) ? $sig['signature_hash'] : null;

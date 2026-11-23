@@ -238,12 +238,18 @@
                 </div>
 
                 <div class="rsgm-cppt-signbox">
+                  <div id="sign_container_{?=isset_or($value.sign_ref_id)?}">
                   {if: isset($value.is_signed) && $value.is_signed}
                   <a href="{?=url(['esignature', 'verify', $value.signature_hash])?}" target="_blank" class="rsgm-cppt-qr-card">
                     <div class="qrcodePetugasValid{?=isset_or($value.nomor)?} rsgm-cppt-qr"></div>
                     <div class="rsgm-cppt-qr-meta">
+                      {if: !empty($value.is_tte_outdated)}
+                      <span class="rsgm-cppt-qr-ok" style="color:#b45309;"><i class="fa fa-exclamation-triangle"></i> TTE Kedaluwarsa</span>
+                      <span class="rsgm-cppt-qr-sub">Catatan dikoreksi setelah TTE</span>
+                      {else}
                       <span class="rsgm-cppt-qr-ok"><i class="fa fa-check-circle"></i> Terverifikasi TTE</span>
                       <span class="rsgm-cppt-qr-sub">Klik QR untuk cek validitas</span>
+                      {/if}
                     </div>
                   </a>
                   <script>
@@ -253,8 +259,15 @@
                       text: "{?=isset_or($value.signature_hash)?}"
                     });
                   </script>
+                  {if: !empty($value.is_tte_outdated) && empty($value.is_voided) && (!empty($value.can_resign_tte) || $current_user == $value.nip)}
+                  <button type="button" class="btn btn-warning btn-xs btn-tte" style="margin-top:6px; width:100%; font-weight:700;"
+                     data-ref_type="soap_ralan"
+                     data-ref_id="{?=isset_or($value.sign_ref_id)?}"
+                     data-signer_name="{?=isset_or($value.nama_petugas)?}">
+                     <i class="fa fa-refresh"></i> TTE Ulang
+                  </button>
+                  {/if}
                   {else}
-                  <div id="sign_container_{?=isset_or($value.sign_ref_id)?}">
                     {if: $current_user == $value.nip}
                     <button type="button" class="btn btn-primary btn-xs btn-tte"
                        data-ref_type="soap_ralan"
@@ -268,8 +281,8 @@
                       <span>Kunjungan: {?=isset_or($value.stts_daftar, '-')?} &bull; Kasus: {?=isset_or($value.kasus_poli, $value.status_poli)?}</span>
                     </div>
                     {/if}
-                  </div>
                   {/if}
+                  </div>
                 </div>
               </div>
               {/if}
@@ -340,12 +353,18 @@
                 {/if}
                 {else}
                 <div class="rsgm-cppt-signbox" style="margin-top: 8px; max-width: 280px;">
+                  <div id="sign_container_{?=isset_or($value.sign_ref_id)?}">
                   {if: isset($value.is_signed) && $value.is_signed}
                   <a href="{?=url(['esignature', 'verify', $value.signature_hash])?}" target="_blank" class="rsgm-cppt-qr-card">
                     <div class="qrcodePetugasValidSimpleDR{?=isset_or($value.nomor)?} rsgm-cppt-qr"></div>
                     <div class="rsgm-cppt-qr-meta">
+                      {if: !empty($value.is_tte_outdated)}
+                      <span class="rsgm-cppt-qr-ok" style="color:#b45309;"><i class="fa fa-exclamation-triangle"></i> TTE Kedaluwarsa</span>
+                      <span class="rsgm-cppt-qr-sub">Catatan dikoreksi setelah TTE</span>
+                      {else}
                       <span class="rsgm-cppt-qr-ok"><i class="fa fa-check-circle"></i> Terverifikasi TTE</span>
                       <span class="rsgm-cppt-qr-sub">Klik QR untuk cek validitas</span>
+                      {/if}
                     </div>
                   </a>
                   <script>
@@ -355,8 +374,15 @@
                       text: "{?=isset_or($value.signature_hash)?}"
                     });
                   </script>
+                  {if: !empty($value.is_tte_outdated) && empty($value.is_voided) && (!empty($value.can_resign_tte) || $current_user == $value.nip)}
+                  <button type="button" class="btn btn-warning btn-xs btn-tte" style="margin-top:6px; width:100%; font-weight:700;"
+                     data-ref_type="soap_ralan"
+                     data-ref_id="{?=isset_or($value.sign_ref_id)?}"
+                     data-signer_name="{?=isset_or($value.nama_petugas)?}">
+                     <i class="fa fa-refresh"></i> TTE Ulang
+                  </button>
+                  {/if}
                   {else}
-                  <div id="sign_container_{?=isset_or($value.sign_ref_id)?}">
                     {if: $current_user == $value.nip}
                     <button type="button" class="btn btn-primary btn-xs btn-tte"
                        data-ref_type="soap_ralan"
@@ -365,8 +391,8 @@
                        <i class="fa fa-pencil"></i> Tanda Tangani (TTE)
                     </button>
                     {/if}
-                  </div>
                   {/if}
+                  </div>
                 </div>
                 <div class="rsgm-cppt-ie-slim" style="justify-content: flex-end; margin-top: 8px;">
                   <span style="margin-left: auto;">Kunjungan: <strong>{?=isset_or($value.stts_daftar, '-')?}</strong> &bull; Kasus: <strong>{?=isset_or($value.kasus_poli, $value.status_poli)?}</strong></span>
@@ -554,12 +580,18 @@
                 </div>
 
                 <div class="rsgm-cppt-signbox">
+                  <div id="sign_container_{?=isset_or($data.sign_ref_id)?}">
                   {if: isset($data.is_signed) && $data.is_signed}
                   <a href="{?=url(['esignature', 'verify', $data.signature_hash])?}" target="_blank" class="rsgm-cppt-qr-card">
                     <div class="qrcodePetugasValidRanapDR{?=isset_or($data.nomor)?} rsgm-cppt-qr"></div>
                     <div class="rsgm-cppt-qr-meta">
+                      {if: !empty($data.is_tte_outdated)}
+                      <span class="rsgm-cppt-qr-ok" style="color:#b45309;"><i class="fa fa-exclamation-triangle"></i> TTE Kedaluwarsa</span>
+                      <span class="rsgm-cppt-qr-sub">Catatan dikoreksi setelah TTE</span>
+                      {else}
                       <span class="rsgm-cppt-qr-ok"><i class="fa fa-check-circle"></i> Terverifikasi TTE</span>
                       <span class="rsgm-cppt-qr-sub">Klik QR untuk cek validitas</span>
+                      {/if}
                     </div>
                   </a>
                   <script>
@@ -569,8 +601,15 @@
                       text: "{?=isset_or($data.signature_hash)?}"
                     });
                   </script>
+                  {if: !empty($data.is_tte_outdated) && empty($data.is_voided) && (!empty($data.can_resign_tte) || $current_user == $data.nip)}
+                  <button type="button" class="btn btn-warning btn-xs btn-tte" style="margin-top:6px; width:100%; font-weight:700;"
+                     data-ref_type="soap_ranap"
+                     data-ref_id="{?=isset_or($data.sign_ref_id)?}"
+                     data-signer_name="{?=isset_or($data.nama_petugas)?}">
+                     <i class="fa fa-refresh"></i> TTE Ulang
+                  </button>
+                  {/if}
                   {else}
-                  <div id="sign_container_{?=isset_or($data.sign_ref_id)?}">
                     {if: $current_user == $data.nip}
                     <button type="button" class="btn btn-primary btn-xs btn-tte"
                        data-ref_type="soap_ranap"
@@ -583,8 +622,8 @@
                       <span><i class="fa fa-clock-o"></i> Belum TTE (Rawat Inap)</span>
                     </div>
                     {/if}
-                  </div>
                   {/if}
+                  </div>
                 </div>
               </div>
 
