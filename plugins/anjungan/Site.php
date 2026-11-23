@@ -3079,7 +3079,15 @@ class Site extends SiteModule
           } elseif($typeParam == 'apotek') {
             $type = 'Apotek';
             $prefix = 'F';
+          } elseif($typeParam == 'poli') {
+            $type = 'Poli';
+            $prefix = 'P';
           }
+
+          // Auto-migrasi / perapihan rekaman check-in poli lama agar tidak mencemari daftar antrean loket pendaftaran
+          try {
+            $this->db()->pdo()->exec("UPDATE mlite_antrian_loket SET type = 'Poli' WHERE type = 'Loket' AND (loket = '0' OR loket IS NULL OR loket = '') AND status = '2' AND no_rkm_medis IS NOT NULL AND no_rkm_medis != ''");
+          } catch (\Throwable $e) {}
 
           $rows = $this->db('mlite_antrian_loket')
             ->where('type', $type)

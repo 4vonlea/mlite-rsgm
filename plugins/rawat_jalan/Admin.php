@@ -1994,7 +1994,7 @@ class Admin extends AdminModule
 
       if (!$cek) {
         $this->db('mlite_antrian_loket')->save([
-          'type' => 'Loket',
+          'type' => 'Poli',
           'noantrian' => $no_reg,
           'postdate' => $tgl_registrasi,
           'start_time' => $start_time,
@@ -2004,10 +2004,9 @@ class Admin extends AdminModule
         ]);
       } else {
         $this->db('mlite_antrian_loket')
-          ->where('no_rkm_medis', $no_rkm_medis)
-          ->where('postdate', $tgl_registrasi)
+          ->where('kd', $cek['kd'])
           ->save([
-            'start_time' => $start_time,
+            'start_time' => (!empty($cek['start_time']) && $cek['start_time'] != '00:00:00') ? $cek['start_time'] : $start_time,
             'end_time' => $now_time,
             'status' => 2
           ]);
@@ -2178,10 +2177,20 @@ class Admin extends AdminModule
       $tgl_registrasi = $_POST['tgl_registrasi'] ?? date('Y-m-d');
 
       if (!empty($no_rkm_medis)) {
-        $this->db('mlite_antrian_loket')
+        $cek = $this->db('mlite_antrian_loket')
           ->where('no_rkm_medis', $no_rkm_medis)
           ->where('postdate', $tgl_registrasi)
-          ->delete();
+          ->oneArray();
+        if ($cek) {
+          if ($cek['type'] === 'Poli') {
+            $this->db('mlite_antrian_loket')->where('kd', $cek['kd'])->delete();
+          } else {
+            $this->db('mlite_antrian_loket')->where('kd', $cek['kd'])->save([
+              'status' => 0,
+              'end_time' => '00:00:00'
+            ]);
+          }
+        }
 
         $antrol = $this->db('mlite_antrian_referensi')
           ->where('tanggal_periksa', $tgl_registrasi)

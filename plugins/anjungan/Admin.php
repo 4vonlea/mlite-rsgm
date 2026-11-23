@@ -84,6 +84,12 @@ class Admin extends AdminModule
           $namaloket = 'a';
           $panggil_loket = 'panggil_loket';
           $date = date('Y-m-d');
+
+          // Auto-migrasi data check-in poli lama agar tidak mencemari ringkasan antrean loket
+          try {
+            $this->db()->pdo()->exec("UPDATE mlite_antrian_loket SET type = 'Poli' WHERE type = 'Loket' AND (loket = '0' OR loket IS NULL OR loket = '') AND status = '2' AND no_rkm_medis IS NOT NULL AND no_rkm_medis != ''");
+          } catch (\Throwable $e) {}
+
           $get_antrian = $this->db('mlite_antrian_loket')->select('MAX(CAST(noantrian AS UNSIGNED)) as max_no')->where('type', 'Loket')->where('postdate', $date)->oneArray();
           $noantrian = 0;
           if(!empty($get_antrian['max_no'])) {

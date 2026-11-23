@@ -384,6 +384,7 @@
       <div class="panel-footer" style="background: #f8fafc; font-size: 12px; color: #475569; text-align: left; line-height: 1.6;">
         <i class="fa fa-lightbulb-o text-warning" style="font-size: 14px;"></i> <b>Tips Operasional Petugas:</b>
         <ul style="margin: 4px 0 0 18px; padding-left: 0;">
+          <li><b>Khusus Antrean Loket Pendaftaran:</b> Halaman ini mengelola antrean pendaftaran / admisi di loket. Antrean pemeriksaan dokter poliklinik dipanggil di masing-masing ruang poli (menggunakan nomor registrasi dokter/poli).</li>
           <li><b>Panggil Cepat:</b> Klik tombol <span class="label label-success" style="font-size: 10px;"><i class="fa fa-bullhorn"></i> Panggil</span> pada tabel atau kotak nomor di atas untuk langsung memanggil pasien tersebut ke meja {?=strtolower(isset_or($sebutan_loket, 'loket'))?} Anda.</li>
           <li><b>Lewati / Skip:</b> Jika nomor dipanggil tidak hadir, klik tombol <span class="label label-danger" style="font-size: 10px;"><i class="fa fa-forward"></i> Skip</span>. Nomor tersebut tidak akan hilang, melainkan tersimpan di tab <b>Dilewati / Skip</b> sehingga tetap dapat dipanggil jika pasien datang belakangan.</li>
           <li><b>Ganti {?=isset_or($sebutan_loket, 'Loket')?} / Panggilan:</b> Sistem otomatis menandai {?=strtolower(isset_or($sebutan_loket, 'loket'))?} pemanggil aktif (<b>{?=isset_or($sebutan_loket, 'Loket')?} {$active_loket}</b>).</li>
