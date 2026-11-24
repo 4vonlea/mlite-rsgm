@@ -58,6 +58,9 @@
         <a href="{?=url([ADMIN, 'jkn_mobile', 'mappingdokter'])?}" class="btn btn-default">
           <i class="fa fa-user-md text-info"></i> Mapping Dokter
         </a>
+        <a href="{?=url([ADMIN, 'pasien', 'pasienbarujkn'])?}" target="_blank" class="btn btn-warning" style="font-weight:600;" title="Buka menu Calon Pasien Baru Mobile JKN (Staging) di Modul Pasien">
+          <i class="fa fa-mobile fa-lg"></i> Calon Pasien Baru MJKN (Staging)
+        </a>
       </div>
     </div>
   </div>
@@ -481,9 +484,10 @@ function bukaModalPasien(index) {
       '<div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">' +
         '<span class="label label-success" style="font-size:11px; padding:4px 8px;"><i class="fa fa-check-circle"></i> Sudah Hadir: ' + countHadir + '</span> ' +
         '<span class="label label-warning" style="font-size:11px; padding:4px 8px; background:#f59e0b;"><i class="fa fa-clock-o"></i> Belum Datang: ' + countBelum + '</span> ' +
-        '<span class="label label-danger" style="font-size:11px; padding:4px 8px;"><i class="fa fa-user-plus"></i> Pasien Baru: ' + countBaru + '</span> ' +
+        '<a href="{?=url([ADMIN, 'pasien', 'pasienbarujkn'])?}" target="_blank" class="label label-danger" style="font-size:11px; padding:4px 8px; text-decoration:none;" title="Buka menu Calon Pasien Baru Mobile JKN (Staging)"><i class="fa fa-user-plus"></i> Pasien Baru: ' + countBaru + '</a> ' +
         '<span class="label label-primary" style="font-size:11px; padding:4px 8px;"><i class="fa fa-user"></i> Pasien Lama: ' + countLama + '</span> ' +
         '<span class="label label-default" style="font-size:11px; padding:4px 8px;">Kapasitas: ' + (item.kapasitaspasien || 0) + '</span> ' +
+        '<a href="{?=url([ADMIN, 'pasien', 'pasienbarujkn'])?}" target="_blank" class="btn btn-xs btn-warning" style="font-weight:700; padding:4px 10px; margin-left:6px;" title="Buka Verifikasi Calon Pasien Baru Mobile JKN (Staging) di Modul Pasien"><i class="fa fa-mobile fa-lg"></i> Calon Pasien Baru MJKN (Staging)</a>' +
         '<button type="button" class="btn btn-xs btn-success" onclick="salinTabelKeSpreadsheet()" style="font-weight:700; padding:4px 10px; margin-left:6px;" title="Copy seluruh isi tabel ke clipboard untuk paste di Excel / Spreadsheet"><i class="fa fa-copy"></i> Salin ke Spreadsheet</button>' +
       '</div>' +
     '</div>'
@@ -524,6 +528,11 @@ function bukaModalPasien(index) {
       var badgePasienBaru = p.is_pasien_baru
         ? '<span class="label label-danger" style="font-size:9px; padding:1px 5px; font-weight:bold;"><i class="fa fa-star"></i> BARU</span>'
         : '<span class="label label-primary" style="font-size:9px; padding:1px 5px;">LAMA</span>';
+
+      var linkPasienBaru = '';
+      if (!p.no_rkm_medis || p.no_rkm_medis === '-') {
+        linkPasienBaru = '<div style="margin-top:3px;"><a href="{?=url([ADMIN, \'pasien\', \'pasienbarujkn\'])?}" target="_blank" class="btn btn-xs btn-warning" style="font-size:9.5px; padding:1px 5px; font-weight:700; white-space:nowrap;" title="Buka menu Calon Pasien Baru Mobile JKN (Staging) untuk menerbitkan No. RM"><i class="fa fa-id-card"></i> Buat No. RM (Staging)</a></div>';
+      }
 
       // Badge Jalur
       var badgeTipe = '<span class="label label-default" style="font-size:10px;"><i class="fa fa-hospital-o"></i> Loket</span>';
@@ -577,7 +586,7 @@ function bukaModalPasien(index) {
         '<td style="text-align:center;">' + (idx + 1) + '</td>' +
         '<td style="text-align:center;"><b>' + (p.no_reg || '-') + '</b>' + bookingInfo + '</td>' +
         '<td><div style="font-weight:600; color:#1e293b;">' + docName + '</div></td>' +
-        '<td><code>' + (p.no_rkm_medis || '-') + '</code><div style="margin-top:2px;">' + badgePasienBaru + '</div></td>' +
+        '<td><code>' + (p.no_rkm_medis || '-') + '</code><div style="margin-top:2px;">' + badgePasienBaru + '</div>' + linkPasienBaru + '</td>' +
         '<td><b>' + (p.nm_pasien || '-') + '</b></td>' +
         '<td><span style="font-family:monospace; font-size:11.5px; color:#0369a1; font-weight:600;">' + nokaPasien + '</span></td>' +
         '<td>' + (p.png_jawab || '-') + '</td>' +
@@ -650,7 +659,9 @@ function copyFallbackSpreadsheet(text) {
 
 function tandaiPasienHadir(kodebooking, norm, noreg, kddokter, kdpoli, index, btnEl) {
   if (!norm || norm === '-' || norm === '') {
-    alert('Perhatian: Pasien ini adalah Pasien Baru dan belum memiliki No. Rekam Medis (RM) di SIMRS.\n\nSilakan buatkan berkas identitas / No. RM terlebih dahulu di meja loket pendaftaran admisi.');
+    if (confirm('Perhatian: Pasien ini adalah Pasien Baru Mobile JKN dan belum memiliki No. Rekam Medis (RM) di SIMRS.\n\nBuka halaman "Calon Pasien Baru Mobile JKN (Staging)" sekarang untuk verifikasi identitas dan menerbitkan No. RM?')) {
+      window.open("{?=url([ADMIN, 'pasien', 'pasienbarujkn'])?}", '_blank');
+    }
     return;
   }
 

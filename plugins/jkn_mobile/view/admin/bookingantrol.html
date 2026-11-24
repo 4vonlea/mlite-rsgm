@@ -73,6 +73,10 @@
         </p>
       </div>
       <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+        <a href="{?=url([ADMIN, 'pasien', 'pasienbarujkn'])?}" target="_blank" 
+           class="btn btn-warning btn-sm" style="font-weight:600;" title="Buka menu Calon Pasien Baru Mobile JKN (Staging) untuk verifikasi identitas dan menerbitkan No. RM">
+          <i class="fa fa-mobile fa-lg"></i> Calon Pasien Baru MJKN (Staging)
+        </a>
         <a href="{?=url([ADMIN, 'jkn_mobile', 'bookingantrol'])?}&sync_bpjs=1{if: !empty($tgl_awal)}&tgl_awal={?=$tgl_awal?}{/if}{if: !empty($tgl_akhir)}&tgl_akhir={?=$tgl_akhir?}{/if}{if: $status_filter != 'Semua'}&status={?=$status_filter?}{/if}{if: $kd_poli_filter != 'Semua'}&kd_poli={?=$kd_poli_filter?}{/if}" 
            class="btn btn-info btn-sm" title="Tarik antrean resmi terbaru langsung dari Server BPJS Mobile JKN untuk rentang tanggal ini">
           <i class="fa fa-cloud-download"></i> 🔄 Tarik Antrean BPJS
@@ -261,6 +265,11 @@
               </div>
               <div style="font-size: 11px; margin-top: 2px;">
                 <span class="text-muted">RM:</span> <code>{?=($value.no_rkm_medis ?: $value.ar_no_rkm_medis)?}</code>
+                {if: empty($value.no_rkm_medis) || $value.no_rkm_medis == '-'}
+                  <a href="{?=url([ADMIN, 'pasien', 'pasienbarujkn'])?}" target="_blank" class="label label-danger" style="font-size:9px; padding:1px 5px; font-weight:bold; text-decoration:none;" title="Pasien Baru Mobile JKN belum memiliki No. RM. Klik untuk verifikasi di Staging">
+                    <i class="fa fa-star"></i> BARU (Buat RM)
+                  </a>
+                {/if}
                 <span class="text-muted" style="margin-left:5px;">BPJS:</span> <span class="text-info">{?=($value.nomor_kartu ?: '-')?}</span>
               </div>
               {if: !empty($value.no_tlp)}
