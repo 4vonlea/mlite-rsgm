@@ -3355,10 +3355,10 @@ class Admin extends AdminModule
   private function _getJknMobileAdmin()
   {
     $jknAdminFile = MODULES . '/jkn_mobile/Admin.php';
-    if (!class_exists('\\Plugins\\JKN_Mobile\\Admin') && file_exists($jknAdminFile)) {
+    if (!class_exists('\\Plugins\\JKN_Mobile\\Admin', false) && file_exists($jknAdminFile)) {
       require_once $jknAdminFile;
     }
-    if (!class_exists('\\Plugins\\JKN_Mobile\\Admin')) {
+    if (!class_exists('\\Plugins\\JKN_Mobile\\Admin', false)) {
       return null;
     }
     $jknAdmin = new \Plugins\JKN_Mobile\Admin($this->core);
@@ -3370,12 +3370,16 @@ class Admin extends AdminModule
 
   public function getPasienbarujkn()
   {
-    $jknAdmin = $this->_getJknMobileAdmin();
-    if (!$jknAdmin) {
-      $this->notify('failure', 'Modul JKN Mobile tidak tersedia.');
-      redirect(url([ADMIN, 'pasien', 'manage']));
+    try {
+      $jknAdmin = $this->_getJknMobileAdmin();
+      if (!$jknAdmin || !method_exists($jknAdmin, 'renderPasienBaruStaging')) {
+        return '<div class="alert alert-warning" style="margin:15px;"><strong>Modul JKN Mobile belum terbaru.</strong> Pastikan file <code>plugins/jkn_mobile/Admin.php</code> dan <code>plugins/jkn_mobile/view/admin/pasienbaru.html</code> sudah ter-upload di server.</div>';
+      }
+      return $jknAdmin->renderPasienBaruStaging('pasien', 'pasienbarujkn', 'verifikasipasienbarujkn', 'batalpasienbarujkn');
+    } catch (\Throwable $e) {
+      error_log('pasien/pasienbarujkn error: ' . $e->getMessage());
+      return '<div class="alert alert-danger" style="margin:15px;"><strong>Error Calon Pasien MJKN:</strong> ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '</div>';
     }
-    return $jknAdmin->renderPasienBaruStaging('pasien', 'pasienbarujkn', 'verifikasipasienbarujkn', 'batalpasienbarujkn');
   }
 
   public function postVerifikasipasienbarujkn()
