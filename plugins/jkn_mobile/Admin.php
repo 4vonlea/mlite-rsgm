@@ -2194,7 +2194,14 @@ class Admin extends AdminModule
         $this->assign['exclude_taskid'] = $this->_getPoliklinik($this->settings->get('jkn_mobile.exclude_taskid'));
         $this->assign['penjab'] = $this->db('penjab')->where('status', '1')->toArray();
 
-        $this->assign['jkn_mobile'] = htmlspecialchars_array($this->settings('jkn_mobile'));
+        $jknSettings = $this->settings('jkn_mobile');
+        if (!isset($jknSettings['auto_pasien_baru']) || $jknSettings['auto_pasien_baru'] === '') {
+            $jknSettings['auto_pasien_baru'] = 'ya';
+        }
+        if (!isset($jknSettings['pesan_pasien_baru_nonaktif']) || trim((string)$jknSettings['pesan_pasien_baru_nonaktif']) === '') {
+            $jknSettings['pesan_pasien_baru_nonaktif'] = 'Pasien baru harap mendaftar terlebih dahulu di loket admisi RS untuk pembuatan Nomor Rekam Medis.';
+        }
+        $this->assign['jkn_mobile'] = htmlspecialchars_array($jknSettings);
         return $this->draw('settings.html', ['settings' => htmlspecialchars_array($this->assign)]);
     }
 
@@ -2216,8 +2223,24 @@ class Admin extends AdminModule
             $_POST['jkn_mobile']['exclude_taskid'] = '';
         }
 
+        if (isset($_POST['jkn_mobile']['auto_pasien_baru'])) {
+            $_POST['jkn_mobile']['auto_pasien_baru'] = ($_POST['jkn_mobile']['auto_pasien_baru'] === 'tidak') ? 'tidak' : 'ya';
+        }
+
         foreach ($_POST['jkn_mobile'] as $key => $val) {
-            $this->settings('jkn_mobile', $key, $val);
+            $exists = $this->db('mlite_settings')
+                ->where('module', 'jkn_mobile')
+                ->where('field', $key)
+                ->oneArray();
+            if ($exists) {
+                $this->settings('jkn_mobile', $key, $val);
+            } else {
+                $this->db('mlite_settings')->save([
+                    'module' => 'jkn_mobile',
+                    'field' => $key,
+                    'value' => $val
+                ]);
+            }
         }
         $this->notify('success', 'Pengaturan telah disimpan');
         redirect(url([ADMIN, 'jkn_mobile', 'settings']));

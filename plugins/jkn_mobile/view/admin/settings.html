@@ -70,6 +70,22 @@
                          </div>
                     </div>
                     <div class="form-group">
+                         <label>Auto Daftar Pasien Baru (Mobile JKN)</label>
+                         <div class="radio">
+                             <label class="radio-inline">
+                                <input type="radio" name="jkn_mobile[auto_pasien_baru]" value="ya" {if: $settings.jkn_mobile.auto_pasien_baru != 'tidak'}checked{/if} /> Ya (Otomatis buat No. RM)
+                             </label>
+                             <label class="radio-inline">
+                                <input type="radio" name="jkn_mobile[auto_pasien_baru]" value="tidak" {if: $settings.jkn_mobile.auto_pasien_baru == 'tidak'}checked{/if} /> Tidak (Wajib daftar di loket admisi)
+                             </label>
+                         </div>
+                         <p class="help-block" style="font-size:12px;">Jika dipilih <strong>Tidak</strong>, pasien baru tidak akan otomatis dimasukkan ke tabel master pasien lewat Mobile JKN. Pasien lama tetap bisa booking online.</p>
+                    </div>
+                    <div class="form-group">
+                        <label>Pesan Penolakan Pasien Baru (jika dinonaktifkan)</label>
+                        <input type="text" name="jkn_mobile[pesan_pasien_baru_nonaktif]" class="form-control" value="{?=isset_or($settings.jkn_mobile.pesan_pasien_baru_nonaktif)?}" placeholder="Pasien baru harap mendaftar terlebih dahulu di loket admisi RS untuk pembuatan Nomor Rekam Medis." />
+                    </div>
+                    <div class="form-group">
                         <label>Tampilkan Poli</label>
                         <select name="jkn_mobile[display][]" class="form-control" multiple>
                           {loop: $settings.poliklinik}
