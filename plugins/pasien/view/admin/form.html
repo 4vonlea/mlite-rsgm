@@ -224,6 +224,17 @@
       </div>
 
       {if: $mlite_crud_permissions.can_create == 'true' || $mlite_crud_permissions.can_update == 'true'}
+      <div style="margin: 0 18px 14px 18px; padding: 11px 14px; background: #fffbeb; border: 1px solid #fde68a; border-left: 4px solid #f59e0b; border-radius: 6px; font-size: 12px; color: #78350f; line-height: 1.55;">
+        <div style="font-weight: 700; margin-bottom: 4px; color: #92400e;">
+          <i class="fa fa-exclamation-triangle" style="margin-right: 5px; color: #d97706;"></i>
+          Pengingat Verifikasi Sebelum Mendaftarkan Pasien Baru
+        </div>
+        <ul style="margin: 0; padding-left: 18px;">
+          <li><strong>Cegah No. RM Ganda:</strong> Cari terlebih dahulu di daftar pasien berdasarkan <strong>NIK (16 digit)</strong>, <strong>No. Kartu BPJS (13 digit)</strong>, atau <strong>Nama &amp; Tgl. Lahir</strong> untuk memastikan pasien belum pernah terdaftar.</li>
+          <li><strong>Cek Booking Mobile JKN:</strong> Jika pasien mendaftar lewat Mobile JKN, buka tombol <a href="{?=url([ADMIN, 'pasien', 'pasienbarujkn'])?}" style="font-weight:700; color:#b45309; text-decoration:underline;">Calon Pasien MJKN</a> lalu klik <em>Verifikasi &amp; Terbitkan RM</em> agar antrean langsung tersambung (tidak perlu input manual di sini).</li>
+          <li><strong>Validasi Identitas Wajib:</strong> Pastikan <strong>NIK 16 digit</strong>, <strong>No. BPJS</strong> (jika peserta JKN), <strong>Nama sesuai KTP</strong>, <strong>Tgl. Lahir</strong>, <strong>Nama Ibu Kandung</strong>, <strong>Alamat</strong>, dan <strong>No. HP</strong> terisi benar agar tidak terkendala bridging Mobile JKN / VClaim.</li>
+        </ul>
+      </div>
       <div class="rsgm-reg-footer">
         <span class="rsgm-footer-hint hidden-xs">
           <i class="fa fa-info-circle"></i> Klik kolom <strong>Nomor RM</strong> untuk mengisi nomor otomatis, atau centang kotak untuk manual

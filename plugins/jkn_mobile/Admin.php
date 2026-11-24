@@ -4206,60 +4206,66 @@ class Admin extends AdminModule
     private function _ensureStagingTables()
     {
         $pdo = $this->db()->pdo();
-        $pdo->exec("CREATE TABLE IF NOT EXISTS `mlite_jkn_pasien_baru` (
-            `id` int(11) NOT NULL AUTO_INCREMENT,
-            `temp_norm` varchar(20) NOT NULL,
-            `no_peserta` varchar(25) NOT NULL,
-            `no_ktp` varchar(20) NOT NULL,
-            `no_kk` varchar(20) DEFAULT '',
-            `nm_pasien` varchar(100) NOT NULL,
-            `jk` enum('L','P') DEFAULT 'L',
-            `tgl_lahir` date DEFAULT NULL,
-            `no_tlp` varchar(40) DEFAULT '',
-            `alamat` varchar(255) DEFAULT '',
-            `kodeprop` varchar(20) DEFAULT '',
-            `namaprop` varchar(100) DEFAULT '',
-            `kodedati2` varchar(20) DEFAULT '',
-            `namadati2` varchar(100) DEFAULT '',
-            `kodekec` varchar(20) DEFAULT '',
-            `namakec` varchar(100) DEFAULT '',
-            `kodekel` varchar(20) DEFAULT '',
-            `namakel` varchar(100) DEFAULT '',
-            `rt` varchar(10) DEFAULT '',
-            `rw` varchar(10) DEFAULT '',
-            `status_verifikasi` enum('Menunggu','Terverifikasi','Batal') NOT NULL DEFAULT 'Menunggu',
-            `no_rkm_medis_resmi` varchar(15) DEFAULT NULL,
-            `verified_by` varchar(50) DEFAULT NULL,
-            `verified_at` datetime DEFAULT NULL,
-            `tgl_input` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            PRIMARY KEY (`id`),
-            UNIQUE KEY `uniq_temp_norm` (`temp_norm`),
-            KEY `idx_no_peserta` (`no_peserta`),
-            KEY `idx_no_ktp` (`no_ktp`),
-            KEY `idx_status` (`status_verifikasi`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+        $hasPasienTable = (bool)$pdo->query("SHOW TABLES LIKE 'mlite_jkn_pasien_baru'")->fetchColumn();
+        if (!$hasPasienTable) {
+            $pdo->exec("CREATE TABLE IF NOT EXISTS `mlite_jkn_pasien_baru` (
+                `id` int(11) NOT NULL AUTO_INCREMENT,
+                `temp_norm` varchar(20) NOT NULL,
+                `no_peserta` varchar(25) NOT NULL,
+                `no_ktp` varchar(20) NOT NULL,
+                `no_kk` varchar(20) DEFAULT '',
+                `nm_pasien` varchar(100) NOT NULL,
+                `jk` enum('L','P') DEFAULT 'L',
+                `tgl_lahir` date DEFAULT NULL,
+                `no_tlp` varchar(40) DEFAULT '',
+                `alamat` varchar(255) DEFAULT '',
+                `kodeprop` varchar(20) DEFAULT '',
+                `namaprop` varchar(100) DEFAULT '',
+                `kodedati2` varchar(20) DEFAULT '',
+                `namadati2` varchar(100) DEFAULT '',
+                `kodekec` varchar(20) DEFAULT '',
+                `namakec` varchar(100) DEFAULT '',
+                `kodekel` varchar(20) DEFAULT '',
+                `namakel` varchar(100) DEFAULT '',
+                `rt` varchar(10) DEFAULT '',
+                `rw` varchar(10) DEFAULT '',
+                `status_verifikasi` enum('Menunggu','Terverifikasi','Batal') NOT NULL DEFAULT 'Menunggu',
+                `no_rkm_medis_resmi` varchar(15) DEFAULT NULL,
+                `verified_by` varchar(50) DEFAULT NULL,
+                `verified_at` datetime DEFAULT NULL,
+                `tgl_input` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (`id`),
+                UNIQUE KEY `uniq_temp_norm` (`temp_norm`),
+                KEY `idx_no_peserta` (`no_peserta`),
+                KEY `idx_no_ktp` (`no_ktp`),
+                KEY `idx_status` (`status_verifikasi`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+        }
 
-        $pdo->exec("CREATE TABLE IF NOT EXISTS `mlite_jkn_booking_baru` (
-            `id` int(11) NOT NULL AUTO_INCREMENT,
-            `temp_norm` varchar(20) NOT NULL,
-            `tanggal_booking` date NOT NULL,
-            `jam_booking` time NOT NULL,
-            `tanggal_periksa` date NOT NULL,
-            `kd_dokter` varchar(20) NOT NULL,
-            `kd_poli` varchar(10) NOT NULL,
-            `no_reg` varchar(10) NOT NULL,
-            `kd_pj` char(3) DEFAULT 'BPJ',
-            `waktu_kunjungan` datetime DEFAULT NULL,
-            `kodebooking` varchar(100) NOT NULL,
-            `nomor_referensi` varchar(60) DEFAULT '',
-            `jenis_kunjungan` varchar(10) DEFAULT '1',
-            `status` enum('Belum','Terdaftar','Batal') NOT NULL DEFAULT 'Belum',
-            `tgl_input` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            PRIMARY KEY (`id`),
-            UNIQUE KEY `uniq_kodebooking` (`kodebooking`),
-            KEY `idx_temp_tgl` (`temp_norm`, `tanggal_periksa`),
-            KEY `idx_poli_dokter_tgl` (`tanggal_periksa`, `kd_poli`, `kd_dokter`, `status`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+        $hasBookingTable = (bool)$pdo->query("SHOW TABLES LIKE 'mlite_jkn_booking_baru'")->fetchColumn();
+        if (!$hasBookingTable) {
+            $pdo->exec("CREATE TABLE IF NOT EXISTS `mlite_jkn_booking_baru` (
+                `id` int(11) NOT NULL AUTO_INCREMENT,
+                `temp_norm` varchar(20) NOT NULL,
+                `tanggal_booking` date NOT NULL,
+                `jam_booking` time NOT NULL,
+                `tanggal_periksa` date NOT NULL,
+                `kd_dokter` varchar(20) NOT NULL,
+                `kd_poli` varchar(10) NOT NULL,
+                `no_reg` varchar(10) NOT NULL,
+                `kd_pj` char(3) DEFAULT 'BPJ',
+                `waktu_kunjungan` datetime DEFAULT NULL,
+                `kodebooking` varchar(100) NOT NULL,
+                `nomor_referensi` varchar(60) DEFAULT '',
+                `jenis_kunjungan` varchar(10) DEFAULT '1',
+                `status` enum('Belum','Terdaftar','Batal') NOT NULL DEFAULT 'Belum',
+                `tgl_input` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (`id`),
+                UNIQUE KEY `uniq_kodebooking` (`kodebooking`),
+                KEY `idx_temp_tgl` (`temp_norm`, `tanggal_periksa`),
+                KEY `idx_poli_dokter_tgl` (`tanggal_periksa`, `kd_poli`, `kd_dokter`, `status`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+        }
     }
 
     public function getPasienbaru()
@@ -4269,7 +4275,15 @@ class Admin extends AdminModule
 
     public function renderPasienBaruStaging($actionModule = 'jkn_mobile', $actionList = 'pasienbaru', $actionVerif = 'verifikasipasienbaru', $actionBatal = 'batalpasienbaru')
     {
-        $this->_ensureStagingTables();
+        try {
+            $this->_ensureStagingTables();
+        } catch (\Throwable $e) {
+            error_log('Staging table init error: ' . $e->getMessage());
+            return '<div class="alert alert-danger" style="margin:15px;"><strong>Gagal menyiapkan tabel staging Mobile JKN:</strong> '
+                . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8')
+                . '</div>';
+        }
+        try {
         $pdo = $this->db()->pdo();
 
         $tanggal_filter = isset($_GET['tanggal']) ? trim((string)$_GET['tanggal']) : date('Y-m-d');
@@ -4303,22 +4317,25 @@ class Admin extends AdminModule
             $params[':tgl2'] = $tanggal_filter;
         }
         if ($keyword !== '') {
-            $where[] = "(p.nm_pasien LIKE :kw OR p.no_ktp LIKE :kw OR p.no_peserta LIKE :kw OR p.temp_norm LIKE :kw OR b.kodebooking LIKE :kw)";
-            $params[':kw'] = '%' . $keyword . '%';
+            $where[] = "(p.nm_pasien LIKE :kw1 OR p.no_ktp LIKE :kw2 OR p.no_peserta LIKE :kw3 OR p.temp_norm LIKE :kw4 OR b.kodebooking LIKE :kw5)";
+            $kwLike = '%' . $keyword . '%';
+            $params[':kw1'] = $kwLike;
+            $params[':kw2'] = $kwLike;
+            $params[':kw3'] = $kwLike;
+            $params[':kw4'] = $kwLike;
+            $params[':kw5'] = $kwLike;
         }
 
+        // Hindari JOIN lintas collation (utf8mb4 vs latin1 pada poliklinik/dokter di MySQL 8/MariaDB)
         $sql = "SELECT p.*,
-                b.tanggal_periksa, b.kd_poli, b.kd_dokter, b.no_reg, b.kodebooking, b.nomor_referensi, b.status AS status_booking,
-                pol.nm_poli, dok.nm_dokter
+                b.tanggal_periksa, b.kd_poli, b.kd_dokter, b.no_reg, b.kodebooking, b.nomor_referensi, b.status AS status_booking
             FROM mlite_jkn_pasien_baru p
             LEFT JOIN (
                 SELECT b1.* FROM mlite_jkn_booking_baru b1
                 INNER JOIN (
                     SELECT temp_norm, MAX(id) AS max_id FROM mlite_jkn_booking_baru GROUP BY temp_norm
                 ) b2 ON b1.id = b2.max_id
-            ) b ON b.temp_norm = p.temp_norm
-            LEFT JOIN poliklinik pol ON pol.kd_poli = b.kd_poli
-            LEFT JOIN dokter dok ON dok.kd_dokter = b.kd_dokter";
+            ) b ON b.temp_norm = p.temp_norm";
         if (!empty($where)) {
             $sql .= " WHERE " . implode(" AND ", $where);
         }
@@ -4327,10 +4344,22 @@ class Admin extends AdminModule
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
         $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC) ?: [];
+
+        $poliMap = [];
+        foreach ($this->db('poliklinik')->select(['kd_poli', 'nm_poli'])->toArray() as $pm) {
+            $poliMap[$pm['kd_poli']] = $pm['nm_poli'];
+        }
+        $dokterMap = [];
+        foreach ($this->db('dokter')->select(['kd_dokter', 'nm_dokter'])->toArray() as $dm) {
+            $dokterMap[$dm['kd_dokter']] = $dm['nm_dokter'];
+        }
+
         foreach ($rows as $idx => &$r) {
             $r['no'] = $idx + 1;
-            $r['nm_poli'] = $r['nm_poli'] ?: ($r['kd_poli'] ?? '');
-            $r['nm_dokter'] = $r['nm_dokter'] ?: ($r['kd_dokter'] ?? '');
+            $kdPoliRow = (string)($r['kd_poli'] ?? '');
+            $kdDokRow = (string)($r['kd_dokter'] ?? '');
+            $r['nm_poli'] = $poliMap[$kdPoliRow] ?? $kdPoliRow;
+            $r['nm_dokter'] = $dokterMap[$kdDokRow] ?? $kdDokRow;
         }
         unset($r);
 
@@ -4353,6 +4382,12 @@ class Admin extends AdminModule
             'action_batal' => $actionBatal,
             'is_admin_jkn' => $isAdminRole
         ]);
+        } catch (\Throwable $e) {
+            error_log('renderPasienBaruStaging error: ' . $e->getMessage());
+            return '<div class="alert alert-danger" style="margin:15px;"><strong>Gagal memuat Calon Pasien Baru MJKN:</strong> '
+                . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8')
+                . '</div>';
+        }
     }
 
     public function postVerifikasipasienbaru()
