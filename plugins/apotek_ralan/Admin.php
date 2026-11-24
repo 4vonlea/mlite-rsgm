@@ -356,6 +356,7 @@ class Admin extends AdminModule
             foreach ($racikan_unique as $racikan) {
                 // Ambil aturan pakai dari input jika ada (prioritas), jika tidak gunakan dari database
                 $aturan_pakai_racikan = isset($aturanPakaiData[$racikan['kd_racik']]) ? $aturanPakaiData[$racikan['kd_racik']] : $racikan['aturan_pakai'];
+                $jml_dr_racikan = (isset($jumlahData[$racikan['kd_racik']]) && $jumlahData[$racikan['kd_racik']] !== '') ? $jumlahData[$racikan['kd_racik']] : $racikan['jml_dr'];
                 
                 $this->db('obat_racikan')->save(
                     [
@@ -365,7 +366,7 @@ class Admin extends AdminModule
                         'no_racik' => htmlspecialchars_array($racikan)['no_racik'],
                         'nama_racik' => htmlspecialchars_array($racikan)['nama_racik'],
                         'kd_racik' => htmlspecialchars_array($racikan)['kd_racik'],
-                        'jml_dr' => htmlspecialchars_array($racikan)['jml_dr'],
+                        'jml_dr' => $jml_dr_racikan,
                         'aturan_pakai' => $aturan_pakai_racikan,
                         'keterangan' => htmlspecialchars_array($racikan)['keterangan']
                     ]
@@ -386,7 +387,7 @@ class Admin extends AdminModule
           }
 
           if(isset($item['no_racik'])) {
-             $jumlah_racik = isset($item['jml_dr']) ? $item['jml_dr'] : (isset($jumlahData[$item['kode_brng']]) ? $jumlahData[$item['kode_brng']] : $item['jml']);
+             $jumlah_racik = (isset($item['kd_racik']) && isset($jumlahData[$item['kd_racik']]) && $jumlahData[$item['kd_racik']] !== '') ? $jumlahData[$item['kd_racik']] : (isset($item['jml_dr']) ? $item['jml_dr'] : $jumlah);
              $jumlah = isset($jumlahData[$item['kode_brng']]) ? $jumlahData[$item['kode_brng']] : $item['jml'];             
           }
 
@@ -500,6 +501,173 @@ class Admin extends AdminModule
         @file_put_contents(__DIR__ . '/../../tmp/validasi_debug.log', $logs, FILE_APPEND);
         http_response_code(500);
         try { echo json_encode(['error' => $e->getMessage()]); } catch (\Throwable $ignored) {}
+        exit();
+      }
+    }
+
+    public function postBatalValidasiResep()
+    {
+      header('Content-Type: application/json');
+      try {
+        $username = $this->core->getUserInfo('username', null, true);
+        if (!$this->core->checkPermission($username, 'can_update', 'apotek_ralan')) {
+          http_response_code(403);
+          echo json_encode(['status' => 'error', 'message' => 'Anda tidak memiliki hak akses untuk membatalkan validasi resep.']);
+          exit();
+        }
+
+        $no_resep = isset($_POST['no_resep']) ? trim($_POST['no_resep']) : '';
+        if ($no_resep === '') {
+          echo json_encode(['status' => 'error', 'message' => 'Nomor resep tidak valid.']);
+          exit();
+        }
+
+        $resep = $this->db('resep_obat')->where('no_resep', $no_resep)->oneArray();
+        if (!$resep) {
+          echo json_encode(['status' => 'error', 'message' => 'Data resep tidak ditemukan.']);
+          exit();
+        }
+
+        if (empty($resep['tgl_perawatan']) || $resep['tgl_perawatan'] === '0000-00-00') {
+          echo json_encode(['status' => 'error', 'message' => 'Resep ini belum divalidasi.']);
+          exit();
+        }
+
+        $no_rawat = $resep['no_rawat'];
+        $tgl_val = $resep['tgl_perawatan'];
+        $jam_val = $resep['jam'];
+
+        // Cegah batal validasi jika tagihan pasien sudah dibayar di Kasir
+        $reg = $this->db('reg_periksa')->select('status_bayar, no_rkm_medis')->where('no_rawat', $no_rawat)->oneArray();
+        if ($reg && isset($reg['status_bayar']) && $reg['status_bayar'] === 'Sudah Bayar') {
+          echo json_encode(['status' => 'error', 'message' => 'Tidak dapat membatalkan validasi karena pasien sudah melakukan pembayaran di Kasir (Sudah Bayar). Batalkan pembayaran terlebih dahulu jika ingin mengubah resep.']);
+          exit();
+        }
+
+        $pdo = $this->db()->pdo();
+        $pdo->exec("SET SESSION innodb_lock_wait_timeout = 20");
+        $pdo->beginTransaction();
+
+        $petugas_login = $this->core->getUserInfo('fullname', null, true);
+        $depo_default = $this->settings->get('farmasi.deporalan');
+        $no_rm = $reg['no_rkm_medis'] ?? $this->core->getRegPeriksaInfo('no_rkm_medis', $no_rawat);
+        $nm_pasien = $this->core->getPasienInfo('nm_pasien', $no_rm);
+
+        // 1. Ambil seluruh detail_pemberian_obat hasil validasi resep ini (cocok no_rawat + tgl_perawatan + jam + status Ralan)
+        $detail_rows = $this->db('detail_pemberian_obat')
+          ->where('no_rawat', $no_rawat)
+          ->where('tgl_perawatan', $tgl_val)
+          ->where('jam', $jam_val)
+          ->where('status', 'Ralan')
+          ->toArray();
+
+        foreach ($detail_rows as $drow) {
+          $kode_brng = $drow['kode_brng'];
+          $jml_kembali = floatval($drow['jml']);
+          $kd_bangsal = !empty($drow['kd_bangsal']) ? $drow['kd_bangsal'] : $depo_default;
+
+          $gudang = $this->db('gudangbarang')
+            ->where('kode_brng', $kode_brng)
+            ->where('kd_bangsal', $kd_bangsal)
+            ->oneArray();
+
+          if ($gudang) {
+            $stok_awal = floatval($gudang['stok']);
+            $stok_akhir = $stok_awal + $jml_kembali;
+
+            $this->db('gudangbarang')
+              ->where('kode_brng', $kode_brng)
+              ->where('kd_bangsal', $kd_bangsal)
+              ->update(['stok' => $stok_akhir]);
+
+            $this->db('riwayat_barang_medis')->save([
+              'kode_brng' => $kode_brng,
+              'stok_awal' => $stok_awal,
+              'masuk' => $jml_kembali,
+              'keluar' => '0',
+              'stok_akhir' => $stok_akhir,
+              'posisi' => 'Pemberian Obat',
+              'tanggal' => date('Y-m-d'),
+              'jam' => date('H:i:s'),
+              'petugas' => $petugas_login,
+              'kd_bangsal' => $kd_bangsal,
+              'status' => 'Hapus',
+              'no_batch' => isset($gudang['no_batch']) ? $gudang['no_batch'] : '',
+              'no_faktur' => isset($gudang['no_faktur']) ? $gudang['no_faktur'] : '',
+              'keterangan' => 'Batal Validasi ' . $no_resep . ' ' . $no_rawat . ' ' . $no_rm . ' ' . $nm_pasien
+            ]);
+          }
+
+          $this->db('aturan_pakai')
+            ->where('no_rawat', $no_rawat)
+            ->where('tgl_perawatan', $tgl_val)
+            ->where('jam', $jam_val)
+            ->where('kode_brng', $kode_brng)
+            ->delete();
+
+          $this->db('detail_pemberian_obat')
+            ->where('no_rawat', $no_rawat)
+            ->where('tgl_perawatan', $tgl_val)
+            ->where('jam', $jam_val)
+            ->where('kode_brng', $kode_brng)
+            ->where('status', 'Ralan')
+            ->delete();
+        }
+
+        // 2. Hapus catatan obat_racikan & detail_obat_racikan milik resep ini pada timestamp validasi tersebut
+        $racikan_list = $this->db('resep_dokter_racikan')
+          ->select('no_racik')
+          ->where('no_resep', $no_resep)
+          ->toArray();
+
+        foreach ($racikan_list as $rac) {
+          $this->db('detail_obat_racikan')
+            ->where('no_rawat', $no_rawat)
+            ->where('tgl_perawatan', $tgl_val)
+            ->where('jam', $jam_val)
+            ->where('no_racik', $rac['no_racik'])
+            ->delete();
+
+          $this->db('obat_racikan')
+            ->where('no_rawat', $no_rawat)
+            ->where('tgl_perawatan', $tgl_val)
+            ->where('jam', $jam_val)
+            ->where('no_racik', $rac['no_racik'])
+            ->delete();
+        }
+
+        // 3. Reset status validasi & penyerahan pada resep_obat agar bisa diedit & divalidasi ulang
+        $cols = $pdo->query("SHOW COLUMNS FROM resep_obat")->fetchAll(\PDO::FETCH_COLUMN);
+        $resetData = [
+          'tgl_perawatan' => '0000-00-00',
+          'jam' => '00:00:00',
+          'tgl_penyerahan' => '0000-00-00',
+          'jam_penyerahan' => '00:00:00'
+        ];
+        if (in_array('petugas_validasi', $cols, true)) {
+          $resetData['petugas_validasi'] = '';
+        }
+        if (in_array('petugas_penyerahan', $cols, true)) {
+          $resetData['petugas_penyerahan'] = '';
+        }
+        if (in_array('catatan_skrining', $cols, true)) {
+          $resetData['catatan_skrining'] = '';
+        }
+
+        $this->db('resep_obat')->where('no_resep', $no_resep)->save($resetData);
+
+        $pdo->commit();
+        echo json_encode([
+          'status' => 'success',
+          'message' => 'Validasi resep ' . $no_resep . ' berhasil dibatalkan. Stok obat dikembalikan dan resep siap diedit serta divalidasi ulang.'
+        ]);
+        exit();
+      } catch (\Throwable $e) {
+        if (isset($pdo) && $pdo->inTransaction()) {
+          $pdo->rollBack();
+        }
+        http_response_code(500);
+        echo json_encode(['status' => 'error', 'message' => 'Gagal membatalkan validasi: ' . $e->getMessage()]);
         exit();
       }
     }
@@ -1779,6 +1947,7 @@ class Admin extends AdminModule
     public function getJavascript()
     {
         header('Content-type: text/javascript');
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
         $this->assign['websocket'] = $this->settings->get('settings.websocket');
         $this->assign['websocket_proxy'] = $this->settings->get('settings.websocket_proxy');
         echo $this->draw(MODULES.'/apotek_ralan/js/admin/apotek_ralan.js', ['mlite' => htmlspecialchars_array($this->assign)]);

@@ -552,10 +552,11 @@ $("#rincian").on("click",".validasi_resep_obat", function(event){
 
       if (isNaN(jml)) {
         // Cek jika ini baris racikan (parent)
-        var jmlRacik = parseFloat($(this).closest('tbody').find('tr:first .jumlah_obat').val());
-        if(!isNaN(jmlRacik) && !isNaN(kandungan)) {
-             var kapasitas = parseFloat($(this).attr('data-kapasitas'));
-             jml = Math.round((jmlRacik * kandungan) / kapasitas);
+        var $tb = $(this).closest('tbody');
+        var jmlRacik = ($tb.find('.kandungan_obat').length > 0) ? parseFloat($tb.find('.jumlah_obat').first().val()) : NaN;
+        if(!isNaN(jmlRacik) && jmlRacik > 0 && !isNaN(kandungan) && kandungan > 0) {
+             var kapasitas = parseFloat($(this).attr('data-kapasitas')) || 0;
+             jml = kapasitas > 0 ? Math.round(((jmlRacik * kandungan) / kapasitas) * 10) / 10 : parseFloat($(this).attr('data-jml'));
         } else {
              jml = parseFloat($(this).attr('data-jml'));
         }
@@ -565,7 +566,7 @@ $("#rincian").on("click",".validasi_resep_obat", function(event){
       if(kode_brng) {
           if(embalaseVal !== undefined) embalaseData[kode_brng] = embalaseVal;
           if(tuslahVal !== undefined) tuslahData[kode_brng] = tuslahVal;
-          if(jumlahVal !== undefined) jumlahData[kode_brng] = jml;
+          if(jumlahVal !== undefined || kandunganVal !== undefined) jumlahData[kode_brng] = jml;
           if(kandunganVal !== undefined) kandunganData[kode_brng] = kandungan;
           if(aturanPakaiVal !== undefined) aturanPakaiData[kode_brng] = aturanPakaiVal;
       }

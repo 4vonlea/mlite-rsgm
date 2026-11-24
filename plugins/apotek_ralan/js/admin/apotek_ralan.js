@@ -438,8 +438,18 @@ function kumpulkanDataObat($tbody) {
       var aturan = $aturanInput.val();
       if (kd_racik && aturan !== undefined) aturanPakaiData[kd_racik] = aturan;
     }
+    var $jmlRacikInput = $(this).find('.jumlah_obat');
+    if ($jmlRacikInput.length > 0) {
+      var kd_racik_jml = $jmlRacikInput.attr('data-kode_brng');
+      var jmlRacikHeader = parseFloat($jmlRacikInput.val());
+      if (kd_racik_jml && !isNaN(jmlRacikHeader)) jumlahData[kd_racik_jml] = jmlRacikHeader;
+    }
   });
+  var isRacikanTbody = false;
   $tbody.find('tr.item-row').each(function() {
+    var $rowTbody = $(this).closest('tbody');
+    isRacikanTbody = $rowTbody.find('.kandungan_obat').length > 0;
+    var jmlRacikTbody = isRacikanTbody ? parseFloat($rowTbody.find('.jumlah_obat').first().val()) : NaN;
     var stok = parseFloat($(this).attr('data-stok'));
     var kode_brng = $(this).find('.embalase').attr('data-kode_brng') || $(this).find('.kandungan_obat').attr('data-kode_brng');
     var embalaseVal = $(this).find('.embalase').val();
@@ -450,17 +460,20 @@ function kumpulkanDataObat($tbody) {
     var jml = parseFloat(jumlahVal);
     var kandungan = parseFloat(kandunganVal);
     if (isNaN(jml)) {
-      var jmlRacik = parseFloat($(this).closest('tbody').find('tr:first .jumlah_obat').val());
-      if(!isNaN(jmlRacik) && !isNaN(kandungan)) {
-        var kapasitas = parseFloat($(this).attr('data-kapasitas'));
-        jml = Math.round((jmlRacik * kandungan) / kapasitas);
+      if(!isNaN(jmlRacikTbody) && jmlRacikTbody > 0 && !isNaN(kandungan) && kandungan > 0) {
+        var kapasitas = parseFloat($(this).attr('data-kapasitas')) || 0;
+        if (kapasitas > 0) {
+          jml = Math.round(((jmlRacikTbody * kandungan) / kapasitas) * 10) / 10;
+        } else {
+          jml = parseFloat($(this).attr('data-jml'));
+        }
       } else { jml = parseFloat($(this).attr('data-jml')); }
     }
     if (isNaN(jml)) jml = 0;
     if(kode_brng) {
       if(embalaseVal !== undefined) embalaseData[kode_brng] = embalaseVal;
       if(tuslahVal !== undefined) tuslahData[kode_brng] = tuslahVal;
-      if(jumlahVal !== undefined) jumlahData[kode_brng] = jml;
+      if(jumlahVal !== undefined || kandunganVal !== undefined) jumlahData[kode_brng] = jml;
       if(kandunganVal !== undefined) kandunganData[kode_brng] = kandungan;
       if(aturanPakaiVal !== undefined) aturanPakaiData[kode_brng] = aturanPakaiVal;
     }
@@ -507,6 +520,56 @@ var _modalValidasiData = {};
 var _modalPenyerahanData = {};
 
 // ======================================================
+// Handler: Batal Validasi Resep (agar bisa diedit & validasi ulang)
+// ======================================================
+$(document).on("click", "#rincian .batal_validasi_resep", function(event) {
+  event.preventDefault();
+  var $btn = $(this);
+  var no_resep = $btn.attr("data-no_resep");
+  var no_rawat = $btn.attr("data-no_rawat");
+  var baseURL = mlite.url + '/' + mlite.admin;
+
+  bootbox.confirm({
+    title: '<i class="fa fa-undo text-danger"></i> Konfirmasi Batal Validasi Resep',
+    message: 'Apakah Anda yakin ingin membatalkan validasi resep <strong>' + no_resep + '</strong>?<br><small class="text-muted">Stok obat &amp; rincian pemberian obat dari resep ini akan dikembalikan, lalu resep dapat diedit dan divalidasi ulang.</small>',
+    buttons: {
+      cancel: { label: 'Tidak', className: 'btn-default' },
+      confirm: { label: '<i class="fa fa-undo"></i> Ya, Batalkan Validasi', className: 'btn-danger' }
+    },
+    callback: function(confirmed) {
+      if (!confirmed) return;
+      $btn.prop('disabled', true);
+      $.ajax({
+        url: baseURL + '/apotek_ralan/batalvalidasiresep?t=' + mlite.token,
+        method: 'POST',
+        dataType: 'json',
+        data: { no_resep: no_resep, no_rawat: no_rawat }
+      }).done(function(res) {
+        if (res && res.status === 'success') {
+          $.post(baseURL + '/apotek_ralan/rincian?t=' + mlite.token, { no_rawat: no_rawat }, function(html) {
+            $("#rincian").html(html).show();
+          });
+          $('#notif').html('<div class="alert alert-success alert-dismissible fade in" role="alert" style="border-radius:0px;margin-top:-15px;">' +
+            '<i class="fa fa-check-circle"></i> ' + (res.message || 'Validasi resep berhasil dibatalkan.') +
+            '<button type="button" class="close" data-dismiss="alert" aria-label="Close">&times;</button>' +
+            '</div>').show();
+        } else {
+          $btn.prop('disabled', false);
+          bootbox.alert((res && res.message) ? res.message : 'Gagal membatalkan validasi resep.');
+        }
+      }).fail(function(xhr) {
+        $btn.prop('disabled', false);
+        var msg = 'Gagal menghubungi server saat membatalkan validasi.';
+        if (xhr && xhr.responseJSON && xhr.responseJSON.message) {
+          msg = xhr.responseJSON.message;
+        }
+        bootbox.alert(msg);
+      });
+    }
+  });
+});
+
+// ======================================================
 // Handler: Buka Modal Skrining & Validasi Resep
 // ======================================================
 $(document).on("click", "#rincian .buka_modal_validasi", function(event) {
@@ -517,13 +580,19 @@ $(document).on("click", "#rincian .buka_modal_validasi", function(event) {
   var tgl_peresepan = $btn.attr("data-tgl_peresepan");
   var jam_peresepan = $btn.attr("data-jam_peresepan");
   var $tbody = $btn.closest('tbody.resep-group');
+  var $targetGroup = $('#rincian tbody').filter(function() {
+    return $(this).find('button[data-no_resep="' + no_resep + '"]').length > 0;
+  });
+  if ($targetGroup.length === 0) {
+    $targetGroup = $tbody;
+  }
 
   // Validasi stok
-  var stokCheck = validasiStok($tbody);
+  var stokCheck = validasiStok($targetGroup);
   if (!stokCheck.valid) { alert(stokCheck.msg); return false; }
 
-  // Kumpulkan data obat untuk POST
-  var obatData = kumpulkanDataObat($tbody);
+  // Kumpulkan data obat untuk POST (termasuk jika 1 no_resep punya >1 grup racikan/non-racikan)
+  var obatData = kumpulkanDataObat($targetGroup);
   _modalValidasiData = { no_resep: no_resep, no_rawat: no_rawat, tgl_peresepan: tgl_peresepan, jam_peresepan: jam_peresepan, obatData: obatData };
 
   // Ambil info pasien dari #rincian-data (hidden element)
@@ -546,7 +615,7 @@ $(document).on("click", "#rincian .buka_modal_validasi", function(event) {
   $('#val-alergi').html(alergiHtml);
 
   // Inject daftar obat ke modal
-  var tabelObatHtml = buildTabelObatModal($tbody);
+  var tabelObatHtml = buildTabelObatModal($targetGroup);
   $('#val-tabel-obat').html(tabelObatHtml);
 
   // Set nama apoteker
