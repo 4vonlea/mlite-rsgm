@@ -1018,6 +1018,109 @@ class Admin extends AdminModule
         exit();
     }
 
+    public function postBatalkanantrean()
+    {
+        header('Content-Type: application/json');
+        $kodebooking = trim($_POST['kodebooking'] ?? '');
+        $norm = trim($_POST['no_rkm_medis'] ?? '');
+        $tanggal = trim($_POST['tanggal'] ?? date('Y-m-d'));
+        $keterangan = trim($_POST['keterangan'] ?? 'Dibatalkan oleh Pasien / RS');
+
+        if (empty($kodebooking) && empty($norm)) {
+            echo json_encode(['status' => 'error', 'message' => 'Parameter pembatalan tidak lengkap.']);
+            exit();
+        }
+
+        $bpjs_notif = '';
+        $bpjs_success = false;
+
+        // 1. Jika ada kodebooking, kirim pembatalan resmi ke BPJS Mobile JKN
+        if (!empty($kodebooking)) {
+            try {
+                date_default_timezone_set('UTC');
+                $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+                $key = $this->consid . $this->secretkey . $tStamp;
+                date_default_timezone_set($this->settings->get('settings.timezone') ?: 'Asia/Jakarta');
+
+                $dataBpjs = json_encode([
+                    'kodebooking' => $kodebooking,
+                    'keterangan' => $keterangan
+                ]);
+                $url = $this->bpjsurl . 'antrean/batal';
+                $output = BpjsService::post($url, $dataBpjs, $this->consid, $this->secretkey, $this->user_key, $tStamp);
+                $json = json_decode($output, true);
+                $code = $json['metadata']['code'] ?? 500;
+                $msg = $json['metadata']['message'] ?? '';
+                if ($code == 200 || strpos(strtolower($msg), 'sudah dibatalkan') !== false) {
+                    $bpjs_success = true;
+                    $bpjs_notif = 'Berhasil dibatalkan di BPJS Mobile JKN.';
+                } else {
+                    $bpjs_notif = 'BPJS: ' . ($msg ?: 'Kode ' . $code);
+                }
+            } catch (\Throwable $e) {
+                $bpjs_notif = 'Error BPJS: ' . $e->getMessage();
+            }
+        }
+
+        // 2. Batalkan di SIMRS lokal:
+        // a) Di booking_registrasi
+        if (!empty($norm) && $norm !== '-') {
+            $this->db('booking_registrasi')
+                ->where('no_rkm_medis', $norm)
+                ->where('tanggal_periksa', $tanggal)
+                ->update(['status' => 'Batal']);
+        }
+
+        // b) Di mlite_antrian_referensi
+        if (!empty($kodebooking)) {
+            $this->db('mlite_antrian_referensi')
+                ->where('kodebooking', $kodebooking)
+                ->update([
+                    'status_kirim' => 'Batal',
+                    'keterangan' => $keterangan
+                ]);
+
+            $cekBatalLog = $this->db('mlite_antrian_referensi_batal')->where('kodebooking', $kodebooking)->oneArray();
+            if (!$cekBatalLog) {
+                $this->db('mlite_antrian_referensi_batal')->save([
+                    'tanggal_batal' => date('Y-m-d'),
+                    'nomor_referensi' => $kodebooking,
+                    'kodebooking' => $kodebooking,
+                    'keterangan' => $keterangan
+                ]);
+            }
+        }
+
+        // c) Di staging mlite_jkn_booking_baru
+        if (!empty($kodebooking)) {
+            $this->db('mlite_jkn_booking_baru')
+                ->where('kodebooking', $kodebooking)
+                ->update(['status' => 'Batal']);
+        }
+
+        // d) Di reg_periksa jika hari H dan belum dilayani
+        if (!empty($norm) && $norm !== '-' && $tanggal === date('Y-m-d')) {
+            $this->db('reg_periksa')
+                ->where('no_rkm_medis', $norm)
+                ->where('tgl_registrasi', $tanggal)
+                ->where('stts', '!=', 'Sudah')
+                ->update(['stts' => 'Batal']);
+        }
+
+        $finalMsg = 'Antrean berhasil dibatalkan di SIMRS.';
+        if ($bpjs_success) {
+            $finalMsg .= ' dan Server BPJS Mobile JKN.';
+        } elseif (!empty($bpjs_notif)) {
+            $finalMsg .= ' (' . $bpjs_notif . ')';
+        }
+
+        echo json_encode([
+            'status' => 'success',
+            'message' => $finalMsg
+        ]);
+        exit();
+    }
+
     public function postSyncJadwalHfis()
     {
         header('Content-Type: application/json');

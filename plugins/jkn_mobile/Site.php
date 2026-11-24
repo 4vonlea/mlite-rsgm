@@ -275,43 +275,43 @@ class Site extends SiteModule
 
                 $cek_kuota = false;
                 if ($validDateFormat && $kodepoli !== '') {
-                    if (strtotime($tanggal) == strtotime(date('Y-m-d'))) {
-                        $sql = "SELECT jadwal.kuota - (SELECT COUNT(reg_periksa.tgl_registrasi)
-                            FROM reg_periksa WHERE reg_periksa.tgl_registrasi = :tgl
-                            AND reg_periksa.kd_dokter = jadwal.kd_dokter AND reg_periksa.kd_poli = jadwal.kd_poli AND reg_periksa.stts != 'Batal') as sisa_kuota,
-                            jadwal.kd_dokter, jadwal.kd_poli, jadwal.jam_mulai as jam_mulai, poliklinik.nm_poli, dokter.nm_dokter, jadwal.kuota
-                            FROM jadwal
-                            INNER JOIN maping_poli_bpjs ON maping_poli_bpjs.kd_poli_rs = jadwal.kd_poli
-                            INNER JOIN maping_dokter_dpjpvclaim ON maping_dokter_dpjpvclaim.kd_dokter = jadwal.kd_dokter
-                            INNER JOIN poliklinik ON poliklinik.kd_poli = jadwal.kd_poli
-                            INNER JOIN dokter ON dokter.kd_dokter = jadwal.kd_dokter
-                            WHERE jadwal.hari_kerja = :hari AND maping_poli_bpjs.kd_poli_bpjs = :kdpoli";
-                    } else {
-                        $sql = "SELECT jadwal.kuota - (SELECT COUNT(booking_registrasi.tanggal_periksa)
-                            FROM booking_registrasi WHERE booking_registrasi.tanggal_periksa = :tgl
-                            AND booking_registrasi.kd_dokter = jadwal.kd_dokter AND booking_registrasi.kd_poli = jadwal.kd_poli AND booking_registrasi.status != 'Batal') as sisa_kuota,
-                            jadwal.kd_dokter, jadwal.kd_poli, jadwal.jam_mulai as jam_mulai, poliklinik.nm_poli, dokter.nm_dokter, jadwal.kuota
-                            FROM jadwal
-                            INNER JOIN maping_poli_bpjs ON maping_poli_bpjs.kd_poli_rs = jadwal.kd_poli
-                            INNER JOIN maping_dokter_dpjpvclaim ON maping_dokter_dpjpvclaim.kd_dokter = jadwal.kd_dokter
-                            INNER JOIN poliklinik ON poliklinik.kd_poli = jadwal.kd_poli
-                            INNER JOIN dokter ON dokter.kd_dokter = jadwal.kd_dokter
-                            WHERE jadwal.hari_kerja = :hari AND maping_poli_bpjs.kd_poli_bpjs = :kdpoli";
-                    }
-
-                    $params = [':tgl' => $tanggal, ':hari' => $hari, ':kdpoli' => $kodepoli];
+                    $jadwal_sql = "SELECT jadwal.kd_dokter, jadwal.kd_poli, jadwal.jam_mulai, jadwal.jam_selesai, jadwal.kuota,
+                                          poliklinik.nm_poli, dokter.nm_dokter
+                                   FROM jadwal
+                                   INNER JOIN maping_poli_bpjs ON maping_poli_bpjs.kd_poli_rs = jadwal.kd_poli
+                                   INNER JOIN maping_dokter_dpjpvclaim ON maping_dokter_dpjpvclaim.kd_dokter = jadwal.kd_dokter
+                                   INNER JOIN poliklinik ON poliklinik.kd_poli = jadwal.kd_poli
+                                   INNER JOIN dokter ON dokter.kd_dokter = jadwal.kd_dokter
+                                   WHERE jadwal.hari_kerja = :hari AND maping_poli_bpjs.kd_poli_bpjs = :kdpoli";
+                    $params = [':hari' => $hari, ':kdpoli' => $kodepoli];
                     if ($kodedokter !== '') {
-                        $sql .= " AND maping_dokter_dpjpvclaim.kd_dokter_bpjs = :kddokter";
+                        $jadwal_sql .= " AND maping_dokter_dpjpvclaim.kd_dokter_bpjs = :kddokter";
                         $params[':kddokter'] = $kodedokter;
                     }
-                    $sql .= " GROUP BY jadwal.kd_dokter, jadwal.kd_poli, jadwal.jam_mulai, jadwal.kuota, poliklinik.nm_poli, dokter.nm_dokter HAVING sisa_kuota > 0 ORDER BY sisa_kuota DESC LIMIT 1";
+                    $jadwal_sql .= " ORDER BY jadwal.jam_mulai ASC LIMIT 1";
 
-                    $stmtKuota = $this->db()->pdo()->prepare($sql);
-                    $stmtKuota->execute($params);
-                    $cek_kuota = $stmtKuota->fetch(\PDO::FETCH_ASSOC);
-                    if (!empty($cek_kuota)) {
-                        $stagingUsed = $this->_getStagingBookingCount($tanggal, $cek_kuota['kd_poli'], $cek_kuota['kd_dokter'], false);
-                        $cek_kuota['sisa_kuota'] = max(0, (int)$cek_kuota['sisa_kuota'] - $stagingUsed);
+                    $stmtJadwal = $this->db()->pdo()->prepare($jadwal_sql);
+                    $stmtJadwal->execute($params);
+                    $rowJadwal = $stmtJadwal->fetch(\PDO::FETCH_ASSOC);
+
+                    if ($rowJadwal) {
+                        $kdDokterRs = $rowJadwal['kd_dokter'];
+                        $kdPoliRs = $rowJadwal['kd_poli'];
+                        $totalKuota = (int)$rowJadwal['kuota'];
+
+                        // Hitung jumlah riil seluruh pasien terdaftar secara komprehensif
+                        // (booking_registrasi + referensi bpjs/pasien baru + reg_periksa + staging)
+                        $totalTerdaftar = $this->_getTotalTerdaftarDokter($tanggal, $kdPoliRs, $kdDokterRs, $kodepoli);
+                        $sisaKuota = max(0, $totalKuota - $totalTerdaftar);
+
+                        // HARD LOCK: Jika total pendaftar sudah mencapai atau melebihi kuota, kunci seketika!
+                        if ($totalKuota > 0 && $sisaKuota > 0) {
+                            $cek_kuota = $rowJadwal;
+                            $cek_kuota['sisa_kuota'] = $sisaKuota;
+                            $cek_kuota['total_terdaftar'] = $totalTerdaftar;
+                        } else {
+                            $cek_kuota = false;
+                        }
                     }
                 }
 
@@ -833,10 +833,10 @@ class Site extends SiteModule
                         $stmtData->execute([':tgl' => $tanggalperiksa, ':kdpoli' => $kdPoliRs, ':kddokter' => $kdDokterRs]);
                         $data = $stmtData->fetch(\PDO::FETCH_ASSOC) ?: [];
 
-                        $stagingTotal = $this->_getStagingBookingCount($tanggalperiksa, $kdPoliRs, $kdDokterRs, false);
-                        $stagingSisa = $this->_getStagingBookingCount($tanggalperiksa, $kdPoliRs, $kdDokterRs, true);
-                        $totalAntrean = (int)($data['total_antrean'] ?? 0) + $stagingTotal;
-                        $sisaAntrean = (int)($data['sisa_antrean'] ?? 0) + $stagingSisa;
+                        $totalTerdaftar = $this->_getTotalTerdaftarDokter($tanggalperiksa, $kdPoliRs, $kdDokterRs, $kodepoli);
+                        $totalAntrean = $totalTerdaftar;
+                        $selesaiCount = (int)($data['total_antrean'] ?? 0) - (int)($data['sisa_antrean'] ?? 0);
+                        $sisaAntrean = max(0, $totalAntrean - max(0, $selesaiCount));
                         $sisaKuota = max(0, $totalKuota - $totalAntrean);
                         $namaPoli = !empty($data['nm_poli']) ? $data['nm_poli'] : ($kdpoli['nm_poli_bpjs'] ?? '');
                         $namaDokter = !empty($kddokter['nm_dokter_bpjs']) ? $kddokter['nm_dokter_bpjs'] : ($data['nm_dokter'] ?? ($jadwalRow['nm_dokter_bpjs'] ?? ''));
@@ -4099,5 +4099,105 @@ class Site extends SiteModule
             return sprintf('%03d', $maxStaging + 1);
         }
         return sprintf('%03d', max(1, $currentNum));
+    }
+
+    private function _getTotalTerdaftarDokter($tanggal, $kdPoliRs, $kdDokterRs, $kodepoliBpjs = '')
+    {
+        $total = 0;
+        $tracked_rms = [];
+        $tracked_kbs = [];
+
+        // 1. Dari booking_registrasi
+        $stmt1 = $this->db()->pdo()->prepare(
+            "SELECT no_rkm_medis FROM booking_registrasi 
+             WHERE tanggal_periksa = :tgl AND kd_poli = :kdpoli AND kd_dokter = :kddokter AND status != 'Batal'"
+        );
+        $stmt1->execute([':tgl' => $tanggal, ':kdpoli' => $kdPoliRs, ':kddokter' => $kdDokterRs]);
+        $rows1 = $stmt1->fetchAll(\PDO::FETCH_ASSOC);
+        foreach ($rows1 as $r) {
+            $rm = trim($r['no_rkm_medis'] ?? '');
+            if ($rm !== '' && $rm !== '-') {
+                $tracked_rms[$rm] = true;
+            }
+            $total++;
+        }
+
+        // 2. Dari reg_periksa jika hari H (pasien yang langsung mendaftar di loket tanpa booking)
+        if ($tanggal === date('Y-m-d')) {
+            $stmt2 = $this->db()->pdo()->prepare(
+                "SELECT no_rkm_medis FROM reg_periksa 
+                 WHERE tgl_registrasi = :tgl AND kd_poli = :kdpoli AND kd_dokter = :kddokter AND stts != 'Batal'"
+            );
+            $stmt2->execute([':tgl' => $tanggal, ':kdpoli' => $kdPoliRs, ':kddokter' => $kdDokterRs]);
+            $rows2 = $stmt2->fetchAll(\PDO::FETCH_ASSOC);
+            foreach ($rows2 as $r) {
+                $rm = trim($r['no_rkm_medis'] ?? '');
+                if ($rm !== '' && $rm !== '-' && isset($tracked_rms[$rm])) {
+                    continue; // Sudah terhitung di booking_registrasi
+                }
+                if ($rm !== '' && $rm !== '-') {
+                    $tracked_rms[$rm] = true;
+                }
+                $total++;
+            }
+        }
+
+        // 3. Dari mlite_jkn_booking_baru (staging)
+        $this->_ensureStagingTables();
+        $stmt3 = $this->db()->pdo()->prepare(
+            "SELECT kodebooking, nomor_kartu FROM mlite_jkn_booking_baru 
+             WHERE tanggal_periksa = :tgl AND kd_poli = :kdpoli AND kd_dokter = :kddokter AND status = 'Belum'"
+        );
+        $stmt3->execute([':tgl' => $tanggal, ':kdpoli' => $kdPoliRs, ':kddokter' => $kdDokterRs]);
+        $rows3 = $stmt3->fetchAll(\PDO::FETCH_ASSOC);
+        foreach ($rows3 as $r) {
+            $kb = trim($r['kodebooking'] ?? '');
+            if ($kb !== '') {
+                $tracked_kbs[$kb] = true;
+            }
+            $total++;
+        }
+
+        // 4. Dari mlite_antrian_referensi (termasuk pasien baru tanpa no_rkm_medis yang tersinkron)
+        $batalList = [];
+        $stmtBatal = $this->db()->pdo()->query("SELECT kodebooking FROM mlite_antrian_referensi_batal");
+        if ($stmtBatal) {
+            $batalList = array_flip($stmtBatal->fetchAll(\PDO::FETCH_COLUMN));
+        }
+
+        $sqlRef = "SELECT kodebooking, no_rkm_medis FROM mlite_antrian_referensi 
+                   WHERE tanggal_periksa = :tgl AND status_kirim != 'Batal'";
+        $stmt4 = $this->db()->pdo()->prepare($sqlRef);
+        $stmt4->execute([':tgl' => $tanggal]);
+        $rows4 = $stmt4->fetchAll(\PDO::FETCH_ASSOC);
+        foreach ($rows4 as $r) {
+            $kb = trim($r['kodebooking'] ?? '');
+            $rm = trim($r['no_rkm_medis'] ?? '');
+
+            if ($kb !== '' && isset($batalList[$kb])) {
+                continue; // Sudah dibatalkan
+            }
+            if ($kb !== '' && isset($tracked_kbs[$kb])) {
+                continue; // Sudah terhitung di staging
+            }
+            if ($rm !== '' && $rm !== '-' && isset($tracked_rms[$rm])) {
+                continue; // Sudah terhitung di booking_registrasi / reg_periksa
+            }
+
+            // Jika ada filter kode poli BPJS, pastikan cocok dengan prefix kodebooking
+            if (!empty($kodepoliBpjs) && strpos($kb, $kodepoliBpjs) === false) {
+                continue;
+            }
+
+            if ($rm !== '' && $rm !== '-') {
+                $tracked_rms[$rm] = true;
+            }
+            if ($kb !== '') {
+                $tracked_kbs[$kb] = true;
+            }
+            $total++;
+        }
+
+        return $total;
     }
 }

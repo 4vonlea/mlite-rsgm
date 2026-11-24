@@ -203,6 +203,43 @@
   </div>
 </div>
 
+<!-- Modal Konfirmasi Batal Antrean Pasien HFIS -->
+<div class="modal fade" id="modalBatalPasienHfis" tabindex="-1" role="dialog" aria-labelledby="modalBatalPasienHfisTitle" aria-hidden="true" style="z-index: 1060;">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content" style="border-radius: 6px;">
+      <div class="modal-header" style="background: #fef2f2; border-bottom: 1px solid #fee2e2;">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="font-size:24px;">&times;</button>
+        <h4 class="modal-title" id="modalBatalPasienHfisTitle" style="font-weight: 700; color: #b91c1c;">
+          <i class="fa fa-times-circle text-danger"></i> Batalkan Antrean Pasien
+        </h4>
+      </div>
+      <div class="modal-body" style="padding: 20px;">
+        <div class="alert alert-warning" style="font-size:12px; margin-bottom:15px;">
+          <i class="fa fa-exclamation-triangle"></i> Pembatalan ini akan membatalkan status antrean pasien di <b>SIMRS</b> dan mengirimkan pembatalan resmi ke <b>Server BPJS Antrean Mobile JKN</b>. Slot kuota dokter akan otomatis terbuka kembali.
+        </div>
+        <div class="form-group">
+          <label style="font-weight:600; color:#334155;">Data Pasien:</label>
+          <input type="text" id="batal_hfis_pasien_info" class="form-control" readonly style="background:#f1f5f9; font-weight:600;">
+          <input type="hidden" id="batal_hfis_kodebooking">
+          <input type="hidden" id="batal_hfis_norm">
+          <input type="hidden" id="batal_hfis_index">
+        </div>
+        <div class="form-group">
+          <label style="font-weight:600; color:#334155;">Alasan Pembatalan <span class="text-danger">*</span>:</label>
+          <textarea id="batal_hfis_keterangan" class="form-control" rows="3" placeholder="Contoh: Pasien berhalangan hadir / Kuota dokter dialihkan / Pembatalan atas permintaan pasien">Dibatalkan atas permintaan pasien / kuota penuh</textarea>
+        </div>
+        <div id="batalHfisAlertArea"></div>
+      </div>
+      <div class="modal-footer" style="background: #f8fafc;">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Tutup</button>
+        <button type="button" class="btn btn-danger" id="btnSubmitBatalHfis" onclick="submitBatalPasienHfis()">
+          <i class="fa fa-times"></i> Ya, Batalkan Antrean Sekarang
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 var currentHfisData = [];
 var currentPoliCode = '';
@@ -513,10 +550,18 @@ function bukaModalPasien(index) {
 
       // Tombol Aksi
       var btnAksi = '';
-      if (!p.is_hadir) {
-        btnAksi = '<button type="button" class="btn btn-xs btn-success" onclick="tandaiPasienHadir(\'' + (p.kodebooking || '') + '\', \'' + (p.no_rkm_medis || '') + '\', \'' + (p.no_reg || '1') + '\', \'' + (item.kd_dokter_rs || '') + '\', \'' + (item.kd_poli_rs || currentPoliCode) + '\', ' + index + ', this)" title="Tandai pasien ini sudah hadir / check-in di RS"><i class="fa fa-check"></i> Hadir</button>';
+      if (p.status === 'Batal') {
+        btnAksi = '<span class="text-danger" style="font-size:11px; font-weight:600;"><i class="fa fa-ban"></i> Batal</span>';
+      } else if (!p.is_hadir) {
+        btnAksi = '<div class="btn-group" role="group" style="white-space:nowrap;">' +
+          '<button type="button" class="btn btn-xs btn-success" onclick="tandaiPasienHadir(\'' + (p.kodebooking || '') + '\', \'' + (p.no_rkm_medis || '') + '\', \'' + (p.no_reg || '1') + '\', \'' + (item.kd_dokter_rs || '') + '\', \'' + (item.kd_poli_rs || currentPoliCode) + '\', ' + index + ', this)" title="Tandai pasien ini sudah hadir / check-in di RS"><i class="fa fa-check"></i> Hadir</button>' +
+          '<button type="button" class="btn btn-xs btn-danger" onclick="konfirmasiBatalModalPasien(\'' + (p.kodebooking || '') + '\', \'' + (p.no_rkm_medis || '') + '\', \'' + (p.nm_pasien || '').replace(/'/g, "\\'") + '\', ' + index + ')" title="Batalkan antrean pasien ini di SIMRS & BPJS"><i class="fa fa-times"></i> Batal</button>' +
+        '</div>';
       } else {
-        btnAksi = '<span class="text-success" style="font-size:11px; font-weight:600;"><i class="fa fa-check-circle"></i> OK</span>';
+        btnAksi = '<div class="btn-group" role="group" style="white-space:nowrap;">' +
+          '<span class="text-success" style="font-size:11px; font-weight:600; margin-right:5px;"><i class="fa fa-check-circle"></i> OK</span>' +
+          '<button type="button" class="btn btn-xs btn-danger" onclick="konfirmasiBatalModalPasien(\'' + (p.kodebooking || '') + '\', \'' + (p.no_rkm_medis || '') + '\', \'' + (p.nm_pasien || '').replace(/'/g, "\\'") + '\', ' + index + ')" title="Batalkan antrean pasien ini di SIMRS & BPJS"><i class="fa fa-times"></i> Batal</button>' +
+        '</div>';
       }
 
       var bookingInfo = '';
@@ -690,6 +735,90 @@ function syncJadwalSimrs(kdDokter, kdPoli, hari, jam, kuota, btnEl) {
     error: function() {
       $btn.prop('disabled', false).html('<i class="fa fa-download"></i> Salin');
       alert('Terjadi kesalahan koneksi ke server SIMRS.');
+    }
+  });
+}
+
+function konfirmasiBatalModalPasien(kodebooking, norm, nmPasien, index) {
+  $('#batal_hfis_kodebooking').val(kodebooking || '');
+  $('#batal_hfis_norm').val(norm || '');
+  $('#batal_hfis_index').val(index);
+  var info = nmPasien;
+  if (norm && norm !== '-') info += ' (RM: ' + norm + ')';
+  if (kodebooking) info += ' [' + kodebooking + ']';
+  $('#batal_hfis_pasien_info').val(info);
+  $('#batal_hfis_keterangan').val('Dibatalkan atas permintaan pasien / kuota penuh');
+  $('#batalHfisAlertArea').html('');
+  $('#btnSubmitBatalHfis').prop('disabled', false).html('<i class="fa fa-times"></i> Ya, Batalkan Antrean Sekarang');
+  $('#modalBatalPasienHfis').modal('show');
+}
+
+function submitBatalPasienHfis() {
+  var kb = $('#batal_hfis_kodebooking').val();
+  var norm = $('#batal_hfis_norm').val();
+  var idx = parseInt($('#batal_hfis_index').val());
+  var ket = $('#batal_hfis_keterangan').val().trim();
+  var btn = $('#btnSubmitBatalHfis');
+  var alertArea = $('#batalHfisAlertArea');
+
+  if (!ket) {
+    alert('Harap tuliskan alasan pembatalan!');
+    $('#batal_hfis_keterangan').focus();
+    return;
+  }
+
+  btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Memproses ke BPJS & SIMRS...');
+  alertArea.html('<div class="alert alert-info" style="margin-top:10px;"><i class="fa fa-spinner fa-spin"></i> Sedang membatalkan antrean di BPJS dan SIMRS...</div>');
+
+  var url = "{?=url([ADMIN, 'jkn_mobile', 'batalkanantrean'])?}";
+  $.ajax({
+    url: url,
+    method: 'POST',
+    data: {
+      kodebooking: kb,
+      no_rkm_medis: norm,
+      tanggal: currentTanggal,
+      keterangan: ket
+    },
+    dataType: 'json',
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest'
+    },
+    success: function(res) {
+      if (res.status === 'success') {
+        alertArea.html('<div class="alert alert-success" style="margin-top:10px;"><i class="fa fa-check-circle"></i> ' + res.message + '</div>');
+        
+        // Update data lokal pasien_list di memori
+        if (currentHfisData[idx] && currentHfisData[idx].pasien_list) {
+          currentHfisData[idx].pasien_list.forEach(function(p) {
+            if ((kb && p.kodebooking === kb) || (norm && norm !== '-' && p.no_rkm_medis === norm)) {
+              p.status = 'Batal';
+              p.is_hadir = false;
+            }
+          });
+          // Kurangi counter terdaftar dokter jika belum batal sebelumnya
+          if (currentHfisData[idx].terdaftar > 0) {
+            currentHfisData[idx].terdaftar = Math.max(0, currentHfisData[idx].terdaftar - 1);
+            var kps = parseInt(currentHfisData[idx].kapasitaspasien || 0);
+            currentHfisData[idx].sisa_kuota = Math.max(0, kps - currentHfisData[idx].terdaftar);
+          }
+        }
+
+        setTimeout(function() {
+          $('#modalBatalPasienHfis').modal('hide');
+          // Re-render modal pasien agar baris langsung update
+          bukaModalPasien(idx);
+          // Re-render tabel jadwal utama agar badge terdaftar terbarui
+          renderTable(currentHfisData);
+        }, 1200);
+      } else {
+        btn.prop('disabled', false).html('<i class="fa fa-times"></i> Ya, Batalkan Antrean Sekarang');
+        alertArea.html('<div class="alert alert-danger" style="margin-top:10px;"><i class="fa fa-exclamation-triangle"></i> ' + (res.message || 'Gagal membatalkan antrean.') + '</div>');
+      }
+    },
+    error: function() {
+      btn.prop('disabled', false).html('<i class="fa fa-times"></i> Ya, Batalkan Antrean Sekarang');
+      alertArea.html('<div class="alert alert-danger" style="margin-top:10px;"><i class="fa fa-plug"></i> Gagal terhubung ke server SIMRS.</div>');
     }
   });
 }
