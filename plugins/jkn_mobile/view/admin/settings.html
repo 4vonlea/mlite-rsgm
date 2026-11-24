@@ -72,14 +72,17 @@
                     <div class="form-group">
                          <label>Auto Daftar Pasien Baru (Mobile JKN)</label>
                          <div class="radio">
-                             <label class="radio-inline">
-                                <input type="radio" name="jkn_mobile[auto_pasien_baru]" value="ya" {if: $settings.jkn_mobile.auto_pasien_baru != 'tidak'}checked{/if} /> Ya (Otomatis buat No. RM)
+                             <label style="display:block; margin-bottom:5px;">
+                                <input type="radio" name="jkn_mobile[auto_pasien_baru]" value="ya" {if: $settings.jkn_mobile.auto_pasien_baru != 'tidak' && $settings.jkn_mobile.auto_pasien_baru != 'staging'}checked{/if} /> <strong>Ya</strong> — Otomatis buat No. RM resmi di master pasien
                              </label>
-                             <label class="radio-inline">
-                                <input type="radio" name="jkn_mobile[auto_pasien_baru]" value="tidak" {if: $settings.jkn_mobile.auto_pasien_baru == 'tidak'}checked{/if} /> Tidak (Wajib daftar di loket admisi)
+                             <label style="display:block; margin-bottom:5px;">
+                                <input type="radio" name="jkn_mobile[auto_pasien_baru]" value="staging" {if: $settings.jkn_mobile.auto_pasien_baru == 'staging'}checked{/if} /> <strong>Staging</strong> — Pasien baru tetap bisa booking antrean MJKN (kode sementara), No. RM resmi baru diterbitkan petugas di menu <em>Calon Pasien Baru</em>
+                             </label>
+                             <label style="display:block;">
+                                <input type="radio" name="jkn_mobile[auto_pasien_baru]" value="tidak" {if: $settings.jkn_mobile.auto_pasien_baru == 'tidak'}checked{/if} /> <strong>Tidak</strong> — Tolak pasien baru di Mobile JKN (wajib daftar di loket admisi)
                              </label>
                          </div>
-                         <p class="help-block" style="font-size:12px;">Jika dipilih <strong>Tidak</strong>, pasien baru tidak akan otomatis dimasukkan ke tabel master pasien lewat Mobile JKN. Pasien lama tetap bisa booking online.</p>
+                         <p class="help-block" style="font-size:12px;">Mode <strong>Staging</strong> menjaga tabel master <code>pasien</code> &amp; counter No. RM tetap bersih sampai petugas admisi memverifikasi identitas pasien saat kedatangan. Pasien lama tetap bisa booking online seperti biasa di semua mode.</p>
                     </div>
                     <div class="form-group">
                         <label>Pesan Penolakan Pasien Baru (jika dinonaktifkan)</label>

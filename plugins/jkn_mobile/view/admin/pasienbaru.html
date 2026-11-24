@@ -1,0 +1,459 @@
+<style>
+  .kpi-card {
+    border-radius: 8px;
+    padding: 15px 18px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    background: #fff;
+    border-left: 4px solid #cbd5e1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .kpi-card.kpi-blue { border-left-color: #0284c7; }
+  .kpi-card.kpi-yellow { border-left-color: #eab308; }
+  .kpi-card.kpi-green { border-left-color: #22c55e; }
+  .kpi-card.kpi-red { border-left-color: #ef4444; }
+  .kpi-title { font-size: 12px; font-weight: 600; text-transform: uppercase; color: #64748b; margin-bottom: 4px; }
+  .kpi-value { font-size: 26px; font-weight: 700; color: #1e293b; line-height: 1; }
+  .kpi-icon { font-size: 30px; opacity: 0.3; }
+  .table-staging th {
+    background: #f8fafc;
+    color: #334155;
+    font-size: 12px;
+    font-weight: 600;
+    vertical-align: middle !important;
+  }
+  .table-staging td {
+    vertical-align: middle !important;
+    font-size: 12px;
+  }
+</style>
+
+<div class="row" style="margin-bottom: 15px;">
+  <div class="col-xs-12">
+    <div style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:10px;">
+      <div>
+        <h3 style="margin:0 0 5px 0; font-weight:700; color:#1e293b;">
+          <i class="fa fa-user-plus text-primary"></i> Calon Pasien Baru Mobile JKN (Staging)
+        </h3>
+        <p class="text-muted" style="margin:0; font-size:13px;">
+          Daftar pasien baru yang mengambil antrean via Mobile JKN pada mode <strong>Staging</strong>. Nomor RM resmi baru diterbitkan setelah petugas admisi melakukan verifikasi identitas di sini.
+        </p>
+      </div>
+      <div>
+        <span class="label {if: $mode_auto == 'staging'}label-success{elseif: $mode_auto == 'tidak'}label-danger{else}label-info{/if}" style="font-size:12px; padding:6px 10px;">
+          Mode Saat Ini: {if: $mode_auto == 'staging'}Staging (Aktif){elseif: $mode_auto == 'tidak'}Nonaktif (Tolak){else}Auto Langsung Master Pasien{/if}
+        </span>
+        {if: $action_module == 'pasien'}
+        <a href="{?=url([ADMIN, 'pasien', 'manage'])?}" class="btn btn-default btn-sm" style="margin-left:6px;">
+          <i class="fa fa-arrow-left"></i> Kembali ke Kelola Pasien
+        </a>
+        {/if}
+        {if: $is_admin_jkn}
+        <a href="{?=url([ADMIN, 'jkn_mobile', 'settings'])?}" class="btn btn-default btn-sm" style="margin-left:6px;">
+          <i class="fa fa-cog"></i> Pengaturan
+        </a>
+        {/if}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- KPI Cards -->
+<div class="row">
+  <div class="col-xs-6 col-sm-3">
+    <div class="kpi-card kpi-blue">
+      <div>
+        <div class="kpi-title">Total Calon Pasien</div>
+        <div class="kpi-value">{?=$total_all?}</div>
+      </div>
+      <i class="fa fa-users kpi-icon text-primary"></i>
+    </div>
+  </div>
+  <div class="col-xs-6 col-sm-3">
+    <div class="kpi-card kpi-yellow">
+      <div>
+        <div class="kpi-title">Menunggu Verifikasi</div>
+        <div class="kpi-value">{?=$total_menunggu?}</div>
+      </div>
+      <i class="fa fa-hourglass-half kpi-icon text-warning"></i>
+    </div>
+  </div>
+  <div class="col-xs-6 col-sm-3">
+    <div class="kpi-card kpi-green">
+      <div>
+        <div class="kpi-title">Terverifikasi (Terbit RM)</div>
+        <div class="kpi-value">{?=$total_verif?}</div>
+      </div>
+      <i class="fa fa-check-circle kpi-icon text-success"></i>
+    </div>
+  </div>
+  <div class="col-xs-6 col-sm-3">
+    <div class="kpi-card kpi-red">
+      <div>
+        <div class="kpi-title">Dibatalkan</div>
+        <div class="kpi-value">{?=$total_batal?}</div>
+      </div>
+      <i class="fa fa-times-circle kpi-icon text-danger"></i>
+    </div>
+  </div>
+</div>
+
+<!-- Filter -->
+<div class="panel panel-default">
+  <div class="panel-body">
+    <form method="GET" action="{?=url([ADMIN, $action_module, $action_list])?}" class="form-inline" style="display:flex; flex-wrap:wrap; gap:10px; align-items:flex-end;">
+      <input type="hidden" name="t" value="{?=$_SESSION['token']?}">
+      <div class="form-group">
+        <label style="display:block; font-size:12px;">Tanggal Periksa</label>
+        <input type="date" name="tanggal" class="form-control input-sm" value="{?=$tanggal_filter?}">
+      </div>
+      <div class="form-group">
+        <label style="display:block; font-size:12px;">Status Verifikasi</label>
+        <select name="status" class="form-control input-sm">
+          <option value="Menunggu" {if: $status_filter == 'Menunggu'}selected{/if}>Menunggu Verifikasi</option>
+          <option value="Terverifikasi" {if: $status_filter == 'Terverifikasi'}selected{/if}>Sudah Terverifikasi</option>
+          <option value="Batal" {if: $status_filter == 'Batal'}selected{/if}>Dibatalkan</option>
+          <option value="Semua" {if: $status_filter == 'Semua'}selected{/if}>Semua Status</option>
+        </select>
+      </div>
+      <div class="form-group" style="flex:1; min-width:200px;">
+        <label style="display:block; font-size:12px;">Cari (Nama / NIK / No. BPJS / Kode Booking)</label>
+        <input type="text" name="q" class="form-control input-sm" style="width:100%;" placeholder="Ketik kata kunci..." value="{?=$keyword?}">
+      </div>
+      <div class="form-group">
+        <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-search"></i> Filter</button>
+        <a href="{?=url([ADMIN, $action_module, $action_list])?}&tanggal=&status=Menunggu" class="btn btn-default btn-sm">Semua Tanggal</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Table -->
+<div class="panel panel-default">
+  <div class="panel-body" style="padding:0;">
+    <div class="table-responsive">
+      <table class="table table-bordered table-striped table-hover table-staging" style="margin-bottom:0;">
+        <thead>
+          <tr>
+            <th style="width:45px; text-align:center;">No</th>
+            <th>Kode Sementara / RM</th>
+            <th>Identitas Pasien (Mobile JKN)</th>
+            <th>Booking Antrean</th>
+            <th style="width:115px; text-align:center;">Status</th>
+            <th style="width:180px; text-align:center;">Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          {if: empty($rows)}
+          <tr>
+            <td colspan="6" class="text-center text-muted" style="padding:30px;">
+              <i class="fa fa-inbox fa-2x" style="display:block; margin-bottom:8px; opacity:0.4;"></i>
+              Tidak ada data calon pasien baru Mobile JKN untuk filter ini.
+            </td>
+          </tr>
+          {else}
+          {loop: $rows}
+          <tr>
+            <td class="text-center">{?=$value.no?}</td>
+            <td>
+              <span class="label label-default" style="font-size:12px;">{?=$value.temp_norm?}</span>
+              {if: !empty($value.no_rkm_medis_resmi)}
+              <div style="margin-top:6px;">
+                <span class="label label-success" style="font-size:12px;"><i class="fa fa-id-card-o"></i> RM: {?=$value.no_rkm_medis_resmi?}</span>
+              </div>
+              {/if}
+              <div class="text-muted" style="font-size:11px; margin-top:4px;">Daftar: {?=$value.tgl_input?}</div>
+            </td>
+            <td>
+              <strong style="font-size:13px; color:#0f172a;">{?=$value.nm_pasien?}</strong>
+              <span class="label label-info" style="margin-left:4px;">{?=$value.jk?}</span>
+              <div style="margin-top:3px;">
+                <span class="text-muted">NIK:</span> <code>{?=$value.no_ktp?}</code> &nbsp;
+                <span class="text-muted">BPJS:</span> <code>{?=$value.no_peserta?}</code>
+              </div>
+              <div style="margin-top:2px; color:#475569;">
+                <i class="fa fa-birthday-cake"></i> {?=$value.tgl_lahir?} &nbsp;|&nbsp;
+                <i class="fa fa-phone"></i> {?=$value.no_tlp?}
+              </div>
+              <div style="margin-top:2px; color:#64748b; font-size:11px;">
+                <i class="fa fa-map-marker"></i> {?=$value.alamat?}
+                {if: !empty($value.namakel)}, {?=$value.namakel?}{/if}
+                {if: !empty($value.namakec)}, {?=$value.namakec?}{/if}
+                {if: !empty($value.namadati2)}, {?=$value.namadati2?}{/if}
+              </div>
+            </td>
+            <td>
+              {if: !empty($value.kodebooking)}
+              <div>
+                <span class="label label-primary">Antrean: {?=$value.no_reg?}</span>
+                <span class="text-muted" style="margin-left:4px;"><i class="fa fa-calendar"></i> {?=$value.tanggal_periksa?}</span>
+              </div>
+              <div style="margin-top:4px;"><strong>{?=$value.nm_poli?}</strong> — {?=$value.nm_dokter?}</div>
+              <div style="margin-top:2px; font-size:11px; color:#64748b;">
+                Kode Booking: <code>{?=$value.kodebooking?}</code>
+              </div>
+              {if: !empty($value.nomor_referensi)}
+              <div style="font-size:11px; color:#64748b;">No. Ref: <code>{?=$value.nomor_referensi?}</code></div>
+              {/if}
+              {else}
+              <span class="text-muted"><em>Belum ada booking aktif</em></span>
+              {/if}
+            </td>
+            <td class="text-center">
+              {if: $value.status_verifikasi == 'Menunggu'}
+                <span class="label label-warning">Menunggu</span>
+              {elseif: $value.status_verifikasi == 'Terverifikasi'}
+                <span class="label label-success">Terverifikasi</span>
+                <div class="text-muted" style="font-size:10px; margin-top:4px;">
+                  oleh {?=$value.verified_by?}<br>{?=$value.verified_at?}
+                </div>
+              {else}
+                <span class="label label-danger">Batal</span>
+              {/if}
+            </td>
+            <td class="text-center">
+              {if: $value.status_verifikasi == 'Menunggu'}
+              <button type="button" class="btn btn-success btn-xs btn-verif-staging"
+                data-id="{?=$value.id?}"
+                data-temp_norm="{?=$value.temp_norm?}"
+                data-nm_pasien="{?=$value.nm_pasien?}"
+                data-no_ktp="{?=$value.no_ktp?}"
+                data-no_peserta="{?=$value.no_peserta?}"
+                data-jk="{?=$value.jk?}"
+                data-tgl_lahir="{?=$value.tgl_lahir?}"
+                data-no_tlp="{?=$value.no_tlp?}"
+                data-alamat="{?=$value.alamat?}"
+                data-tgl_periksa="{?=$value.tanggal_periksa?}"
+                data-nm_poli="{?=$value.nm_poli?}"
+                data-nm_dokter="{?=$value.nm_dokter?}"
+                data-kodebooking="{?=$value.kodebooking?}">
+                <i class="fa fa-check"></i> Verifikasi &amp; Terbitkan RM
+              </button>
+              <form method="POST" action="{?=url([ADMIN, $action_module, $action_batal])?}" style="display:inline-block; margin-top:5px;" onsubmit="return confirm('Batalkan calon pasien baru {?=$value.nm_pasien?} ({?=$value.temp_norm?})?');">
+                <input type="hidden" name="id" value="{?=$value.id?}">
+                <button type="submit" class="btn btn-danger btn-xs"><i class="fa fa-times"></i> Batalkan</button>
+              </form>
+              {else}
+                <span class="text-muted" style="font-size:11px;">Selesai</span>
+              {/if}
+            </td>
+          </tr>
+          {/loop}
+          {/if}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Verifikasi & Terbitkan No. RM Resmi -->
+<div class="modal fade" id="modalVerifikasiStaging" tabindex="-1" role="dialog" aria-labelledby="modalVerifikasiStagingLabel">
+  <div class="modal-dialog modal-lg" role="document">
+    <form method="POST" action="{?=url([ADMIN, $action_module, $action_verif])?}" class="modal-content">
+      <div class="modal-header" style="background:#0f766e; color:#fff;">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color:#fff; opacity:0.9;"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="modalVerifikasiStagingLabel">
+          <i class="fa fa-id-card"></i> Verifikasi Identitas &amp; Terbitkan No. RM Resmi
+        </h4>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" name="id" id="v_id">
+        <div class="alert alert-info" style="font-size:12px; margin-bottom:15px;">
+          <strong>Kode Sementara:</strong> <span id="v_temp_norm_label"></span> &nbsp;|&nbsp;
+          <strong>Booking:</strong> <span id="v_booking_label">-</span><br>
+          Pastikan identitas sesuai KTP &amp; Kartu BPJS pasien. Setelah disimpan, sistem akan menerbitkan <strong>No. RM Resmi 6 digit</strong> ke tabel <code>pasien</code> dan memindahkan booking antrean ke <code>booking_registrasi</code>.
+        </div>
+
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label>Nama Lengkap Pasien <span class="text-danger">*</span></label>
+              <input type="text" name="nm_pasien" id="v_nm_pasien" class="form-control input-sm" required>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="form-group">
+              <label>Jenis Kelamin <span class="text-danger">*</span></label>
+              <select name="jk" id="v_jk" class="form-control input-sm" required>
+                <option value="L">Laki-laki (L)</option>
+                <option value="P">Perempuan (P)</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="form-group">
+              <label>Tanggal Lahir <span class="text-danger">*</span></label>
+              <input type="date" name="tgl_lahir" id="v_tgl_lahir" class="form-control input-sm" required>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-4">
+            <div class="form-group">
+              <label>NIK (No. KTP) <span class="text-danger">*</span></label>
+              <input type="text" name="no_ktp" id="v_no_ktp" class="form-control input-sm" maxlength="20" required>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="form-group">
+              <label>No. Kartu BPJS <span class="text-danger">*</span></label>
+              <input type="text" name="no_peserta" id="v_no_peserta" class="form-control input-sm" maxlength="25" required>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="form-group">
+              <label>No. Telepon / HP</label>
+              <input type="text" name="no_tlp" id="v_no_tlp" class="form-control input-sm">
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-4">
+            <div class="form-group">
+              <label>Tempat Lahir</label>
+              <input type="text" name="tmp_lahir" id="v_tmp_lahir" class="form-control input-sm" value="-" placeholder="Kota lahir">
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="form-group">
+              <label>Nama Ibu Kandung</label>
+              <input type="text" name="nm_ibu" id="v_nm_ibu" class="form-control input-sm" value="-" placeholder="Nama ibu kandung">
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="form-group">
+              <label>Status Nikah</label>
+              <select name="stts_nikah" id="v_stts_nikah" class="form-control input-sm">
+                <option value="BELUM MENIKAH">BELUM MENIKAH</option>
+                <option value="MENIKAH">MENIKAH</option>
+                <option value="JANDA">JANDA</option>
+                <option value="DUDHA">DUDHA</option>
+                <option value="JOMBLO">JOMBLO</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-3">
+            <div class="form-group">
+              <label>Agama</label>
+              <select name="agama" id="v_agama" class="form-control input-sm">
+                <option value="ISLAM">ISLAM</option>
+                <option value="KRISTEN">KRISTEN</option>
+                <option value="KATOLIK">KATOLIK</option>
+                <option value="HINDU">HINDU</option>
+                <option value="BUDHA">BUDHA</option>
+                <option value="KONGHUCU">KONGHUCU</option>
+                <option value="-">-</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="form-group">
+              <label>Gol. Darah</label>
+              <select name="gol_darah" id="v_gol_darah" class="form-control input-sm">
+                <option value="-">-</option>
+                <option value="A">A</option>
+                <option value="B">B</option>
+                <option value="O">O</option>
+                <option value="AB">AB</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="form-group">
+              <label>Hubungan PJ</label>
+              <select name="keluarga" id="v_keluarga" class="form-control input-sm">
+                <option value="AYAH">AYAH</option>
+                <option value="IBU">IBU</option>
+                <option value="ISTRI">ISTRI</option>
+                <option value="SUAMI">SUAMI</option>
+                <option value="SAUDARA">SAUDARA</option>
+                <option value="ANAK">ANAK</option>
+                <option value="DIRI SENDIRI">DIRI SENDIRI</option>
+                <option value="LAIN-LAIN">LAIN-LAIN</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="form-group">
+              <label>Nama Penanggung Jawab</label>
+              <input type="text" name="namakeluarga" id="v_namakeluarga" class="form-control input-sm" value="-">
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-8">
+            <div class="form-group">
+              <label>Alamat</label>
+              <input type="text" name="alamat" id="v_alamat" class="form-control input-sm">
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="form-group">
+              <label>Pekerjaan</label>
+              <input type="text" name="pekerjaan" id="v_pekerjaan" class="form-control input-sm" value="-">
+            </div>
+          </div>
+        </div>
+
+        <div class="checkbox" id="v_reg_ralan_wrap" style="background:#f0fdf4; border:1px solid #bbf7d0; padding:10px 12px 10px 30px; border-radius:6px; margin-top:5px;">
+          <label>
+            <input type="checkbox" name="daftar_ralan" id="v_daftar_ralan" value="1">
+            <strong>Sekaligus daftarkan kunjungan ke Rawat Jalan (<code>reg_periksa</code>)</strong> untuk jadwal booking hari ini
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default btn-sm" data-dismiss="modal">Batal</button>
+        <button type="submit" class="btn btn-success btn-sm"><i class="fa fa-check-circle"></i> Simpan &amp; Terbitkan No. RM Resmi</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  $(document).on('click', '.btn-verif-staging', function() {
+    var btn = $(this);
+    $('#v_id').val(btn.data('id'));
+    $('#v_temp_norm_label').text(btn.data('temp_norm') || '-');
+    $('#v_nm_pasien').val(btn.data('nm_pasien') || '');
+    $('#v_no_ktp').val(btn.data('no_ktp') || '');
+    $('#v_no_peserta').val(btn.data('no_peserta') || '');
+    $('#v_jk').val(btn.data('jk') || 'L');
+    $('#v_tgl_lahir').val(btn.data('tgl_lahir') || '');
+    $('#v_no_tlp').val(btn.data('no_tlp') || '');
+    $('#v_alamat').val(btn.data('alamat') || '');
+    $('#v_tmp_lahir').val('-');
+    $('#v_nm_ibu').val('-');
+    $('#v_namakeluarga').val('-');
+    $('#v_pekerjaan').val('-');
+
+    var tglPeriksa = btn.data('tgl_periksa') || '';
+    var nmPoli = btn.data('nm_poli') || '';
+    var nmDokter = btn.data('nm_dokter') || '';
+    var kodebooking = btn.data('kodebooking') || '';
+    if (kodebooking) {
+      $('#v_booking_label').text(tglPeriksa + ' • ' + nmPoli + ' (' + nmDokter + ') • ' + kodebooking);
+    } else {
+      $('#v_booking_label').text('Belum ada booking aktif');
+    }
+
+    var today = new Date().toISOString().slice(0, 10);
+    if (kodebooking && tglPeriksa === today) {
+      $('#v_reg_ralan_wrap').show();
+      $('#v_daftar_ralan').prop('checked', false);
+    } else {
+      $('#v_reg_ralan_wrap').hide();
+      $('#v_daftar_ralan').prop('checked', false);
+    }
+
+    $('#modalVerifikasiStaging').modal('show');
+  });
+</script>

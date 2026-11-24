@@ -36,6 +36,7 @@ class Admin extends AdminModule
             'Add Mapping Dokter' => 'addmappingdokter',
             'Jadwal Dokter HFIS' => 'jadwaldokter',
             'Data Booking Antrol' => 'bookingantrol',
+            'Calon Pasien Baru' => 'pasienbaru',
             'Task ID' => 'taskid',
             'Quality Rate' => 'qrantrol',
             'Dashboard Antrol BPJS' => 'antrol',
@@ -55,6 +56,7 @@ class Admin extends AdminModule
             ['name' => 'Add Mapping Dokter', 'url' => url([ADMIN, 'jkn_mobile', 'addmappingdokter']), 'icon' => 'tasks', 'desc' => 'Add Mapping Dokter JKN Mobile'],
             ['name' => 'Jadwal Dokter HFIS', 'url' => url([ADMIN, 'jkn_mobile', 'jadwaldokter']), 'icon' => 'tasks', 'desc' => 'Jadwal Dokter HFIS JKN Mobile'],
             ['name' => 'Data Booking Antrol', 'url' => url([ADMIN, 'jkn_mobile', 'bookingantrol']), 'icon' => 'list', 'desc' => 'Booking Antrol JKN Mobile'],
+            ['name' => 'Calon Pasien Baru', 'url' => url([ADMIN, 'jkn_mobile', 'pasienbaru']), 'icon' => 'user-plus', 'desc' => 'Verifikasi Calon Pasien Baru Mobile JKN (Mode Staging)'],
             ['name' => 'Task ID', 'url' => url([ADMIN, 'jkn_mobile', 'taskid']), 'icon' => 'tasks', 'desc' => 'Task ID JKN Mobile'],
             ['name' => 'Log Task ID', 'url' => url([ADMIN, 'jkn_mobile', 'logtaskid']), 'icon' => 'tasks', 'desc' => 'Log Task ID JKN Mobile'],
             ['name' => 'Quality Rate', 'url' => url([ADMIN, 'jkn_mobile', 'qrantrol']), 'icon' => 'tasks', 'desc' => 'Quality Rate Antrian Online BPJS'],
@@ -2246,7 +2248,14 @@ class Admin extends AdminModule
         $this->assign['exclude_taskid'] = $this->_getPoliklinik($this->settings->get('jkn_mobile.exclude_taskid'));
         $this->assign['penjab'] = $this->db('penjab')->where('status', '1')->toArray();
 
-        $this->assign['jkn_mobile'] = htmlspecialchars_array($this->settings('jkn_mobile'));
+        $jknSettings = $this->settings('jkn_mobile');
+        if (!isset($jknSettings['auto_pasien_baru']) || $jknSettings['auto_pasien_baru'] === '') {
+            $jknSettings['auto_pasien_baru'] = 'ya';
+        }
+        if (!isset($jknSettings['pesan_pasien_baru_nonaktif']) || trim((string)$jknSettings['pesan_pasien_baru_nonaktif']) === '') {
+            $jknSettings['pesan_pasien_baru_nonaktif'] = 'Pasien baru harap mendaftar terlebih dahulu di loket admisi RS untuk pembuatan Nomor Rekam Medis.';
+        }
+        $this->assign['jkn_mobile'] = htmlspecialchars_array($jknSettings);
         return $this->draw('settings.html', ['settings' => htmlspecialchars_array($this->assign)]);
     }
 
@@ -2268,8 +2277,25 @@ class Admin extends AdminModule
             $_POST['jkn_mobile']['exclude_taskid'] = '';
         }
 
+        if (isset($_POST['jkn_mobile']['auto_pasien_baru'])) {
+            $modeVal = strtolower(trim((string)$_POST['jkn_mobile']['auto_pasien_baru']));
+            $_POST['jkn_mobile']['auto_pasien_baru'] = in_array($modeVal, ['ya', 'staging', 'tidak'], true) ? $modeVal : 'ya';
+        }
+
         foreach ($_POST['jkn_mobile'] as $key => $val) {
-            $this->settings('jkn_mobile', $key, $val);
+            $exists = $this->db('mlite_settings')
+                ->where('module', 'jkn_mobile')
+                ->where('field', $key)
+                ->oneArray();
+            if ($exists) {
+                $this->settings('jkn_mobile', $key, $val);
+            } else {
+                $this->db('mlite_settings')->save([
+                    'module' => 'jkn_mobile',
+                    'field' => $key,
+                    'value' => $val
+                ]);
+            }
         }
         $this->notify('success', 'Pengaturan telah disimpan');
         redirect(url([ADMIN, 'jkn_mobile', 'settings']));
@@ -3910,6 +3936,426 @@ class Admin extends AdminModule
     public function postSaveTaskID1()
     {
 
+    }
+
+    private function _ensureStagingTables()
+    {
+        $pdo = $this->db()->pdo();
+        $pdo->exec("CREATE TABLE IF NOT EXISTS `mlite_jkn_pasien_baru` (
+            `id` int(11) NOT NULL AUTO_INCREMENT,
+            `temp_norm` varchar(20) NOT NULL,
+            `no_peserta` varchar(25) NOT NULL,
+            `no_ktp` varchar(20) NOT NULL,
+            `no_kk` varchar(20) DEFAULT '',
+            `nm_pasien` varchar(100) NOT NULL,
+            `jk` enum('L','P') DEFAULT 'L',
+            `tgl_lahir` date DEFAULT NULL,
+            `no_tlp` varchar(40) DEFAULT '',
+            `alamat` varchar(255) DEFAULT '',
+            `kodeprop` varchar(20) DEFAULT '',
+            `namaprop` varchar(100) DEFAULT '',
+            `kodedati2` varchar(20) DEFAULT '',
+            `namadati2` varchar(100) DEFAULT '',
+            `kodekec` varchar(20) DEFAULT '',
+            `namakec` varchar(100) DEFAULT '',
+            `kodekel` varchar(20) DEFAULT '',
+            `namakel` varchar(100) DEFAULT '',
+            `rt` varchar(10) DEFAULT '',
+            `rw` varchar(10) DEFAULT '',
+            `status_verifikasi` enum('Menunggu','Terverifikasi','Batal') NOT NULL DEFAULT 'Menunggu',
+            `no_rkm_medis_resmi` varchar(15) DEFAULT NULL,
+            `verified_by` varchar(50) DEFAULT NULL,
+            `verified_at` datetime DEFAULT NULL,
+            `tgl_input` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (`id`),
+            UNIQUE KEY `uniq_temp_norm` (`temp_norm`),
+            KEY `idx_no_peserta` (`no_peserta`),
+            KEY `idx_no_ktp` (`no_ktp`),
+            KEY `idx_status` (`status_verifikasi`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+        $pdo->exec("CREATE TABLE IF NOT EXISTS `mlite_jkn_booking_baru` (
+            `id` int(11) NOT NULL AUTO_INCREMENT,
+            `temp_norm` varchar(20) NOT NULL,
+            `tanggal_booking` date NOT NULL,
+            `jam_booking` time NOT NULL,
+            `tanggal_periksa` date NOT NULL,
+            `kd_dokter` varchar(20) NOT NULL,
+            `kd_poli` varchar(10) NOT NULL,
+            `no_reg` varchar(10) NOT NULL,
+            `kd_pj` char(3) DEFAULT 'BPJ',
+            `waktu_kunjungan` datetime DEFAULT NULL,
+            `kodebooking` varchar(100) NOT NULL,
+            `nomor_referensi` varchar(60) DEFAULT '',
+            `jenis_kunjungan` varchar(10) DEFAULT '1',
+            `status` enum('Belum','Terdaftar','Batal') NOT NULL DEFAULT 'Belum',
+            `tgl_input` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (`id`),
+            UNIQUE KEY `uniq_kodebooking` (`kodebooking`),
+            KEY `idx_temp_tgl` (`temp_norm`, `tanggal_periksa`),
+            KEY `idx_poli_dokter_tgl` (`tanggal_periksa`, `kd_poli`, `kd_dokter`, `status`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    }
+
+    public function getPasienbaru()
+    {
+        return $this->renderPasienBaruStaging('jkn_mobile', 'pasienbaru', 'verifikasipasienbaru', 'batalpasienbaru');
+    }
+
+    public function renderPasienBaruStaging($actionModule = 'jkn_mobile', $actionList = 'pasienbaru', $actionVerif = 'verifikasipasienbaru', $actionBatal = 'batalpasienbaru')
+    {
+        $this->_ensureStagingTables();
+        $pdo = $this->db()->pdo();
+
+        $tanggal_filter = isset($_GET['tanggal']) ? trim((string)$_GET['tanggal']) : date('Y-m-d');
+        if ($tanggal_filter !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $tanggal_filter)) {
+            $tanggal_filter = date('Y-m-d');
+        }
+        $status_filter = isset($_GET['status']) ? trim((string)$_GET['status']) : 'Menunggu';
+        if (!in_array($status_filter, ['Menunggu', 'Terverifikasi', 'Batal', 'Semua'], true)) {
+            $status_filter = 'Menunggu';
+        }
+        $keyword = isset($_GET['q']) ? trim((string)$_GET['q']) : '';
+
+        // KPI counts
+        $kpiSql = "SELECT
+            COUNT(*) AS total_all,
+            SUM(CASE WHEN status_verifikasi = 'Menunggu' THEN 1 ELSE 0 END) AS total_menunggu,
+            SUM(CASE WHEN status_verifikasi = 'Terverifikasi' THEN 1 ELSE 0 END) AS total_verif,
+            SUM(CASE WHEN status_verifikasi = 'Batal' THEN 1 ELSE 0 END) AS total_batal
+            FROM mlite_jkn_pasien_baru";
+        $kpi = $pdo->query($kpiSql)->fetch(\PDO::FETCH_ASSOC) ?: [];
+
+        $where = [];
+        $params = [];
+        if ($status_filter !== 'Semua') {
+            $where[] = "p.status_verifikasi = :status";
+            $params[':status'] = $status_filter;
+        }
+        if ($tanggal_filter !== '') {
+            $where[] = "(b.tanggal_periksa = :tgl OR (b.id IS NULL AND DATE(p.tgl_input) = :tgl2))";
+            $params[':tgl'] = $tanggal_filter;
+            $params[':tgl2'] = $tanggal_filter;
+        }
+        if ($keyword !== '') {
+            $where[] = "(p.nm_pasien LIKE :kw OR p.no_ktp LIKE :kw OR p.no_peserta LIKE :kw OR p.temp_norm LIKE :kw OR b.kodebooking LIKE :kw)";
+            $params[':kw'] = '%' . $keyword . '%';
+        }
+
+        $sql = "SELECT p.*,
+                b.tanggal_periksa, b.kd_poli, b.kd_dokter, b.no_reg, b.kodebooking, b.nomor_referensi, b.status AS status_booking,
+                pol.nm_poli, dok.nm_dokter
+            FROM mlite_jkn_pasien_baru p
+            LEFT JOIN (
+                SELECT b1.* FROM mlite_jkn_booking_baru b1
+                INNER JOIN (
+                    SELECT temp_norm, MAX(id) AS max_id FROM mlite_jkn_booking_baru GROUP BY temp_norm
+                ) b2 ON b1.id = b2.max_id
+            ) b ON b.temp_norm = p.temp_norm
+            LEFT JOIN poliklinik pol ON pol.kd_poli = b.kd_poli
+            LEFT JOIN dokter dok ON dok.kd_dokter = b.kd_dokter";
+        if (!empty($where)) {
+            $sql .= " WHERE " . implode(" AND ", $where);
+        }
+        $sql .= " ORDER BY p.id DESC LIMIT 200";
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC) ?: [];
+        foreach ($rows as $idx => &$r) {
+            $r['no'] = $idx + 1;
+            $r['nm_poli'] = $r['nm_poli'] ?: ($r['kd_poli'] ?? '');
+            $r['nm_dokter'] = $r['nm_dokter'] ?: ($r['kd_dokter'] ?? '');
+        }
+        unset($r);
+
+        $modeAuto = strtolower(trim((string)($this->settings->get('jkn_mobile.auto_pasien_baru') ?? 'ya')));
+        $isAdminRole = ($this->core->getUserInfo('role') == 'admin');
+
+        return $this->draw(MODULES . '/jkn_mobile/view/admin/pasienbaru.html', [
+            'rows' => htmlspecialchars_array($rows),
+            'total_all' => (int)($kpi['total_all'] ?? 0),
+            'total_menunggu' => (int)($kpi['total_menunggu'] ?? 0),
+            'total_verif' => (int)($kpi['total_verif'] ?? 0),
+            'total_batal' => (int)($kpi['total_batal'] ?? 0),
+            'tanggal_filter' => htmlspecialchars($tanggal_filter, ENT_QUOTES, 'UTF-8'),
+            'status_filter' => htmlspecialchars($status_filter, ENT_QUOTES, 'UTF-8'),
+            'keyword' => htmlspecialchars($keyword, ENT_QUOTES, 'UTF-8'),
+            'mode_auto' => htmlspecialchars($modeAuto, ENT_QUOTES, 'UTF-8'),
+            'action_module' => $actionModule,
+            'action_list' => $actionList,
+            'action_verif' => $actionVerif,
+            'action_batal' => $actionBatal,
+            'is_admin_jkn' => $isAdminRole
+        ]);
+    }
+
+    public function postVerifikasipasienbaru()
+    {
+        $this->handleVerifikasiPasienBaru('jkn_mobile', 'pasienbaru');
+    }
+
+    public function handleVerifikasiPasienBaru($redirectModule = 'jkn_mobile', $redirectAction = 'pasienbaru')
+    {
+        $this->_ensureStagingTables();
+        $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+        if ($id <= 0) {
+            $this->notify('failure', 'Data calon pasien tidak valid.');
+            redirect(url([ADMIN, $redirectModule, $redirectAction]));
+        }
+
+        $pdo = $this->db()->pdo();
+        try {
+            $pdo->beginTransaction();
+
+            $stmtGet = $pdo->prepare("SELECT * FROM mlite_jkn_pasien_baru WHERE id = ? FOR UPDATE");
+            $stmtGet->execute([$id]);
+            $staging = $stmtGet->fetch(\PDO::FETCH_ASSOC);
+
+            if (!$staging || ($staging['status_verifikasi'] ?? '') !== 'Menunggu') {
+                $pdo->rollBack();
+                $this->notify('failure', 'Data calon pasien tidak ditemukan atau sudah diproses.');
+                redirect(url([ADMIN, $redirectModule, $redirectAction]));
+            }
+
+            $nm_pasien = trim((string)($_POST['nm_pasien'] ?? $staging['nm_pasien']));
+            $no_ktp = trim((string)($_POST['no_ktp'] ?? $staging['no_ktp']));
+            $no_peserta = trim((string)($_POST['no_peserta'] ?? $staging['no_peserta']));
+            $jk = in_array(($_POST['jk'] ?? $staging['jk']), ['L', 'P'], true) ? $_POST['jk'] : ($staging['jk'] ?: 'L');
+            $tgl_lahir = trim((string)($_POST['tgl_lahir'] ?? $staging['tgl_lahir']));
+            $tmp_lahir = trim((string)($_POST['tmp_lahir'] ?? '-')) ?: '-';
+            $nm_ibu = trim((string)($_POST['nm_ibu'] ?? '-')) ?: '-';
+            $alamat = trim((string)($_POST['alamat'] ?? $staging['alamat'])) ?: '-';
+            $no_tlp = trim((string)($_POST['no_tlp'] ?? $staging['no_tlp'])) ?: '-';
+            $stts_nikah = trim((string)($_POST['stts_nikah'] ?? 'BELUM MENIKAH')) ?: 'BELUM MENIKAH';
+            $agama = trim((string)($_POST['agama'] ?? 'ISLAM')) ?: 'ISLAM';
+            $gol_darah = trim((string)($_POST['gol_darah'] ?? '-')) ?: '-';
+            $pekerjaan = trim((string)($_POST['pekerjaan'] ?? '-')) ?: '-';
+            $keluarga = trim((string)($_POST['keluarga'] ?? 'AYAH')) ?: 'AYAH';
+            $namakeluarga = trim((string)($_POST['namakeluarga'] ?? '-')) ?: '-';
+            $daftar_ralan = !empty($_POST['daftar_ralan']);
+
+            if ($nm_pasien === '' || $no_ktp === '' || $tgl_lahir === '') {
+                $pdo->rollBack();
+                $this->notify('failure', 'Nama lengkap, NIK, dan tanggal lahir wajib diisi.');
+                redirect(url([ADMIN, $redirectModule, $redirectAction]));
+            }
+
+            // Cek jika pasien ternyata sudah ada di tabel pasien (berdasarkan no_peserta atau no_ktp)
+            $existingPasien = null;
+            if ($no_peserta !== '') {
+                $existingPasien = $this->db('pasien')->where('no_peserta', $no_peserta)->oneArray();
+            }
+            if (empty($existingPasien) && $no_ktp !== '') {
+                $existingPasien = $this->db('pasien')->where('no_ktp', $no_ktp)->oneArray();
+            }
+
+            if (!empty($existingPasien)) {
+                $noRmResmi = $existingPasien['no_rkm_medis'];
+                if ($no_peserta !== '' && (empty($existingPasien['no_peserta']) || $existingPasien['no_peserta'] === '-')) {
+                    $this->db('pasien')->where('no_rkm_medis', $noRmResmi)->save(['no_peserta' => $no_peserta]);
+                }
+            } else {
+                $noRmResmi = $this->core->setNoRM();
+                $umurStr = '0 Th 0 Bl 0 Hr';
+                if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $tgl_lahir)) {
+                    $bDate = new \DateTime($tgl_lahir);
+                    $todayDt = new \DateTime('today');
+                    if ($bDate < $todayDt) {
+                        $diff = $todayDt->diff($bDate);
+                        $umurStr = $diff->y . ' Th ' . $diff->m . ' Bl ' . $diff->d . ' Hr';
+                    }
+                }
+
+                $savedPasien = $this->db('pasien')->save([
+                    'no_rkm_medis' => $noRmResmi,
+                    'nm_pasien' => $nm_pasien,
+                    'no_ktp' => $no_ktp,
+                    'jk' => $jk,
+                    'tmp_lahir' => $tmp_lahir,
+                    'tgl_lahir' => $tgl_lahir,
+                    'nm_ibu' => $nm_ibu,
+                    'alamat' => $alamat,
+                    'gol_darah' => $gol_darah,
+                    'pekerjaan' => $pekerjaan,
+                    'stts_nikah' => $stts_nikah,
+                    'agama' => $agama,
+                    'tgl_daftar' => date('Y-m-d'),
+                    'no_tlp' => $no_tlp,
+                    'umur' => $umurStr,
+                    'pnd' => '-',
+                    'keluarga' => $keluarga,
+                    'namakeluarga' => $namakeluarga,
+                    'kd_pj' => $this->settings->get('jkn_mobile.kd_pj_bpjs') ?: 'BPJ',
+                    'no_peserta' => $no_peserta,
+                    'kd_kel' => $this->settings->get('jkn_mobile.kdkel') ?: '1',
+                    'kd_kec' => $this->settings->get('jkn_mobile.kdkec') ?: '1',
+                    'kd_kab' => $this->settings->get('jkn_mobile.kdkab') ?: '1',
+                    'pekerjaanpj' => '-',
+                    'alamatpj' => $alamat,
+                    'kelurahanpj' => '-',
+                    'kecamatanpj' => '-',
+                    'kabupatenpj' => '-',
+                    'perusahaan_pasien' => $this->settings->get('jkn_mobile.perusahaan_pasien') ?: '-',
+                    'suku_bangsa' => $this->settings->get('jkn_mobile.suku_bangsa') ?: '1',
+                    'bahasa_pasien' => $this->settings->get('jkn_mobile.bahasa_pasien') ?: '1',
+                    'cacat_fisik' => $this->settings->get('jkn_mobile.cacat_fisik') ?: '1',
+                    'email' => '',
+                    'nip' => '',
+                    'kd_prop' => $this->settings->get('jkn_mobile.kdprop') ?: '1',
+                    'propinsipj' => '-'
+                ]);
+                if (!$savedPasien) {
+                    throw new \RuntimeException('Gagal menyimpan pasien baru ke tabel pasien.');
+                }
+                $stmtSetRm = $pdo->prepare("UPDATE set_no_rkm_medis SET no_rkm_medis = ?");
+                $stmtSetRm->execute([(string)$noRmResmi]);
+            }
+
+            // Sinkronkan booking sementara ke booking_registrasi & mlite_antrian_referensi
+            $stmtBk = $pdo->prepare("SELECT * FROM mlite_jkn_booking_baru WHERE temp_norm = ? AND status = 'Belum' ORDER BY id ASC");
+            $stmtBk->execute([$staging['temp_norm']]);
+            $stagingBookings = $stmtBk->fetchAll(\PDO::FETCH_ASSOC) ?: [];
+
+            $registeredToday = false;
+            foreach ($stagingBookings as $bk) {
+                $existsRegBk = $this->db('booking_registrasi')
+                    ->where('no_rkm_medis', $noRmResmi)
+                    ->where('tanggal_periksa', $bk['tanggal_periksa'])
+                    ->oneArray();
+
+                $bkStatus = 'Belum';
+                if ($daftar_ralan && $bk['tanggal_periksa'] === date('Y-m-d')) {
+                    $existsRalan = $this->db('reg_periksa')
+                        ->where('no_rkm_medis', $noRmResmi)
+                        ->where('tgl_registrasi', $bk['tanggal_periksa'])
+                        ->where('kd_poli', $bk['kd_poli'])
+                        ->oneArray();
+                    if (!$existsRalan) {
+                        $biaya_reg_row = $this->db('poliklinik')->where('kd_poli', $bk['kd_poli'])->oneArray();
+                        $umurAngka = '0';
+                        $sttsUmur = 'Th';
+                        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $tgl_lahir)) {
+                            $bDate = new \DateTime($tgl_lahir);
+                            $todayDt = new \DateTime('today');
+                            $diff = $todayDt->diff($bDate);
+                            if ($diff->y > 0) {
+                                $umurAngka = (string)$diff->y;
+                                $sttsUmur = 'Th';
+                            } elseif ($diff->m > 0) {
+                                $umurAngka = (string)$diff->m;
+                                $sttsUmur = 'Bl';
+                            } else {
+                                $umurAngka = (string)$diff->d;
+                                $sttsUmur = 'Hr';
+                            }
+                        }
+                        $this->db('reg_periksa')->save([
+                            'no_reg' => $bk['no_reg'],
+                            'no_rawat' => $this->core->setNoRawat($bk['tanggal_periksa']),
+                            'tgl_registrasi' => $bk['tanggal_periksa'],
+                            'jam_reg' => date('H:i:s'),
+                            'kd_dokter' => $bk['kd_dokter'],
+                            'no_rkm_medis' => $noRmResmi,
+                            'kd_poli' => $bk['kd_poli'],
+                            'p_jawab' => $namakeluarga,
+                            'almt_pj' => $alamat,
+                            'hubunganpj' => $keluarga,
+                            'biaya_reg' => $biaya_reg_row['registrasi'] ?? 0,
+                            'stts' => 'Belum',
+                            'stts_daftar' => 'Baru',
+                            'status_lanjut' => 'Ralan',
+                            'kd_pj' => $bk['kd_pj'] ?: ($this->settings->get('jkn_mobile.kd_pj_bpjs') ?: 'BPJ'),
+                            'umurdaftar' => $umurAngka,
+                            'sttsumur' => $sttsUmur,
+                            'status_bayar' => 'Belum Bayar',
+                            'status_poli' => 'Baru'
+                        ]);
+                        $registeredToday = true;
+                        $bkStatus = 'Terdaftar';
+                    }
+                }
+
+                if (!$existsRegBk) {
+                    $this->db('booking_registrasi')->save([
+                        'tanggal_booking' => $bk['tanggal_booking'],
+                        'jam_booking' => $bk['jam_booking'],
+                        'no_rkm_medis' => $noRmResmi,
+                        'tanggal_periksa' => $bk['tanggal_periksa'],
+                        'kd_dokter' => $bk['kd_dokter'],
+                        'kd_poli' => $bk['kd_poli'],
+                        'no_reg' => $bk['no_reg'],
+                        'kd_pj' => $bk['kd_pj'] ?: ($this->settings->get('jkn_mobile.kd_pj_bpjs') ?: 'BPJ'),
+                        'limit_reg' => 1,
+                        'waktu_kunjungan' => $bk['waktu_kunjungan'],
+                        'status' => $bkStatus
+                    ]);
+                }
+
+                $stmtUpdBk = $pdo->prepare("UPDATE mlite_jkn_booking_baru SET status = 'Terdaftar' WHERE id = ?");
+                $stmtUpdBk->execute([$bk['id']]);
+            }
+
+            // Update no_rkm_medis sementara -> resmi di mlite_antrian_referensi
+            $stmtRef = $pdo->prepare("UPDATE mlite_antrian_referensi SET no_rkm_medis = ?, keterangan = '' WHERE no_rkm_medis = ?");
+            $stmtRef->execute([$noRmResmi, $staging['temp_norm']]);
+
+            $verifiedBy = (string)$this->core->getUserInfo('username');
+            $stmtVer = $pdo->prepare("UPDATE mlite_jkn_pasien_baru SET status_verifikasi = 'Terverifikasi', no_rkm_medis_resmi = ?, verified_by = ?, verified_at = NOW() WHERE id = ?");
+            $stmtVer->execute([$noRmResmi, $verifiedBy, $id]);
+
+            $pdo->commit();
+
+            $msg = 'Pasien ' . $nm_pasien . ' berhasil diverifikasi dengan No. RM Resmi: ' . $noRmResmi . '.';
+            if ($registeredToday) {
+                $msg .= ' Kunjungan hari ini juga telah didaftarkan ke Rawat Jalan.';
+            }
+            $this->notify('success', $msg);
+        } catch (\Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            error_log('Verifikasi staging pasien baru error: ' . $e->getMessage());
+            $this->notify('failure', 'Gagal memverifikasi pasien baru: ' . $e->getMessage());
+        }
+
+        redirect(url([ADMIN, $redirectModule, $redirectAction]));
+    }
+
+    public function postBatalpasienbaru()
+    {
+        $this->handleBatalPasienBaru('jkn_mobile', 'pasienbaru');
+    }
+
+    public function handleBatalPasienBaru($redirectModule = 'jkn_mobile', $redirectAction = 'pasienbaru')
+    {
+        $this->_ensureStagingTables();
+        $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+        if ($id <= 0) {
+            $this->notify('failure', 'Data calon pasien tidak valid.');
+            redirect(url([ADMIN, $redirectModule, $redirectAction]));
+        }
+
+        $pdo = $this->db()->pdo();
+        $stmt = $pdo->prepare("SELECT * FROM mlite_jkn_pasien_baru WHERE id = ?");
+        $stmt->execute([$id]);
+        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        if (!$row || ($row['status_verifikasi'] ?? '') !== 'Menunggu') {
+            $this->notify('failure', 'Data tidak ditemukan atau sudah diproses.');
+            redirect(url([ADMIN, $redirectModule, $redirectAction]));
+        }
+
+        $verifiedBy = (string)$this->core->getUserInfo('username');
+        $pdo->prepare("UPDATE mlite_jkn_pasien_baru SET status_verifikasi = 'Batal', verified_by = ?, verified_at = NOW() WHERE id = ?")
+            ->execute([$verifiedBy, $id]);
+        $pdo->prepare("UPDATE mlite_jkn_booking_baru SET status = 'Batal' WHERE temp_norm = ? AND status = 'Belum'")
+            ->execute([$row['temp_norm']]);
+        $pdo->prepare("DELETE FROM mlite_antrian_referensi WHERE no_rkm_medis = ?")
+            ->execute([$row['temp_norm']]);
+
+        $this->notify('success', 'Calon pasien baru ' . $row['nm_pasien'] . ' (' . $row['temp_norm'] . ') telah dibatalkan.');
+        redirect(url([ADMIN, $redirectModule, $redirectAction]));
     }
 
     public function getJavascript()

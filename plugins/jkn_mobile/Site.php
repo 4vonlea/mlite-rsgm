@@ -309,6 +309,10 @@ class Site extends SiteModule
                     $stmtKuota = $this->db()->pdo()->prepare($sql);
                     $stmtKuota->execute($params);
                     $cek_kuota = $stmtKuota->fetch(\PDO::FETCH_ASSOC);
+                    if (!empty($cek_kuota)) {
+                        $stagingUsed = $this->_getStagingBookingCount($tanggal, $cek_kuota['kd_poli'], $cek_kuota['kd_dokter'], false);
+                        $cek_kuota['sisa_kuota'] = max(0, (int)$cek_kuota['sisa_kuota'] - $stagingUsed);
+                    }
                 }
 
                 $jadwal = null;
@@ -405,6 +409,124 @@ class Site extends SiteModule
                                     )
                                 );
                                 $httpCode = 201;
+                            } else if ($autoPasienBaru === 'staging') {
+                                $stagingPasien = $this->_findStagingPasien($nomorkartu, $nik);
+                                if (empty($stagingPasien)) {
+                                    $response = array(
+                                        'metadata' => array(
+                                            'message' => 'Data pasien ini tidak ditemukan',
+                                            'code' => 202
+                                        )
+                                    );
+                                    $httpCode = 202;
+                                } else {
+                                    $existingStagingBooking = $this->db('mlite_jkn_booking_baru')
+                                        ->where('temp_norm', $stagingPasien['temp_norm'])
+                                        ->where('tanggal_periksa', $tanggal)
+                                        ->desc('id')
+                                        ->oneArray();
+                                    if (!empty($existingStagingBooking) && ($existingStagingBooking['status'] ?? '') === 'Batal') {
+                                        $existingStagingBooking = null;
+                                    }
+                                    if (!empty($existingStagingBooking)) {
+                                        $response = array(
+                                            'metadata' => array(
+                                                'message' => 'Anda sudah terdaftar dalam antrian ditanggal ' . $tanggal . '. Silahkan pilih tanggal lain.',
+                                                'code' => 201
+                                            )
+                                        );
+                                        $httpCode = 201;
+                                    } else {
+                                        $kdDokterRs = $cek_kuota['kd_dokter'] ?: ($jadwal['kd_dokter'] ?? $dokter['kd_dokter']);
+                                        $kdPoliRs = $cek_kuota['kd_poli'] ?: ($jadwal['kd_poli'] ?? $poli['kd_poli_rs']);
+
+                                        $no_reg = $this->core->setNoBooking($kdDokterRs, $tanggal, $kdPoliRs);
+                                        if (strtotime($tanggal) == strtotime(date('Y-m-d'))) {
+                                            $no_reg_today = $this->core->setNoReg($kdDokterRs, $kdPoliRs);
+                                            if ((int)$no_reg_today > (int)$no_reg) {
+                                                $no_reg = $no_reg_today;
+                                            }
+                                        }
+                                        $no_reg = $this->_bumpNoRegWithStaging($no_reg, $tanggal, $kdPoliRs, $kdDokterRs);
+
+                                        $no_urut_reg = (int)substr((string)$no_reg, 0, 3);
+                                        $minutes = $no_urut_reg * 10;
+                                        $jamMulaiEst = date('H:i:s', strtotime('+' . $minutes . ' minutes', strtotime($cek_kuota['jam_mulai'])));
+                                        $keterangan = 'Pasien baru harap datang 30 menit lebih awal ke loket admisi membawa KTP & Kartu BPJS untuk pembuatan No. RM resmi.';
+                                        $estimasi = strtotime($tanggal . ' ' . $jamMulaiEst) * 1000;
+                                        if (strtotime($tanggal) == strtotime(date('Y-m-d'))) {
+                                            $jamNowEst = date('H:i:s', strtotime('+' . $minutes . ' minutes', strtotime(date('H:i:s'))));
+                                            $estimasi = strtotime($tanggal . ' ' . $jamNowEst) * 1000;
+                                        }
+
+                                        $kodebooking = $this->settings->get('settings.ppk_bpjs') . date('YmdHis') . $kodepoli . $no_reg . 'MJKN';
+                                        $savedStaging = $this->db('mlite_jkn_booking_baru')->save([
+                                            'temp_norm' => $stagingPasien['temp_norm'],
+                                            'tanggal_booking' => date('Y-m-d'),
+                                            'jam_booking' => date('H:i:s'),
+                                            'tanggal_periksa' => $tanggal,
+                                            'kd_dokter' => $kdDokterRs,
+                                            'kd_poli' => $kdPoliRs,
+                                            'no_reg' => $no_reg,
+                                            'kd_pj' => $this->settings->get('jkn_mobile.kd_pj_bpjs') ?: 'BPJ',
+                                            'waktu_kunjungan' => $tanggal . ' ' . $jamMulaiEst,
+                                            'kodebooking' => $kodebooking,
+                                            'nomor_referensi' => $nomorreferensi,
+                                            'jenis_kunjungan' => (string)$jeniskunjungan,
+                                            'status' => 'Belum'
+                                        ]);
+
+                                        if ($savedStaging) {
+                                            $sisaKuota = max(0, (int)$cek_kuota['sisa_kuota'] - 1);
+                                            $totalKuota = (int)$cek_kuota['kuota'];
+                                            $namaDokter = !empty($jadwal['nm_dokter_bpjs']) ? $jadwal['nm_dokter_bpjs'] : ($dokter['nm_dokter_bpjs'] ?? $cek_kuota['nm_dokter']);
+
+                                            $response = array(
+                                                'response' => array(
+                                                    'nomorantrean' => $kodepoli . '-' . $no_reg,
+                                                    'angkaantrean' => (int)$no_reg,
+                                                    'kodebooking' => $kodebooking,
+                                                    'pasienbaru' => 1,
+                                                    'norm' => (string)$stagingPasien['temp_norm'],
+                                                    'namapoli' => (string)$cek_kuota['nm_poli'],
+                                                    'namadokter' => (string)$namaDokter,
+                                                    'estimasidilayani' => (int)$estimasi,
+                                                    'sisakuotajkn' => $sisaKuota,
+                                                    'kuotajkn' => $totalKuota,
+                                                    'sisakuotanonjkn' => $sisaKuota,
+                                                    'kuotanonjkn' => $totalKuota,
+                                                    'keterangan' => $keterangan
+                                                ),
+                                                'metadata' => array(
+                                                    'message' => 'Ok',
+                                                    'code' => 200
+                                                )
+                                            );
+                                            $httpCode = 200;
+
+                                            if ($nomorreferensi !== '') {
+                                                $this->db('mlite_antrian_referensi')->save([
+                                                    'tanggal_periksa' => $tanggal,
+                                                    'no_rkm_medis' => $stagingPasien['temp_norm'],
+                                                    'nomor_kartu' => $nomorkartu,
+                                                    'nomor_referensi' => $nomorreferensi,
+                                                    'kodebooking' => $kodebooking,
+                                                    'jenis_kunjungan' => $jeniskunjungan,
+                                                    'status_kirim' => 'Belum',
+                                                    'keterangan' => 'STAGING_PASIEN_BARU'
+                                                ]);
+                                            }
+                                        } else {
+                                            $response = array(
+                                                'metadata' => array(
+                                                    'message' => 'Maaf Terjadi Kesalahan, Hubungi layanan pelanggan Rumah Sakit..',
+                                                    'code' => 201
+                                                )
+                                            );
+                                            $httpCode = 201;
+                                        }
+                                    }
+                                }
                             } else {
                                 $response = array(
                                     'metadata' => array(
@@ -448,6 +570,7 @@ class Site extends SiteModule
                                         $no_reg = $no_reg_today;
                                     }
                                 }
+                                $no_reg = $this->_bumpNoRegWithStaging($no_reg, $tanggal, $kdPoliRs, $kdDokterRs);
 
                                 $no_urut_reg = (int)substr((string)$no_reg, 0, 3);
                                 $minutes = $no_urut_reg * 10;
@@ -710,8 +833,10 @@ class Site extends SiteModule
                         $stmtData->execute([':tgl' => $tanggalperiksa, ':kdpoli' => $kdPoliRs, ':kddokter' => $kdDokterRs]);
                         $data = $stmtData->fetch(\PDO::FETCH_ASSOC) ?: [];
 
-                        $totalAntrean = (int)($data['total_antrean'] ?? 0);
-                        $sisaAntrean = (int)($data['sisa_antrean'] ?? 0);
+                        $stagingTotal = $this->_getStagingBookingCount($tanggalperiksa, $kdPoliRs, $kdDokterRs, false);
+                        $stagingSisa = $this->_getStagingBookingCount($tanggalperiksa, $kdPoliRs, $kdDokterRs, true);
+                        $totalAntrean = (int)($data['total_antrean'] ?? 0) + $stagingTotal;
+                        $sisaAntrean = (int)($data['sisa_antrean'] ?? 0) + $stagingSisa;
                         $sisaKuota = max(0, $totalKuota - $totalAntrean);
                         $namaPoli = !empty($data['nm_poli']) ? $data['nm_poli'] : ($kdpoli['nm_poli_bpjs'] ?? '');
                         $namaDokter = !empty($kddokter['nm_dokter_bpjs']) ? $kddokter['nm_dokter_bpjs'] : ($data['nm_dokter'] ?? ($jadwalRow['nm_dokter_bpjs'] ?? ''));
@@ -1103,13 +1228,36 @@ class Site extends SiteModule
                         }
                     }
                     if (!$booking_registrasi) {
-                        $response = array(
-                            'metadata' => array(
-                                'message' => 'Data Booking tidak ditemukan',
-                                'code' => 201
-                            )
-                        );
-                        $httpCode = 201;
+                        $this->_ensureStagingTables();
+                        $stagingBooking = $this->db('mlite_jkn_booking_baru')
+                            ->where('kodebooking', $decode['kodebooking'])
+                            ->oneArray();
+                        if ($stagingBooking) {
+                            if (($stagingBooking['status'] ?? '') === 'Batal') {
+                                $response = array(
+                                    'metadata' => array(
+                                        'message' => 'Data Booking Sudah Dibatalkan',
+                                        'code' => 201
+                                    )
+                                );
+                            } else {
+                                $response = array(
+                                    'metadata' => array(
+                                        'message' => 'Pasien baru harap melapor ke loket admisi untuk verifikasi identitas & penerbitan No. RM terlebih dahulu',
+                                        'code' => 201
+                                    )
+                                );
+                            }
+                            $httpCode = 201;
+                        } else {
+                            $response = array(
+                                'metadata' => array(
+                                    'message' => 'Data Booking tidak ditemukan',
+                                    'code' => 201
+                                )
+                            );
+                            $httpCode = 201;
+                        }
                     } else {
                         if ($booking_registrasi['status'] == 'Belum') {
                             $response = array(
@@ -1286,13 +1434,63 @@ class Site extends SiteModule
                         }
                     }
                     if (!$booking_registrasi) {
-                        $response = array(
-                            'metadata' => array(
-                                'message' => 'Data Booking tidak ditemukan',
-                                'code' => 201
-                            )
-                        );
-                        $httpCode = 201;
+                        $this->_ensureStagingTables();
+                        $stagingBooking = $this->db('mlite_jkn_booking_baru')
+                            ->where('kodebooking', $decode['kodebooking'])
+                            ->oneArray();
+                        if ($stagingBooking) {
+                            if (strtotime(date("Y-m-d")) > strtotime($stagingBooking['tanggal_periksa'])) {
+                                $response = array(
+                                    'metadata' => array(
+                                        'message' => 'Pembatalan Antrean tidak berlaku mundur',
+                                        'code' => 201
+                                    )
+                                );
+                                $httpCode = 201;
+                            } else if (($stagingBooking['status'] ?? '') === 'Terdaftar') {
+                                $response = array(
+                                    'metadata' => array(
+                                        'message' => 'Anda Sudah Checkin, Pendaftaran Tidak Bisa Dibatalkan',
+                                        'code' => 201
+                                    )
+                                );
+                                $httpCode = 201;
+                            } else if (($stagingBooking['status'] ?? '') === 'Batal') {
+                                $response = array(
+                                    'metadata' => array(
+                                        'message' => 'Antrean sudah dibatalkan sebelumnya',
+                                        'code' => 201
+                                    )
+                                );
+                                $httpCode = 201;
+                            } else {
+                                $this->db('mlite_jkn_booking_baru')
+                                    ->where('id', $stagingBooking['id'])
+                                    ->save(['status' => 'Batal']);
+                                $this->db('mlite_antrian_referensi_batal')->save([
+                                    'tanggal_batal' => date('Y-m-d'),
+                                    'nomor_referensi' => $referensi['nomor_referensi'] ?? ($stagingBooking['nomor_referensi'] ?? ''),
+                                    'kodebooking' => $decode['kodebooking'],
+                                    'keterangan' => $decode['keterangan']
+                                ]);
+                                $this->db('mlite_antrian_referensi')->where('kodebooking', $decode['kodebooking'])->delete();
+                                $response = array(
+                                    'metadata' => array(
+                                        'message' => 'Ok',
+                                        'code' => 200
+                                    )
+                                );
+                                $httpCode = 200;
+                            }
+                        } else {
+                            $response = array(
+                                'metadata' => array(
+                                    'message' => 'Data Booking tidak ditemukan',
+                                    'code' => 201
+                                )
+                            );
+                            $httpCode = 201;
+                        }
                     } else {
                         if (strtotime(date("Y-m-d")) > strtotime($booking_registrasi['tanggal_periksa'])) {
                             $response = array(
@@ -1481,6 +1679,66 @@ class Site extends SiteModule
                             )
                         );
                         $httpCode = 201;
+                    } else if ($autoPasienBaru === 'staging') {
+                        $this->_ensureStagingTables();
+                        $existingStaging = $this->_findStagingPasien($decode['nomorkartu'], $decode['nik']);
+                        if (!empty($existingStaging)) {
+                            $tempNorm = $existingStaging['temp_norm'];
+                            $response = array(
+                                'response' => array(
+                                    'norm' => (string)$tempNorm
+                                ),
+                                'metadata' => array(
+                                    'message' => 'Data calon pasien baru diterima. Silahkan lanjutkan ke booking antrean dan lakukan verifikasi di loket admisi saat kedatangan.',
+                                    'code' => 200
+                                )
+                            );
+                            $httpCode = 200;
+                        } else {
+                            $tempNorm = $this->_generateTempNoRM();
+                            $savedStaging = $this->db('mlite_jkn_pasien_baru')->save([
+                                'temp_norm' => $tempNorm,
+                                'no_peserta' => $decode['nomorkartu'],
+                                'no_ktp' => $decode['nik'],
+                                'no_kk' => $decode['nomorkk'],
+                                'nm_pasien' => $decode['nama'],
+                                'jk' => $decode['jeniskelamin'],
+                                'tgl_lahir' => $decode['tanggallahir'],
+                                'no_tlp' => $decode['nohp'],
+                                'alamat' => $decode['alamat'],
+                                'kodeprop' => (string)($decode['kodeprop'] ?? ''),
+                                'namaprop' => (string)($decode['namaprop'] ?? ''),
+                                'kodedati2' => (string)($decode['kodedati2'] ?? ''),
+                                'namadati2' => (string)($decode['namadati2'] ?? ''),
+                                'kodekec' => (string)($decode['kodekec'] ?? ''),
+                                'namakec' => (string)($decode['namakec'] ?? ''),
+                                'kodekel' => (string)($decode['kodekel'] ?? ''),
+                                'namakel' => (string)($decode['namakel'] ?? ''),
+                                'rt' => (string)($decode['rt'] ?? ''),
+                                'rw' => (string)($decode['rw'] ?? ''),
+                                'status_verifikasi' => 'Menunggu'
+                            ]);
+                            if ($savedStaging) {
+                                $response = array(
+                                    'response' => array(
+                                        'norm' => (string)$tempNorm
+                                    ),
+                                    'metadata' => array(
+                                        'message' => 'Data calon pasien baru diterima. Silahkan lanjutkan ke booking antrean dan lakukan verifikasi di loket admisi saat kedatangan.',
+                                        'code' => 200
+                                    )
+                                );
+                                $httpCode = 200;
+                            } else {
+                                $response = array(
+                                    'metadata' => array(
+                                        'message' => 'Gagal menyimpan data calon pasien baru, silahkan hubungi petugas Faskes.',
+                                        'code' => 201
+                                    )
+                                );
+                                $httpCode = 201;
+                            }
+                        }
                     } else {
                         $date = date('Y-m-d');
                         $noRmBaru = $this->core->setNoRM();
@@ -1633,7 +1891,19 @@ class Site extends SiteModule
                             }
                         }
                         if (!$booking_registrasi) {
-                            $response = array('metadata' => array('message' => 'Data Booking tidak ditemukan', 'code' => 201));
+                            $this->_ensureStagingTables();
+                            $stagingBooking = $this->db('mlite_jkn_booking_baru')
+                                ->where('kodebooking', $decode['kodebooking'])
+                                ->oneArray();
+                            if ($stagingBooking) {
+                                if (($stagingBooking['status'] ?? '') === 'Batal') {
+                                    $response = array('metadata' => array('message' => 'Data Booking Sudah Dibatalkan', 'code' => 201));
+                                } else {
+                                    $response = array('metadata' => array('message' => 'Pasien baru harap melapor ke loket admisi terlebih dahulu untuk verifikasi identitas & penerbitan No. RM resmi', 'code' => 201));
+                                }
+                            } else {
+                                $response = array('metadata' => array('message' => 'Data Booking tidak ditemukan', 'code' => 201));
+                            }
                         } else if ($booking_registrasi['status'] == 'Terdaftar') {
                             $response = array('metadata' => array('message' => 'Anda Sudah Checkin', 'code' => 201));
                         } else if ($booking_registrasi['status'] == 'Belum') {
@@ -3699,5 +3969,135 @@ class Site extends SiteModule
         } else {
             return TRUE;
         }
+    }
+
+    private static $stagingTablesReady = false;
+
+    private function _ensureStagingTables()
+    {
+        if (self::$stagingTablesReady) {
+            return;
+        }
+        try {
+            $pdo = $this->db()->pdo();
+            $pdo->exec("CREATE TABLE IF NOT EXISTS `mlite_jkn_pasien_baru` (
+                `id` int(11) NOT NULL AUTO_INCREMENT,
+                `temp_norm` varchar(20) NOT NULL,
+                `no_peserta` varchar(25) NOT NULL,
+                `no_ktp` varchar(20) NOT NULL,
+                `no_kk` varchar(20) DEFAULT '',
+                `nm_pasien` varchar(100) NOT NULL,
+                `jk` enum('L','P') DEFAULT 'L',
+                `tgl_lahir` date DEFAULT NULL,
+                `no_tlp` varchar(40) DEFAULT '',
+                `alamat` varchar(255) DEFAULT '',
+                `kodeprop` varchar(20) DEFAULT '',
+                `namaprop` varchar(100) DEFAULT '',
+                `kodedati2` varchar(20) DEFAULT '',
+                `namadati2` varchar(100) DEFAULT '',
+                `kodekec` varchar(20) DEFAULT '',
+                `namakec` varchar(100) DEFAULT '',
+                `kodekel` varchar(20) DEFAULT '',
+                `namakel` varchar(100) DEFAULT '',
+                `rt` varchar(10) DEFAULT '',
+                `rw` varchar(10) DEFAULT '',
+                `status_verifikasi` enum('Menunggu','Terverifikasi','Batal') NOT NULL DEFAULT 'Menunggu',
+                `no_rkm_medis_resmi` varchar(15) DEFAULT NULL,
+                `verified_by` varchar(50) DEFAULT NULL,
+                `verified_at` datetime DEFAULT NULL,
+                `tgl_input` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (`id`),
+                UNIQUE KEY `uniq_temp_norm` (`temp_norm`),
+                KEY `idx_no_peserta` (`no_peserta`),
+                KEY `idx_no_ktp` (`no_ktp`),
+                KEY `idx_status` (`status_verifikasi`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+            $pdo->exec("CREATE TABLE IF NOT EXISTS `mlite_jkn_booking_baru` (
+                `id` int(11) NOT NULL AUTO_INCREMENT,
+                `temp_norm` varchar(20) NOT NULL,
+                `tanggal_booking` date NOT NULL,
+                `jam_booking` time NOT NULL,
+                `tanggal_periksa` date NOT NULL,
+                `kd_dokter` varchar(20) NOT NULL,
+                `kd_poli` varchar(10) NOT NULL,
+                `no_reg` varchar(10) NOT NULL,
+                `kd_pj` char(3) DEFAULT 'BPJ',
+                `waktu_kunjungan` datetime DEFAULT NULL,
+                `kodebooking` varchar(100) NOT NULL,
+                `nomor_referensi` varchar(60) DEFAULT '',
+                `jenis_kunjungan` varchar(10) DEFAULT '1',
+                `status` enum('Belum','Terdaftar','Batal') NOT NULL DEFAULT 'Belum',
+                `tgl_input` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (`id`),
+                UNIQUE KEY `uniq_kodebooking` (`kodebooking`),
+                KEY `idx_temp_tgl` (`temp_norm`, `tanggal_periksa`),
+                KEY `idx_poli_dokter_tgl` (`tanggal_periksa`, `kd_poli`, `kd_dokter`, `status`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+            self::$stagingTablesReady = true;
+        } catch (\Throwable $e) {
+            error_log('JKN Mobile ensureStagingTables error: ' . $e->getMessage());
+        }
+    }
+
+    private function _generateTempNoRM()
+    {
+        $this->_ensureStagingTables();
+        $maxId = (int)$this->db()->pdo()->query("SELECT COALESCE(MAX(id), 0) FROM mlite_jkn_pasien_baru")->fetchColumn();
+        $next = $maxId + 1;
+        do {
+            $candidate = sprintf('TMP%05d', $next);
+            $exists = $this->db('mlite_jkn_pasien_baru')->where('temp_norm', $candidate)->oneArray();
+            $next++;
+        } while (!empty($exists));
+        return $candidate;
+    }
+
+    private function _findStagingPasien($nomorkartu, $nik = '')
+    {
+        $this->_ensureStagingTables();
+        $row = null;
+        if ($nomorkartu !== '') {
+            $row = $this->db('mlite_jkn_pasien_baru')
+                ->where('no_peserta', $nomorkartu)
+                ->where('status_verifikasi', 'Menunggu')
+                ->desc('id')
+                ->oneArray();
+        }
+        if (empty($row) && $nik !== '') {
+            $row = $this->db('mlite_jkn_pasien_baru')
+                ->where('no_ktp', $nik)
+                ->where('status_verifikasi', 'Menunggu')
+                ->desc('id')
+                ->oneArray();
+        }
+        return $row ?: null;
+    }
+
+    private function _getStagingBookingCount($tanggal, $kdPoli, $kdDokter, $onlyBelum = false)
+    {
+        $this->_ensureStagingTables();
+        // Hanya hitung status = 'Belum' karena booking berstatus 'Terdaftar' sudah dimigrasi ke booking_registrasi/reg_periksa
+        $sql = "SELECT COUNT(*) FROM mlite_jkn_booking_baru WHERE tanggal_periksa = :tgl AND kd_poli = :kdpoli AND kd_dokter = :kddokter AND status = 'Belum'";
+        $stmt = $this->db()->pdo()->prepare($sql);
+        $stmt->execute([':tgl' => $tanggal, ':kdpoli' => $kdPoli, ':kddokter' => $kdDokter]);
+        return (int)$stmt->fetchColumn();
+    }
+
+    private function _bumpNoRegWithStaging($noReg, $tanggal, $kdPoli, $kdDokter)
+    {
+        $this->_ensureStagingTables();
+        $stmt = $this->db()->pdo()->prepare(
+            "SELECT MAX(CAST(no_reg AS UNSIGNED)) FROM mlite_jkn_booking_baru
+             WHERE tanggal_periksa = :tgl AND kd_poli = :kdpoli AND kd_dokter = :kddokter AND status = 'Belum'"
+        );
+        $stmt->execute([':tgl' => $tanggal, ':kdpoli' => $kdPoli, ':kddokter' => $kdDokter]);
+        $maxStaging = (int)$stmt->fetchColumn();
+        $currentNum = (int)$noReg;
+        if ($maxStaging >= $currentNum) {
+            return sprintf('%03d', $maxStaging + 1);
+        }
+        return sprintf('%03d', max(1, $currentNum));
     }
 }

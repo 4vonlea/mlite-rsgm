@@ -12,6 +12,7 @@ class Admin extends AdminModule
   {
     return [
       'Kelola' => 'manage',
+      'Calon Pasien Baru MJKN' => 'pasienbarujkn',
     ];
   }
 
@@ -46,6 +47,14 @@ class Admin extends AdminModule
 
     $cek_vclaim = $this->db('mlite_modules')->where('dir', 'vclaim')->oneArray();
     $cek_pcare = $this->db('mlite_modules')->where('dir', 'pcare')->oneArray();
+    $jkn_staging_menunggu = 0;
+    try {
+      $jkn_staging_menunggu = (int)$this->db()->pdo()
+        ->query("SELECT COUNT(*) FROM mlite_jkn_pasien_baru WHERE status_verifikasi = 'Menunggu'")
+        ->fetchColumn();
+    } catch (\Throwable $e) {
+      $jkn_staging_menunggu = 0;
+    }
 
     return $this->draw('manage.html', [
       'pasien' => $pasien,
@@ -54,6 +63,7 @@ class Admin extends AdminModule
       'jml_halaman' => $jml_halaman,
       'cek_vclaim' => htmlspecialchars_array($cek_vclaim),
       'cek_pcare' => $cek_pcare,
+      'jkn_staging_menunggu' => $jkn_staging_menunggu,
       'offset' => $offset,
       'admin_mode' => $this->settings->get('settings.admin_mode'),
       'mlite_crud_permissions' => $this->core->loadCrudPermissions('pasien'),
@@ -3340,6 +3350,62 @@ class Admin extends AdminModule
       echo json_encode(['status' => 'error', 'message' => 'Gagal memuat riwayat form RME.'], JSON_UNESCAPED_UNICODE);
     }
     exit();
+  }
+
+  private function _getJknMobileAdmin()
+  {
+    $jknAdminFile = MODULES . '/jkn_mobile/Admin.php';
+    if (!class_exists('\\Plugins\\JKN_Mobile\\Admin') && file_exists($jknAdminFile)) {
+      require_once $jknAdminFile;
+    }
+    if (!class_exists('\\Plugins\\JKN_Mobile\\Admin')) {
+      return null;
+    }
+    $jknAdmin = new \Plugins\JKN_Mobile\Admin($this->core);
+    if (method_exists($jknAdmin, 'init')) {
+      $jknAdmin->init();
+    }
+    return $jknAdmin;
+  }
+
+  public function getPasienbarujkn()
+  {
+    $jknAdmin = $this->_getJknMobileAdmin();
+    if (!$jknAdmin) {
+      $this->notify('failure', 'Modul JKN Mobile tidak tersedia.');
+      redirect(url([ADMIN, 'pasien', 'manage']));
+    }
+    return $jknAdmin->renderPasienBaruStaging('pasien', 'pasienbarujkn', 'verifikasipasienbarujkn', 'batalpasienbarujkn');
+  }
+
+  public function postVerifikasipasienbarujkn()
+  {
+    $perms = $this->core->loadCrudPermissions('pasien');
+    if (($perms['can_create'] ?? 'false') !== 'true') {
+      $this->notify('failure', 'Anda tidak memiliki hak akses untuk menambahkan pasien baru.');
+      redirect(url([ADMIN, 'pasien', 'pasienbarujkn']));
+    }
+    $jknAdmin = $this->_getJknMobileAdmin();
+    if (!$jknAdmin) {
+      $this->notify('failure', 'Modul JKN Mobile tidak tersedia.');
+      redirect(url([ADMIN, 'pasien', 'manage']));
+    }
+    $jknAdmin->handleVerifikasiPasienBaru('pasien', 'pasienbarujkn');
+  }
+
+  public function postBatalpasienbarujkn()
+  {
+    $perms = $this->core->loadCrudPermissions('pasien');
+    if (($perms['can_create'] ?? 'false') !== 'true' && ($perms['can_update'] ?? 'false') !== 'true') {
+      $this->notify('failure', 'Anda tidak memiliki hak akses untuk membatalkan calon pasien.');
+      redirect(url([ADMIN, 'pasien', 'pasienbarujkn']));
+    }
+    $jknAdmin = $this->_getJknMobileAdmin();
+    if (!$jknAdmin) {
+      $this->notify('failure', 'Modul JKN Mobile tidak tersedia.');
+      redirect(url([ADMIN, 'pasien', 'manage']));
+    }
+    $jknAdmin->handleBatalPasienBaru('pasien', 'pasienbarujkn');
   }
 
 }
