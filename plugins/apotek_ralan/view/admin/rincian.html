@@ -384,7 +384,7 @@
         <th>Harga</th>
       </tr>
       {loop: $value.resep_dokter_racikan_detail as $data}
-        <tr class="item-row" data-nama_brng="{?=isset_or($data.nama_brng)?}" data-stok="{?=isset_or($data.stok)?}" data-jml="{?=isset_or($data.jml)?}" data-kandungan="{?=isset_or($data.kandungan)?}" data-kapasitas="{?=isset_or($data.kapasitas)?}" data-ralan="{?=isset_or($data.ralan)?}">
+        <tr class="item-row" data-nama_brng="{?=isset_or($data.nama_brng)?}" data-stok="{?=isset_or($data.stok)?}" data-jml="{?=isset_or($data.jml)?}" data-kandungan="{?=isset_or($data.kandungan)?}" data-kapasitas="{?=isset_or($data.kapasitas)?}" data-ralan="{?=isset_or($data.dasar)?}">
           <td>{?=isset_or($data.nama_brng)?}</td>
           <td><input type="number" class="form-control input-sm kandungan_obat" data-kode_brng="{?=isset_or($data.kode_brng)?}" value="{?=isset_or($data.kandungan)?}" style="width: 100px;" {if: $value.tgl_perawatan !== '0000-00-00'}disabled{/if}></td>
           <td><span class="jml_obat_display">{?=isset_or($data.jml)?}</span></td>

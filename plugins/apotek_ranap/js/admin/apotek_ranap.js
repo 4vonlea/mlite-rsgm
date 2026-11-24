@@ -236,8 +236,10 @@ $(document).on('input', '.jumlah_obat, .kandungan_obat, .embalase, .tuslah', fun
             $row.attr('data-jml', jmlBaru);
             
             // Update total harga per obat
-            var embalase = parseFloat($row.find('.embalase').val()) || 0;
-            var tuslah = parseFloat($row.find('.tuslah').val()) || 0;
+            var embRaw = $row.find('.embalase').val();
+            var tusRaw = $row.find('.tuslah').val();
+            var embalase = (embRaw !== '' ? parseFloat(embRaw) : parseFloat($row.find('.embalase').attr('placeholder'))) || 0;
+            var tuslah = (tusRaw !== '' ? parseFloat(tusRaw) : parseFloat($row.find('.tuslah').attr('placeholder'))) || 0;
             var totalHarga = (jmlBaru * ralan) + embalase + tuslah;
             var formattedHarga = totalHarga.toLocaleString('id-ID', {minimumFractionDigits: 2, maximumFractionDigits: 2});
             $row.find('.total_harga_display').text(formattedHarga);
@@ -245,11 +247,13 @@ $(document).on('input', '.jumlah_obat, .kandungan_obat, .embalase, .tuslah', fun
 
         // Hitung total biaya obat racikan
         var totalBiayaRacikan = 0;
-        $tbody.find('tr.item-row').each(function() {
+        $tbody.closest('table').find('tr.item-row').each(function() {
             var ralan = parseFloat($(this).attr('data-ralan')) || 0;
             var jml = parseFloat($(this).attr('data-jml')) || 0;
-            var embalase = parseFloat($(this).find('.embalase').val()) || 0;
-            var tuslah = parseFloat($(this).find('.tuslah').val()) || 0;
+            var embRaw = $(this).find('.embalase').val();
+            var tusRaw = $(this).find('.tuslah').val();
+            var embalase = (embRaw !== '' ? parseFloat(embRaw) : parseFloat($(this).find('.embalase').attr('placeholder'))) || 0;
+            var tuslah = (tusRaw !== '' ? parseFloat(tusRaw) : parseFloat($(this).find('.tuslah').attr('placeholder'))) || 0;
             totalBiayaRacikan += (ralan * jml) + embalase + tuslah;
         });
         
