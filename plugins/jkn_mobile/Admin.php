@@ -552,19 +552,71 @@ class Admin extends AdminModule
                             }
 
                             $no_reg = !empty($ba['noantrean']) ? $ba['noantrean'] : (!empty($ba['angkaantrean']) ? $ba['angkaantrean'] : $kb);
-                            $jam = !empty($ba['estimasidilayani']) ? $ba['estimasidilayani'] : (!empty($ba['jampraktek']) ? $ba['jampraktek'] : '-');
+                            $raw_jam = !empty($ba['estimasidilayani']) ? $ba['estimasidilayani'] : (!empty($ba['jampraktek']) ? $ba['jampraktek'] : '-');
+                            $jam = $raw_jam;
+                            if (is_numeric($raw_jam) && strlen((string)$raw_jam) >= 12) {
+                                $jam = date('H:i', intval($raw_jam / 1000));
+                            }
+
+                            // Tentukan status pasien baru vs lama
+                            $is_baru = false;
+                            if (empty($norm) || $norm === '-') {
+                                $is_baru = true;
+                            } elseif (isset($ba['pasienbaru']) && ($ba['pasienbaru'] == 1 || $ba['pasienbaru'] === '1')) {
+                                $is_baru = true;
+                            } else {
+                                $cntPrev = $this->db('reg_periksa')->where('no_rkm_medis', $norm)->where('tgl_registrasi', '<', $tanggal)->count();
+                                $is_baru = ($cntPrev == 0);
+                            }
+
+                            // Cek apakah sudah hadir di SIMRS pada tanggal ini
+                            $is_hadir = false;
+                            $jam_hadir = '-';
+                            $status_label = $ba['status'] ?? 'Belum dilayani';
+                            $no_rawat = '-';
+
+                            if (!empty($norm) && $norm !== '-') {
+                                $regCek = $this->db('reg_periksa')->where('no_rkm_medis', $norm)->where('tgl_registrasi', $tanggal)->oneArray();
+                                if ($regCek) {
+                                    $is_hadir = true;
+                                    $jam_hadir = substr($regCek['jam_reg'], 0, 5);
+                                    $no_rawat = $regCek['no_rawat'];
+                                    if ($regCek['stts'] === 'Sudah') {
+                                        $status_label = 'Selesai Dilayani';
+                                    } elseif ($regCek['stts'] === 'Batal') {
+                                        $status_label = 'Batal';
+                                    } else {
+                                        $status_label = 'Hadir (Check-In)';
+                                    }
+                                }
+                            }
+
+                            if (!$is_hadir && !empty($kb)) {
+                                $t3 = $this->db('mlite_antrian_referensi_taskid')->where('nomor_referensi', $kb)->where('taskid', 3)->oneArray();
+                                if ($t3 && !empty($t3['waktu'])) {
+                                    $is_hadir = true;
+                                    $jam_hadir = date('H:i', intval($t3['waktu'] / 1000));
+                                    $status_label = 'Hadir (Check-In)';
+                                }
+                            }
 
                             $pasien_final[] = [
                                 'no_reg' => $no_reg,
-                                'no_rawat' => '-',
+                                'no_rawat' => $no_rawat,
                                 'no_rkm_medis' => $norm ?: '-',
                                 'nm_pasien' => $pName,
                                 'png_jawab' => 'BPJS Kesehatan',
                                 'jam' => $jam,
-                                'status' => $ba['status'] ?? 'Terdaftar BPJS',
-                                'tipe' => 'Mobile JKN (BPJS)',
+                                'raw_jam' => $raw_jam,
+                                'status' => $status_label,
+                                'is_hadir' => $is_hadir,
+                                'jam_hadir' => $jam_hadir,
+                                'is_pasien_baru' => $is_baru,
+                                'tipe' => $is_hadir ? 'Registrasi Hari H (Hadir)' : 'Mobile JKN (BPJS)',
                                 'sumber' => !empty($ba['sumberdata']) ? $ba['sumberdata'] : 'Mobile JKN (BPJS)',
-                                'kodebooking' => $kb
+                                'kodebooking' => $kb,
+                                'kd_dokter' => $kd_dokter_rs,
+                                'kd_poli' => !empty($list_kd_poli_rs) ? $list_kd_poli_rs[0] : ''
                             ];
 
                             $tracked_bookings[$kb] = true;
@@ -613,11 +665,31 @@ class Admin extends AdminModule
                                     continue;
                                 }
 
+                                $cntPrev = $this->db('reg_periksa')->where('no_rkm_medis', $rm)->where('tgl_registrasi', '<', $tanggal)->count();
+                                $is_baru = ($cntPrev == 0);
+
+                                $raw_jam = $pb['jam'] ?? '-';
+                                $jam = $raw_jam;
+                                if (is_numeric($raw_jam) && strlen((string)$raw_jam) >= 12) {
+                                    $jam = date('H:i', intval($raw_jam / 1000));
+                                }
+
+                                $is_hadir = ($pb['status'] === 'Terdaftar');
+                                $jam_hadir = $is_hadir ? substr($pb['jam'] ?? '', 0, 5) : '-';
+
                                 $pb['tipe'] = $ref ? 'Mobile JKN (BPJS)' : 'Booking Online';
                                 $pb['sumber'] = $ref ? 'Mobile JKN (BPJS)' : 'SIMRS Online';
                                 $pb['kodebooking'] = $kb;
                                 $pb['png_jawab'] = $pb['png_jawab'] ?: 'Umum / BPJS';
                                 $pb['nm_pasien'] = $pb['nm_pasien'] ?: ('Pasien RM ' . $rm);
+                                $pb['jam'] = $jam;
+                                $pb['raw_jam'] = $raw_jam;
+                                $pb['is_hadir'] = $is_hadir;
+                                $pb['jam_hadir'] = $jam_hadir;
+                                $pb['status'] = $is_hadir ? 'Hadir (Check-In)' : 'Belum Datang';
+                                $pb['is_pasien_baru'] = $is_baru;
+                                $pb['kd_dokter'] = $kd_dokter_rs;
+                                $pb['kd_poli'] = !empty($list_kd_poli_rs) ? $list_kd_poli_rs[0] : '';
                                 $pasien_final[] = $pb;
 
                                 if (!empty($rm)) $tracked_rms[$rm] = true;
@@ -650,23 +722,41 @@ class Admin extends AdminModule
 
                             foreach ($pasien_reg as $pr) {
                                 $rm = $pr['no_rkm_medis'] ?? '';
+                                $jam_hadir = substr($pr['jam'], 0, 5);
+                                $sttsLabel = 'Hadir (Check-In)';
+                                if ($pr['status'] === 'Sudah') {
+                                    $sttsLabel = 'Selesai Dilayani';
+                                } elseif ($pr['status'] === 'Batal') {
+                                    $sttsLabel = 'Batal';
+                                }
+
                                 if (!empty($rm) && isset($tracked_rms[$rm])) {
                                     foreach ($pasien_final as &$pf) {
                                         if (($pf['no_rkm_medis'] ?? '') === $rm) {
                                             $pf['no_rawat'] = $pr['no_rawat'];
                                             $pf['no_reg'] = $pr['no_reg'];
-                                            $pf['jam'] = $pr['jam'];
-                                            $pf['status'] = $pr['status'];
+                                            $pf['jam_hadir'] = $jam_hadir;
+                                            $pf['status'] = $sttsLabel;
+                                            $pf['is_hadir'] = true;
                                             $pf['tipe'] = 'Registrasi Hari H (Hadir)';
                                             break;
                                         }
                                     }
                                 } else {
-                                    $pr['tipe'] = 'Registrasi Hari H';
+                                    $cntPrev = $this->db('reg_periksa')->where('no_rkm_medis', $rm)->where('tgl_registrasi', '<', $tanggal)->count();
+                                    $is_baru = ($cntPrev == 0);
+
+                                    $pr['tipe'] = 'Registrasi Hari H (Hadir)';
                                     $pr['sumber'] = 'Loket / Mandiri RS';
                                     $pr['kodebooking'] = '';
                                     $pr['png_jawab'] = $pr['png_jawab'] ?: 'Umum / BPJS';
                                     $pr['nm_pasien'] = $pr['nm_pasien'] ?: ('Pasien RM ' . $rm);
+                                    $pr['is_hadir'] = true;
+                                    $pr['jam_hadir'] = $jam_hadir;
+                                    $pr['status'] = $sttsLabel;
+                                    $pr['is_pasien_baru'] = $is_baru;
+                                    $pr['kd_dokter'] = $kd_dokter_rs;
+                                    $pr['kd_poli'] = !empty($list_kd_poli_rs) ? $list_kd_poli_rs[0] : '';
                                     $pasien_final[] = $pr;
                                     if (!empty($rm)) $tracked_rms[$rm] = true;
                                 }
@@ -711,6 +801,173 @@ class Admin extends AdminModule
                 'total_terdaftar' => $total_terdaftar,
                 'total_sisa' => $total_sisa
             ]
+        ]);
+        exit();
+    }
+
+    public function postTandaiHadirPasien()
+    {
+        header('Content-Type: application/json');
+        $kodebooking = trim($_POST['kodebooking'] ?? '');
+        $norm = trim($_POST['no_rkm_medis'] ?? '');
+        $tanggal = trim($_POST['tanggal'] ?? date('Y-m-d'));
+        $kd_dokter = trim($_POST['kd_dokter'] ?? '');
+        $kd_poli = trim($_POST['kd_poli'] ?? '');
+        $no_reg = trim($_POST['no_reg'] ?? '1');
+
+        if (empty($norm) || $norm === '-') {
+            if (!empty($kodebooking)) {
+                $ref = $this->db('mlite_antrian_referensi')->where('kodebooking', $kodebooking)->oneArray();
+                if ($ref && !empty($ref['no_rkm_medis'])) {
+                    $norm = $ref['no_rkm_medis'];
+                }
+            }
+        }
+
+        if (empty($norm) || $norm === '-') {
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Pasien belum memiliki No. Rekam Medis (RM) di SIMRS. Harap daftarkan identitas pasien baru terlebih dahulu di loket admisi pendaftaran.'
+            ]);
+            exit();
+        }
+
+        $pasien = $this->db('pasien')->where('no_rkm_medis', $norm)->oneArray();
+        if (!$pasien) {
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Data pasien dengan No. RM ' . $norm . ' tidak ditemukan di database SIMRS.'
+            ]);
+            exit();
+        }
+
+        $now_time = date('H:i:s');
+        $start_time = date('H:i:s', strtotime('-3 minutes'));
+
+        // Cek apakah sudah ada di reg_periksa
+        $reg = $this->db('reg_periksa')
+            ->where('no_rkm_medis', $norm)
+            ->where('tgl_registrasi', $tanggal)
+            ->oneArray();
+
+        if (!$reg) {
+            $booking = $this->db('booking_registrasi')
+                ->where('no_rkm_medis', $norm)
+                ->where('tanggal_periksa', $tanggal)
+                ->oneArray();
+
+            if ($booking) {
+                if (empty($kd_dokter)) $kd_dokter = $booking['kd_dokter'];
+                if (empty($kd_poli)) $kd_poli = $booking['kd_poli'];
+                if (empty($no_reg) || $no_reg === '1') $no_reg = $booking['no_reg'];
+            }
+
+            $tglLahirStr = $pasien['tgl_lahir'] ?? '';
+            $umur = "0";
+            $sttsumur = "Th";
+            if (!empty($tglLahirStr) && $tglLahirStr !== '0000-00-00') {
+                $diff = (new \DateTime(date('Y-m-d')))->diff(new \DateTime($tglLahirStr));
+                if ($diff->y > 0) { $umur = (string)$diff->y; $sttsumur = "Th"; }
+                elseif ($diff->m > 0) { $umur = (string)$diff->m; $sttsumur = "Bl"; }
+                else { $umur = (string)$diff->d; $sttsumur = "Hr"; }
+            }
+
+            $cntPrev = $this->db('reg_periksa')->where('no_rkm_medis', $norm)->where('tgl_registrasi', '<', $tanggal)->count();
+            $stts_daftar = ($cntPrev == 0) ? 'Baru' : 'Lama';
+
+            $no_rawat = $this->core->setNoRawat($tanggal);
+
+            $this->db('reg_periksa')->save([
+                'no_reg' => $no_reg,
+                'no_rawat' => $no_rawat,
+                'tgl_registrasi' => $tanggal,
+                'jam_reg' => $now_time,
+                'kd_dokter' => $kd_dokter,
+                'no_rkm_medis' => $norm,
+                'kd_poli' => $kd_poli,
+                'p_jawab' => $pasien['namakeluarga'] ?? '-',
+                'almt_pj' => $pasien['alamatpj'] ?? '-',
+                'hubunganpj' => $pasien['keluarga'] ?? '-',
+                'biaya_reg' => 0,
+                'stts' => 'Belum',
+                'stts_daftar' => $stts_daftar,
+                'status_lanjut' => 'Ralan',
+                'kd_pj' => $booking['kd_pj'] ?? ($pasien['kd_pj'] ?? 'BPJ'),
+                'umurdaftar' => $umur,
+                'sttsumur' => $sttsumur,
+                'status_bayar' => 'Belum Bayar',
+                'status_poli' => 'Lama'
+            ]);
+
+            if ($booking) {
+                $this->db('booking_registrasi')
+                    ->where('no_rkm_medis', $norm)
+                    ->where('tanggal_periksa', $tanggal)
+                    ->update(['status' => 'Terdaftar']);
+            }
+        } else {
+            $no_reg = $reg['no_reg'];
+        }
+
+        // Catat kehadiran di mlite_antrian_loket dengan type Poli
+        $cekLok = $this->db('mlite_antrian_loket')->where('no_rkm_medis', $norm)->where('postdate', $tanggal)->oneArray();
+        if (!$cekLok) {
+            $this->db('mlite_antrian_loket')->save([
+                'type' => 'Poli',
+                'noantrian' => $no_reg,
+                'postdate' => $tanggal,
+                'start_time' => $start_time,
+                'end_time' => $now_time,
+                'no_rkm_medis' => $norm,
+                'status' => 2
+            ]);
+        } else {
+            $this->db('mlite_antrian_loket')->where('kd', $cekLok['kd'])->save([
+                'end_time' => $now_time,
+                'status' => 2
+            ]);
+        }
+
+        // Simpan Task ID 1, 2, 3 jika ada kodebooking
+        if (!empty($kodebooking)) {
+            $nowMs = time() * 1000;
+            $startMs = (time() - 180) * 1000;
+            if (!$this->db('mlite_antrian_referensi_taskid')->where('nomor_referensi', $kodebooking)->where('taskid', 1)->oneArray()) {
+                $this->db('mlite_antrian_referensi_taskid')->save([
+                    'tanggal_periksa' => $tanggal,
+                    'nomor_referensi' => $kodebooking,
+                    'taskid' => 1,
+                    'waktu' => $startMs,
+                    'status' => 'Belum',
+                    'keterangan' => ''
+                ]);
+            }
+            if (!$this->db('mlite_antrian_referensi_taskid')->where('nomor_referensi', $kodebooking)->where('taskid', 2)->oneArray()) {
+                $this->db('mlite_antrian_referensi_taskid')->save([
+                    'tanggal_periksa' => $tanggal,
+                    'nomor_referensi' => $kodebooking,
+                    'taskid' => 2,
+                    'waktu' => $nowMs,
+                    'status' => 'Belum',
+                    'keterangan' => ''
+                ]);
+            }
+            if (!$this->db('mlite_antrian_referensi_taskid')->where('nomor_referensi', $kodebooking)->where('taskid', 3)->oneArray()) {
+                $this->db('mlite_antrian_referensi_taskid')->save([
+                    'tanggal_periksa' => $tanggal,
+                    'nomor_referensi' => $kodebooking,
+                    'taskid' => 3,
+                    'waktu' => $nowMs,
+                    'status' => 'Belum',
+                    'keterangan' => ''
+                ]);
+            }
+        }
+
+        echo json_encode([
+            'status' => 'success',
+            'message' => 'Pasien ' . $pasien['nm_pasien'] . ' (RM: ' . $norm . ') berhasil ditandai Hadir / Check-In pada pukul ' . substr($now_time, 0, 5) . '!',
+            'jam_hadir' => substr($now_time, 0, 5)
         ]);
         exit();
     }
