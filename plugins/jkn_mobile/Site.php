@@ -4122,51 +4122,77 @@ class Site extends SiteModule
             $total++;
         }
 
-        // 2. Dari reg_periksa jika hari H (pasien yang langsung mendaftar di loket tanpa booking)
-        if ($tanggal === date('Y-m-d')) {
-            $stmt2 = $this->db()->pdo()->prepare(
-                "SELECT no_rkm_medis FROM reg_periksa 
-                 WHERE tgl_registrasi = :tgl AND kd_poli = :kdpoli AND kd_dokter = :kddokter AND stts != 'Batal'"
-            );
-            $stmt2->execute([':tgl' => $tanggal, ':kdpoli' => $kdPoliRs, ':kddokter' => $kdDokterRs]);
-            $rows2 = $stmt2->fetchAll(\PDO::FETCH_ASSOC);
-            foreach ($rows2 as $r) {
-                $rm = trim($r['no_rkm_medis'] ?? '');
-                if ($rm !== '' && $rm !== '-' && isset($tracked_rms[$rm])) {
-                    continue; // Sudah terhitung di booking_registrasi
-                }
-                if ($rm !== '' && $rm !== '-') {
-                    $tracked_rms[$rm] = true;
-                }
-                $total++;
+        // 2. Dari reg_periksa (pasien yang langsung mendaftar di loket / sudah hadir)
+        $stmt2 = $this->db()->pdo()->prepare(
+            "SELECT no_rkm_medis FROM reg_periksa
+             WHERE tgl_registrasi = :tgl AND kd_poli = :kdpoli AND kd_dokter = :kddokter AND stts != 'Batal'"
+        );
+        $stmt2->execute([':tgl' => $tanggal, ':kdpoli' => $kdPoliRs, ':kddokter' => $kdDokterRs]);
+        $rows2 = $stmt2->fetchAll(\PDO::FETCH_ASSOC);
+        foreach ($rows2 as $r) {
+            $rm = trim($r['no_rkm_medis'] ?? '');
+            if ($rm !== '' && $rm !== '-' && isset($tracked_rms[$rm])) {
+                continue; // Sudah terhitung di booking_registrasi
             }
+            if ($rm !== '' && $rm !== '-') {
+                $tracked_rms[$rm] = true;
+            }
+            $total++;
         }
 
-        // 3. Dari mlite_jkn_booking_baru (staging)
+        // 3. Dari mlite_jkn_booking_baru (staging pasien baru yang belum verifikasi)
         $this->_ensureStagingTables();
         $stmt3 = $this->db()->pdo()->prepare(
-            "SELECT kodebooking, nomor_kartu FROM mlite_jkn_booking_baru 
+            "SELECT kodebooking, temp_norm FROM mlite_jkn_booking_baru
              WHERE tanggal_periksa = :tgl AND kd_poli = :kdpoli AND kd_dokter = :kddokter AND status = 'Belum'"
         );
         $stmt3->execute([':tgl' => $tanggal, ':kdpoli' => $kdPoliRs, ':kddokter' => $kdDokterRs]);
         $rows3 = $stmt3->fetchAll(\PDO::FETCH_ASSOC);
         foreach ($rows3 as $r) {
             $kb = trim($r['kodebooking'] ?? '');
+            $tmpRm = trim($r['temp_norm'] ?? '');
             if ($kb !== '') {
                 $tracked_kbs[$kb] = true;
+            }
+            if ($tmpRm !== '') {
+                $tracked_rms[$tmpRm] = true;
             }
             $total++;
         }
 
-        // 4. Dari mlite_antrian_referensi (termasuk pasien baru tanpa no_rkm_medis yang tersinkron)
+        // 4. Dari mlite_antrian_referensi (fallback referensi belum masuk tabel di atas, cegah salah hitung lintas dokter)
         $batalList = [];
         $stmtBatal = $this->db()->pdo()->query("SELECT kodebooking FROM mlite_antrian_referensi_batal");
         if ($stmtBatal) {
             $batalList = array_flip($stmtBatal->fetchAll(\PDO::FETCH_COLUMN));
         }
 
-        $sqlRef = "SELECT kodebooking, no_rkm_medis FROM mlite_antrian_referensi 
-                   WHERE tanggal_periksa = :tgl AND status_kirim != 'Batal'";
+        // Kumpulkan RM & kodebooking milik dokter lain di tanggal yang sama agar tidak ikut terhitung ke kuota dokter ini
+        $otherDoctorRms = [];
+        $otherDoctorKbs = [];
+        $stmtOtherBk = $this->db()->pdo()->prepare(
+            "SELECT no_rkm_medis FROM booking_registrasi
+             WHERE tanggal_periksa = :tgl AND (kd_dokter != :kddokter OR kd_poli != :kdpoli) AND status != 'Batal'"
+        );
+        $stmtOtherBk->execute([':tgl' => $tanggal, ':kddokter' => $kdDokterRs, ':kdpoli' => $kdPoliRs]);
+        foreach ($stmtOtherBk->fetchAll(\PDO::FETCH_COLUMN) as $orm) {
+            $orm = trim((string)$orm);
+            if ($orm !== '' && $orm !== '-') $otherDoctorRms[$orm] = true;
+        }
+        $stmtOtherStg = $this->db()->pdo()->prepare(
+            "SELECT kodebooking, temp_norm FROM mlite_jkn_booking_baru
+             WHERE tanggal_periksa = :tgl AND (kd_dokter != :kddokter OR kd_poli != :kdpoli) AND status != 'Batal'"
+        );
+        $stmtOtherStg->execute([':tgl' => $tanggal, ':kddokter' => $kdDokterRs, ':kdpoli' => $kdPoliRs]);
+        foreach ($stmtOtherStg->fetchAll(\PDO::FETCH_ASSOC) as $os) {
+            $okb = trim((string)($os['kodebooking'] ?? ''));
+            $otmp = trim((string)($os['temp_norm'] ?? ''));
+            if ($okb !== '') $otherDoctorKbs[$okb] = true;
+            if ($otmp !== '') $otherDoctorRms[$otmp] = true;
+        }
+
+        $sqlRef = "SELECT kodebooking, no_rkm_medis FROM mlite_antrian_referensi
+                   WHERE tanggal_periksa = :tgl AND (status_kirim IS NULL OR status_kirim != 'Batal')";
         $stmt4 = $this->db()->pdo()->prepare($sqlRef);
         $stmt4->execute([':tgl' => $tanggal]);
         $rows4 = $stmt4->fetchAll(\PDO::FETCH_ASSOC);
@@ -4174,17 +4200,14 @@ class Site extends SiteModule
             $kb = trim($r['kodebooking'] ?? '');
             $rm = trim($r['no_rkm_medis'] ?? '');
 
-            if ($kb !== '' && isset($batalList[$kb])) {
-                continue; // Sudah dibatalkan
+            if ($kb !== '' && (isset($batalList[$kb]) || isset($tracked_kbs[$kb]) || isset($otherDoctorKbs[$kb]))) {
+                continue;
             }
-            if ($kb !== '' && isset($tracked_kbs[$kb])) {
-                continue; // Sudah terhitung di staging
-            }
-            if ($rm !== '' && $rm !== '-' && isset($tracked_rms[$rm])) {
-                continue; // Sudah terhitung di booking_registrasi / reg_periksa
+            if ($rm !== '' && $rm !== '-' && (isset($tracked_rms[$rm]) || isset($otherDoctorRms[$rm]))) {
+                continue;
             }
 
-            // Jika ada filter kode poli BPJS, pastikan cocok dengan prefix kodebooking
+            // Jika ada filter kode poli BPJS, pastikan cocok dengan kodebooking
             if (!empty($kodepoliBpjs) && strpos($kb, $kodepoliBpjs) === false) {
                 continue;
             }

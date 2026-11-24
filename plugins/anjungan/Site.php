@@ -2831,7 +2831,7 @@ class Site extends SiteModule
 
               // Helper closure untuk menghitung pasien terdaftar untuk dokter & poli pada tanggal kunjungan
               $hitungTerdaftar = function($kd_dok, $kp, $tgl) {
-                  $stmt1 = $this->db()->pdo()->prepare("SELECT COUNT(*) FROM reg_periksa WHERE kd_dokter = :kd_dok AND kd_poli = :kp AND tgl_registrasi = :tgl");
+                  $stmt1 = $this->db()->pdo()->prepare("SELECT COUNT(*) FROM reg_periksa WHERE kd_dokter = :kd_dok AND kd_poli = :kp AND tgl_registrasi = :tgl AND stts != 'Batal'");
                   $stmt1->execute(['kd_dok' => $kd_dok, 'kp' => $kp, 'tgl' => $tgl]);
                   $cnt1 = intval($stmt1->fetchColumn());
 
@@ -2839,7 +2839,16 @@ class Site extends SiteModule
                   $stmt2->execute(['kd_dok' => $kd_dok, 'kp' => $kp, 'tgl' => $tgl]);
                   $cnt2 = intval($stmt2->fetchColumn());
 
-                  return $cnt1 + $cnt2;
+                  $cnt3 = 0;
+                  try {
+                      $stmt3 = $this->db()->pdo()->prepare("SELECT COUNT(*) FROM mlite_jkn_booking_baru WHERE kd_dokter = :kd_dok AND kd_poli = :kp AND tanggal_periksa = :tgl AND status = 'Belum'");
+                      $stmt3->execute(['kd_dok' => $kd_dok, 'kp' => $kp, 'tgl' => $tgl]);
+                      $cnt3 = intval($stmt3->fetchColumn());
+                  } catch (\Throwable $e) {
+                      $cnt3 = 0;
+                  }
+
+                  return $cnt1 + $cnt2 + $cnt3;
               };
 
               // 1. Coba ambil dari tabel jadwal jika ada
@@ -3039,9 +3048,17 @@ class Site extends SiteModule
 
               if (!empty($cekJadwalDokter) && intval($cekJadwalDokter['kuota']) > 0) {
                   $kuotaMaks = intval($cekJadwalDokter['kuota']);
-                  $cnt1 = $this->db('reg_periksa')->where('kd_dokter', $_POST['kd_dokter'])->where('kd_poli', $_POST['kd_poli'])->where('tgl_registrasi', $tgl_periksa)->count();
+                  $cnt1 = $this->db('reg_periksa')->where('kd_dokter', $_POST['kd_dokter'])->where('kd_poli', $_POST['kd_poli'])->where('tgl_registrasi', $tgl_periksa)->where('stts', '!=', 'Batal')->count();
                   $cnt2 = $this->db('booking_registrasi')->where('kd_dokter', $_POST['kd_dokter'])->where('kd_poli', $_POST['kd_poli'])->where('tanggal_periksa', $tgl_periksa)->where('status', 'Belum')->count();
-                  if (($cnt1 + $cnt2) >= $kuotaMaks) {
+                  $cnt3 = 0;
+                  try {
+                      $stmtStg = $this->db()->pdo()->prepare("SELECT COUNT(*) FROM mlite_jkn_booking_baru WHERE kd_dokter = :kd_dok AND kd_poli = :kp AND tanggal_periksa = :tgl AND status = 'Belum'");
+                      $stmtStg->execute(['kd_dok' => $_POST['kd_dokter'], 'kp' => $_POST['kd_poli'], 'tgl' => $tgl_periksa]);
+                      $cnt3 = intval($stmtStg->fetchColumn());
+                  } catch (\Throwable $e) {
+                      $cnt3 = 0;
+                  }
+                  if (($cnt1 + $cnt2 + $cnt3) >= $kuotaMaks) {
                       echo json_encode(['status' => 'err', 'message' => 'Mohon maaf, kuota dokter ini sudah penuh untuk tanggal ' . $tgl_periksa . '. Silakan pilih dokter atau tanggal lain.']);
                       exit();
                   }

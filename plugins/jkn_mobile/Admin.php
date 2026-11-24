@@ -797,6 +797,65 @@ class Admin extends AdminModule
                                         $tracked_rms[$rm] = true;
                                 }
                             }
+
+                            // 4. Ambil dari mlite_jkn_booking_baru (calon pasien baru MJKN mode staging yang belum verifikasi)
+                            try {
+                                $pdoHfis = $this->db()->pdo();
+                                $hasStgTbl = (bool)$pdoHfis->query("SHOW TABLES LIKE 'mlite_jkn_booking_baru'")->fetchColumn();
+                                if ($hasStgTbl) {
+                                    $stgParams = [':tgl' => $tanggal, ':kddok' => $kd_dokter_rs];
+                                    $stgPoliCond = '';
+                                    if (!empty($list_kd_poli_rs)) {
+                                        $ph = [];
+                                        foreach (array_values($list_kd_poli_rs) as $pi => $pv) {
+                                            $kph = ':sp' . $pi;
+                                            $ph[] = $kph;
+                                            $stgParams[$kph] = $pv;
+                                        }
+                                        $stgPoliCond = " AND b.kd_poli IN (" . implode(',', $ph) . ")";
+                                    }
+                                    $stmtStg = $pdoHfis->prepare(
+                                        "SELECT b.temp_norm, b.no_reg, b.jam_booking, b.kodebooking, b.kd_poli, b.kd_dokter,
+                                                p.nm_pasien, p.no_peserta
+                                         FROM mlite_jkn_booking_baru b
+                                         LEFT JOIN mlite_jkn_pasien_baru p ON p.temp_norm = b.temp_norm
+                                         WHERE b.tanggal_periksa = :tgl AND b.kd_dokter = :kddok AND b.status = 'Belum'" . $stgPoliCond . "
+                                         ORDER BY b.no_reg ASC"
+                                    );
+                                    $stmtStg->execute($stgParams);
+                                    foreach ($stmtStg->fetchAll(\PDO::FETCH_ASSOC) as $sb) {
+                                        $skb = trim((string)($sb['kodebooking'] ?? ''));
+                                        $strm = trim((string)($sb['temp_norm'] ?? ''));
+                                        if (($skb !== '' && isset($tracked_bookings[$skb])) || ($strm !== '' && isset($tracked_rms[$strm]))) {
+                                            continue;
+                                        }
+                                        $pasien_final[] = [
+                                            'no_reg' => $sb['no_reg'] ?? '',
+                                            'no_rawat' => '',
+                                            'no_rkm_medis' => $strm,
+                                            'nm_pasien' => ($sb['nm_pasien'] ?: ('Calon Pasien ' . $strm)) . ' (Staging)',
+                                            'no_peserta' => $sb['no_peserta'] ?: '-',
+                                            'png_jawab' => 'BPJS (Staging)',
+                                            'jam' => substr((string)($sb['jam_booking'] ?? ''), 0, 5),
+                                            'raw_jam' => $sb['jam_booking'] ?? '',
+                                            'tipe' => 'Calon Pasien Baru MJKN (Staging)',
+                                            'sumber' => 'Mobile JKN (Staging)',
+                                            'kodebooking' => $skb,
+                                            'nm_dokter' => $item['namadokter'] ?? '',
+                                            'is_hadir' => false,
+                                            'jam_hadir' => '-',
+                                            'status' => 'Menunggu Verifikasi Admisi',
+                                            'is_pasien_baru' => true,
+                                            'kd_dokter' => $kd_dokter_rs,
+                                            'kd_poli' => $sb['kd_poli'] ?? (!empty($list_kd_poli_rs) ? $list_kd_poli_rs[0] : '')
+                                        ];
+                                        if ($strm !== '') $tracked_rms[$strm] = true;
+                                        if ($skb !== '') $tracked_bookings[$skb] = true;
+                                    }
+                                }
+                            } catch (\Throwable $eStg) {
+                                error_log('postHfis staging count error: ' . $eStg->getMessage());
+                            }
                         }
 
                         $kapasitas = intval($item['kapasitaspasien'] ?? 0);
