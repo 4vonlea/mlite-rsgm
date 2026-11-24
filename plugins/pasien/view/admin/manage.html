@@ -30,13 +30,19 @@
         </div>
         {/if}
         <div class="rsgm-pasien-toolbar">
-          {if: $mlite_crud_permissions.can_create == 'true'}
-          <div id="index">
+          <div id="index" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            {if: $mlite_crud_permissions.can_create == 'true'}
             <button class="btn btn-sm btn-primary rsgm-btn-new-pasien" type="button" id="bukaform">
               <i class="fa fa-user-plus"></i> <span>Pasien Baru</span>
             </button>
+            {/if}
+            <a href="{?=url([ADMIN, 'pasien', 'pasienbarujkn'])?}" class="btn btn-sm btn-warning" style="white-space:nowrap; display:inline-flex; align-items:center; gap:6px; border-radius:6px; font-weight:600;">
+              <i class="fa fa-mobile fa-lg"></i> <span>Calon Pasien MJKN</span>
+              {if: $jkn_staging_menunggu > 0}
+              <span class="badge" style="background:#dc2626; color:#fff;">{?=$jkn_staging_menunggu?}</span>
+              {/if}
+            </a>
           </div>
-          {/if}
           <div class="rsgm-pasien-search">
             <input type="text" id="searchInput" name="cari" minlength="3" class="form-control" placeholder="Cari nama, No. RM, NIK, alamat, telepon..." required>
             <button type="button" onclick="loadData(1)" title="Cari"><i class="fa fa-search"></i></button>
