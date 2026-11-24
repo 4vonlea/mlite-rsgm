@@ -392,13 +392,28 @@ class Site extends SiteModule
                 } else {
                     if (!empty($cek_kuota) && (int)$cek_kuota['sisa_kuota'] > 0) {
                         if (empty($data_pasien)) {
-                            $response = array(
-                                'metadata' => array(
-                                    'message' => 'Data pasien ini tidak ditemukan',
-                                    'code' => 202
-                                )
-                            );
-                            $httpCode = 202;
+                            $autoPasienBaru = strtolower(trim((string)($this->settings->get('jkn_mobile.auto_pasien_baru') ?? 'ya')));
+                            if ($autoPasienBaru === 'tidak') {
+                                $pesanTolak = trim((string)($this->settings->get('jkn_mobile.pesan_pasien_baru_nonaktif') ?? ''));
+                                if ($pesanTolak === '') {
+                                    $pesanTolak = 'Pasien baru harap mendaftar terlebih dahulu di loket admisi RS untuk pembuatan Nomor Rekam Medis.';
+                                }
+                                $response = array(
+                                    'metadata' => array(
+                                        'message' => $pesanTolak,
+                                        'code' => 201
+                                    )
+                                );
+                                $httpCode = 201;
+                            } else {
+                                $response = array(
+                                    'metadata' => array(
+                                        'message' => 'Data pasien ini tidak ditemukan',
+                                        'code' => 202
+                                    )
+                                );
+                                $httpCode = 202;
+                            }
                         } else {
                             // Cek apakah pasien sudah terdaftar di booking_registrasi pada tanggal yang sama
                             $existingBooking = $this->db('booking_registrasi')
@@ -1378,7 +1393,20 @@ class Site extends SiteModule
                 );
                 $httpCode = 201;
             } else if ((string)$reqToken === (string)$this->_getToken() && $reqUser !== null && (string)$reqUser === (string)$this->settings->get('jkn_mobile.x_username')) {
-                if (empty($decode['nomorkartu'])) {
+                $autoPasienBaru = strtolower(trim((string)($this->settings->get('jkn_mobile.auto_pasien_baru') ?? 'ya')));
+                if ($autoPasienBaru === 'tidak') {
+                    $pesanTolak = trim((string)($this->settings->get('jkn_mobile.pesan_pasien_baru_nonaktif') ?? ''));
+                    if ($pesanTolak === '') {
+                        $pesanTolak = 'Pasien baru harap mendaftar terlebih dahulu di loket admisi RS untuk pembuatan Nomor Rekam Medis.';
+                    }
+                    $response = array(
+                        'metadata' => array(
+                            'message' => $pesanTolak,
+                            'code' => 201
+                        )
+                    );
+                    $httpCode = 201;
+                } else if (empty($decode['nomorkartu'])) {
                     $response = array('metadata' => array('message' => 'Nomor Kartu tidak boleh kosong', 'code' => 201));
                 } else if (mb_strlen($decode['nomorkartu'], 'UTF-8') <> 13) {
                     $response = array('metadata' => array('message' => 'Nomor Kartu harus 13 digit', 'code' => 201));
