@@ -81,11 +81,11 @@
   <div class="container-fluid">
     <div class="row" style="margin-top: 15px;">
       <!-- KARTU NAVIGASI LOKET PERTAMA -->
-      <div class="col-md-4">
+      <div class="col-sm-6 col-md-3">
         <a href="{?=url(ADMIN.'/anjungan/pemanggil/?show=panggil_loket&loket=' . $loket_first)?}">
           <div class="panel {if: $show == 'panggil_loket' && $active_loket == $loket_first}panel-primary{else}panel-default{/if} text-center" style="box-shadow: 0 4px 10px rgba(0,0,0,0.15); border-radius: 8px;">
             <div class="panel-heading">
-              <div class="no_loket" style="color: inherit; font-size: 18px; font-weight: bold;">
+              <div class="no_loket" style="color: inherit; font-size: 16px; font-weight: bold;">
                 <i class="fa fa-id-card"></i> {$nama_loket_1}
               </div>
             </div>
@@ -97,12 +97,12 @@
       </div>
 
       <!-- KARTU NAVIGASI LOKET KEDUA / CUSTOMER SERVICE -->
-      <div class="col-md-4">
+      <div class="col-sm-6 col-md-3">
         {if: $display_card2 == 'loket2'}
         <a href="{?=url(ADMIN.'/anjungan/pemanggil/?show=panggil_loket&loket=' . $loket_second)?}">
           <div class="panel {if: $show == 'panggil_loket' && $active_loket == $loket_second}panel-primary{else}panel-default{/if} text-center" style="box-shadow: 0 4px 10px rgba(0,0,0,0.15); border-radius: 8px;">
             <div class="panel-heading">
-              <div class="no_loket" style="color: inherit; font-size: 18px; font-weight: bold;">
+              <div class="no_loket" style="color: inherit; font-size: 16px; font-weight: bold;">
                 <i class="fa fa-id-card"></i> {$nama_loket_2}
               </div>
             </div>
@@ -115,7 +115,7 @@
         <a href="{?=url(ADMIN.'/anjungan/pemanggil/?show=panggil_cs&loket=1')?}">
           <div class="panel {if: $show == 'panggil_cs'}panel-success{else}panel-default{/if} text-center" style="box-shadow: 0 4px 10px rgba(0,0,0,0.15); border-radius: 8px;">
             <div class="panel-heading">
-              <div class="no_loket" style="color: inherit; font-size: 18px; font-weight: bold;">
+              <div class="no_loket" style="color: inherit; font-size: 16px; font-weight: bold;">
                 <i class="fa fa-headphones"></i> CUSTOMER SERVICE
               </div>
             </div>
@@ -128,11 +128,11 @@
       </div>
 
       <!-- KARTU NAVIGASI FARMASI & APOTEK -->
-      <div class="col-md-4">
+      <div class="col-sm-6 col-md-3">
         <a href="{?=url(ADMIN.'/anjungan/pemanggil/?show=panggil_apotek&loket=1')?}">
           <div class="panel {if: $show == 'panggil_apotek'}panel-warning{else}panel-default{/if} text-center" style="box-shadow: 0 4px 10px rgba(0,0,0,0.15); border-radius: 8px;">
             <div class="panel-heading">
-              <div class="no_loket" style="color: inherit; font-size: 18px; font-weight: bold;">
+              <div class="no_loket" style="color: inherit; font-size: 16px; font-weight: bold;">
                 <i class="fa fa-medkit"></i> FARMASI & APOTEK
               </div>
             </div>
@@ -142,8 +142,292 @@
           </div>
         </a>  
       </div>
+
+      <!-- KARTU NAVIGASI POLIKLINIK (BARU) -->
+      <div class="col-sm-6 col-md-3">
+        <a href="{?=url(ADMIN.'/anjungan/pemanggil/?show=panggil_poli')?}">
+          <div class="panel {if: $show == 'panggil_poli'}panel-info{else}panel-default{/if} text-center" style="box-shadow: 0 4px 10px rgba(0,0,0,0.15); border-radius: 8px;">
+            <div class="panel-heading">
+              <div class="no_loket" style="color: inherit; font-size: 16px; font-weight: bold;">
+                <i class="fa fa-stethoscope"></i> POLIKLINIK
+              </div>
+            </div>
+            <div class="panel-body text-info">
+              <div class="no_antrian">P-<span class="antrian_Poli">{?=isset_or($init_poli_no, '000')?}</span></div>
+            </div>
+          </div>
+        </a>  
+      </div>
     </div>
 
+    <!-- ============================================== -->
+    <!-- PANEL KHUSUS PEMANGGIL POLIKLINIK (PETUGAS POLI) -->
+    <!-- ============================================== -->
+    {if: $show == 'panggil_poli'}
+    <!-- BAR FILTER POLIKLINIK & DOKTER -->
+    <div style="background: #ffffff; padding: 14px 20px; border-radius: 10px; margin-top: 15px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); border-left: 5px solid #0284c7;">
+      <div class="row" style="display: flex; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <div class="col-md-4 col-sm-6">
+          <label style="font-size: 13px; font-weight: bold; color: #1e293b; margin-bottom: 4px;">
+            <i class="fa fa-stethoscope text-primary"></i> Pilih Poliklinik:
+          </label>
+          <select id="selectPoliPemanggil" class="form-control input-sm" style="font-weight: 600; font-size: 13px;" onchange="switchPoli(this.value)">
+            {loop: $daftar_poli}
+            <option value="{$value.kd_poli}" {if: $kd_poli_aktif == $value.kd_poli}selected{/if}>
+              {$value.nm_poli} ({$value.kd_poli})
+            </option>
+            {/loop}
+          </select>
+        </div>
+
+        <div class="col-md-4 col-sm-6">
+          <label style="font-size: 13px; font-weight: bold; color: #1e293b; margin-bottom: 4px;">
+            <i class="fa fa-user-md text-success"></i> Filter Dokter Jaga:
+          </label>
+          <select id="selectDokterPemanggil" class="form-control input-sm" style="font-weight: 600; font-size: 13px;" onchange="switchDokter(this.value)">
+            <option value="">-- Semua Dokter di Poli Ini --</option>
+            {loop: $daftar_dokter}
+            <option value="{$value.kd_dokter}" {if: $kd_dokter_aktif == $value.kd_dokter}selected{/if}>
+              {$value.nm_dokter}
+            </option>
+            {/loop}
+          </select>
+        </div>
+
+        <div class="col-md-4 col-sm-12 text-right" style="margin-top: 20px;">
+          <a href="{?=url('anjungan/poli/' . $kd_poli_aktif)?}" target="_blank" class="btn btn-sm btn-info" style="font-weight: bold; border-radius: 6px;">
+            <i class="fa fa-television"></i> Buka TV Display Poli Ini
+          </a>
+          <button type="button" class="btn btn-sm btn-default" onclick="refreshPoliTable()" style="font-weight: bold; border-radius: 6px; margin-left: 5px;">
+            <i class="fa fa-refresh"></i> Refresh
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- KARTU PANGGILAN POLI UTAMA & KONTROL PEMERIKSAAN -->
+    <div class="row">
+      <!-- KOLOM KIRI: KARTU PANGGILAN SUARA AKTIF -->
+      <div class="col-md-5 col-sm-12">
+        <div class="panel panel-primary" style="box-shadow: 0 6px 20px rgba(0,0,0,0.15); border-radius: 12px; overflow: hidden; border: none;">
+          <div class="panel-heading" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); padding: 15px 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 16px; font-weight: bold; color: #fff;">
+                <i class="fa fa-bullhorn"></i> PANGGILAN PASIEN POLIKLINIK
+              </span>
+              <span class="label label-warning" style="font-size: 12px; padding: 4px 10px; border-radius: 10px;">
+                {$nama_poli_aktif}
+              </span>
+            </div>
+          </div>
+
+          <div class="panel-body text-center" style="padding: 25px 20px; background: #fff;">
+            <div style="font-size: 13px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">
+              NOMOR ANTREAN POLI SEDANG DIPANGGIL
+            </div>
+
+            <!-- NOMOR ANTREAN BESAR -->
+            <div id="poli_display_num" style="font-size: 88px; font-weight: 900; color: #0284c7; line-height: 1; margin: 15px 0 10px 0; letter-spacing: 2px;">
+              {$nomor_panggil_aktif}
+            </div>
+
+            <!-- NAMA PASIEN & DOKTER -->
+            <div style="background: #f1f5f9; border-radius: 8px; padding: 12px 15px; margin-bottom: 20px;">
+              <div id="poli_display_nama" style="font-size: 20px; font-weight: bold; color: #0f172a; word-break: break-word;">
+                {$nama_panggil_aktif}
+              </div>
+              <div id="poli_display_dokter" style="font-size: 13px; color: #475569; margin-top: 4px;">
+                <i class="fa fa-user-md text-primary"></i> <span id="poli_display_dokter_text">{$dokter_panggil_aktif}</span>
+              </div>
+            </div>
+
+            <!-- STATUS AUDIO NOTIFICATION -->
+            <div id="poli_calling_status_alert" class="alert alert-success" style="display: none; padding: 10px 14px; margin-bottom: 15px; font-weight: bold; border-radius: 8px;">
+              <i class="fa fa-volume-up fa-spin"></i> <span id="poli_calling_status_text">Sedang mengumumkan panggilan...</span>
+            </div>
+
+            <!-- TOMBOL PANGGIL UTAMA (SUARA TTS) -->
+            <button type="button" id="btnPoliCall" class="btn btn-success btn-lg btn-block" style="font-size: 18px; font-weight: bold; padding: 14px; border-radius: 8px; box-shadow: 0 4px 12px rgba(40,167,69,0.35);" onclick="panggilSuaraPoliAktif()">
+              <i class="fa fa-bullhorn"></i> PANGGIL SUARA (SPEAKER TV)
+            </button>
+
+            <!-- BARIS TOMBOL AKSI CEPAT -->
+            <div class="row" style="margin-top: 10px;">
+              <div class="col-xs-6" style="padding-right: 5px;">
+                <button type="button" id="btnPoliNext" class="btn btn-primary btn-block" style="font-weight: bold; padding: 10px 5px; border-radius: 6px;" onclick="panggilNextPoli()">
+                  <i class="fa fa-step-forward"></i> Panggil Berikutnya
+                </button>
+              </div>
+              <div class="col-xs-6" style="padding-left: 5px;">
+                <button type="button" class="btn btn-warning btn-block" style="font-weight: bold; padding: 10px 5px; border-radius: 6px;" onclick="panggilSuaraPoliAktif()">
+                  <i class="fa fa-refresh"></i> Panggil Ulang
+                </button>
+              </div>
+            </div>
+
+            <div class="row" style="margin-top: 8px;">
+              <div class="col-xs-6" style="padding-right: 5px;">
+                <button type="button" class="btn btn-info btn-block" style="font-weight: bold; padding: 8px 5px; border-radius: 6px;" onclick="mulaiPeriksaPoliAktif()" title="Pasien masuk ruang periksa (Task ID 4 BPJS)">
+                  <i class="fa fa-stethoscope"></i> Mulai Periksa
+                </button>
+              </div>
+              <div class="col-xs-6" style="padding-left: 5px;">
+                <button type="button" class="btn btn-default btn-block" style="font-weight: bold; padding: 8px 5px; border-radius: 6px; color: #16a34a; border-color: #16a34a;" onclick="selesaiPeriksaPoliAktif()" title="Pemeriksaan dokter selesai (Task ID 5 BPJS)">
+                  <i class="fa fa-check-circle"></i> Selesai Periksa
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- RINGKASAN STATISTIK HARI INI -->
+          <div class="panel-footer" style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 15px 20px;">
+            <div class="row text-center">
+              <div class="col-xs-3" style="border-right: 1px solid #e2e8f0;">
+                <div style="font-size: 10.5px; color: #64748b; font-weight: 700; text-transform: uppercase;">Total</div>
+                <strong id="poli_stat_total" style="font-size: 18px; color: #0284c7;">{$stat_total}</strong>
+              </div>
+              <div class="col-xs-3" style="border-right: 1px solid #e2e8f0;">
+                <div style="font-size: 10.5px; color: #64748b; font-weight: 700; text-transform: uppercase;">Menunggu</div>
+                <strong id="poli_stat_menunggu" style="font-size: 18px; color: #d97706;">{$stat_menunggu}</strong>
+              </div>
+              <div class="col-xs-3" style="border-right: 1px solid #e2e8f0;">
+                <div style="font-size: 10.5px; color: #64748b; font-weight: 700; text-transform: uppercase;">Diperiksa</div>
+                <strong id="poli_stat_periksa" style="font-size: 18px; color: #2563eb;">{$stat_periksa}</strong>
+              </div>
+              <div class="col-xs-3">
+                <div style="font-size: 10.5px; color: #64748b; font-weight: 700; text-transform: uppercase;">Selesai</div>
+                <strong id="poli_stat_sudah" style="font-size: 18px; color: #16a34a;">{$stat_sudah}</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <input type="hidden" id="active_poli_rawat" value="{$no_rawat_panggil_aktif}">
+        <input type="hidden" id="active_poli_reg" value="{$nomor_panggil_aktif}">
+        <input type="hidden" id="active_poli_nama" value="{$nama_panggil_aktif}">
+        <input type="hidden" id="active_poli_kd_poli" value="{$kd_poli_aktif}">
+        <input type="hidden" id="active_poli_nm_poli" value="{$nama_poli_aktif}">
+        <input type="hidden" id="active_poli_kd_dokter" value="{$kd_dokter_aktif}">
+        <input type="hidden" id="active_poli_nm_dokter" value="{$dokter_panggil_aktif}">
+      </div>
+
+      <!-- KOLOM KANAN: TABEL LIVE PASIEN POLI HARI INI -->
+      <div class="col-md-7 col-sm-12">
+        <div class="panel panel-default" style="box-shadow: 0 4px 18px rgba(0,0,0,0.08); border-radius: 12px; overflow: hidden; border: 1px solid #cbd5e1;">
+          <div class="panel-heading" style="background: linear-gradient(135deg, #1e293b 0%, #334155 100%); color: #fff; padding: 12px 18px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+              <h4 style="margin: 0; font-size: 16px; font-weight: bold; color: #f8fafc;">
+                <i class="fa fa-list text-info"></i> Daftar Antrean Pasien Hari Ini ({?=date('d/m/Y')?})
+              </h4>
+              <span class="label label-success" style="font-size: 11px; padding: 4px 8px;">Live Polling Aktif</span>
+            </div>
+          </div>
+
+          <div class="panel-body" style="padding: 15px 18px;">
+            <!-- Filter Status & Cari Pasien -->
+            <div class="row" style="margin-bottom: 12px;">
+              <div class="col-sm-7" style="margin-bottom: 8px;">
+                <div class="btn-group btn-group-xs" role="group">
+                  <button type="button" class="btn btn-primary active btn-poli-filter" data-stts="all" onclick="filterPoliStatus('all', this)">Semua</button>
+                  <button type="button" class="btn btn-default btn-poli-filter" data-stts="Belum" onclick="filterPoliStatus('Belum', this)">Menunggu</button>
+                  <button type="button" class="btn btn-default btn-poli-filter" data-stts="Berkas Diterima" onclick="filterPoliStatus('Berkas Diterima', this)">Diperiksa</button>
+                  <button type="button" class="btn btn-default btn-poli-filter" data-stts="Sudah" onclick="filterPoliStatus('Sudah', this)">Selesai</button>
+                </div>
+              </div>
+              <div class="col-sm-5">
+                <input type="text" id="searchPasienPoli" class="form-control input-sm" placeholder="Cari No. Antre / RM / Pasien...">
+              </div>
+            </div>
+
+            <!-- Tabel Daftar Pasien -->
+            <div class="table-responsive" style="max-height: 460px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px;">
+              <table class="table table-hover table-striped" style="margin-bottom: 0; font-size: 12.5px;">
+                <thead style="background: #f1f5f9; position: sticky; top: 0; z-index: 5;">
+                  <tr>
+                    <th style="width: 70px; text-align: center;">No. Reg</th>
+                    <th>Pasien & No. RM</th>
+                    <th>Dokter & Penjamin</th>
+                    <th style="width: 100px; text-align: center;">Status</th>
+                    <th style="width: 130px; text-align: center;">Aksi Panggil</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody_antrian_poli">
+                  {if: !empty($antrian_poli_list)}
+                    {loop: $antrian_poli_list}
+                    <tr class="row-poli-patient" data-stts="{$value.stts}" data-search="{?=strtolower($value.no_reg . ' ' . $value.no_rkm_medis . ' ' . $value.nm_pasien . ' ' . $value.nm_dokter)?}">
+                      <td style="text-align: center; vertical-align: middle;">
+                        <span class="badge" style="background: #0284c7; font-size: 13px; font-weight: bold; padding: 4px 8px;">
+                          {$value.no_reg}
+                        </span>
+                      </td>
+                      <td style="vertical-align: middle;">
+                        <div style="font-weight: bold; color: #1e293b;">{$value.nm_pasien}</div>
+                        <small class="text-muted"><i class="fa fa-id-card-o"></i> {$value.no_rkm_medis} &bull; Jam: {$value.jam_reg}</small>
+                      </td>
+                      <td style="vertical-align: middle;">
+                        <div style="font-size: 11.5px; color: #334155;"><i class="fa fa-user-md text-primary"></i> {$value.nm_dokter}</div>
+                        <span class="label {if: strpos(strtolower($value.png_jawab), 'bpjs') !== false}label-success{else}label-default{/if}" style="font-size: 10px;">
+                          {$value.png_jawab}
+                        </span>
+                        {if: !empty($value.is_hadir)}
+                          <span class="label label-info" style="font-size: 10px;" title="Pasien sudah check-in di anjungan/hadir"><i class="fa fa-check"></i> Hadir</span>
+                        {/if}
+                      </td>
+                      <td style="text-align: center; vertical-align: middle;">
+                        {if: $value.stts == 'Belum'}
+                          <span class="label label-warning" style="font-size: 11px;">Menunggu</span>
+                        {elseif: $value.stts == 'Berkas Diterima'}
+                          <span class="label label-primary" style="font-size: 11px;"><i class="fa fa-stethoscope"></i> Diperiksa</span>
+                        {elseif: $value.stts == 'Sudah'}
+                          <span class="label label-success" style="font-size: 11px;"><i class="fa fa-check"></i> Selesai</span>
+                        {elseif: $value.stts == 'Batal'}
+                          <span class="label label-danger" style="font-size: 11px;">Batal</span>
+                        {else}
+                          <span class="label label-default" style="font-size: 11px;">{$value.stts}</span>
+                        {/if}
+                      </td>
+                      <td style="text-align: center; vertical-align: middle;">
+                        <div class="btn-group btn-group-xs" role="group">
+                          <button type="button" class="btn btn-success" title="Panggil Pasien Ini dengan Suara" onclick="panggilPasienPoliDirect('{$value.no_reg}', '{?=addslashes($value.nm_pasien)?}', '{$value.no_rawat}', '{?=addslashes($value.nm_dokter)?}')">
+                            <i class="fa fa-bullhorn"></i>
+                          </button>
+                          {if: $value.stts == 'Belum'}
+                          <button type="button" class="btn btn-info" title="Mulai Periksa (Task ID 4)" onclick="mulaiPeriksaPoliDirect('{$value.no_rawat}')">
+                            <i class="fa fa-stethoscope"></i>
+                          </button>
+                          {/if}
+                          {if: $value.stts == 'Berkas Diterima'}
+                          <button type="button" class="btn btn-primary" title="Selesai Periksa (Task ID 5)" onclick="selesaiPeriksaPoliDirect('{$value.no_rawat}')">
+                            <i class="fa fa-check"></i>
+                          </button>
+                          {/if}
+                          <button type="button" class="btn btn-danger" title="Lewati / Skip" onclick="skipPoliDirect('{$value.no_rawat}')">
+                            <i class="fa fa-step-forward"></i>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                    {/loop}
+                  {else}
+                    <tr>
+                      <td colspan="5" class="text-center text-muted" style="padding: 30px;">
+                        <i class="fa fa-folder-open-o" style="font-size: 32px; color: #cbd5e1; display: block; margin-bottom: 8px;"></i>
+                        Belum ada pasien terdaftar di {$nama_poli_aktif} hari ini ({?=date('d/m/Y')?}).
+                      </td>
+                    </tr>
+                  {/if}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="panel-footer" style="background: #f8fafc; font-size: 11.5px; color: #475569; padding: 10px 18px;">
+            <i class="fa fa-info-circle text-info"></i> Klik tombol <span class="label label-success" style="font-size: 10px;"><i class="fa fa-bullhorn"></i></span> untuk memanggil pasien langsung dengan suara. Status <b>Diperiksa</b> otomatis mengirim Task ID 4 BPJS Antrean.
+          </div>
+        </div>
+      </div>
+    </div>
+    {else}
     <!-- BAR PEMILIH LOKET DINAMIS & FLEKSIBEL -->
     <div style="background: #ffffff; padding: 12px 20px; border-radius: 10px; margin-top: 15px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
       <div style="font-size: 15px; font-weight: bold; color: #1e293b; display: flex; align-items: center; gap: 8px;">
@@ -393,6 +677,7 @@
     </div>
   </div>
   {/if}
+  {/if}
 
   <div class="container" style="margin-bottom: 60px;">
     <div class="alert alert-info text-left" style="background: rgba(13, 37, 68, 0.85); color: #e2e8f0; border: 1px solid rgba(255,255,255,0.15);">
@@ -427,7 +712,7 @@
       alert('Masukkan nomor loket yang valid!');
       return;
     }
-    window.location.href = '{?=url([ADMIN, "anjungan", "pemanggil"])?}?show=' + encodeURIComponent(curShow) + '&loket=' + customL;
+    window.location.href = '{?=url(ADMIN."/anjungan/pemanggil/?show=" . $show)?}&loket=' + customL;
   }
 
   // Live real-time counter polling (sync with TV Display)
@@ -892,4 +1177,298 @@
     });
   });
   {/loop}
+
+  // ==============================================
+  // JAVASCRIPT LOGIC KHUSUS PEMANGGIL POLIKLINIK
+  // ==============================================
+  function switchPoli(kd) {
+    var baseUrl = '{?=url(ADMIN."/anjungan/pemanggil/?show=panggil_poli")?}';
+    window.location.href = baseUrl + '&kd_poli=' + encodeURIComponent(kd);
+  }
+
+  function switchDokter(kd) {
+    var poli = $('#selectPoliPemanggil').val();
+    var baseUrl = '{?=url(ADMIN."/anjungan/pemanggil/?show=panggil_poli")?}';
+    window.location.href = baseUrl + '&kd_poli=' + encodeURIComponent(poli) + '&kd_dokter=' + encodeURIComponent(kd);
+  }
+
+  function filterPoliStatus(stts, btn) {
+    $('.btn-poli-filter').removeClass('btn-primary active').addClass('btn-default');
+    $(btn).removeClass('btn-default').addClass('btn-primary active');
+
+    if (stts === 'all') {
+      $('.row-poli-patient').show();
+    } else {
+      $('.row-poli-patient').hide();
+      $('.row-poli-patient[data-stts="' + stts + '"]').show();
+    }
+  }
+
+  // Cari cepat nama/no pasien poli
+  $('#searchPasienPoli').on('keyup', function() {
+    var val = $(this).val().toLowerCase().trim();
+    $('.row-poli-patient').each(function() {
+      var text = $(this).attr('data-search') || '';
+      if (!val || text.indexOf(val) !== -1) {
+        $(this).show();
+      } else {
+        $(this).hide();
+      }
+    });
+  });
+
+  // Pemutar Suara Panggilan Poliklinik (TTS Bahasa Indonesia)
+  function speakPoliCall(no_reg, nm_pasien, nm_poli, nm_dokter) {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+
+      // Sound chime ding-dong effect
+      try {
+        var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        var osc = audioCtx.createOscillator();
+        var gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+        osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.15); // E5
+        osc.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.3); // G5
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.6);
+        osc.start(audioCtx.currentTime);
+        osc.stop(audioCtx.currentTime + 0.6);
+      } catch (e) {}
+
+      var cleanReg = parseInt(no_reg, 10) || no_reg;
+      var text = 'Nomor antrean, ' + cleanReg + ', atas nama ' + nm_pasien + ', silakan menuju ke ' + nm_poli;
+      if (nm_dokter && nm_dokter !== '-') {
+        text += ', dokter ' + nm_dokter;
+      }
+
+      var utter = new SpeechSynthesisUtterance(text);
+      utter.lang = 'id-ID';
+      utter.rate = 0.9;
+      utter.pitch = 1.0;
+
+      // Cari suara bahasa Indonesia jika ada
+      var voices = window.speechSynthesis.getVoices();
+      for (var i = 0; i < voices.length; i++) {
+        if (voices[i].lang.indexOf('id') !== -1 || voices[i].lang.indexOf('ID') !== -1) {
+          utter.voice = voices[i];
+          break;
+        }
+      }
+
+      $('#poli_calling_status_alert').show();
+      $('#poli_calling_status_text').text('Mengumumkan: ' + text);
+
+      utter.onend = function() {
+        setTimeout(function() {
+          $('#poli_calling_status_alert').fadeOut();
+        }, 1500);
+      };
+      utter.onerror = function() {
+        $('#poli_calling_status_alert').fadeOut();
+      };
+
+      setTimeout(function() {
+        window.speechSynthesis.speak(utter);
+      }, 500);
+    }
+  }
+
+  function panggilSuaraPoliAktif() {
+    var rawat = $('#active_poli_rawat').val();
+    var reg = $('#active_poli_reg').val();
+    var nama = $('#active_poli_nama').val();
+    var kd_poli = $('#active_poli_kd_poli').val();
+    var nm_poli = $('#active_poli_nm_poli').val();
+    var kd_dokter = $('#active_poli_kd_dokter').val();
+    var nm_dokter = $('#active_poli_nm_dokter').val();
+
+    if (!reg || reg === '---' || !nama || nama.indexOf('Belum Ada') !== -1) {
+      alert('Belum ada antrean pasien yang dipilih.');
+      return;
+    }
+
+    panggilPasienPoliDirect(reg, nama, rawat, nm_dokter);
+  }
+
+  function panggilPasienPoliDirect(no_reg, nm_pasien, no_rawat, nm_dokter) {
+    var kd_poli = $('#selectPoliPemanggil').val();
+    var nm_poli = $('#selectPoliPemanggil option:selected').text();
+    var kd_dokter = $('#selectDokterPemanggil').val() || '';
+
+    $('#poli_display_num').text(no_reg);
+    $('#poli_display_nama').text(nm_pasien);
+    $('#poli_display_dokter_text').text(nm_dokter || '-');
+    $('#active_poli_rawat').val(no_rawat);
+    $('#active_poli_reg').val(no_reg);
+    $('#active_poli_nama').val(nm_pasien);
+
+    // Suarakan TTS
+    speakPoliCall(no_reg, nm_pasien, nm_poli, nm_dokter);
+
+    // Kirim update ke backend
+    $.ajax({
+      url: '{?=url([ADMIN, "anjungan", "panggilpoli"])?}',
+      type: 'POST',
+      data: {
+        action: 'call',
+        no_rawat: no_rawat,
+        no_reg: no_reg,
+        nm_pasien: nm_pasien,
+        kd_poli: kd_poli,
+        nm_poli: nm_poli,
+        kd_dokter: kd_dokter,
+        nm_dokter: nm_dokter
+      },
+      dataType: 'json',
+      success: function(resp) {
+        if (resp && resp.status) {
+          refreshPoliTable();
+        }
+      }
+    });
+  }
+
+  function panggilNextPoli() {
+    // Cari pasien pertama di baris tabel yang berstatus 'Belum'
+    var firstWaiting = $('.row-poli-patient[data-stts="Belum"]').first();
+    if (firstWaiting.length > 0) {
+      var callBtn = firstWaiting.find('button.btn-success');
+      if (callBtn.length > 0) {
+        callBtn.click();
+        return;
+      }
+    }
+    alert('Tidak ada pasien yang menunggu lagi di poliklinik ini.');
+  }
+
+  function mulaiPeriksaPoliDirect(no_rawat) {
+    $.ajax({
+      url: '{?=url([ADMIN, "anjungan", "panggilpoli"])?}',
+      type: 'POST',
+      data: { action: 'hadir', no_rawat: no_rawat },
+      dataType: 'json',
+      success: function(resp) {
+        refreshPoliTable();
+      }
+    });
+  }
+
+  function mulaiPeriksaPoliAktif() {
+    var rawat = $('#active_poli_rawat').val();
+    if (!rawat) {
+      alert('Pilih pasien terlebih dahulu.');
+      return;
+    }
+    mulaiPeriksaPoliDirect(rawat);
+  }
+
+  function selesaiPeriksaPoliDirect(no_rawat) {
+    if (!confirm('Tandai pemeriksaan pasien ini sudah selesai? (Task ID 5 BPJS)')) return;
+    $.ajax({
+      url: '{?=url([ADMIN, "anjungan", "panggilpoli"])?}',
+      type: 'POST',
+      data: { action: 'finish', no_rawat: no_rawat },
+      dataType: 'json',
+      success: function(resp) {
+        refreshPoliTable();
+      }
+    });
+  }
+
+  function selesaiPeriksaPoliAktif() {
+    var rawat = $('#active_poli_rawat').val();
+    if (!rawat) {
+      alert('Pilih pasien terlebih dahulu.');
+      return;
+    }
+    selesaiPeriksaPoliDirect(rawat);
+  }
+
+  function skipPoliDirect(no_rawat) {
+    if (!confirm('Lewati antrean pasien ini?')) return;
+    $.ajax({
+      url: '{?=url([ADMIN, "anjungan", "panggilpoli"])?}',
+      type: 'POST',
+      data: { action: 'skip', no_rawat: no_rawat },
+      dataType: 'json',
+      success: function(resp) {
+        refreshPoliTable();
+      }
+    });
+  }
+
+  function refreshPoliTable() {
+    var kd_poli = $('#selectPoliPemanggil').val();
+    var kd_dokter = $('#selectDokterPemanggil').val() || '';
+
+    $.ajax({
+      url: '{?=url([ADMIN, "anjungan", "antrianpolilive"])?}',
+      type: 'GET',
+      data: { kd_poli: kd_poli, kd_dokter: kd_dokter },
+      dataType: 'json',
+      success: function(resp) {
+        if (!resp || !resp.status) return;
+
+        // Update stats counters
+        if (resp.stats) {
+          $('#poli_stat_total').text(resp.stats.total);
+          $('#poli_stat_menunggu').text(resp.stats.menunggu);
+          $('#poli_stat_periksa').text(resp.stats.periksa);
+          $('#poli_stat_sudah').text(resp.stats.sudah);
+        }
+
+        // Render rows
+        if (resp.patients && resp.patients.length > 0) {
+          var html = '';
+          $.each(resp.patients, function(i, p) {
+            var badgeStts = '<span class="label label-default" style="font-size: 11px;">' + p.stts + '</span>';
+            if (p.stts === 'Belum') badgeStts = '<span class="label label-warning" style="font-size: 11px;">Menunggu</span>';
+            if (p.stts === 'Berkas Diterima') badgeStts = '<span class="label label-primary" style="font-size: 11px;"><i class="fa fa-stethoscope"></i> Diperiksa</span>';
+            if (p.stts === 'Sudah') badgeStts = '<span class="label label-success" style="font-size: 11px;"><i class="fa fa-check"></i> Selesai</span>';
+            if (p.stts === 'Batal') badgeStts = '<span class="label label-danger" style="font-size: 11px;">Batal</span>';
+
+            var isHadirBadge = p.is_hadir ? ' <span class="label label-info" style="font-size: 10px;" title="Pasien sudah check-in/hadir"><i class="fa fa-check"></i> Hadir</span>' : '';
+            var isBpjs = (p.png_jawab || '').toLowerCase().indexOf('bpjs') !== -1;
+            var pjBadge = '<span class="label ' + (isBpjs ? 'label-success' : 'label-default') + '" style="font-size: 10px;">' + (p.png_jawab || '-') + '</span>';
+
+            var safeNama = (p.nm_pasien || '').replace(/'/g, "\\'");
+            var safeDokter = (p.nm_dokter || '').replace(/'/g, "\\'");
+
+            var actionBtns = '<button type="button" class="btn btn-success" title="Panggil Pasien Ini dengan Suara" onclick="panggilPasienPoliDirect(\'' + p.no_reg + '\', \'' + safeNama + '\', \'' + p.no_rawat + '\', \'' + safeDokter + '\')"><i class="fa fa-bullhorn"></i></button>';
+            if (p.stts === 'Belum') {
+              actionBtns += ' <button type="button" class="btn btn-info" title="Mulai Periksa (Task ID 4)" onclick="mulaiPeriksaPoliDirect(\'' + p.no_rawat + '\')"><i class="fa fa-stethoscope"></i></button>';
+            }
+            if (p.stts === 'Berkas Diterima') {
+              actionBtns += ' <button type="button" class="btn btn-primary" title="Selesai Periksa (Task ID 5)" onclick="selesaiPeriksaPoliDirect(\'' + p.no_rawat + '\')"><i class="fa fa-check"></i></button>';
+            }
+            actionBtns += ' <button type="button" class="btn btn-danger" title="Lewati / Skip" onclick="skipPoliDirect(\'' + p.no_rawat + '\')"><i class="fa fa-step-forward"></i></button>';
+
+            var searchData = (p.no_reg + ' ' + p.no_rkm_medis + ' ' + p.nm_pasien + ' ' + p.nm_dokter).toLowerCase();
+
+            html += '<tr class="row-poli-patient" data-stts="' + p.stts + '" data-search="' + searchData + '">' +
+              '<td style="text-align: center; vertical-align: middle;"><span class="badge" style="background: #0284c7; font-size: 13px; font-weight: bold; padding: 4px 8px;">' + p.no_reg + '</span></td>' +
+              '<td style="vertical-align: middle;"><div style="font-weight: bold; color: #1e293b;">' + p.nm_pasien + '</div><small class="text-muted"><i class="fa fa-id-card-o"></i> ' + p.no_rkm_medis + ' &bull; Jam: ' + p.jam_reg + '</small></td>' +
+              '<td style="vertical-align: middle;"><div style="font-size: 11.5px; color: #334155;"><i class="fa fa-user-md text-primary"></i> ' + p.nm_dokter + '</div>' + pjBadge + isHadirBadge + '</td>' +
+              '<td style="text-align: center; vertical-align: middle;">' + badgeStts + '</td>' +
+              '<td style="text-align: center; vertical-align: middle;"><div class="btn-group btn-group-xs" role="group">' + actionBtns + '</div></td>' +
+            '</tr>';
+          });
+          $('#tbody_antrian_poli').html(html);
+        } else {
+          $('#tbody_antrian_poli').html('<tr><td colspan="5" class="text-center text-muted" style="padding: 30px;"><i class="fa fa-folder-open-o" style="font-size: 32px; color: #cbd5e1; display: block; margin-bottom: 8px;"></i>Belum ada pasien terdaftar di poliklinik ini hari ini.</td></tr>');
+        }
+      }
+    });
+  }
+
+  if (curShow === 'panggil_poli') {
+    // Auto-refresh daftar pasien setiap 10 detik
+    setInterval(function() {
+      refreshPoliTable();
+    }, 10000);
+  }
   </script>

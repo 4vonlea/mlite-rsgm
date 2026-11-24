@@ -49,6 +49,31 @@ class Admin extends AdminModule
       }
       $tanggal       = getDayIndonesia(date('Y-m-d')).', '.dateIndonesia(date('Y-m-d'));
       $username      = !empty($_username) ? $_username : $__username;
+      $date          = date('Y-m-d');
+
+      // Ambil nomor antrean terkini untuk ke-4 kartu navigasi atas
+      $loketFirst = 1;
+      $loketSecond = 2;
+      $loketRaw = $this->settings->get('anjungan.antrian_loket') ?: '1,2';
+      $loketArr = array_values(array_filter(array_map('trim', explode(",", $loketRaw))));
+      if(!empty($loketArr)) {
+        $loketFirst = intval($loketArr[0]);
+        if(isset($loketArr[1])) $loketSecond = intval($loketArr[1]);
+      }
+
+      $loket1DB = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'Loket')->where('loket', $loketFirst)->where('postdate', $date)->where('status', '>=', 1)->desc('kd')->oneArray();
+      $init_loket1_no = !empty($loket1DB['noantrian']) ? $loket1DB['noantrian'] : 0;
+
+      $loket2DB = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'Loket')->where('loket', $loketSecond)->where('postdate', $date)->where('status', '>=', 1)->desc('kd')->oneArray();
+      $init_card2_no = !empty($loket2DB['noantrian']) ? $loket2DB['noantrian'] : 0;
+
+      $apotekDB = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'Apotek')->where('postdate', $date)->where('status', '>=', 1)->desc('kd')->oneArray();
+      $init_apotek_no = !empty($apotekDB['noantrian']) ? $apotekDB['noantrian'] : 0;
+
+      $init_poli_no = $this->settings->get('anjungan.panggil_poli_nomor') ?: '000';
+      if($this->settings->get('anjungan.panggil_poli_tanggal') != $date) {
+        $init_poli_no = '000';
+      }
 
       $show = !empty($_GET['show']) ? $_GET['show'] : "panggil_loket";
       switch($show){
@@ -521,6 +546,135 @@ class Admin extends AdminModule
           };
 
         break;
+        case "panggil_poli":
+          $display = 'Panggil Poliklinik';
+          $namaloket = 'poli';
+          $panggil_loket = 'panggil_poli';
+          $loket = ['1'];
+          $activeLoket = 1;
+
+          // Daftar Poliklinik Aktif (kecuali poli dummy '-')
+          $daftar_poli = $this->db('poliklinik')->where('status', '1')->where('kd_poli', '!=', '-')->asc('nm_poli')->toArray();
+          $kd_poli_aktif = isset($_GET['kd_poli']) && !empty($_GET['kd_poli']) ? $_GET['kd_poli'] : (!empty($daftar_poli) ? $daftar_poli[0]['kd_poli'] : '');
+
+          // Detail Poli Aktif
+          $poli_aktif = $this->db('poliklinik')->where('kd_poli', $kd_poli_aktif)->oneArray();
+          $nama_poli_aktif = !empty($poli_aktif['nm_poli']) ? $poli_aktif['nm_poli'] : 'Poliklinik';
+
+          // Daftar Dokter Aktif
+          $daftar_dokter = $this->db('dokter')->where('status', '1')->asc('nm_dokter')->toArray();
+          $kd_dokter_aktif = isset($_GET['kd_dokter']) ? $_GET['kd_dokter'] : '';
+
+          // Pasien Hari Ini di Poli Terpilih
+          $qPasien = $this->db('reg_periksa')
+            ->select('reg_periksa.no_reg')
+            ->select('reg_periksa.no_rawat')
+            ->select('reg_periksa.no_rkm_medis')
+            ->select('reg_periksa.kd_poli')
+            ->select('reg_periksa.kd_dokter')
+            ->select('reg_periksa.jam_reg')
+            ->select('reg_periksa.stts')
+            ->select('reg_periksa.status_lanjut')
+            ->select('pasien.nm_pasien')
+            ->select('dokter.nm_dokter')
+            ->select('penjab.png_jawab')
+            ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+            ->join('dokter', 'dokter.kd_dokter = reg_periksa.kd_dokter')
+            ->join('penjab', 'penjab.kd_pj = reg_periksa.kd_pj')
+            ->where('reg_periksa.tgl_registrasi', $date)
+            ->where('reg_periksa.kd_poli', $kd_poli_aktif);
+
+          if(!empty($kd_dokter_aktif)) {
+            $qPasien->where('reg_periksa.kd_dokter', $kd_dokter_aktif);
+          }
+          $antrian_poli_list = $qPasien->asc('reg_periksa.no_reg')->toArray();
+
+          // Cek data kehadiran / check-in dari APM / Loket
+          $checkinRM = [];
+          try {
+            $chkRows = $this->db('mlite_antrian_loket')->select('no_rkm_medis')->where('postdate', $date)->where('status', 2)->toArray();
+            foreach($chkRows as $cr) {
+              if(!empty($cr['no_rkm_medis'])) $checkinRM[$cr['no_rkm_medis']] = true;
+            }
+          } catch(\Throwable $e){}
+
+          // Hitung Statistik
+          $stat_total = count($antrian_poli_list);
+          $stat_menunggu = 0;
+          $stat_periksa = 0;
+          $stat_sudah = 0;
+          $stat_batal = 0;
+          $next_pasien = null;
+          $current_exam_pasien = null;
+
+          foreach($antrian_poli_list as &$p) {
+            $p['is_hadir'] = isset($checkinRM[$p['no_rkm_medis']]) || in_array($p['stts'], ['Berkas Diterima', 'Sudah']);
+            if($p['stts'] == 'Belum') {
+              $stat_menunggu++;
+              if($next_pasien === null) {
+                $next_pasien = $p;
+              }
+            } elseif($p['stts'] == 'Berkas Diterima') {
+              $stat_periksa++;
+              if($current_exam_pasien === null) {
+                $current_exam_pasien = $p;
+              }
+            } elseif($p['stts'] == 'Sudah') {
+              $stat_sudah++;
+            } elseif($p['stts'] == 'Batal') {
+              $stat_batal++;
+            }
+          }
+          unset($p);
+
+          // Panggilan aktif dari settings
+          $set_nomor = $this->settings->get('anjungan.panggil_poli_nomor');
+          $set_nama = $this->settings->get('anjungan.panggil_poli_nama');
+          $set_dokter = $this->settings->get('anjungan.panggil_poli_dokter');
+          $set_kd_poli = $this->settings->get('anjungan.panggil_poli_kd_poli');
+          $set_tgl = $this->settings->get('anjungan.panggil_poli_tanggal');
+
+          $nomor_panggil_aktif = '---';
+          $nama_panggil_aktif = 'Belum Ada Panggilan';
+          $dokter_panggil_aktif = '-';
+          $no_rawat_panggil_aktif = '';
+
+          if($set_tgl == $date && $set_kd_poli == $kd_poli_aktif && !empty($set_nomor)) {
+            $nomor_panggil_aktif = sprintf("%03d", intval($set_nomor));
+            $nama_panggil_aktif = $set_nama;
+            $dokter_panggil_aktif = $set_dokter;
+            foreach($antrian_poli_list as $pl) {
+              if(sprintf("%03d", intval($pl['no_reg'])) == $nomor_panggil_aktif) {
+                $no_rawat_panggil_aktif = $pl['no_rawat'];
+                break;
+              }
+            }
+          } elseif($current_exam_pasien !== null) {
+            $nomor_panggil_aktif = sprintf("%03d", intval($current_exam_pasien['no_reg']));
+            $nama_panggil_aktif = $current_exam_pasien['nm_pasien'];
+            $dokter_panggil_aktif = $current_exam_pasien['nm_dokter'];
+            $no_rawat_panggil_aktif = $current_exam_pasien['no_rawat'];
+          } elseif($next_pasien !== null) {
+            $nomor_panggil_aktif = sprintf("%03d", intval($next_pasien['no_reg']));
+            $nama_panggil_aktif = $next_pasien['nm_pasien'] . ' (Siap Dipanggil)';
+            $dokter_panggil_aktif = $next_pasien['nm_dokter'];
+            $no_rawat_panggil_aktif = $next_pasien['no_rawat'];
+          }
+
+          $tcounter = intval($nomor_panggil_aktif);
+          $noantrian = $stat_total;
+          $waiting_count = $stat_menunggu;
+          $next_waiting = $next_pasien ? sprintf("%03d", intval($next_pasien['no_reg'])) . ' - ' . $next_pasien['nm_pasien'] : '-';
+          $waiting_numbers = [];
+          foreach($antrian_poli_list as $pl) {
+            if($pl['stts'] == 'Belum') {
+              $waiting_numbers[] = sprintf("%03d", intval($pl['no_reg'])) . ' (' . $pl['nm_pasien'] . ')';
+            }
+          }
+          $skipped_count = $stat_batal;
+          $hitung_antrian = $antrian_poli_list;
+          $xcounter = [];
+        break;
       }
 
       return $this->draw('pemanggil.html', [
@@ -547,6 +701,23 @@ class Admin extends AdminModule
         'init_loket1_no' => sprintf("%03d", intval(isset_or($init_loket1_no, 0))),
         'init_card2_no' => sprintf("%03d", intval(isset_or($init_card2_no, 0))),
         'init_apotek_no' => sprintf("%03d", intval(isset_or($init_apotek_no, 0))),
+        'init_poli_no' => isset_or($init_poli_no, '000'),
+        'daftar_poli' => isset_or($daftar_poli, []),
+        'kd_poli_aktif' => isset_or($kd_poli_aktif, ''),
+        'nama_poli_aktif' => isset_or($nama_poli_aktif, ''),
+        'daftar_dokter' => isset_or($daftar_dokter, []),
+        'kd_dokter_aktif' => isset_or($kd_dokter_aktif, ''),
+        'antrian_poli_list' => isset_or($antrian_poli_list, []),
+        'stat_total' => isset_or($stat_total, 0),
+        'stat_menunggu' => isset_or($stat_menunggu, 0),
+        'stat_periksa' => isset_or($stat_periksa, 0),
+        'stat_sudah' => isset_or($stat_sudah, 0),
+        'stat_batal' => isset_or($stat_batal, 0),
+        'nomor_panggil_aktif' => isset_or($nomor_panggil_aktif, '---'),
+        'nama_panggil_aktif' => isset_or($nama_panggil_aktif, '-'),
+        'dokter_panggil_aktif' => isset_or($dokter_panggil_aktif, '-'),
+        'no_rawat_panggil_aktif' => isset_or($no_rawat_panggil_aktif, ''),
+        'next_pasien' => isset_or($next_pasien, null),
         'display_card2' => $this->settings->get('anjungan.display_card2') ?: 'loket2',
         'nama_loket_1' => $this->settings->get('anjungan.nama_loket_1') ?: 'Loket Pendaftaran 1',
         'nama_loket_2' => $this->settings->get('anjungan.nama_loket_2') ?: 'Loket Pendaftaran 2',
@@ -555,6 +726,286 @@ class Admin extends AdminModule
         'daftar_loket' => $loket,
         'display' => $display
       ]);
+    }
+
+    public function postPanggilPoli()
+    {
+      $this->setTemplate(false);
+      header('Content-Type: application/json');
+
+      $action = $_POST['action'] ?? 'call';
+      $no_rawat = $_POST['no_rawat'] ?? '';
+      $no_reg = $_POST['no_reg'] ?? '';
+      $nm_pasien = $_POST['nm_pasien'] ?? '';
+      $kd_poli = $_POST['kd_poli'] ?? '';
+      $nm_poli = $_POST['nm_poli'] ?? '';
+      $kd_dokter = $_POST['kd_dokter'] ?? '';
+      $nm_dokter = $_POST['nm_dokter'] ?? '';
+
+      $date = date('Y-m-d');
+
+      // Ambil data pasien jika no_rawat ada namun data lain belum lengkap
+      if(!empty($no_rawat) && (empty($nm_pasien) || empty($no_reg))) {
+        $reg = $this->db('reg_periksa')
+          ->select('reg_periksa.*')
+          ->select('pasien.nm_pasien')
+          ->select('poliklinik.nm_poli')
+          ->select('dokter.nm_dokter')
+          ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+          ->join('poliklinik', 'poliklinik.kd_poli = reg_periksa.kd_poli')
+          ->join('dokter', 'dokter.kd_dokter = reg_periksa.kd_dokter')
+          ->where('reg_periksa.no_rawat', $no_rawat)
+          ->oneArray();
+        if($reg) {
+          $no_reg = $reg['no_reg'];
+          $nm_pasien = $reg['nm_pasien'];
+          $kd_poli = $reg['kd_poli'];
+          $nm_poli = $reg['nm_poli'];
+          $kd_dokter = $reg['kd_dokter'];
+          $nm_dokter = $reg['nm_dokter'];
+        }
+      }
+
+      if($action == 'call' || $action == 'recall') {
+        $this->settings->set('anjungan.panggil_poli_nomor', sprintf("%03d", intval($no_reg)));
+        $this->settings->set('anjungan.panggil_poli_nama', $nm_pasien);
+        $this->settings->set('anjungan.panggil_poli_dokter', $nm_dokter);
+        $this->settings->set('anjungan.panggil_poli_kd_poli', $kd_poli);
+        $this->settings->set('anjungan.panggil_poli_tujuan', $nm_poli);
+        $this->settings->set('anjungan.panggil_poli_tanggal', $date);
+        $this->settings->set('anjungan.panggil_poli_time', time());
+
+        // Update status pasien ke 'Berkas Diterima' jika masih 'Belum'
+        if(!empty($no_rawat)) {
+          $curr = $this->db('reg_periksa')->where('no_rawat', $no_rawat)->oneArray();
+          if($curr && $curr['stts'] == 'Belum') {
+            $this->db('reg_periksa')->where('no_rawat', $no_rawat)->save(['stts' => 'Berkas Diterima']);
+          }
+        }
+
+        // Catat Task ID 4 untuk BPJS Antrean (Mulai Pelayanan Poli)
+        try {
+          $regPeriksa = $this->db('reg_periksa')->where('no_rawat', $no_rawat)->oneArray();
+          if($regPeriksa) {
+            $norm = $regPeriksa['no_rkm_medis'];
+            $tgl = $regPeriksa['tgl_registrasi'];
+            $antrol = $this->db('mlite_antrian_referensi')->where('tanggal_periksa', $tgl)->where('no_rkm_medis', $norm)->oneArray();
+            if (!$antrol) {
+              $p = $this->db('pasien')->where('no_rkm_medis', $norm)->oneArray();
+              if ($p && !empty($p['no_peserta'])) {
+                $antrol = $this->db('mlite_antrian_referensi')->where('tanggal_periksa', $tgl)->where('nomor_kartu', $p['no_peserta'])->oneArray();
+              }
+            }
+            if ($antrol && !empty($antrol['kodebooking'])) {
+              $kb = $antrol['kodebooking'];
+              $nowMs = round(microtime(true) * 1000);
+              $t4 = $this->db('mlite_antrian_referensi_taskid')->where('nomor_referensi', $kb)->where('taskid', '4')->oneArray();
+              if (!$t4) {
+                $this->db('mlite_antrian_referensi_taskid')->save([
+                  'tanggal_periksa' => $tgl,
+                  'nomor_referensi' => $kb,
+                  'taskid' => 4,
+                  'waktu' => $nowMs,
+                  'status' => 'Belum',
+                  'keterangan' => 'Panggilan Ruang Poli Anjungan'
+                ]);
+              }
+            }
+          }
+        } catch(\Throwable $e){}
+
+        echo json_encode([
+          'status' => true,
+          'action' => $action,
+          'no_reg' => sprintf("%03d", intval($no_reg)),
+          'nm_pasien' => $nm_pasien,
+          'nm_poli' => $nm_poli,
+          'nm_dokter' => $nm_dokter,
+          'no_rawat' => $no_rawat,
+          'message' => 'Memanggil antrian ' . sprintf("%03d", intval($no_reg)) . ' - ' . $nm_pasien
+        ]);
+        exit();
+      }
+
+      if($action == 'finish') {
+        if(!empty($no_rawat)) {
+          $this->db('reg_periksa')->where('no_rawat', $no_rawat)->save(['stts' => 'Sudah']);
+
+          // Catat Task ID 5 untuk BPJS Antrean (Selesai Pelayanan Poli)
+          try {
+            $regPeriksa = $this->db('reg_periksa')->where('no_rawat', $no_rawat)->oneArray();
+            if($regPeriksa) {
+              $norm = $regPeriksa['no_rkm_medis'];
+              $tgl = $regPeriksa['tgl_registrasi'];
+              $antrol = $this->db('mlite_antrian_referensi')->where('tanggal_periksa', $tgl)->where('no_rkm_medis', $norm)->oneArray();
+              if (!$antrol) {
+                $p = $this->db('pasien')->where('no_rkm_medis', $norm)->oneArray();
+                if ($p && !empty($p['no_peserta'])) {
+                  $antrol = $this->db('mlite_antrian_referensi')->where('tanggal_periksa', $tgl)->where('nomor_kartu', $p['no_peserta'])->oneArray();
+                }
+              }
+              if ($antrol && !empty($antrol['kodebooking'])) {
+                $kb = $antrol['kodebooking'];
+                $nowMs = round(microtime(true) * 1000);
+                $t5 = $this->db('mlite_antrian_referensi_taskid')->where('nomor_referensi', $kb)->where('taskid', '5')->oneArray();
+                if (!$t5) {
+                  $this->db('mlite_antrian_referensi_taskid')->save([
+                    'tanggal_periksa' => $tgl,
+                    'nomor_referensi' => $kb,
+                    'taskid' => 5,
+                    'waktu' => $nowMs,
+                    'status' => 'Belum',
+                    'keterangan' => 'Selesai Layanan Poli Anjungan'
+                  ]);
+                }
+              }
+            }
+          } catch(\Throwable $e){}
+        }
+        echo json_encode(['status' => true, 'action' => 'finish', 'message' => 'Pelayanan pemeriksaan selesai']);
+        exit();
+      }
+
+      if($action == 'skip') {
+        if(!empty($no_rawat)) {
+          $this->db('reg_periksa')->where('no_rawat', $no_rawat)->save(['stts' => 'Batal']);
+        }
+        echo json_encode(['status' => true, 'action' => 'skip', 'message' => 'Antrian dilewati / ditandai batal']);
+        exit();
+      }
+
+      if($action == 'hadir') {
+        if(!empty($no_rawat)) {
+          $this->db('reg_periksa')->where('no_rawat', $no_rawat)->save(['stts' => 'Berkas Diterima']);
+
+          // Catat Task ID 4 untuk BPJS Antrean
+          try {
+            $regPeriksa = $this->db('reg_periksa')->where('no_rawat', $no_rawat)->oneArray();
+            if($regPeriksa) {
+              $norm = $regPeriksa['no_rkm_medis'];
+              $tgl = $regPeriksa['tgl_registrasi'];
+              $antrol = $this->db('mlite_antrian_referensi')->where('tanggal_periksa', $tgl)->where('no_rkm_medis', $norm)->oneArray();
+              if (!$antrol) {
+                $p = $this->db('pasien')->where('no_rkm_medis', $norm)->oneArray();
+                if ($p && !empty($p['no_peserta'])) {
+                  $antrol = $this->db('mlite_antrian_referensi')->where('tanggal_periksa', $tgl)->where('nomor_kartu', $p['no_peserta'])->oneArray();
+                }
+              }
+              if ($antrol && !empty($antrol['kodebooking'])) {
+                $kb = $antrol['kodebooking'];
+                $nowMs = round(microtime(true) * 1000);
+                $t4 = $this->db('mlite_antrian_referensi_taskid')->where('nomor_referensi', $kb)->where('taskid', '4')->oneArray();
+                if (!$t4) {
+                  $this->db('mlite_antrian_referensi_taskid')->save([
+                    'tanggal_periksa' => $tgl,
+                    'nomor_referensi' => $kb,
+                    'taskid' => 4,
+                    'waktu' => $nowMs,
+                    'status' => 'Belum',
+                    'keterangan' => 'Hadir Masuk Poli Anjungan'
+                  ]);
+                }
+              }
+            }
+          } catch(\Throwable $e){}
+        }
+        echo json_encode(['status' => true, 'action' => 'hadir', 'message' => 'Pasien ditandai hadir / berkas diterima']);
+        exit();
+      }
+
+      echo json_encode(['status' => false, 'message' => 'Aksi tidak dikenal']);
+      exit();
+    }
+
+    public function getAntrianPoliLive()
+    {
+      $this->setTemplate(false);
+      header('Content-Type: application/json');
+
+      $date = date('Y-m-d');
+      $kd_poli = $_GET['kd_poli'] ?? '';
+      $kd_dokter = $_GET['kd_dokter'] ?? '';
+
+      if(empty($kd_poli)) {
+        $firstPoli = $this->db('poliklinik')->where('status', '1')->asc('nm_poli')->oneArray();
+        $kd_poli = $firstPoli ? $firstPoli['kd_poli'] : '';
+      }
+
+      $qPasien = $this->db('reg_periksa')
+        ->select('reg_periksa.no_reg')
+        ->select('reg_periksa.no_rawat')
+        ->select('reg_periksa.no_rkm_medis')
+        ->select('reg_periksa.kd_poli')
+        ->select('reg_periksa.kd_dokter')
+        ->select('reg_periksa.jam_reg')
+        ->select('reg_periksa.stts')
+        ->select('reg_periksa.status_lanjut')
+        ->select('pasien.nm_pasien')
+        ->select('dokter.nm_dokter')
+        ->select('penjab.png_jawab')
+        ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+        ->join('dokter', 'dokter.kd_dokter = reg_periksa.kd_dokter')
+        ->join('penjab', 'penjab.kd_pj = reg_periksa.kd_pj')
+        ->where('reg_periksa.tgl_registrasi', $date)
+        ->where('reg_periksa.kd_poli', $kd_poli);
+
+      if(!empty($kd_dokter)) {
+        $qPasien->where('reg_periksa.kd_dokter', $kd_dokter);
+      }
+      $pasien_list = $qPasien->asc('reg_periksa.no_reg')->toArray();
+
+      $checkinRM = [];
+      try {
+        $chkRows = $this->db('mlite_antrian_loket')->select('no_rkm_medis')->where('postdate', $date)->where('status', 2)->toArray();
+        foreach($chkRows as $cr) {
+          if(!empty($cr['no_rkm_medis'])) $checkinRM[$cr['no_rkm_medis']] = true;
+        }
+      } catch(\Throwable $e){}
+
+      $stat_total = count($pasien_list);
+      $stat_menunggu = 0;
+      $stat_periksa = 0;
+      $stat_sudah = 0;
+      $stat_batal = 0;
+      $next_pasien = null;
+
+      foreach($pasien_list as &$p) {
+        $p['is_hadir'] = isset($checkinRM[$p['no_rkm_medis']]) || in_array($p['stts'], ['Berkas Diterima', 'Sudah']);
+        if($p['stts'] == 'Belum') {
+          $stat_menunggu++;
+          if($next_pasien === null) $next_pasien = $p;
+        } elseif($p['stts'] == 'Berkas Diterima') {
+          $stat_periksa++;
+        } elseif($p['stts'] == 'Sudah') {
+          $stat_sudah++;
+        } elseif($p['stts'] == 'Batal') {
+          $stat_batal++;
+        }
+      }
+      unset($p);
+
+      echo json_encode([
+        'status' => true,
+        'kd_poli' => $kd_poli,
+        'patients' => $pasien_list,
+        'stats' => [
+          'total' => $stat_total,
+          'menunggu' => $stat_menunggu,
+          'periksa' => $stat_periksa,
+          'sudah' => $stat_sudah,
+          'batal' => $stat_batal
+        ],
+        'next' => $next_pasien,
+        'active_call' => [
+          'nomor' => $this->settings->get('anjungan.panggil_poli_nomor'),
+          'nama' => $this->settings->get('anjungan.panggil_poli_nama'),
+          'poli' => $this->settings->get('anjungan.panggil_poli_tujuan'),
+          'dokter' => $this->settings->get('anjungan.panggil_poli_dokter'),
+          'kd_poli' => $this->settings->get('anjungan.panggil_poli_kd_poli'),
+          'time' => $this->settings->get('anjungan.panggil_poli_time')
+        ]
+      ]);
+      exit();
     }
 
     public function getSettings()

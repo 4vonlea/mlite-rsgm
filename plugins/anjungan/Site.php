@@ -58,6 +58,7 @@ class Site extends SiteModule
         $this->route('anjungan/apotek/ambilantrian', 'getDisplayAntrianApotekAmbil');
         $this->route('anjungan/ajax', 'getAjax');
         $this->route('anjungan/panggilantrian', 'getPanggilAntrian');
+        $this->route('anjungan/panggilpolistatus', 'getAntrianPoliStatus');
         $this->route('anjungan/panggilselesai', 'getPanggilSelesai');
         $this->route('anjungan/simpannorm', 'getSimpanNoRM');
         $this->route('anjungan/setpanggil', 'getSetPanggil');
@@ -516,6 +517,17 @@ class Site extends SiteModule
         $logo  = $this->settings->get('settings.logo');
         $display = $this->_resultDisplayAntrianPoli();
 
+        if(isset($_GET['ajax'])) {
+          $this->setTemplate(false);
+          header('Content-Type: application/json');
+          echo json_encode([
+            'status' => true,
+            'display' => $display,
+            'time' => date('H:i:s')
+          ]);
+          exit();
+        }
+
         $_username = '';
         $__username = 'Tamu';
         if(isset($_SESSION['mlite_user'])) {
@@ -670,6 +682,97 @@ class Site extends SiteModule
         }
 
         $date = date('Y-m-d');
+        $kd_poli = isset($slug[2]) ? $slug[2] : '';
+        $kd_dokter = isset($slug[3]) ? $slug[3] : '';
+
+        // AJAX polling endpoint untuk TV Display Poli Spesifik
+        if(isset($_GET['ajax'])) {
+          $this->setTemplate(false);
+          header('Content-Type: application/json');
+
+          $qPoli = $this->db('reg_periksa')
+            ->select('reg_periksa.no_reg')
+            ->select('reg_periksa.no_rawat')
+            ->select('reg_periksa.no_rkm_medis')
+            ->select('reg_periksa.kd_poli')
+            ->select('reg_periksa.kd_dokter')
+            ->select('reg_periksa.stts')
+            ->select('pasien.nm_pasien')
+            ->select('dokter.nm_dokter')
+            ->join('pasien', 'pasien.no_rkm_medis = reg_periksa.no_rkm_medis')
+            ->join('dokter', 'dokter.kd_dokter = reg_periksa.kd_dokter')
+            ->where('reg_periksa.tgl_registrasi', $date)
+            ->where('reg_periksa.kd_poli', $kd_poli);
+
+          if(!empty($kd_dokter)) {
+            $qPoli->where('reg_periksa.kd_dokter', $kd_dokter);
+          }
+          $patients = $qPoli->asc('reg_periksa.no_reg')->toArray();
+
+          $sedang_periksa = null;
+          $selanjutnya = [];
+          $total = count($patients);
+          $menunggu = 0;
+          $selesai = 0;
+
+          foreach($patients as $pt) {
+            if($pt['stts'] == 'Berkas Diterima' && $sedang_periksa === null) {
+              $sedang_periksa = $pt;
+            } elseif($pt['stts'] == 'Belum') {
+              $menunggu++;
+              if(count($selanjutnya) < 6) {
+                $selanjutnya[] = [
+                  'no_reg' => sprintf("%03d", intval($pt['no_reg'])),
+                  'nm_pasien' => $pt['nm_pasien'],
+                  'nm_dokter' => $pt['nm_dokter']
+                ];
+              }
+            } elseif($pt['stts'] == 'Sudah') {
+              $selesai++;
+            }
+          }
+
+          // Panggilan aktif dari setting
+          $set_nomor = $this->settings->get('anjungan.panggil_poli_nomor');
+          $set_nama = $this->settings->get('anjungan.panggil_poli_nama');
+          $set_dokter = $this->settings->get('anjungan.panggil_poli_dokter');
+          $set_kd_poli = $this->settings->get('anjungan.panggil_poli_kd_poli');
+          $set_tgl = $this->settings->get('anjungan.panggil_poli_tanggal');
+          $set_time = intval($this->settings->get('anjungan.panggil_poli_time') ?: 0);
+
+          $active_call = null;
+          if($set_tgl == $date && $set_kd_poli == $kd_poli && !empty($set_nomor)) {
+            $active_call = [
+              'nomor' => sprintf("%03d", intval($set_nomor)),
+              'nama' => $set_nama,
+              'dokter' => $set_dokter,
+              'time' => $set_time
+            ];
+          } elseif($sedang_periksa !== null) {
+            $active_call = [
+              'nomor' => sprintf("%03d", intval($sedang_periksa['no_reg'])),
+              'nama' => $sedang_periksa['nm_pasien'],
+              'dokter' => $sedang_periksa['nm_dokter'],
+              'time' => 0
+            ];
+          }
+
+          echo json_encode([
+            'status' => true,
+            'kd_poli' => $kd_poli,
+            'active_call' => $active_call,
+            'selanjutnya' => $selanjutnya,
+            'total' => $total,
+            'menunggu' => $menunggu,
+            'selesai' => $selesai,
+            'time' => date('H:i:s')
+          ]);
+          exit();
+        }
+
+        $detail_poli = $this->db('poliklinik')->where('kd_poli', $kd_poli)->oneArray();
+        $nm_poli = $detail_poli ? $detail_poli['nm_poli'] : 'Poliklinik';
+
         $tentukan_hari=date('D',strtotime(date('Y-m-d')));
         $day = array(
           'Sun' => 'AKHAD',
@@ -702,6 +805,8 @@ class Site extends SiteModule
           'vidio' => $vidio,
           'running_text' => $running_text,
           'jadwal' => $jadwal,
+          'kd_poli' => $kd_poli,
+          'nm_poli' => $nm_poli,
           'slug' => $slug
         ]);
 
@@ -837,7 +942,21 @@ class Site extends SiteModule
         $poliklinik = $slug[3];
         $query = $this->db()->pdo()->prepare("SELECT a.kd_dokter, a.kd_poli, b.nm_poli, c.nm_dokter, a.jam_mulai, a.jam_selesai FROM jadwal a, poliklinik b, dokter c WHERE a.kd_poli = b.kd_poli AND a.kd_dokter = c.kd_dokter AND a.hari_kerja = '$hari' AND a.kd_poli = '$poliklinik'");
         $query->execute();
-        $rows = $query->fetchAll(\PDO::FETCH_ASSOC);;
+        $rows = $query->fetchAll(\PDO::FETCH_ASSOC);
+
+        // Fallback 1: Jika tabel jadwal kosong hari ini, ambil dari registrasi aktif hari ini
+        if (empty($rows)) {
+            $query2 = $this->db()->pdo()->prepare("SELECT DISTINCT reg_periksa.kd_dokter, reg_periksa.kd_poli, poliklinik.nm_poli, dokter.nm_dokter, '08:00:00' as jam_mulai, '16:00:00' as jam_selesai FROM reg_periksa JOIN poliklinik ON poliklinik.kd_poli = reg_periksa.kd_poli JOIN dokter ON dokter.kd_dokter = reg_periksa.kd_dokter WHERE reg_periksa.tgl_registrasi = '$date' AND reg_periksa.kd_poli = '$poliklinik'");
+            $query2->execute();
+            $rows = $query2->fetchAll(\PDO::FETCH_ASSOC);
+        }
+
+        // Fallback 2: Jika belum ada pasien terdaftar hari ini, tampilkan poliklinik aktif agar TV tidak blank
+        if (empty($rows)) {
+            $query3 = $this->db()->pdo()->prepare("SELECT '-' as kd_dokter, poliklinik.kd_poli, poliklinik.nm_poli, 'Dokter Poliklinik' as nm_dokter, '08:00:00' as jam_mulai, '16:00:00' as jam_selesai FROM poliklinik WHERE poliklinik.kd_poli = '$poliklinik'");
+            $query3->execute();
+            $rows = $query3->fetchAll(\PDO::FETCH_ASSOC);
+        }
 
         $result = [];
         if (count($rows)) {
@@ -970,7 +1089,24 @@ class Site extends SiteModule
         $poliklinik = $slug[4];
         $query = $this->db()->pdo()->prepare("SELECT a.kd_dokter, a.kd_poli, b.nm_poli, c.nm_dokter, a.jam_mulai, a.jam_selesai FROM jadwal a, poliklinik b, dokter c WHERE a.kd_poli = b.kd_poli AND a.kd_dokter = c.kd_dokter AND a.hari_kerja = '$hari' AND a.kd_poli = '$poliklinik'");
         $query->execute();
-        $rows = $query->fetchAll(\PDO::FETCH_ASSOC);;
+        $rows = $query->fetchAll(\PDO::FETCH_ASSOC);
+
+        // Fallback 1: Jika tabel jadwal kosong hari ini, ambil dari registrasi aktif hari ini
+        if (empty($rows)) {
+            $filterDokter = (isset($slug[4]) && $slug[4] != '') ? " AND reg_periksa.kd_dokter = '" . addslashes($slug[4]) . "'" : "";
+            $filterPoli = ($slug[3] != 'all') ? " AND reg_periksa.kd_poli = '" . addslashes($poliklinik) . "'" : "";
+            $query2 = $this->db()->pdo()->prepare("SELECT DISTINCT reg_periksa.kd_dokter, reg_periksa.kd_poli, poliklinik.nm_poli, dokter.nm_dokter, '08:00:00' as jam_mulai, '16:00:00' as jam_selesai FROM reg_periksa JOIN poliklinik ON poliklinik.kd_poli = reg_periksa.kd_poli JOIN dokter ON dokter.kd_dokter = reg_periksa.kd_dokter WHERE reg_periksa.tgl_registrasi = '$date' $filterPoli $filterDokter");
+            $query2->execute();
+            $rows = $query2->fetchAll(\PDO::FETCH_ASSOC);
+        }
+
+        // Fallback 2: Jika belum ada pasien terdaftar hari ini, tampilkan poliklinik aktif agar TV tidak blank
+        if (empty($rows)) {
+            $filterActive = ($slug[3] != 'all') ? " WHERE poliklinik.kd_poli = '" . addslashes($poliklinik) . "'" : " WHERE poliklinik.status = '1'";
+            $query3 = $this->db()->pdo()->prepare("SELECT '-' as kd_dokter, poliklinik.kd_poli, poliklinik.nm_poli, 'Dokter Poliklinik' as nm_dokter, '08:00:00' as jam_mulai, '16:00:00' as jam_selesai FROM poliklinik $filterActive");
+            $query3->execute();
+            $rows = $query3->fetchAll(\PDO::FETCH_ASSOC);
+        }
 
         $result = [];
         if (count($rows)) {
@@ -1101,7 +1237,24 @@ class Site extends SiteModule
         $poliklinik = $slug[5];
         $query = $this->db()->pdo()->prepare("SELECT a.kd_dokter, a.kd_poli, b.nm_poli, c.nm_dokter, a.jam_mulai, a.jam_selesai FROM jadwal a, poliklinik b, dokter c WHERE a.kd_poli = b.kd_poli AND a.kd_dokter = c.kd_dokter AND a.hari_kerja = '$hari' AND a.kd_poli = '$poliklinik'");
         $query->execute();
-        $rows = $query->fetchAll(\PDO::FETCH_ASSOC);;
+        $rows = $query->fetchAll(\PDO::FETCH_ASSOC);
+
+        // Fallback 1: Jika tabel jadwal kosong hari ini, ambil dari registrasi aktif hari ini
+        if (empty($rows)) {
+            $filterDokter = (isset($slug[4]) && $slug[4] != '') ? " AND reg_periksa.kd_dokter = '" . addslashes($slug[4]) . "'" : "";
+            $filterPoli = ($slug[3] != 'all') ? " AND reg_periksa.kd_poli = '" . addslashes($poliklinik) . "'" : "";
+            $query2 = $this->db()->pdo()->prepare("SELECT DISTINCT reg_periksa.kd_dokter, reg_periksa.kd_poli, poliklinik.nm_poli, dokter.nm_dokter, '08:00:00' as jam_mulai, '16:00:00' as jam_selesai FROM reg_periksa JOIN poliklinik ON poliklinik.kd_poli = reg_periksa.kd_poli JOIN dokter ON dokter.kd_dokter = reg_periksa.kd_dokter WHERE reg_periksa.tgl_registrasi = '$date' $filterPoli $filterDokter");
+            $query2->execute();
+            $rows = $query2->fetchAll(\PDO::FETCH_ASSOC);
+        }
+
+        // Fallback 2: Jika belum ada pasien terdaftar hari ini, tampilkan poliklinik aktif agar TV tidak blank
+        if (empty($rows)) {
+            $filterActive = ($slug[3] != 'all') ? " WHERE poliklinik.kd_poli = '" . addslashes($poliklinik) . "'" : " WHERE poliklinik.status = '1'";
+            $query3 = $this->db()->pdo()->prepare("SELECT '-' as kd_dokter, poliklinik.kd_poli, poliklinik.nm_poli, 'Dokter Poliklinik' as nm_dokter, '08:00:00' as jam_mulai, '16:00:00' as jam_selesai FROM poliklinik $filterActive");
+            $query3->execute();
+            $rows = $query3->fetchAll(\PDO::FETCH_ASSOC);
+        }
 
         $result = [];
         if (count($rows)) {
@@ -1240,7 +1393,24 @@ class Site extends SiteModule
           $query = $this->db()->pdo()->prepare("SELECT a.kd_dokter, a.kd_poli, b.nm_poli, c.nm_dokter, a.jam_mulai, a.jam_selesai FROM jadwal a, poliklinik b, dokter c WHERE a.kd_poli = b.kd_poli AND a.kd_dokter = c.kd_dokter AND a.hari_kerja = '$hari' AND a.kd_poli = '$poliklinik' AND a.kd_dokter = '$dokter'");
         }
         $query->execute();
-        $rows = $query->fetchAll(\PDO::FETCH_ASSOC);;
+        $rows = $query->fetchAll(\PDO::FETCH_ASSOC);
+
+        // Fallback 1: Jika tabel jadwal kosong hari ini, ambil dari registrasi aktif hari ini
+        if (empty($rows)) {
+            $filterDokter = (isset($slug[4]) && $slug[4] != '') ? " AND reg_periksa.kd_dokter = '" . addslashes($slug[4]) . "'" : "";
+            $filterPoli = ($slug[3] != 'all') ? " AND reg_periksa.kd_poli = '" . addslashes($poliklinik) . "'" : "";
+            $query2 = $this->db()->pdo()->prepare("SELECT DISTINCT reg_periksa.kd_dokter, reg_periksa.kd_poli, poliklinik.nm_poli, dokter.nm_dokter, '08:00:00' as jam_mulai, '16:00:00' as jam_selesai FROM reg_periksa JOIN poliklinik ON poliklinik.kd_poli = reg_periksa.kd_poli JOIN dokter ON dokter.kd_dokter = reg_periksa.kd_dokter WHERE reg_periksa.tgl_registrasi = '$date' $filterPoli $filterDokter");
+            $query2->execute();
+            $rows = $query2->fetchAll(\PDO::FETCH_ASSOC);
+        }
+
+        // Fallback 2: Jika belum ada pasien terdaftar hari ini, tampilkan poliklinik aktif agar TV tidak blank
+        if (empty($rows)) {
+            $filterActive = ($slug[3] != 'all') ? " WHERE poliklinik.kd_poli = '" . addslashes($poliklinik) . "'" : " WHERE poliklinik.status = '1'";
+            $query3 = $this->db()->pdo()->prepare("SELECT '-' as kd_dokter, poliklinik.kd_poli, poliklinik.nm_poli, 'Dokter Poliklinik' as nm_dokter, '08:00:00' as jam_mulai, '16:00:00' as jam_selesai FROM poliklinik $filterActive");
+            $query3->execute();
+            $rows = $query3->fetchAll(\PDO::FETCH_ASSOC);
+        }
 
         $result = [];
         if (count($rows)) {
@@ -1975,6 +2145,39 @@ class Site extends SiteModule
       echo json_encode([
           'status' => true,
           'message' => 'Berhasil update status panggilan'
+      ]);
+      exit();
+    }
+
+    public function getAntrianPoliStatus()
+    {
+      $this->setTemplate(false);
+      header('Content-Type: application/json');
+
+      $date = date('Y-m-d');
+      $kd_poli = $_GET['kd_poli'] ?? '';
+      $set_nomor = $this->settings->get('anjungan.panggil_poli_nomor') ?: '';
+      $set_nama = $this->settings->get('anjungan.panggil_poli_nama') ?: '';
+      $set_dokter = $this->settings->get('anjungan.panggil_poli_dokter') ?: '';
+      $set_kd_poli = $this->settings->get('anjungan.panggil_poli_kd_poli') ?: '';
+      $set_tujuan = $this->settings->get('anjungan.panggil_poli_tujuan') ?: '';
+      $set_tanggal = $this->settings->get('anjungan.panggil_poli_tanggal') ?: '';
+      $set_time = intval($this->settings->get('anjungan.panggil_poli_time') ?: 0);
+
+      $is_active = ($set_tanggal == $date && !empty($set_nomor));
+      if(!empty($kd_poli) && $kd_poli != $set_kd_poli) {
+        $is_active = false;
+      }
+
+      echo json_encode([
+        'status' => $is_active,
+        'nomor' => sprintf("%03d", intval($set_nomor)),
+        'nama' => $set_nama,
+        'dokter' => $set_dokter,
+        'kd_poli' => $set_kd_poli,
+        'poli' => $set_tujuan,
+        'time' => $set_time,
+        'date' => $set_tanggal
       ]);
       exit();
     }
@@ -3471,7 +3674,24 @@ class Site extends SiteModule
 
         $query = $this->db()->pdo()->prepare("SELECT a.nm_bangsal, b.kelas , a.kd_bangsal FROM bangsal a, kamar b WHERE a.kd_bangsal = b.kd_bangsal AND b.statusdata = '1' GROUP BY b.kd_bangsal, b.kelas");
         $query->execute();
-        $rows = $query->fetchAll(\PDO::FETCH_ASSOC);;
+        $rows = $query->fetchAll(\PDO::FETCH_ASSOC);
+
+        // Fallback 1: Jika tabel jadwal kosong hari ini, ambil dari registrasi aktif hari ini
+        if (empty($rows)) {
+            $filterDokter = (isset($slug[4]) && $slug[4] != '') ? " AND reg_periksa.kd_dokter = '" . addslashes($slug[4]) . "'" : "";
+            $filterPoli = ($slug[3] != 'all') ? " AND reg_periksa.kd_poli = '" . addslashes($poliklinik) . "'" : "";
+            $query2 = $this->db()->pdo()->prepare("SELECT DISTINCT reg_periksa.kd_dokter, reg_periksa.kd_poli, poliklinik.nm_poli, dokter.nm_dokter, '08:00:00' as jam_mulai, '16:00:00' as jam_selesai FROM reg_periksa JOIN poliklinik ON poliklinik.kd_poli = reg_periksa.kd_poli JOIN dokter ON dokter.kd_dokter = reg_periksa.kd_dokter WHERE reg_periksa.tgl_registrasi = '$date' $filterPoli $filterDokter");
+            $query2->execute();
+            $rows = $query2->fetchAll(\PDO::FETCH_ASSOC);
+        }
+
+        // Fallback 2: Jika belum ada pasien terdaftar hari ini, tampilkan poliklinik aktif agar TV tidak blank
+        if (empty($rows)) {
+            $filterActive = ($slug[3] != 'all') ? " WHERE poliklinik.kd_poli = '" . addslashes($poliklinik) . "'" : " WHERE poliklinik.status = '1'";
+            $query3 = $this->db()->pdo()->prepare("SELECT '-' as kd_dokter, poliklinik.kd_poli, poliklinik.nm_poli, 'Dokter Poliklinik' as nm_dokter, '08:00:00' as jam_mulai, '16:00:00' as jam_selesai FROM poliklinik $filterActive");
+            $query3->execute();
+            $rows = $query3->fetchAll(\PDO::FETCH_ASSOC);
+        }
 
         $result = [];
         if (count($rows)) {

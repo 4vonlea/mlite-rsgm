@@ -745,6 +745,87 @@ class Admin extends AdminModule
     exit();
   }
 
+  public function postPanggilPasien()
+  {
+    $no_rawat = $_POST['no_rawat'] ?? '';
+    $no_rkm_medis = $_POST['no_rkm_medis'] ?? '';
+    $kd_poli = $_POST['kd_poli'] ?? '';
+    $kd_dokter = $_POST['kd_dokter'] ?? '';
+    $no_reg = $_POST['no_reg'] ?? '';
+    $nm_pasien = $_POST['nm_pasien'] ?? '';
+    $nm_poli = $_POST['nm_poli'] ?? '';
+    $now_time = date('H:i:s');
+    $tgl = date('Y-m-d');
+
+    if (!empty($no_rawat)) {
+      $reg = $this->db('reg_periksa')->where('no_rawat', $no_rawat)->oneArray();
+      if ($reg) {
+        $tgl = $reg['tgl_registrasi'];
+        if ($reg['stts'] == 'Belum') {
+          $this->db('reg_periksa')->where('no_rawat', $no_rawat)->save(['stts' => 'Berkas Diterima']);
+        }
+      }
+    }
+
+    // Update state panggilan untuk Display TV Poliklinik
+    $display_fields = [
+      'panggil_poli_nomor' => $no_reg,
+      'panggil_poli_nama' => $nm_pasien,
+      'panggil_poli_tujuan' => $nm_poli,
+      'panggil_poli_kd_poli' => $kd_poli,
+      'panggil_poli_waktu' => (string)time()
+    ];
+    foreach ($display_fields as $fld => $fval) {
+      $check_setting = $this->db('mlite_settings')->where('module', 'anjungan')->where('field', $fld)->oneArray();
+      if ($check_setting) {
+        $this->db('mlite_settings')->where('module', 'anjungan')->where('field', $fld)->save(['value' => $fval]);
+      } else {
+        $this->db('mlite_settings')->save(['module' => 'anjungan', 'field' => $fld, 'value' => $fval]);
+      }
+    }
+
+    // Catat Task ID 4 untuk BPJS Antrean
+    if (!empty($no_rkm_medis)) {
+      $antrol = $this->db('mlite_antrian_referensi')
+        ->where('tanggal_periksa', $tgl)
+        ->where('no_rkm_medis', $no_rkm_medis)
+        ->oneArray();
+
+      if (!$antrol) {
+        $p = $this->db('pasien')->where('no_rkm_medis', $no_rkm_medis)->oneArray();
+        if ($p && !empty($p['no_peserta'])) {
+          $antrol = $this->db('mlite_antrian_referensi')
+            ->where('tanggal_periksa', $tgl)
+            ->where('nomor_kartu', $p['no_peserta'])
+            ->oneArray();
+        }
+      }
+
+      if ($antrol && !empty($antrol['kodebooking'])) {
+        $kb = $antrol['kodebooking'];
+        $nowMs = time() * 1000;
+        $t4 = $this->db('mlite_antrian_referensi_taskid')->where('nomor_referensi', $kb)->where('taskid', '4')->oneArray();
+        if (!$t4) {
+          $this->db('mlite_antrian_referensi_taskid')->save([
+            'tanggal_periksa' => $tgl,
+            'nomor_referensi' => $kb,
+            'taskid' => 4,
+            'waktu' => $nowMs,
+            'status' => 'Belum',
+            'keterangan' => ''
+          ]);
+        }
+      }
+    }
+
+    header('Content-Type: application/json');
+    echo json_encode([
+      'status' => 'success',
+      'message' => 'Panggilan pasien nomor ' . $no_reg . ' (' . $nm_pasien . ') berhasil dikirim ke layar antrean.'
+    ]);
+    exit();
+  }
+
   public function postSetPoliTujuan()
   {
     $no_rawat = $_POST['no_rawat'] ?? '';

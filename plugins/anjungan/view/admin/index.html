@@ -256,15 +256,18 @@
 <!-- HEADER SECTION -->
 <div class="anjungan-header">
   <div class="row">
-    <div class="col-md-7">
+    <div class="col-md-6">
       <h3><i class="fa fa-television text-primary"></i> Pusat Display & Anjungan Informasi</h3>
       <p>Katalog resmi monitor antrian, TV display poliklinik, penunjang medis, dan anjungan mandiri pasien RSGM</p>
     </div>
-    <div class="col-md-5 text-right" style="margin-top: 6px;">
+    <div class="col-md-6 text-right" style="margin-top: 6px;">
       <a href="{?=url([ADMIN, 'anjungan', 'pemanggil', '?show=panggil_loket'])?}" class="btn btn-primary btn-sm">
         <i class="fa fa-bullhorn"></i> Pemanggil Loket
       </a>
-      <a href="{?=url([ADMIN, 'anjungan', 'settings'])?}" class="btn btn-default btn-sm" style="margin-left: 6px;">
+      <a href="{?=url([ADMIN, 'anjungan', 'pemanggil', '?show=panggil_poli'])?}" class="btn btn-info btn-sm" style="margin-left: 4px;">
+        <i class="fa fa-stethoscope"></i> Pemanggil Poli
+      </a>
+      <a href="{?=url([ADMIN, 'anjungan', 'settings'])?}" class="btn btn-default btn-sm" style="margin-left: 4px;">
         <i class="fa fa-cog"></i> Pengaturan
       </a>
     </div>
@@ -277,13 +280,13 @@
     <div class="col-md-8">
       <div class="filter-pills">
         <button type="button" class="btn btn-filter active" data-category="all">
-          <i class="fa fa-th-large"></i> Semua Display (<span id="count-all">14</span>)
+          <i class="fa fa-th-large"></i> Semua Display (<span id="count-all">15</span>)
         </button>
         <button type="button" class="btn btn-filter" data-category="loket">
           <i class="fa fa-users"></i> Loket & Antrian (<span id="count-loket">4</span>)
         </button>
         <button type="button" class="btn btn-filter" data-category="poli">
-          <i class="fa fa-stethoscope"></i> Poliklinik (<span id="count-poli">2</span>)
+          <i class="fa fa-stethoscope"></i> Poliklinik (<span id="count-poli">3</span>)
         </button>
         <button type="button" class="btn btn-filter" data-category="farmasi">
           <i class="fa fa-medkit"></i> Farmasi (<span id="count-farmasi">2</span>)
@@ -443,7 +446,40 @@
     </div>
   </div>
 
-  <!-- 5. Display Antrian Poliklinik (Semua Poli) -->
+  <!-- 5. Pemanggil Antrian Poliklinik -->
+  <div class="col-sm-6 col-md-4 card-item" data-category="poli" data-keywords="pemanggil antrian poliklinik panggil poli perawat dokter dokter gigi ralan panel pemanggil">
+    <div class="display-card">
+      <div class="card-accent accent-teal"></div>
+      <div class="card-body">
+        <div class="card-header-flex">
+          <div class="card-icon bg-icon-teal">
+            <i class="fa fa-stethoscope"></i>
+          </div>
+          <div class="card-title-wrap">
+            <h4>Pemanggil Antrian Poliklinik</h4>
+            <span class="badge badge-category badge-teal">Panel Petugas Poli</span>
+          </div>
+        </div>
+        <div class="card-desc">
+          Panel kontrol khusus perawat dan petugas poliklinik untuk memanggil pasien dengan suara (TTS), melacak kehadiran pasien, dan update status pemeriksaan (Task ID 4 & 5 BPJS).
+        </div>
+        <div class="url-container">
+          <span class="url-text" id="url-pemanggil-poli">{?=url([ADMIN, 'anjungan', 'pemanggil', '?show=panggil_poli'])?}</span>
+          <button type="button" class="btn-copy-url" data-target="url-pemanggil-poli" title="Salin URL"><i class="fa fa-copy"></i></button>
+        </div>
+        <div class="card-footer-actions">
+          <a href="{?=url([ADMIN, 'anjungan', 'pemanggil', '?show=panggil_poli'])?}" class="btn btn-primary btn-action">
+            <i class="fa fa-bullhorn"></i> Buka Pemanggil Poli
+          </a>
+          <button type="button" class="btn btn-default btn-action btn-preview-screen" data-url="{?=url([ADMIN, 'anjungan', 'pemanggil', '?show=panggil_poli'])?}" data-title="Panel Pemanggil Antrian Poliklinik">
+            <i class="fa fa-eye"></i> Pratinjau
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. Display Antrian Poliklinik (Semua Poli) -->
   <div class="col-sm-6 col-md-4 card-item" data-category="poli" data-keywords="display antrian poliklinik semua poli dokter koridor ralan rawat jalan">
     <div class="display-card">
       <div class="card-accent accent-green"></div>

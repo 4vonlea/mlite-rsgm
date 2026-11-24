@@ -2,7 +2,6 @@
 <html lang="id">
 <head>
     <meta charset="utf-8">
-    <meta http-equiv="refresh" content="15">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{?=isset_or($title, 'Antrian Poliklinik')?} - {?=isset_or($settings.nama_instansi)?}</title>
@@ -262,7 +261,7 @@
           <th style="width: 38%;">Antrian Menunggu Berikutnya</th>
         </tr>
       </thead>
-      <tbody>
+      <tbody id="poli-table-body">
         {if: !empty($display)}
           {loop: $display}
           <tr>
@@ -337,6 +336,68 @@
   }
   setInterval(updateLiveClock, 1000);
   updateLiveClock();
+
+  // Background smooth AJAX update tanpa kedip putih
+  function updatePoliQueue() {
+    var ajaxUrl = window.location.href + (window.location.href.indexOf('?') !== -1 ? '&' : '?') + 'ajax=1';
+    $.ajax({
+      url: ajaxUrl,
+      dataType: 'json',
+      cache: false,
+      success: function(resp) {
+        if (!resp || !resp.status || !resp.display) return;
+        if (resp.display.length > 0) {
+          var html = '';
+          $.each(resp.display, function(idx, item) {
+            var inExam = item.dalam_pemeriksaan;
+            var numBox = '';
+            if (inExam && inExam.no_reg) {
+              numBox = '<div class="calling-box-active">' +
+                '<span class="calling-num">' + inExam.no_reg + '</span>' +
+                '<span class="calling-patient">' + (inExam.nm_pasien || '') + '</span>' +
+              '</div>';
+            } else {
+              numBox = '<div class="calling-box-empty">' +
+                '<span class="calling-num-empty">---</span>' +
+                '<span class="calling-patient-empty">Menunggu Panggilan</span>' +
+              '</div>';
+            }
+
+            var nextList = '';
+            if (item.selanjutnya && item.selanjutnya.length > 0) {
+              $.each(item.selanjutnya.slice(0, 3), function(i, nxt) {
+                nextList += '<span class="queue-pill">' + nxt.no_reg + ' - ' + nxt.nm_pasien + '</span>';
+              });
+            } else {
+              nextList = '<span class="text-muted" style="font-size: 13px; font-style: italic;">Tidak ada antrian menunggu</span>';
+            }
+
+            var antrianJml = (item.dalam_antrian && typeof item.dalam_antrian.jumlah !== 'undefined') ? item.dalam_antrian.jumlah : 0;
+            var dilayaniJml = (item.sudah_dilayani && typeof item.sudah_dilayani.jumlah !== 'undefined') ? item.sudah_dilayani.jumlah : 0;
+
+            html += '<tr>' +
+              '<td>' +
+                '<div class="clinic-name">' + (item.nm_poli || '') + '</div>' +
+                '<div class="doctor-name"><i class="fa fa-user-md text-info"></i> ' + (item.nm_dokter || '') + '</div>' +
+                '<div class="schedule-time"><i class="fa fa-clock-o"></i> Jam Praktik: ' + (item.jam_mulai || '08:00:00') + ' - ' + (item.jam_selesai || '14:00:00') + ' WITA</div>' +
+              '</td>' +
+              '<td>' + numBox + '</td>' +
+              '<td>' +
+                '<div class="stats-row">' +
+                  '<div class="stat-badge"><i class="fa fa-users"></i> Total: <b>' + antrianJml + '</b></div>' +
+                  '<div class="stat-badge"><i class="fa fa-check-circle"></i> Selesai: <b>' + dilayaniJml + '</b></div>' +
+                '</div>' +
+                '<div class="next-queue-title"><i class="fa fa-arrow-circle-right text-info"></i> Antrian Selanjutnya:</div>' +
+                '<div class="queue-pills">' + nextList + '</div>' +
+              '</td>' +
+            '</tr>';
+          });
+          $('#poli-table-body').html(html);
+        }
+      }
+    });
+  }
+  setInterval(updatePoliQueue, 7000);
   </script>
 </body>
 </html>
