@@ -1460,6 +1460,11 @@ $(document).on('click', 'a[href="#rujuk_internal"]', function(event){
     }
 
     var rujuk_internal = ''
+        + '<div class="alert alert-info" style="font-size:12px; line-height:1.45; margin-bottom:14px; padding:10px 12px; background-color:#eff6ff; border:1px solid #bfdbfe; border-left:4px solid #3b82f6; color:#1e40af; border-radius:4px;">'
+        + '<i class="fa fa-info-circle"></i> <strong>Catatan Konsul Internal:</strong><br>'
+        + 'Fitur ini untuk <strong>konsultasi medis antar dokter di hari yang sama</strong> (1 episode rawat jalan, tidak perlu SEP baru).<br>'
+        + '<em>*Jika pasien dialihkan untuk tindakan di <strong>hari yang berbeda</strong>, gunakan menu <strong>Surat Kontrol</strong> ke poli tujuan.</em>'
+        + '</div>'
         + '<div class="form-group">'
         + '<label for="status_keluar">Pilih Poli</label>'
         + '<select name="kd_poli" id="kd_poli" class="form-control" data-use-dimmer="false">'
