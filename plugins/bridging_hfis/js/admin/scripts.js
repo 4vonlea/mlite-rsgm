@@ -13,6 +13,97 @@ var daysConfig = [
     { chk: "sabtusore", dayNum: 6, sesi: "sore", val: "6|sore", dari: "darisore6|sore", sampai: "sampaisore6|sore", kuota: "kuotasabtusore", label: "Sabtu Sore" }
 ];
 
+function filterDropdownDokter(keyword) {
+    var sel = document.getElementById("kd_dokter");
+    if (!sel) return;
+    keyword = (keyword || '').toLowerCase().trim();
+    var opts = sel.options;
+    for (var i = 1; i < opts.length; i++) {
+        var txt = opts[i].text.toLowerCase();
+        var val = opts[i].value.toLowerCase();
+        if (!keyword || txt.indexOf(keyword) !== -1 || val.indexOf(keyword) !== -1) {
+            opts[i].style.display = "";
+        } else {
+            opts[i].style.display = "none";
+        }
+    }
+}
+
+function filterDropdownPoli(keyword) {
+    var sel = document.getElementById("kd_poli");
+    if (!sel) return;
+    keyword = (keyword || '').toLowerCase().trim();
+    var opts = sel.options;
+    for (var i = 1; i < opts.length; i++) {
+        var txt = opts[i].text.toLowerCase();
+        var val = opts[i].value.toLowerCase();
+        if (!keyword || txt.indexOf(keyword) !== -1 || val.indexOf(keyword) !== -1) {
+            opts[i].style.display = "";
+        } else {
+            opts[i].style.display = "none";
+        }
+    }
+}
+
+function terapkanTemplate(target) {
+    var jamBuka = document.getElementById("tpl_jam_buka") ? document.getElementById("tpl_jam_buka").value : "08:30";
+    var jamTutup = document.getElementById("tpl_jam_tutup") ? document.getElementById("tpl_jam_tutup").value : "12:00";
+    var kuota = document.getElementById("tpl_kuota") ? document.getElementById("tpl_kuota").value : "14";
+
+    if (!jamBuka || !jamTutup) {
+        alert("Silakan isi Jam Buka dan Jam Tutup pada kotak template terlebih dahulu!");
+        return;
+    }
+    if (jamTutup <= jamBuka) {
+        alert("Kesalahan Template:\nJam Tutup (" + jamTutup + ") harus lebih besar dari Jam Buka (" + jamBuka + ")!");
+        return;
+    }
+    var kuotaNum = parseInt(kuota, 10);
+    if (isNaN(kuotaNum) || kuotaNum <= 0) {
+        alert("Kesalahan Template:\nKuota pasien harus diisi minimal 1!");
+        return;
+    }
+
+    var targetDays = [];
+    if (target === 'senin-jumat') {
+        targetDays = ['senin', 'selasa', 'rabu', 'kamis', 'jumat'];
+    } else if (target === 'senin-sabtu') {
+        targetDays = ['senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu'];
+    } else if (target === 'tercentang') {
+        for (var i = 0; i < daysConfig.length; i++) {
+            var elChk = document.getElementById(daysConfig[i].chk);
+            if (elChk && elChk.checked) {
+                targetDays.push(daysConfig[i].chk);
+            }
+        }
+        if (targetDays.length === 0) {
+            alert("Tidak ada hari yang sedang dicentang. Silakan centang hari terlebih dahulu atau klik 'Terapkan Senin - Jumat'!");
+            return;
+        }
+    }
+
+    for (var k = 0; k < daysConfig.length; k++) {
+        var cfg = daysConfig[k];
+        if (targetDays.indexOf(cfg.chk) !== -1) {
+            setCheckboxState(cfg.chk, true);
+            var elDari = document.getElementById(cfg.dari);
+            var elSampai = document.getElementById(cfg.sampai);
+            var elKuota = document.getElementById(cfg.kuota);
+
+            if (elDari) elDari.value = jamBuka;
+            if (elSampai) elSampai.value = jamTutup;
+            if (elKuota) elKuota.value = kuotaNum;
+            updateCardVisual(cfg.chk, true);
+        }
+    }
+}
+
+function aturSemuaHari(bukaSemua) {
+    for (var i = 0; i < daysConfig.length; i++) {
+        setCheckboxState(daysConfig[i].chk, !!bukaSemua);
+    }
+}
+
 function updateCardVisual(chkId, isChecked) {
     var card = document.getElementById("card_" + chkId);
     var badge = document.getElementById("badge_" + chkId);
@@ -66,7 +157,7 @@ function setCheckboxState(chkId, isChecked) {
             el.removeAttribute('checked');
         }
         syncKalyptoToggle(el, !!isChecked);
-        setTimeout(function() {
+        setTimeout(function () {
             syncKalyptoToggle(el, !!isChecked);
         }, 30);
     }
@@ -78,7 +169,7 @@ function onCheckboxDayChange(chkId) {
     if (!el) return;
 
     // Tunggu event Kalypto selesai mengubah DOM
-    setTimeout(function() {
+    setTimeout(function () {
         var isChecked = el.checked;
         if (window.$) {
             var $toggle = $(el).next('.toggle');
@@ -215,7 +306,7 @@ function muatJadwalAktif(isManual) {
                         status.innerHTML = '<i class="fa fa-spinner fa-spin text-info"></i> Jadwal di SIMRS kosong. Mencoba menarik langsung dari server BPJS HFIS...';
                     }
                     // Auto-pull dari server BPJS HFIS jika di SIMRS belum ada datanya
-                    setTimeout(function() {
+                    setTimeout(function () {
                         tarikJadwalLangsungBpjs(false);
                     }, 350);
                 }
@@ -393,17 +484,35 @@ function ubahhfis() {
 
         // Hanya sertakan jika dicentang, atau jika jam buka & tutup diisi lengkap
         if (isChecked || (dariVal !== '' && sampaiVal !== '')) {
+            if (!dariVal || !sampaiVal) {
+                alert("Peringatan Jadwal " + cfg.label + ":\nJam Buka dan Jam Tutup wajib diisi lengkap!");
+                if (elDari && !elDari.value) elDari.focus();
+                else if (elSampai) elSampai.focus();
+                return;
+            }
+            if (sampaiVal <= dariVal) {
+                alert("Peringatan Jadwal " + cfg.label + ":\nJam Tutup (" + sampaiVal + ") harus lebih besar dari Jam Buka (" + dariVal + ")!");
+                if (elSampai) elSampai.focus();
+                return;
+            }
+            var kNum = parseInt(kuotaVal, 10);
+            if (isNaN(kNum) || kNum <= 0) {
+                alert("Peringatan Kuota " + cfg.label + ":\nKuota pasien wajib diisi minimal 1!");
+                if (elKuota) elKuota.focus();
+                return;
+            }
+
             jadwal.push({
                 "hari": cfg.val,
                 "buka": dariVal,
                 "tutup": sampaiVal,
-                "kuota": kuotaVal
+                "kuota": kNum
             });
             activeDaysDesc.push({
                 label: cfg.label,
-                buka: dariVal || '08:00',
-                tutup: sampaiVal || '12:00',
-                kuota: kuotaVal || '30'
+                buka: dariVal,
+                tutup: sampaiVal,
+                kuota: kNum
             });
         } else {
             closedDaysLabels.push(cfg.label);
@@ -439,14 +548,14 @@ function ubahhfis() {
         if (elJmlBuka) elJmlBuka.innerText = jadwal.length;
 
         if (elListBuka) {
-            elListBuka.innerHTML = activeDaysDesc.map(function(d) {
+            elListBuka.innerHTML = activeDaysDesc.map(function (d) {
                 return '<div style="margin-bottom:3px;"><i class="fa fa-check text-success"></i> <b>' + d.label + '</b>: ' + d.buka + ' - ' + d.tutup + ' (Kuota: ' + d.kuota + ')</div>';
             }).join('');
         }
 
         if (elListTutup) {
             if (closedDaysLabels.length > 0) {
-                elListTutup.innerHTML = closedDaysLabels.map(function(lbl) {
+                elListTutup.innerHTML = closedDaysLabels.map(function (lbl) {
                     return '<span class="label label-danger" style="margin-right:4px; margin-bottom:4px; display:inline-block; font-size:10px;">' + lbl + '</span>';
                 }).join(' ');
             } else {
@@ -512,10 +621,14 @@ function eksekusiUbahHfis() {
             var res = JSON.parse(this.responseText);
             if (res.status === 'success' || res.code == 200) {
                 if (notif) {
-                    notif.innerHTML = '<div class="alert alert-success alert-dismissible" style="border-radius:4px;">' +
+                    var linkJadwalHfis = (window.mlite && window.mlite.url ? window.mlite.url + '/' + window.mlite.admin + '/jkn_mobile/jadwaldokter?t=' + (window.mlite.token || '') : '#');
+                    notif.innerHTML = '<div class="alert alert-success alert-dismissible" style="border-radius:6px; box-shadow:0 2px 6px rgba(34,197,94,0.2);">' +
                         '<button type="button" class="close" data-dismiss="alert">&times;</button>' +
-                        '<h4><i class="fa fa-check-circle"></i> Berhasil Disimpan!</h4>' +
+                        '<h4><i class="fa fa-check-circle"></i> Berhasil Disimpan ke BPJS HFIS & SIMRS!</h4>' +
                         '<p>' + (res.message || 'Jadwal dokter berhasil disinkronkan ke server BPJS HFIS dan database SIMRS.') + '</p>' +
+                        '<div style="margin-top:10px;">' +
+                        '<a href="' + linkJadwalHfis + '" target="_blank" class="btn btn-sm btn-success" style="font-weight:bold; box-shadow:0 1px 3px rgba(0,0,0,0.15);"><i class="fa fa-calendar-check-o"></i> Buka Jadwal Dokter HFIS untuk Verifikasi Kuota & Pasien <i class="fa fa-external-link"></i></a>' +
+                        '</div>' +
                         '</div>';
                 }
                 setTimeout(function () {
@@ -911,12 +1024,12 @@ function initCardVisuals() {
 }
 
 if (typeof $ !== 'undefined') {
-    $(document).ready(function() {
+    $(document).ready(function () {
         initCardVisuals();
         setTimeout(initCardVisuals, 150);
     });
 } else {
-    document.addEventListener("DOMContentLoaded", function() {
+    document.addEventListener("DOMContentLoaded", function () {
         initCardVisuals();
         setTimeout(initCardVisuals, 150);
     });

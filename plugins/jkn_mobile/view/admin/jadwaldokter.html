@@ -199,7 +199,10 @@
         <div id="modalPasienContent"></div>
       </div>
       <div class="modal-footer" style="background:#f8fafc; display:flex; justify-content:space-between; align-items:center;">
-        <button type="button" class="btn btn-success" onclick="salinTabelKeSpreadsheet()"><i class="fa fa-copy"></i> Salin Seluruh Tabel ke Spreadsheet (Excel)</button>
+        <div>
+          <button type="button" class="btn btn-success" onclick="salinTabelKeSpreadsheet()"><i class="fa fa-copy"></i> Salin Seluruh Tabel ke Spreadsheet (Excel)</button>
+          <button type="button" class="btn btn-info" onclick="unduhTabelCsv()" style="margin-left:6px;"><i class="fa fa-download"></i> Unduh File CSV / Excel</button>
+        </div>
         <button type="button" class="btn btn-default" data-dismiss="modal"><i class="fa fa-times"></i> Tutup</button>
       </div>
     </div>
@@ -247,6 +250,7 @@
 var currentHfisData = [];
 var currentPoliCode = '';
 var currentTanggal = '';
+var URL_PASIEN_BARU_STAGING = "{?=url([ADMIN, 'pasien', 'pasienbarujkn'])?}";
 
 function setTanggalQuick(offsetDays) {
   var d = new Date();
@@ -484,11 +488,12 @@ function bukaModalPasien(index) {
       '<div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">' +
         '<span class="label label-success" style="font-size:11px; padding:4px 8px;"><i class="fa fa-check-circle"></i> Sudah Hadir: ' + countHadir + '</span> ' +
         '<span class="label label-warning" style="font-size:11px; padding:4px 8px; background:#f59e0b;"><i class="fa fa-clock-o"></i> Belum Datang: ' + countBelum + '</span> ' +
-        '<a href="{?=url([ADMIN, 'pasien', 'pasienbarujkn'])?}" target="_blank" class="label label-danger" style="font-size:11px; padding:4px 8px; text-decoration:none;" title="Buka menu Calon Pasien Baru Mobile JKN (Staging)"><i class="fa fa-user-plus"></i> Pasien Baru: ' + countBaru + '</a> ' +
+        '<a href="' + URL_PASIEN_BARU_STAGING + '" target="_blank" class="label label-danger" style="font-size:11px; padding:4px 8px; text-decoration:none;" title="Buka menu Calon Pasien Baru Mobile JKN (Staging)"><i class="fa fa-user-plus"></i> Pasien Baru: ' + countBaru + '</a> ' +
         '<span class="label label-primary" style="font-size:11px; padding:4px 8px;"><i class="fa fa-user"></i> Pasien Lama: ' + countLama + '</span> ' +
         '<span class="label label-default" style="font-size:11px; padding:4px 8px;">Kapasitas: ' + (item.kapasitaspasien || 0) + '</span> ' +
-        '<a href="{?=url([ADMIN, 'pasien', 'pasienbarujkn'])?}" target="_blank" class="btn btn-xs btn-warning" style="font-weight:700; padding:4px 10px; margin-left:6px;" title="Buka Verifikasi Calon Pasien Baru Mobile JKN (Staging) di Modul Pasien"><i class="fa fa-mobile fa-lg"></i> Calon Pasien Baru MJKN (Staging)</a>' +
+        '<a href="' + URL_PASIEN_BARU_STAGING + '" target="_blank" class="btn btn-xs btn-warning" style="font-weight:700; padding:4px 10px; margin-left:6px;" title="Buka Verifikasi Calon Pasien Baru Mobile JKN (Staging) di Modul Pasien"><i class="fa fa-mobile fa-lg"></i> Calon Pasien Baru MJKN (Staging)</a>' +
         '<button type="button" class="btn btn-xs btn-success" onclick="salinTabelKeSpreadsheet()" style="font-weight:700; padding:4px 10px; margin-left:6px;" title="Copy seluruh isi tabel ke clipboard untuk paste di Excel / Spreadsheet"><i class="fa fa-copy"></i> Salin ke Spreadsheet</button>' +
+        '<button type="button" class="btn btn-xs btn-info" onclick="unduhTabelCsv()" style="font-weight:700; padding:4px 10px; margin-left:4px;" title="Unduh data tabel dalam file CSV / Excel"><i class="fa fa-download"></i> Unduh CSV</button>' +
       '</div>' +
     '</div>'
   );
@@ -531,7 +536,7 @@ function bukaModalPasien(index) {
 
       var linkPasienBaru = '';
       if (!p.no_rkm_medis || p.no_rkm_medis === '-') {
-        linkPasienBaru = '<div style="margin-top:3px;"><a href="{?=url([ADMIN, \'pasien\', \'pasienbarujkn\'])?}" target="_blank" class="btn btn-xs btn-warning" style="font-size:9.5px; padding:1px 5px; font-weight:700; white-space:nowrap;" title="Buka menu Calon Pasien Baru Mobile JKN (Staging) untuk menerbitkan No. RM"><i class="fa fa-id-card"></i> Buat No. RM (Staging)</a></div>';
+        linkPasienBaru = '<div style="margin-top:3px;"><a href="' + URL_PASIEN_BARU_STAGING + '" target="_blank" class="btn btn-xs btn-warning" style="font-size:9.5px; padding:1px 5px; font-weight:700; white-space:nowrap;" title="Buka menu Calon Pasien Baru Mobile JKN (Staging) untuk menerbitkan No. RM"><i class="fa fa-id-card"></i> Buat No. RM (Staging)</a></div>';
       }
 
       // Badge Jalur
@@ -606,12 +611,9 @@ function bukaModalPasien(index) {
   $('#modalPasienHfis').modal('show');
 }
 
-function salinTabelKeSpreadsheet() {
+function getTableDataAsTsv() {
   var table = document.getElementById('tabelPasienSimrsModal');
-  if (!table) {
-    alert('Tidak ada data tabel yang dapat disalin.');
-    return;
-  }
+  if (!table) return null;
 
   var tsv = [];
   var rows = table.querySelectorAll('tr');
@@ -625,42 +627,175 @@ function salinTabelKeSpreadsheet() {
       if (j === maxCol - 1 && i === 0 && cols[j].innerText.trim().toLowerCase() === 'aksi') continue;
       if (j === maxCol - 1 && i > 0) continue;
 
-      var text = cols[j].innerText.replace(/(\r\n|\n|\r)/gm, ' ').replace(/\t/g, ' ').trim();
+      var text = (cols[j].innerText || cols[j].textContent || '')
+        .replace(/(\r\n|\n|\r)/gm, ' ')
+        .replace(/\t/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
       row.push(text);
     }
-    tsv.push(row.join('\t'));
+    if (row.length > 0) {
+      tsv.push(row.join('\t'));
+    }
   }
 
-  var tsvString = tsv.join('\r\n');
+  return tsv.join('\r\n');
+}
+
+function salinTabelKeSpreadsheet() {
+  var tsvString = getTableDataAsTsv();
+  if (!tsvString) {
+    alert('Tidak ada data tabel yang dapat disalin.');
+    return;
+  }
+
+  // Metode 1: In-modal safe copy (Berhasil 100% pada HTTP & Bootstrap modal)
+  var copied = copyTextInModal(tsvString);
+  if (copied) {
+    tampilkanNotifSalinSukses();
+    return;
+  }
+
+  // Metode 2: navigator.clipboard (jika didukung context browser)
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(tsvString).then(function() {
-      alert('✓ Seluruh data tabel berhasil disalin ke Clipboard!\n\nSilakan langsung buka Microsoft Excel atau Google Spreadsheet, lalu tekan Ctrl + V (Paste).');
+      tampilkanNotifSalinSukses();
     }).catch(function() {
-      copyFallbackSpreadsheet(tsvString);
+      bukaModalManualCopy(tsvString);
     });
   } else {
-    copyFallbackSpreadsheet(tsvString);
+    bukaModalManualCopy(tsvString);
   }
 }
 
-function copyFallbackSpreadsheet(text) {
+function copyTextInModal(text) {
+  var modalEl = document.getElementById('modalPasienHfis');
+  var container = (modalEl && modalEl.querySelector('.modal-body')) || document.body;
+
   var textarea = document.createElement('textarea');
   textarea.value = text;
-  document.body.appendChild(textarea);
-  textarea.select();
-  try {
-    document.execCommand('copy');
-    alert('✓ Seluruh data tabel berhasil disalin ke Clipboard!\n\nSilakan langsung buka Microsoft Excel atau Google Spreadsheet, lalu tekan Ctrl + V (Paste).');
-  } catch (err) {
-    alert('Gagal menyalin otomatis. Silakan blok tabel secara manual dan gunakan Ctrl + C.');
+  textarea.setAttribute('readonly', '');
+  textarea.style.position = 'fixed';
+  textarea.style.left = '10px';
+  textarea.style.top = '10px';
+  textarea.style.width = '120px';
+  textarea.style.height = '40px';
+  textarea.style.padding = '0';
+  textarea.style.border = 'none';
+  textarea.style.outline = 'none';
+  textarea.style.boxShadow = 'none';
+  textarea.style.background = 'transparent';
+  textarea.style.opacity = '0.01';
+  textarea.style.zIndex = '999999';
+
+  container.appendChild(textarea);
+
+  // Matikan sementara enforceFocus Bootstrap modal agar tidak mencuri kembali fokus
+  var origEnforce = null;
+  if (window.$ && $.fn.modal && $.fn.modal.Constructor) {
+    origEnforce = $.fn.modal.Constructor.prototype.enforceFocus;
+    $.fn.modal.Constructor.prototype.enforceFocus = function() {};
   }
-  document.body.removeChild(textarea);
+
+  textarea.focus();
+  textarea.select();
+  textarea.setSelectionRange(0, textarea.value.length);
+
+  var successful = false;
+  try {
+    successful = document.execCommand('copy');
+  } catch (err) {
+    successful = false;
+  }
+
+  // Pulihkan enforceFocus
+  if (origEnforce && window.$ && $.fn.modal && $.fn.modal.Constructor) {
+    $.fn.modal.Constructor.prototype.enforceFocus = origEnforce;
+  }
+
+  container.removeChild(textarea);
+  return successful;
+}
+
+function tampilkanNotifSalinSukses() {
+  var notifHtml = '<div id="notifSalinSuksesModal" style="position:fixed; top:25px; right:25px; z-index:999999; background:#15803d; color:#ffffff; padding:15px 22px; border-radius:8px; box-shadow:0 10px 25px rgba(0,0,0,0.3); font-size:13px; font-weight:600; display:flex; align-items:center; gap:12px; border:2px solid #bbf7d0;">' +
+    '<i class="fa fa-check-circle fa-2x"></i>' +
+    '<div>' +
+      '<div style="font-size:14px; font-weight:700;">Data Berhasil Disalin ke Clipboard!</div>' +
+      '<div style="font-size:12px; font-weight:normal; opacity:0.95; margin-top:2px;">Buka Microsoft Excel atau Google Spreadsheet, lalu tekan <b>Ctrl + V</b> (Paste).</div>' +
+    '</div>' +
+  '</div>';
+
+  $('#notifSalinSuksesModal').remove();
+  $('body').append(notifHtml);
+  setTimeout(function() {
+    $('#notifSalinSuksesModal').fadeOut(500, function() { $(this).remove(); });
+  }, 4000);
+}
+
+function bukaModalManualCopy(text) {
+  var html = '<div class="modal fade" id="modalFallbackSalin" tabindex="-1" role="dialog" style="z-index:1070;">' +
+    '<div class="modal-dialog" role="document" style="max-width:650px;">' +
+      '<div class="modal-content" style="border-radius:6px;">' +
+        '<div class="modal-header" style="background:#f0f9ff; border-bottom:1px solid #bae6fd;">' +
+          '<button type="button" class="close" data-dismiss="modal">&times;</button>' +
+          '<h4 class="modal-title" style="color:#0369a1; font-weight:700;"><i class="fa fa-copy"></i> Salin Data Pasien</h4>' +
+        '</div>' +
+        '<div class="modal-body">' +
+          '<p class="text-muted" style="font-size:12px;">Browser Anda membatasi akses clipboard otomatis melalui HTTP. Tekan tombol <b>Pilih Semua (Ctrl + C)</b> di bawah, atau unduh langsung file CSV/Excel:</p>' +
+          '<textarea id="txtManualCopy" class="form-control" rows="10" style="font-family:monospace; font-size:11px; white-space:pre;" readonly>' + text + '</textarea>' +
+        '</div>' +
+        '<div class="modal-footer" style="display:flex; justify-content:space-between; align-items:center;">' +
+          '<div>' +
+            '<button type="button" class="btn btn-primary" onclick="var el=document.getElementById(\'txtManualCopy\'); el.focus(); el.select(); document.execCommand(\'copy\'); alert(\'Berhasil disalin! Silakan Paste (Ctrl+V) di Excel.\');"><i class="fa fa-copy"></i> Pilih & Salin Semua</button>' +
+            '<button type="button" class="btn btn-success" onclick="unduhTabelCsv()"><i class="fa fa-download"></i> Unduh File CSV / Excel</button>' +
+          '</div>' +
+          '<button type="button" class="btn btn-default" data-dismiss="modal">Tutup</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+  '</div>';
+
+  $('#modalFallbackSalin').remove();
+  $('body').append(html);
+  $('#modalFallbackSalin').modal('show');
+  setTimeout(function() {
+    var el = document.getElementById('txtManualCopy');
+    if (el) {
+      el.focus();
+      el.select();
+    }
+  }, 300);
+}
+
+function unduhTabelCsv() {
+  var tsvString = getTableDataAsTsv();
+  if (!tsvString) {
+    alert('Tidak ada data tabel yang dapat diunduh.');
+    return;
+  }
+
+  // Karakter UTF-8 BOM (\uFEFF) + pemisah titik koma (;) agar Microsoft Excel di Windows otomatis membuka kolom dengan rapi
+  var csvContent = "\uFEFF" + tsvString.replace(/\t/g, ';');
+  var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  var url = URL.createObjectURL(blob);
+
+  var docTitle = 'Daftar_Pasien_' + (currentTanggal || 'SIMRS');
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = docTitle + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(function() {
+    URL.revokeObjectURL(url);
+  }, 1000);
 }
 
 function tandaiPasienHadir(kodebooking, norm, noreg, kddokter, kdpoli, index, btnEl) {
   if (!norm || norm === '-' || norm === '') {
     if (confirm('Perhatian: Pasien ini adalah Pasien Baru Mobile JKN dan belum memiliki No. Rekam Medis (RM) di SIMRS.\n\nBuka halaman "Calon Pasien Baru Mobile JKN (Staging)" sekarang untuk verifikasi identitas dan menerbitkan No. RM?')) {
-      window.open("{?=url([ADMIN, 'pasien', 'pasienbarujkn'])?}", '_blank');
+      window.open(URL_PASIEN_BARU_STAGING, '_blank');
     }
     return;
   }
