@@ -73,6 +73,10 @@
         </p>
       </div>
       <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+        <a href="{?=url([ADMIN, 'jkn_mobile', 'bookingantrol'])?}&sync_bpjs=1{if: !empty($tgl_awal)}&tgl_awal={?=$tgl_awal?}{/if}{if: !empty($tgl_akhir)}&tgl_akhir={?=$tgl_akhir?}{/if}{if: $status_filter != 'Semua'}&status={?=$status_filter?}{/if}{if: $kd_poli_filter != 'Semua'}&kd_poli={?=$kd_poli_filter?}{/if}" 
+           class="btn btn-info btn-sm" title="Tarik antrean resmi terbaru langsung dari Server BPJS Mobile JKN untuk rentang tanggal ini">
+          <i class="fa fa-cloud-download"></i> 🔄 Tarik Antrean BPJS
+        </a>
         <button type="button" class="btn btn-warning btn-sm" onclick="bukaModalSyncMassal()" title="Sinkronkan seluruh Task ID antrean pasien hari ini ke server BPJS Antrean secara otomatis">
           <i class="fa fa-refresh"></i> ⚡ Sinkronkan Semua Task ID Hari Ini
         </button>

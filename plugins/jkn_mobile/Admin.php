@@ -2581,6 +2581,21 @@ class Admin extends AdminModule
             $tgl_akhir = '';
         }
 
+        // Sinkronisasi otomatis data antrean resmi dari server BPJS Antrean Mobile JKN
+        // Dilakukan jika ada filter tanggal (rentang <= 7 hari) atau tombol sync diklik
+        $do_sync = isset($_REQUEST['sync_bpjs']) && $_REQUEST['sync_bpjs'] == '1';
+        $total_synced_bpjs = 0;
+        if (!empty($tgl_awal) && !empty($tgl_akhir)) {
+            $diffDays = (strtotime($tgl_akhir) - strtotime($tgl_awal)) / 86400;
+            if ($diffDays >= 0 && ($diffDays <= 7 || $do_sync)) {
+                $currDate = $tgl_awal;
+                while (strtotime($currDate) <= strtotime($tgl_akhir)) {
+                    $total_synced_bpjs += $this->_syncAntreanBpjsDate($currDate);
+                    $currDate = date('Y-m-d', strtotime($currDate . ' +1 day'));
+                }
+            }
+        }
+
         $poliklinik = $this->db('poliklinik')->where('status', '1')->asc('nm_poli')->toArray();
 
         $where_ar = [];
@@ -2599,6 +2614,9 @@ class Admin extends AdminModule
         }
 
         $where_ar_sql = !empty($where_ar) ? "WHERE " . implode(" AND ", $where_ar) : "";
+        $where_br_sql = !empty($where_ar) 
+            ? "WHERE " . implode(" AND ", array_map(function($w){ return "br." . $w; }, $where_ar)) . " AND ar_sub.kodebooking IS NULL" 
+            : "WHERE ar_sub.kodebooking IS NULL";
 
         $sql = "SELECT 
             ar.tanggal_periksa,
@@ -2642,10 +2660,26 @@ class Admin extends AdminModule
             FROM mlite_antrian_referensi
             $where_ar_sql
             GROUP BY kodebooking
+
+            UNION
+
+            SELECT 
+                CONCAT('SIMRS-', br.no_rkm_medis, '-', DATE_FORMAT(br.tanggal_periksa, '%Y%m%d')) as kodebooking,
+                br.tanggal_periksa,
+                br.no_rkm_medis,
+                COALESCE(p_sub.no_peserta, '-') as nomor_kartu,
+                '' as nomor_referensi,
+                '3' as jenis_kunjungan,
+                'Belum' as status_kirim,
+                'Booking SIMRS / Surat Kontrol' as keterangan
+            FROM booking_registrasi br
+            LEFT JOIN pasien p_sub ON p_sub.no_rkm_medis = br.no_rkm_medis
+            LEFT JOIN mlite_antrian_referensi ar_sub ON ar_sub.no_rkm_medis = br.no_rkm_medis AND ar_sub.tanggal_periksa = br.tanggal_periksa
+            $where_br_sql
         ) ar
-        LEFT JOIN pasien p ON p.no_rkm_medis = ar.no_rkm_medis
-        LEFT JOIN booking_registrasi br ON br.no_rkm_medis = ar.no_rkm_medis AND br.tanggal_periksa = ar.tanggal_periksa
-        LEFT JOIN reg_periksa rp ON rp.no_rkm_medis = ar.no_rkm_medis AND rp.tgl_registrasi = ar.tanggal_periksa
+        LEFT JOIN pasien p ON (p.no_rkm_medis = ar.no_rkm_medis AND ar.no_rkm_medis != '-') OR (ar.nomor_kartu != '-' AND ar.nomor_kartu != '' AND p.no_peserta = ar.nomor_kartu)
+        LEFT JOIN booking_registrasi br ON br.tanggal_periksa = ar.tanggal_periksa AND (br.no_rkm_medis = ar.no_rkm_medis OR (p.no_rkm_medis IS NOT NULL AND br.no_rkm_medis = p.no_rkm_medis))
+        LEFT JOIN reg_periksa rp ON rp.tgl_registrasi = ar.tanggal_periksa AND (rp.no_rkm_medis = ar.no_rkm_medis OR (p.no_rkm_medis IS NOT NULL AND rp.no_rkm_medis = p.no_rkm_medis))
         LEFT JOIN dokter d ON d.kd_dokter = COALESCE(br.kd_dokter, rp.kd_dokter)
         LEFT JOIN poliklinik pl ON pl.kd_poli = COALESCE(br.kd_poli, rp.kd_poli)
         LEFT JOIN penjab pj ON pj.kd_pj = COALESCE(br.kd_pj, rp.kd_pj)
@@ -2656,8 +2690,9 @@ class Admin extends AdminModule
         ) batal ON batal.kodebooking = ar.kodebooking
         ORDER BY ar.tanggal_periksa DESC, br.no_reg ASC";
 
+        $params_all = !empty($params_ar) ? array_merge($params_ar, $params_ar) : [];
         $stmt = $this->db()->pdo()->prepare($sql);
-        $stmt->execute($params_ar);
+        $stmt->execute($params_all);
         $raw_rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
         $all_refs = [];
@@ -2786,6 +2821,32 @@ class Admin extends AdminModule
 
             if ($status_filter !== 'Semua' && $status_filter !== $status_label) {
                 continue;
+            }
+
+            // Fallback jika kd_poli atau data pasien belum terpetakan di booking_registrasi
+            if (empty($row['kd_poli']) && !empty($row['no_rkm_medis']) && $row['no_rkm_medis'] !== '-') {
+                $brCek = $this->db('booking_registrasi')->where('no_rkm_medis', $row['no_rkm_medis'])->where('tanggal_periksa', $row['tanggal_periksa'])->oneArray();
+                if ($brCek) {
+                    $row['kd_poli'] = $brCek['kd_poli'];
+                    $row['kd_dokter'] = $brCek['kd_dokter'];
+                    if (empty($row['no_reg'])) $row['no_reg'] = $brCek['no_reg'];
+                    if (empty($row['jam_booking'])) $row['jam_booking'] = $brCek['jam_booking'];
+                    $poliRow = $this->db('poliklinik')->where('kd_poli', $brCek['kd_poli'])->oneArray();
+                    if ($poliRow) $row['nm_poli'] = $poliRow['nm_poli'];
+                    $dokRow = $this->db('dokter')->where('kd_dokter', $brCek['kd_dokter'])->oneArray();
+                    if ($dokRow) $row['nm_dokter'] = $dokRow['nm_dokter'];
+                }
+            }
+
+            if (empty($row['nm_pasien']) && !empty($row['no_rkm_medis']) && $row['no_rkm_medis'] !== '-') {
+                $pCek = $this->db('pasien')->where('no_rkm_medis', $row['no_rkm_medis'])->oneArray();
+                if ($pCek) {
+                    $row['nm_pasien'] = $pCek['nm_pasien'];
+                    $row['jk'] = $pCek['jk'];
+                    $row['no_ktp'] = $pCek['no_ktp'];
+                    $row['no_tlp'] = $pCek['no_tlp'];
+                    $row['alamat'] = $pCek['alamat'];
+                }
             }
 
             if ($kd_poli_filter !== 'Semua' && $row['kd_poli'] !== $kd_poli_filter) {
@@ -3594,6 +3655,107 @@ class Admin extends AdminModule
             'details' => $results
         ]);
         exit();
+    }
+
+    protected function _syncAntreanBpjsDate($tanggal)
+    {
+        $count = 0;
+        try {
+            $tStamp = BpjsService::getTimestamp();
+            $key = $this->consid . $this->secretkey . $tStamp;
+            $urlAntrean = $this->bpjsurl . 'antrean/pendaftaran/tanggal/' . $tanggal;
+            $outAntrean = BpjsService::get($urlAntrean, NULL, $this->consid, $this->secretkey, $this->user_key, $tStamp);
+            $jsonAntrean = json_decode($outAntrean, true);
+            if (!empty($jsonAntrean['response'])) {
+                $decAntrean = stringDecrypt($key, $jsonAntrean['response']);
+                if (!empty($decAntrean)) {
+                    $decompAntrean = \LZCompressor\LZString::decompressFromEncodedURIComponent($decAntrean);
+                    $listAntrean = json_decode($decompAntrean, true);
+                    if (is_array($listAntrean)) {
+                        foreach ($listAntrean as $ba) {
+                            $kb = trim($ba['kodebooking'] ?? '');
+                            if (empty($kb)) continue;
+
+                            $norm = trim($ba['norekammedis'] ?? '');
+                            $noka = trim($ba['nokapst'] ?? '');
+                            $nik = trim($ba['nik'] ?? '');
+
+                            // Cari RM dari master pasien jika norm kosong
+                            if (empty($norm) || $norm === '-') {
+                                if (!empty($noka)) {
+                                    $p = $this->db('pasien')->where('no_peserta', $noka)->oneArray();
+                                    if ($p) $norm = $p['no_rkm_medis'];
+                                }
+                                if (empty($norm) && !empty($nik)) {
+                                    $p = $this->db('pasien')->where('no_ktp', $nik)->oneArray();
+                                    if ($p) $norm = $p['no_rkm_medis'];
+                                }
+                            }
+
+                            // Cek apakah sudah ada di mlite_antrian_referensi
+                            $cekRef = $this->db('mlite_antrian_referensi')->where('kodebooking', $kb)->oneArray();
+                            if (!$cekRef) {
+                                $this->db('mlite_antrian_referensi')->save([
+                                    'tanggal_periksa' => !empty($ba['tanggalperiksa']) ? $ba['tanggalperiksa'] : $tanggal,
+                                    'no_rkm_medis' => $norm ?: '-',
+                                    'nomor_kartu' => $noka ?: '-',
+                                    'nomor_referensi' => $ba['nomorreferensi'] ?? '',
+                                    'kodebooking' => $kb,
+                                    'jenis_kunjungan' => $ba['jeniskunjungan'] ?? '1',
+                                    'status_kirim' => 'Belum',
+                                    'keterangan' => 'Sinkron BPJS Mobile JKN'
+                                ]);
+                                $count++;
+                            } elseif ((empty($cekRef['no_rkm_medis']) || $cekRef['no_rkm_medis'] === '-') && !empty($norm) && $norm !== '-') {
+                                $this->db('mlite_antrian_referensi')->where('kodebooking', $kb)->save(['no_rkm_medis' => $norm]);
+                            }
+
+                            // Pastikan data booking_registrasi terhubung ke dokter dan poli yang benar
+                            if (!empty($norm) && $norm !== '-') {
+                                $tglPrk = !empty($ba['tanggalperiksa']) ? $ba['tanggalperiksa'] : $tanggal;
+                                $cekBook = $this->db('booking_registrasi')
+                                    ->where('no_rkm_medis', $norm)
+                                    ->where('tanggal_periksa', $tglPrk)
+                                    ->oneArray();
+
+                                if (!$cekBook) {
+                                    $kdDokBpjs = (string)($ba['kodedokter'] ?? '');
+                                    $kdPoliBpjs = (string)($ba['kodepoli'] ?? '');
+                                    $mapDok = $this->db('maping_dokter_dpjpvclaim')->where('kd_dokter_bpjs', $kdDokBpjs)->oneArray();
+                                    if (!$mapDok && $kdDokBpjs !== '') {
+                                        $mapDok = $this->db('maping_dokter_dpjpvclaim')->where('kd_dokter_bpjs', ltrim($kdDokBpjs, '0'))->oneArray();
+                                    }
+                                    $mapPoli = $this->db('maping_poli_bpjs')->where('kd_poli_bpjs', $kdPoliBpjs)->oneArray();
+
+                                    $kd_dok_rs = $mapDok ? $mapDok['kd_dokter'] : '';
+                                    $kd_poli_rs = $mapPoli ? $mapPoli['kd_poli_rs'] : '';
+                                    $no_reg = !empty($ba['angkaantrean']) ? $ba['angkaantrean'] : (!empty($ba['noantrean']) ? $ba['noantrean'] : '1');
+                                    $jam_praktek = !empty($ba['jampraktek']) ? explode('-', $ba['jampraktek'])[0] . ':00' : '08:00:00';
+
+                                    $this->db('booking_registrasi')->save([
+                                        'tanggal_booking' => date('Y-m-d'),
+                                        'jam_booking' => date('H:i:s'),
+                                        'no_rkm_medis' => $norm,
+                                        'tanggal_periksa' => $tglPrk,
+                                        'kd_dokter' => $kd_dok_rs,
+                                        'kd_poli' => $kd_poli_rs,
+                                        'no_reg' => $no_reg,
+                                        'kd_pj' => 'BPJ',
+                                        'limit_reg' => 0,
+                                        'waktu_kunjungan' => $tglPrk . ' ' . $jam_praktek,
+                                        'status' => 'Belum'
+                                    ]);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            error_log("Error _syncAntreanBpjsDate: " . $e->getMessage());
+        }
+
+        return $count;
     }
 
     private function _exportBookingAntrolCsv($rows, $tgl_awal, $tgl_akhir)
