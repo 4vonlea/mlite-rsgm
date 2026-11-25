@@ -1883,45 +1883,136 @@ class Site extends SiteModule
 
     public function _resultDisplayAntrianApotek()
     {
-        $query = $this->db('mlite_antrian_loket')
-          ->join('pasien', 'pasien.no_rkm_medis=mlite_antrian_loket.no_rkm_medis')
-          ->where('type', 'Apotek')
-          ->where('postdate', date('Y-m-d'))
-          ->where('status', '<>', '3')
-          ->toArray();
+        $today = date('Y-m-d');
+        $rows = [];
 
-        $rows=[];
-        foreach ($query as $row) {
-          $row['status_resep'] = 'Belum';
-          $row['jenis_resep'] = 'Non Racikan';
-
-          $reg_periksa = $this->db('reg_periksa')
-            ->where('tgl_registrasi', date('Y-m-d'))
-            ->where('kd_poli', '<>', 'IGDK')
-            ->where('no_rkm_medis', $row['no_rkm_medis'])
-            ->oneArray();
-
-          $resep_obat = $this->db('resep_obat')
-            ->where('tgl_peresepan', date('Y-m-d'))
-            ->where('no_rawat', $reg_periksa['no_rawat'])
-            ->where('status', 'ralan')
-            ->oneArray();
-
-          $resep_dokter_racikan = $this->db('resep_dokter_racikan')->where('no_resep', $resep_obat['no_resep'])->oneArray();
-
-          if($resep_obat['tgl_perawatan'] != '0000-00-00' && $resep_obat['jam'] != '00:00:00') {
-            $row['status_resep'] = 'Disiapkan';
-          }
-          if($resep_obat['tgl_penyerahan'] != '0000-00-00' && $resep_obat['jam_penyerahan'] != '00:00:00') {
-            $row['status_resep'] = 'Diserahkan';
-          }
-
-          if(!empty($resep_dokter_racikan)) {
-            $row['jenis_resep'] = 'Racikan';
-          }
-
-          $rows[] = $row;
+        // 1. Ambil order resep obat hari ini (ralan & ranap)
+        try {
+            $reseps = $this->db('resep_obat')
+                ->join('reg_periksa', 'reg_periksa.no_rawat=resep_obat.no_rawat')
+                ->join('pasien', 'pasien.no_rkm_medis=reg_periksa.no_rkm_medis')
+                ->leftJoin('poliklinik', 'poliklinik.kd_poli=reg_periksa.kd_poli')
+                ->leftJoin('dokter', 'dokter.kd_dokter=resep_obat.kd_dokter')
+                ->where(function($q) use ($today) {
+                    $q->where('resep_obat.tgl_peresepan', $today)
+                      ->orWhere('resep_obat.tgl_perawatan', $today)
+                      ->orWhere('resep_obat.tgl_penyerahan', $today);
+                })
+                ->select([
+                    'no_resep'        => 'resep_obat.no_resep',
+                    'no_rawat'        => 'resep_obat.no_rawat',
+                    'tgl_peresepan'   => 'resep_obat.tgl_peresepan',
+                    'jam_peresepan'   => 'resep_obat.jam_peresepan',
+                    'tgl_perawatan'   => 'resep_obat.tgl_perawatan',
+                    'jam'             => 'resep_obat.jam',
+                    'tgl_penyerahan'  => 'resep_obat.tgl_penyerahan',
+                    'jam_penyerahan'  => 'resep_obat.jam_penyerahan',
+                    'status_layanan'  => 'resep_obat.status',
+                    'no_reg'          => 'reg_periksa.no_reg',
+                    'kd_poli'         => 'reg_periksa.kd_poli',
+                    'nm_poli'         => 'poliklinik.nm_poli',
+                    'no_rkm_medis'    => 'pasien.no_rkm_medis',
+                    'nm_pasien'       => 'pasien.nm_pasien',
+                    'nm_dokter'       => 'dokter.nm_dokter'
+                ])
+                ->desc('resep_obat.jam_peresepan')
+                ->limit(60)
+                ->toArray();
+        } catch (\Throwable $e) {
+            $reseps = [];
         }
+
+        // Ambil data racikan hari ini
+        $racik_resep = [];
+        if (!empty($reseps)) {
+            $resep_ids = array_column($reseps, 'no_resep');
+            if (!empty($resep_ids)) {
+                try {
+                    $racik_rows = $this->db('resep_dokter_racikan')
+                        ->whereIn('no_resep', $resep_ids)
+                        ->select('no_resep')
+                        ->toArray();
+                    foreach ($racik_rows as $rr) {
+                        $racik_resep[$rr['no_resep']] = true;
+                    }
+                } catch (\Throwable $e) {}
+            }
+        }
+
+        // Ambil nomor antrean apotek di loket (jika ada)
+        $antrian_loket_map = [];
+        try {
+            $loket_rows = $this->db('mlite_antrian_loket')
+                ->where('type', 'Apotek')
+                ->where('postdate', $today)
+                ->toArray();
+            foreach ($loket_rows as $lr) {
+                if (!empty($lr['no_rkm_medis'])) {
+                    $antrian_loket_map[$lr['no_rkm_medis']] = $lr['noantrian'];
+                }
+            }
+        } catch (\Throwable $e) {}
+
+        foreach ($reseps as $r) {
+            $status_resep = 'Menunggu';
+            if (!empty($r['tgl_penyerahan']) && $r['tgl_penyerahan'] != '0000-00-00' && $r['jam_penyerahan'] != '00:00:00') {
+                $status_resep = 'Diserahkan';
+            } elseif (!empty($r['tgl_perawatan']) && $r['tgl_perawatan'] != '0000-00-00' && $r['jam'] != '00:00:00') {
+                $status_resep = 'Disiapkan';
+            }
+
+            $noantrian = !empty($antrian_loket_map[$r['no_rkm_medis']]) 
+                ? 'F-' . $antrian_loket_map[$r['no_rkm_medis']] 
+                : (!empty($r['no_reg']) ? $r['no_reg'] : '-');
+
+            $rows[] = [
+                'no_resep'       => $r['no_resep'],
+                'no_rawat'       => $r['no_rawat'],
+                'no_rkm_medis'   => $r['no_rkm_medis'],
+                'nm_pasien'      => $r['nm_pasien'],
+                'noantrian'      => $noantrian,
+                'jenis_resep'    => isset($racik_resep[$r['no_resep']]) ? 'Racikan' : 'Non Racikan',
+                'status_resep'   => $status_resep,
+                'status_layanan' => $r['status_layanan'],
+                'nm_poli'        => $r['nm_poli'],
+                'nm_dokter'      => $r['nm_dokter'],
+                'jam_peresepan'  => $r['jam_peresepan']
+            ];
+        }
+
+        // 2. Tambahkan juga pasien yang mengambil karcis antrian apotek mandiri namun belum ada resep_obat
+        try {
+            $query_loket = $this->db('mlite_antrian_loket')
+              ->join('pasien', 'pasien.no_rkm_medis=mlite_antrian_loket.no_rkm_medis')
+              ->where('type', 'Apotek')
+              ->where('postdate', $today)
+              ->where('status', '<>', '3')
+              ->toArray();
+            foreach ($query_loket as $ql) {
+                $found = false;
+                foreach ($rows as $rw) {
+                    if ($rw['no_rkm_medis'] == $ql['no_rkm_medis']) {
+                        $found = true;
+                        break;
+                    }
+                }
+                if (!$found) {
+                    $rows[] = [
+                        'no_resep'       => '-',
+                        'no_rawat'       => '-',
+                        'no_rkm_medis'   => $ql['no_rkm_medis'],
+                        'nm_pasien'      => $ql['nm_pasien'],
+                        'noantrian'      => 'F-' . $ql['noantrian'],
+                        'jenis_resep'    => 'Non Racikan',
+                        'status_resep'   => 'Menunggu',
+                        'status_layanan' => 'ralan',
+                        'nm_poli'        => 'Loket Apotek',
+                        'nm_dokter'      => '-',
+                        'jam_peresepan'  => $ql['start_time'] ?? ''
+                    ];
+                }
+            }
+        } catch (\Throwable $e) {}
 
         return $rows;
     }
@@ -3411,11 +3502,65 @@ class Site extends SiteModule
         // FOR DISPLAY
         case "apotek-display":
           $rows = $this->_resultDisplayAntrianApotek();  
-          foreach ($rows as $row) {      
-            echo '<li style="padding:10px;">'
-               .  '<span class="noantrian"><b>'. $row['noantrian'] . '</b></span> '. $row['nm_pasien'] . ' - ' . $row['no_rkm_medis'] . ' Resep: ' . $row['jenis_resep'] . ' <span class="pull-right">Status: <b {if: $row.status_resep == "Disiapkan"}style="color:red;"{/if} {if: $row.status_resep == "Diserahkan"}style="color:green;"{/if}>' . $row['status_resep'] . '</b></span><br>'
-               . '</li>'; 
+          if (empty($rows)) {
+            echo '<li style="padding: 30px; text-align: center; color: rgba(255,255,255,0.7); font-size: 18px;">'
+               . '<i class="fa fa-info-circle fa-2x" style="display:block; margin-bottom:12px; color:#38bdf8;"></i>'
+               . 'Belum ada antrian atau orderan resep obat saat ini.'
+               . '</li>';
+          } else {
+            foreach ($rows as $row) {
+              $badgeBg = '#ef4444'; // merah
+              $badgeText = 'Order Masuk';
+              if ($row['status_resep'] == 'Diserahkan') {
+                $badgeBg = '#10b981'; // hijau
+                $badgeText = 'Siap Diambil';
+              } elseif ($row['status_resep'] == 'Disiapkan') {
+                $badgeBg = '#f59e0b'; // kuning
+                $badgeText = 'Sedang Disiapkan';
+              }
+              
+              $jenisBadge = ($row['jenis_resep'] == 'Racikan') 
+                ? '<span style="background:rgba(236,72,153,0.3); border:1px solid #f472b6; color:#fbcfe8; padding:2px 8px; border-radius:12px; font-size:12px; font-weight:700; margin-left:8px;"><i class="fa fa-flask"></i> Racikan</span>' 
+                : '<span style="background:rgba(59,130,246,0.3); border:1px solid #60a5fa; color:#bfdbfe; padding:2px 8px; border-radius:12px; font-size:12px; font-weight:700; margin-left:8px;"><i class="fa fa-medkit"></i> Non-Racik</span>';
+              
+              $asal = !empty($row['nm_poli']) ? $row['nm_poli'] : (!empty($row['status_layanan']) && $row['status_layanan'] == 'ranap' ? 'Rawat Inap' : 'Poliklinik');
+
+              echo '<li class="apotek-item-row" style="padding:14px 18px; margin-bottom:10px; border-radius:10px; background:rgba(255,255,255,0.08); border-left:5px solid ' . $badgeBg . '; display:flex; align-items:center; justify-content:space-between; box-shadow:0 2px 8px rgba(0,0,0,0.25);">'
+                 . '<div style="display:flex; align-items:center; gap:16px;">'
+                 . '  <span style="background:' . $badgeBg . '; color:#fff; font-size:24px; font-weight:800; padding:6px 16px; border-radius:8px; min-width:70px; text-align:center; box-shadow:0 3px 8px rgba(0,0,0,0.3);">' . htmlspecialchars($row['noantrian'], ENT_QUOTES, 'UTF-8') . '</span>'
+                 . '  <div>'
+                 . '    <div style="font-size:19px; font-weight:700; color:#ffffff; letter-spacing:0.3px;">' . htmlspecialchars($row['nm_pasien'], ENT_QUOTES, 'UTF-8') . ' <span style="font-size:14px; font-weight:normal; color:#94a3b8;">(' . htmlspecialchars($row['no_rkm_medis'], ENT_QUOTES, 'UTF-8') . ')</span>' . $jenisBadge . '</div>'
+                 . '    <div style="font-size:13px; color:#cbd5e1; margin-top:4px;"><i class="fa fa-hospital-o"></i> ' . htmlspecialchars($asal, ENT_QUOTES, 'UTF-8') . (!empty($row['nm_dokter']) && $row['nm_dokter'] != '-' ? ' &bull; <i class="fa fa-user-md"></i> ' . htmlspecialchars($row['nm_dokter'], ENT_QUOTES, 'UTF-8') : '') . '</div>'
+                 . '  </div>'
+                 . '</div>'
+                 . '<div style="text-align:right;">'
+                 . '  <span style="background:' . $badgeBg . '; color:#fff; font-size:14px; font-weight:700; padding:6px 14px; border-radius:20px; display:inline-block; letter-spacing:0.5px; box-shadow:0 2px 8px rgba(0,0,0,0.2);">' . $badgeText . '</span>'
+                 . (!empty($row['no_resep']) && $row['no_resep'] != '-' ? '  <div style="font-size:12px; color:#94a3b8; margin-top:4px;">No. Resep: ' . htmlspecialchars($row['no_resep'], ENT_QUOTES, 'UTF-8') . '</div>' : '')
+                 . '</div>'
+                 . '</li>';
+            }
           }
+        break;
+        case "apotek-panggil-status":
+          $set_nomor  = $this->settings->get('anjungan.panggil_apotek_nomor') ?: '';
+          $set_nama   = $this->settings->get('anjungan.panggil_apotek_nama') ?: '';
+          $set_unit   = $this->settings->get('anjungan.panggil_apotek_unit') ?: 'Apotek';
+          $set_lokasi = $this->settings->get('anjungan.panggil_apotek_lokasi') ?: '';
+          $set_waktu  = intval($this->settings->get('anjungan.panggil_apotek_waktu') ?: 0);
+          
+          // Aktif jika baru dipanggil dalam 120 detik terakhir
+          $is_active = (!empty($set_nama) && (time() - $set_waktu <= 120));
+          
+          header('Content-Type: application/json');
+          echo json_encode([
+            'status' => $is_active,
+            'nomor'  => $set_nomor,
+            'nama'   => $set_nama,
+            'unit'   => $set_unit,
+            'lokasi' => $set_lokasi,
+            'waktu'  => $set_waktu
+          ]);
+          exit();
         break;
         case "laboratorium-display":
           $rows = $this->_resultDisplayAntrianLaboratorium();  

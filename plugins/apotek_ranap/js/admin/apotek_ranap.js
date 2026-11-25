@@ -179,6 +179,10 @@ $("#form_rincian").on("click", "#selesai", function(event){
 
 // ketika baris data diklik
 $("#display").on("click", ".layanan_obat", function(event){
+  // Jangan buka rincian jika yang diklik adalah tombol panggil atau aksi lainnya
+  if ($(event.target).closest('.apotek-panggil-ranap, button, a').length > 0) {
+    return;
+  }
   {if: $this->core->checkPermission($this->core->getUserInfo('username'), 'can_update', 'apotek_ranap') == true}
   var baseURL = mlite.url + '/' + mlite.admin;
   event.preventDefault();
