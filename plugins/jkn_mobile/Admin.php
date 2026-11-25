@@ -408,8 +408,8 @@ class Admin extends AdminModule
                                 $listAntrean = json_decode($decompAntrean, true);
                                 if (is_array($listAntrean)) {
                                     foreach ($listAntrean as $ba) {
-                                        $st = strtolower($ba['status'] ?? '');
-                                        if ($st === 'batal' || $st === 'batal antrean' || $st === 'batal_antrean') {
+                                        if ($this->_isBpjsStatusBatal($ba['status'] ?? '')) {
+                                            $this->_applyBpjsCancelToSimrs($ba, $tanggal);
                                             continue;
                                         }
                                         $kd_dok = (string) ($ba['kodedokter'] ?? '');
@@ -2769,16 +2769,19 @@ class Admin extends AdminModule
             $tgl_akhir = '';
         }
 
-        // Sinkronisasi otomatis data antrean resmi dari server BPJS Antrean Mobile JKN
+        // Sinkronisasi otomatis data antrean resmi & status batal dari server BPJS Antrean Mobile JKN
         // Dilakukan jika ada filter tanggal (rentang <= 7 hari) atau tombol sync diklik
         $do_sync = isset($_REQUEST['sync_bpjs']) && $_REQUEST['sync_bpjs'] == '1';
         $total_synced_bpjs = 0;
+        $total_synced_batal = 0;
         if (!empty($tgl_awal) && !empty($tgl_akhir)) {
             $diffDays = (strtotime($tgl_akhir) - strtotime($tgl_awal)) / 86400;
             if ($diffDays >= 0 && ($diffDays <= 7 || $do_sync)) {
                 $currDate = $tgl_awal;
                 while (strtotime($currDate) <= strtotime($tgl_akhir)) {
-                    $total_synced_bpjs += $this->_syncAntreanBpjsDate($currDate);
+                    $syncRes = $this->_syncAntreanBpjsDate($currDate);
+                    $total_synced_bpjs += (int) ($syncRes['new'] ?? 0);
+                    $total_synced_batal += (int) ($syncRes['batal'] ?? 0);
                     $currDate = date('Y-m-d', strtotime($currDate . ' +1 day'));
                 }
             }
@@ -3132,6 +3135,8 @@ class Admin extends AdminModule
             'total_belum' => $total_belum,
             'total_terdaftar' => $total_terdaftar,
             'total_batal' => $total_batal,
+            'total_synced_bpjs' => $total_synced_bpjs,
+            'total_synced_batal' => $total_synced_batal,
         ]);
     }
 
@@ -3845,9 +3850,217 @@ class Admin extends AdminModule
         exit();
     }
 
+    protected function _isBpjsStatusBatal($status)
+    {
+        $st = strtolower(trim((string) $status));
+        return ($st !== '' && ($st === 'batal' || $st === 'batal antrean' || $st === 'batal_antrean' || strpos($st, 'batal') !== false));
+    }
+
+    protected function _applyBpjsCancelToSimrs($ba, $tanggal, $norm = '')
+    {
+        $changed = false;
+        $kb = trim($ba['kodebooking'] ?? '');
+        if (empty($kb)) {
+            return false;
+        }
+
+        $tglPrk = !empty($ba['tanggalperiksa']) ? $ba['tanggalperiksa'] : $tanggal;
+        $noka = trim($ba['nokapst'] ?? '');
+        $nik = trim($ba['nik'] ?? '');
+        $alasan = trim($ba['keterangan'] ?? '');
+        if ($alasan === '') {
+            $alasan = 'Dibatalkan di Mobile JKN (Auto-Sinkron BPJS)';
+        }
+
+        if (empty($norm) || $norm === '-') {
+            $norm = trim($ba['norekammedis'] ?? '');
+        }
+        $cekRef = $this->db('mlite_antrian_referensi')->where('kodebooking', $kb)->oneArray();
+        if ((empty($norm) || $norm === '-') && $cekRef && !empty($cekRef['no_rkm_medis']) && $cekRef['no_rkm_medis'] !== '-') {
+            $norm = $cekRef['no_rkm_medis'];
+        }
+        if (empty($norm) || $norm === '-') {
+            if (!empty($noka)) {
+                $p = $this->db('pasien')->where('no_peserta', $noka)->oneArray();
+                if ($p) $norm = $p['no_rkm_medis'];
+            }
+            if ((empty($norm) || $norm === '-') && !empty($nik)) {
+                $p = $this->db('pasien')->where('no_ktp', $nik)->oneArray();
+                if ($p) $norm = $p['no_rkm_medis'];
+            }
+        }
+
+        // 1. Update atau simpan status Batal di mlite_antrian_referensi
+        if ($cekRef) {
+            if (($cekRef['status_kirim'] ?? '') !== 'Batal') {
+                $updRef = [
+                    'status_kirim' => 'Batal',
+                    'keterangan' => $alasan
+                ];
+                if ((empty($cekRef['no_rkm_medis']) || $cekRef['no_rkm_medis'] === '-') && !empty($norm) && $norm !== '-') {
+                    $updRef['no_rkm_medis'] = $norm;
+                }
+                $this->db('mlite_antrian_referensi')->where('kodebooking', $kb)->save($updRef);
+                $changed = true;
+            }
+        } else {
+            $this->db('mlite_antrian_referensi')->save([
+                'tanggal_periksa' => $tglPrk,
+                'no_rkm_medis' => $norm ?: '-',
+                'nomor_kartu' => $noka ?: '-',
+                'nomor_referensi' => $ba['nomorreferensi'] ?? '',
+                'kodebooking' => $kb,
+                'jenis_kunjungan' => $ba['jeniskunjungan'] ?? '1',
+                'status_kirim' => 'Batal',
+                'keterangan' => $alasan
+            ]);
+            $changed = true;
+        }
+
+        // 2. Catat log pembatalan di mlite_antrian_referensi_batal
+        $cekBatalLog = $this->db('mlite_antrian_referensi_batal')->where('kodebooking', $kb)->oneArray();
+        if (!$cekBatalLog) {
+            $this->db('mlite_antrian_referensi_batal')->save([
+                'tanggal_batal' => date('Y-m-d'),
+                'nomor_referensi' => !empty($ba['nomorreferensi']) ? $ba['nomorreferensi'] : ($cekRef['nomor_referensi'] ?? $kb),
+                'kodebooking' => $kb,
+                'keterangan' => $alasan
+            ]);
+            $changed = true;
+        }
+
+        // 3. Sinkron status Batal ke booking_registrasi
+        if (!empty($norm) && $norm !== '-') {
+            $cekBook = $this->db('booking_registrasi')
+                ->where('no_rkm_medis', $norm)
+                ->where('tanggal_periksa', $tglPrk)
+                ->oneArray();
+            if ($cekBook && ($cekBook['status'] ?? '') !== 'Batal') {
+                $this->db('booking_registrasi')
+                    ->where('no_rkm_medis', $norm)
+                    ->where('tanggal_periksa', $tglPrk)
+                    ->update(['status' => 'Batal']);
+                $changed = true;
+            }
+        }
+
+        // 4. Sinkron status Batal ke staging calon pasien baru MJKN jika ada
+        try {
+            $cekStaging = $this->db('mlite_jkn_booking_baru')->where('kodebooking', $kb)->oneArray();
+            if ($cekStaging && ($cekStaging['status'] ?? '') !== 'Batal') {
+                $this->db('mlite_jkn_booking_baru')
+                    ->where('kodebooking', $kb)
+                    ->update(['status' => 'Batal']);
+                $changed = true;
+            }
+        } catch (\Throwable $eStg) {
+        }
+
+        // 5. Sinkron status Batal ke reg_periksa jika pasien belum dilayani (stts = 'Belum')
+        if (!empty($norm) && $norm !== '-') {
+            $cekReg = $this->db('reg_periksa')
+                ->where('no_rkm_medis', $norm)
+                ->where('tgl_registrasi', $tglPrk)
+                ->where('stts', 'Belum')
+                ->oneArray();
+            if ($cekReg) {
+                $this->db('reg_periksa')
+                    ->where('no_rawat', $cekReg['no_rawat'])
+                    ->update(['stts' => 'Batal']);
+                $changed = true;
+            }
+        }
+
+        // 6. Catat Task ID 99 (Batal) di tabel taskid lokal bila belum ada
+        try {
+            $cekT99 = $this->db('mlite_antrian_referensi_taskid')
+                ->where('nomor_referensi', $kb)
+                ->where('taskid', '99')
+                ->oneArray();
+            if (!$cekT99) {
+                $this->db('mlite_antrian_referensi_taskid')->save([
+                    'tanggal_periksa' => $tglPrk,
+                    'nomor_referensi' => $kb,
+                    'taskid' => 99,
+                    'waktu' => round(microtime(true) * 1000),
+                    'status' => 'Sudah',
+                    'keterangan' => $alasan
+                ]);
+            }
+        } catch (\Throwable $eT99) {
+        }
+
+        return $changed;
+    }
+
+    public function postSyncBatalBpjs()
+    {
+        header('Content-Type: application/json');
+        $tgl_awal = trim($_POST['tgl_awal'] ?? $_GET['tgl_awal'] ?? date('Y-m-d'));
+        $tgl_akhir = trim($_POST['tgl_akhir'] ?? $_GET['tgl_akhir'] ?? $tgl_awal);
+
+        if (empty($tgl_awal)) {
+            $tgl_awal = date('Y-m-d');
+        }
+        if (empty($tgl_akhir)) {
+            $tgl_akhir = $tgl_awal;
+        }
+        if (strtotime($tgl_akhir) < strtotime($tgl_awal)) {
+            $tgl_akhir = $tgl_awal;
+        }
+
+        $diffDays = (strtotime($tgl_akhir) - strtotime($tgl_awal)) / 86400;
+        if ($diffDays > 31) {
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Rentang tanggal terlalu panjang (maksimal 31 hari per sinkronisasi). Persempit filter tanggal terlebih dahulu.'
+            ]);
+            exit();
+        }
+
+        $total_new = 0;
+        $total_batal = 0;
+        $batal_items = [];
+        $dates_checked = 0;
+
+        $currDate = $tgl_awal;
+        while (strtotime($currDate) <= strtotime($tgl_akhir)) {
+            $res = $this->_syncAntreanBpjsDate($currDate);
+            $total_new += (int) ($res['new'] ?? 0);
+            $total_batal += (int) ($res['batal'] ?? 0);
+            if (!empty($res['batal_items'])) {
+                $batal_items = array_merge($batal_items, $res['batal_items']);
+            }
+            $dates_checked++;
+            $currDate = date('Y-m-d', strtotime($currDate . ' +1 day'));
+        }
+
+        $msg = "Sinkronisasi {$dates_checked} hari ({$tgl_awal} s.d. {$tgl_akhir}) selesai. ";
+        if ($total_batal > 0) {
+            $msg .= "Ditemukan dan dibatalkan otomatis di SIMRS: {$total_batal} antrean (pasien batal di Mobile JKN).";
+        } else {
+            $msg .= "Tidak ada antrean batal baru dari Mobile JKN yang belum sinkron (semua status sudah selaras).";
+        }
+        if ($total_new > 0) {
+            $msg .= " (+{$total_new} booking baru ditarik dari BPJS).";
+        }
+
+        echo json_encode([
+            'status' => 'success',
+            'message' => $msg,
+            'dates_checked' => $dates_checked,
+            'total_new' => $total_new,
+            'total_batal' => $total_batal,
+            'batal_items' => $batal_items
+        ]);
+        exit();
+    }
+
     protected function _syncAntreanBpjsDate($tanggal)
     {
         $count = 0;
+        $batal_synced = 0;
+        $batal_items = [];
         try {
             $tStamp = BpjsService::getTimestamp();
             $key = $this->consid . $this->secretkey . $tStamp;
@@ -3867,6 +4080,7 @@ class Admin extends AdminModule
                             $norm = trim($ba['norekammedis'] ?? '');
                             $noka = trim($ba['nokapst'] ?? '');
                             $nik = trim($ba['nik'] ?? '');
+                            $isBatalBpjs = $this->_isBpjsStatusBatal($ba['status'] ?? '');
 
                             // Cari RM dari master pasien jika norm kosong
                             if (empty($norm) || $norm === '-') {
@@ -3874,10 +4088,24 @@ class Admin extends AdminModule
                                     $p = $this->db('pasien')->where('no_peserta', $noka)->oneArray();
                                     if ($p) $norm = $p['no_rkm_medis'];
                                 }
-                                if (empty($norm) && !empty($nik)) {
+                                if ((empty($norm) || $norm === '-') && !empty($nik)) {
                                     $p = $this->db('pasien')->where('no_ktp', $nik)->oneArray();
                                     if ($p) $norm = $p['no_rkm_medis'];
                                 }
+                            }
+
+                            // Auto-Sinkron Status "Batal" dari BPJS (pasien batal sendiri di Mobile JKN) ke SIMRS
+                            if ($isBatalBpjs) {
+                                if ($this->_applyBpjsCancelToSimrs($ba, $tanggal, $norm)) {
+                                    $batal_synced++;
+                                    $batal_items[] = [
+                                        'kodebooking' => $kb,
+                                        'no_rkm_medis' => $norm ?: '-',
+                                        'tanggal' => !empty($ba['tanggalperiksa']) ? $ba['tanggalperiksa'] : $tanggal,
+                                        'status_bpjs' => $ba['status'] ?? 'Batal'
+                                    ];
+                                }
+                                continue;
                             }
 
                             // Cek apakah sudah ada di mlite_antrian_referensi
@@ -3943,7 +4171,11 @@ class Admin extends AdminModule
             error_log("Error _syncAntreanBpjsDate: " . $e->getMessage());
         }
 
-        return $count;
+        return [
+            'new' => $count,
+            'batal' => $batal_synced,
+            'batal_items' => $batal_items
+        ];
     }
 
     private function _exportBookingAntrolCsv($rows, $tgl_awal, $tgl_akhir)

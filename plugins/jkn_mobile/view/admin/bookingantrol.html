@@ -81,6 +81,9 @@
            class="btn btn-info btn-sm" title="Tarik antrean resmi terbaru langsung dari Server BPJS Mobile JKN untuk rentang tanggal ini">
           <i class="fa fa-cloud-download"></i> 🔄 Tarik Antrean BPJS
         </a>
+        <button type="button" id="btnSyncBatalBpjs" class="btn btn-danger btn-sm" onclick="sinkronStatusBatalBpjs()" title="Cek status pembatalan dari server BPJS (pasien batal sendiri di Mobile JKN) dan otomatis tandai Batal di SIMRS">
+          <i class="fa fa-ban"></i> Sinkron Batal BPJS
+        </button>
         <button type="button" class="btn btn-warning btn-sm" onclick="bukaModalSyncMassal()" title="Sinkronkan seluruh Task ID antrean pasien hari ini ke server BPJS Antrean secara otomatis">
           <i class="fa fa-refresh"></i> ⚡ Sinkronkan Semua Task ID Hari Ini
         </button>
@@ -91,6 +94,16 @@
       </div>
     </div>
   </div>
+</div>
+
+<!-- Notifikasi Auto-Sinkron Status Batal BPJS -->
+<div id="alertSyncBatalWrap">
+  {if: !empty($total_synced_batal) && $total_synced_batal > 0}
+  <div class="alert alert-info alert-dismissible" role="alert" style="border-radius: 6px; margin-bottom: 15px;">
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+    <i class="fa fa-check-circle"></i> <strong>Auto-Sinkron Batal BPJS:</strong> Sebanyak <strong>{?=$total_synced_batal?} antrean</strong> yang dibatalkan pasien di Mobile JKN otomatis diperbarui menjadi <strong>Batal</strong> di SIMRS.
+  </div>
+  {/if}
 </div>
 
 <!-- KPI Summary Cards -->
@@ -987,6 +1000,63 @@ function mulaiProsesSyncMassal() {
   }).fail(function() {
     addLog('Gagal menghubungi endpoint antrean SIMRS.', '#ef4444');
     $('#btnStartBulkSync').prop('disabled', false).html('<i class="fa fa-play"></i> Coba Lagi');
+  });
+}
+
+function sinkronStatusBatalBpjs() {
+  var btn = $('#btnSyncBatalBpjs');
+  var tglAwal = $('#filter_tgl_awal').val() || "{?=$tgl_awal?}" || "{?=date('Y-m-d')?}";
+  var tglAkhir = $('#filter_tgl_akhir').val() || "{?=$tgl_akhir?}" || tglAwal;
+
+  btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Menyinkronkan...');
+  $.ajax({
+    url: "{?=url([ADMIN, 'jkn_mobile', 'syncbatalbpjs'])?}",
+    method: 'POST',
+    dataType: 'json',
+    data: {
+      tgl_awal: tglAwal,
+      tgl_akhir: tglAkhir
+    },
+    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+    success: function(res) {
+      btn.prop('disabled', false).html('<i class="fa fa-ban"></i> Sinkron Batal BPJS');
+      if (res && res.status === 'success') {
+        var alertCls = (res.total_batal > 0) ? 'alert-success' : 'alert-info';
+        var detailHtml = '';
+        if (res.batal_items && res.batal_items.length > 0) {
+          var kbs = [];
+          for (var i = 0; i < res.batal_items.length; i++) {
+            kbs.push(res.batal_items[i].kodebooking + ' (RM: ' + res.batal_items[i].no_rkm_medis + ')');
+          }
+          detailHtml = '<div style="margin-top:5px; font-size:12px;"><strong>Dibatalkan:</strong> ' + kbs.join(', ') + '</div>';
+        }
+        $('#alertSyncBatalWrap').html(
+          '<div class="alert ' + alertCls + ' alert-dismissible" role="alert" style="border-radius: 6px; margin-bottom: 15px;">' +
+          '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
+          '<i class="fa fa-check-circle"></i> ' + (res.message || 'Sinkronisasi selesai.') + detailHtml +
+          '</div>'
+        );
+        if (res.total_batal > 0 || res.total_new > 0) {
+          setTimeout(function() { location.reload(); }, 1800);
+        }
+      } else {
+        $('#alertSyncBatalWrap').html(
+          '<div class="alert alert-danger alert-dismissible" role="alert" style="border-radius: 6px; margin-bottom: 15px;">' +
+          '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
+          '<i class="fa fa-exclamation-triangle"></i> ' + ((res && res.message) ? res.message : 'Gagal menyinkronkan status batal dari BPJS.') +
+          '</div>'
+        );
+      }
+    },
+    error: function() {
+      btn.prop('disabled', false).html('<i class="fa fa-ban"></i> Sinkron Batal BPJS');
+      $('#alertSyncBatalWrap').html(
+        '<div class="alert alert-danger alert-dismissible" role="alert" style="border-radius: 6px; margin-bottom: 15px;">' +
+        '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
+        '<i class="fa fa-exclamation-triangle"></i> Gagal menghubungi server saat menyinkronkan status batal BPJS.' +
+        '</div>'
+      );
+    }
   });
 }
 </script>
