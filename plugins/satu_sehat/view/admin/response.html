@@ -256,6 +256,7 @@
     <div class="panel-heading clearfix" style="padding-bottom: 0px;">
         <h3 class="panel-title pull-left" style="padding-top: 7px; margin-bottom: 10px;">Data Response Satu Sehat 
             <a href="{?=url('/satu-sehat/forward-tanggal')?}" class="btn btn-info btn-xs" target="_blank" style="margin-left:5px;"><i class="fa fa-send"></i> Kirim Massal</a>
+            <a href="#" class="btn btn-warning btn-xs" data-toggle="modal" data-target="#syncIgdModal" id="btn-sync-igd-open" style="margin-left:5px; color:#fff;"><i class="fa fa-ambulance"></i> Sync Encounter IGD (EMER)</a>
             <a href="#" class="btn btn-success btn-xs" data-toggle="modal" data-target="#rekapModal" id="btn-rekap-excel" style="margin-left:5px;"><i class="fa fa-file-excel-o"></i> Rekap Excel</a>
         </h3>
         
@@ -542,6 +543,63 @@
         </div>
     </div>
 </div>
+<!-- Modal Sinkronisasi PUT Encounter IGD (AMB -> EMER) -->
+<div class="modal fade" id="syncIgdModal" tabindex="-1" role="dialog" aria-labelledby="syncIgdModalLabel">
+    <div class="modal-dialog modal-md" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="background:#d97706; color:#fff;">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color:#fff; opacity:0.9;"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="syncIgdModalLabel"><i class="fa fa-ambulance"></i> Sinkronisasi Encounter IGD (AMB &rarr; EMER)</h4>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning" style="font-size:12px; padding:8px 12px; margin-bottom:12px;">
+                    <i class="fa fa-info-circle"></i>
+                    Memperbarui resource <b>Encounter</b> poli IGD (<code>{?=$this->core->settings->get('settings.igd') ?: 'UGD'?}</code>) yang sudah telanjur terkirim sebagai Rawat Jalan (<code>AMB</code>) menjadi Gawat Darurat (<code>EMER</code>) melalui <code>PUT /Encounter/[id]</code> agar terhitung di kolom <b>IGD</b> pada dashboard SatuSehat Kemenkes.
+                </div>
+                <div class="row">
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <label style="font-size:12px; margin-bottom:2px;">Tanggal Awal</label>
+                            <div class="input-group">
+                                <input type="text" id="sync_igd_awal" class="form-control tanggal" placeholder="YYYY-MM-DD">
+                                <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <label style="font-size:12px; margin-bottom:2px;">Tanggal Akhir</label>
+                            <div class="input-group">
+                                <input type="text" id="sync_igd_akhir" class="form-control tanggal" placeholder="YYYY-MM-DD">
+                                <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="sync-igd-progress-wrap" style="display:none; margin-top:6px;">
+                    <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px;">
+                        <strong id="sync-igd-status-text">Memuat daftar kunjungan IGD...</strong>
+                        <span id="sync-igd-counter">0 / 0</span>
+                    </div>
+                    <div class="progress" style="height:12px; margin-bottom:10px;">
+                        <div id="sync-igd-bar" class="progress-bar progress-bar-warning progress-bar-striped active" role="progressbar" style="width:0%;"></div>
+                    </div>
+                    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px; font-size:11.5px;">
+                        <span class="label label-success">Diupdate ke EMER: <b id="sync-cnt-updated">0</b></span>
+                        <span class="label label-info">Sudah EMER: <b id="sync-cnt-already">0</b></span>
+                        <span class="label label-danger">Gagal: <b id="sync-cnt-error">0</b></span>
+                        <span class="label label-default">Belum Kirim Encounter: <b id="sync-cnt-unsent">0</b></span>
+                    </div>
+                    <div id="sync-igd-log" style="max-height:200px; overflow-y:auto; background:#f8fafc; border:1px solid #e2e8f0; border-radius:4px; padding:8px; font-size:11.5px; font-family:monospace;"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal" id="btn-sync-igd-close">Tutup</button>
+                <button type="button" class="btn btn-warning" id="btn-sync-igd-start" style="color:#fff; font-weight:600;"><i class="fa fa-refresh"></i> Mulai Sinkronisasi IGD</button>
+            </div>
+        </div>
+    </div>
+</div>
 <script type="text/javascript">
     let table;
     let statusFilter = '';
@@ -706,6 +764,138 @@
             syncUrlDates();
         });
         $('#rekapModal').on('show.bs.modal', syncRekapDates);
+        $('#syncIgdModal').on('show.bs.modal', function () {
+            var tgl_awal = $('#tanggal_awal').val() || '';
+            var tgl_akhir = $('#tanggal_akhir').val() || '';
+            if (tgl_awal && !$('#sync_igd_awal').val()) $('#sync_igd_awal').val(tgl_awal);
+            if (tgl_akhir && !$('#sync_igd_akhir').val()) $('#sync_igd_akhir').val(tgl_akhir);
+        });
+
+        var syncIgdRunning = false;
+        function appendSyncLogLine(text, color) {
+            var box = document.getElementById('sync-igd-log');
+            if (!box) return;
+            var line = document.createElement('div');
+            line.style.padding = '2px 0';
+            line.style.borderBottom = '1px dashed #e2e8f0';
+            if (color) line.style.color = color;
+            line.textContent = text;
+            box.appendChild(line);
+            box.scrollTop = box.scrollHeight;
+        }
+
+        $('#btn-sync-igd-start').on('click', function () {
+            if (syncIgdRunning) return;
+            var tglAwal = ($('#sync_igd_awal').val() || '').trim();
+            var tglAkhir = ($('#sync_igd_akhir').val() || '').trim();
+            var logBox = document.getElementById('sync-igd-log');
+            if (logBox) logBox.replaceChildren();
+            $('#sync-igd-progress-wrap').show();
+
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(tglAwal) || !/^\d{4}-\d{2}-\d{2}$/.test(tglAkhir)) {
+                $('#sync-igd-status-text').text('Format tanggal wajib YYYY-MM-DD.');
+                appendSyncLogLine('Error: Silakan isi Tanggal Awal dan Tanggal Akhir dengan format YYYY-MM-DD.', '#c53030');
+                return;
+            }
+
+            syncIgdRunning = true;
+            $('#btn-sync-igd-start').prop('disabled', true);
+            $('#sync-cnt-updated').text('0');
+            $('#sync-cnt-already').text('0');
+            $('#sync-cnt-error').text('0');
+            $('#sync-cnt-unsent').text('0');
+            $('#sync-igd-bar').addClass('active').css('width', '5%');
+            $('#sync-igd-status-text').text('Mengambil daftar kunjungan IGD...');
+            $('#sync-igd-counter').text('0 / 0');
+
+            $.ajax({
+                url: baseURL + '/satu_sehat/listsyncigd?t=' + encodeURIComponent(mlite.token),
+                method: 'POST',
+                dataType: 'json',
+                data: { tanggal_awal: tglAwal, tanggal_akhir: tglAkhir }
+            }).done(function (res) {
+                if (!res || res.status !== 'ok') {
+                    $('#sync-igd-status-text').text('Gagal memuat daftar IGD.');
+                    appendSyncLogLine((res && res.message) ? res.message : 'Gagal memuat daftar kunjungan IGD.', '#c53030');
+                    syncIgdRunning = false;
+                    $('#btn-sync-igd-start').prop('disabled', false);
+                    $('#sync-igd-bar').removeClass('active');
+                    return;
+                }
+
+                var items = Array.isArray(res.items) ? res.items : [];
+                $('#sync-cnt-unsent').text(String(res.total_unsent || 0));
+                if (items.length === 0) {
+                    $('#sync-igd-bar').removeClass('active').css('width', '100%');
+                    $('#sync-igd-status-text').text('Tidak ada kunjungan IGD ber-ID Encounter pada rentang tanggal ini.');
+                    appendSyncLogLine('Total kunjungan IGD: ' + (res.total_igd || 0) + ' (Belum kirim Encounter: ' + (res.total_unsent || 0) + ').', '#4a5568');
+                    syncIgdRunning = false;
+                    $('#btn-sync-igd-start').prop('disabled', false);
+                    return;
+                }
+
+                var total = items.length;
+                var done = 0, cntUpdated = 0, cntAlready = 0, cntErr = 0;
+                var idx = 0, active = 0, concurrency = 3;
+                $('#sync-igd-counter').text('0 / ' + total);
+                $('#sync-igd-status-text').text('Memproses PUT Encounter ke EMER...');
+
+                function pump() {
+                    while (active < concurrency && idx < total) {
+                        (function (item) {
+                            active++;
+                            $.ajax({
+                                url: baseURL + '/satu_sehat/syncigditem?t=' + encodeURIComponent(mlite.token),
+                                method: 'POST',
+                                dataType: 'json',
+                                timeout: 45000,
+                                data: { no_rawat: item.no_rawat }
+                            }).done(function (r) {
+                                if (r && r.status === 'updated') {
+                                    cntUpdated++;
+                                    $('#sync-cnt-updated').text(String(cntUpdated));
+                                    appendSyncLogLine('[OK] ' + item.tgl_registrasi + ' | ' + item.no_rawat + ' — ' + (r.message || 'Updated ke EMER'), '#1e7e34');
+                                } else if (r && r.status === 'already_emer') {
+                                    cntAlready++;
+                                    $('#sync-cnt-already').text(String(cntAlready));
+                                    appendSyncLogLine('[SKIP] ' + item.tgl_registrasi + ' | ' + item.no_rawat + ' — ' + (r.message || 'Sudah EMER'), '#2b6cb0');
+                                } else {
+                                    cntErr++;
+                                    $('#sync-cnt-error').text(String(cntErr));
+                                    appendSyncLogLine('[ERR] ' + item.tgl_registrasi + ' | ' + item.no_rawat + ' — ' + ((r && r.message) ? r.message : 'Gagal update'), '#c53030');
+                                }
+                            }).fail(function (xhr, st) {
+                                cntErr++;
+                                $('#sync-cnt-error').text(String(cntErr));
+                                appendSyncLogLine('[ERR] ' + item.tgl_registrasi + ' | ' + item.no_rawat + ' — Koneksi/timeout (' + st + ')', '#c53030');
+                            }).always(function () {
+                                active--;
+                                done++;
+                                var pct = Math.round((done / total) * 100);
+                                $('#sync-igd-bar').css('width', pct + '%');
+                                $('#sync-igd-counter').text(done + ' / ' + total);
+                                if (done >= total) {
+                                    syncIgdRunning = false;
+                                    $('#btn-sync-igd-start').prop('disabled', false);
+                                    $('#sync-igd-bar').removeClass('active');
+                                    $('#sync-igd-status-text').text('Sinkronisasi selesai!');
+                                    table.ajax.reload(null, false);
+                                } else {
+                                    pump();
+                                }
+                            });
+                        })(items[idx++]);
+                    }
+                }
+                pump();
+            }).fail(function () {
+                $('#sync-igd-status-text').text('Gagal menghubungi server.');
+                appendSyncLogLine('Error jaringan saat memuat daftar kunjungan IGD.', '#c53030');
+                syncIgdRunning = false;
+                $('#btn-sync-igd-start').prop('disabled', false);
+                $('#sync-igd-bar').removeClass('active');
+            });
+        });
 
         $('#tanggal_awal').on('dp.change', function(e) {
             $('#tanggal_akhir').data('DateTimePicker').date(e.date);
@@ -874,7 +1064,13 @@
                             return `<a href="" class="btn btn-xs btn-info" data-id="${row.no_rawat_converted}" data-tipe="encounter" data-toggle="modal" data-target="#asuransiModal" id="clearModalBtn"><i class="fa fa-check"></i></a>`;
                         } else if (row.id_encounter == '' && row.tgl_pulang == '') {
                             return badgeError('Belum Closing', 'Pasien belum closing. Lakukan billing / input tgl. pulang terlebih dahulu.');
-                        } else { return `<span class="uuid">${data}</span>` }
+                        } else {
+                            var igdCode = "{?=$this->core->settings->get('settings.igd') ?: 'UGD'?}";
+                            var syncBtn = (row.kd_poli === igdCode)
+                                ? ` <a href="" class="btn btn-xs btn-warning" title="Update PUT Encounter ke class EMER (IGD)" data-id="${row.no_rawat_converted}" data-tipe="updateencounter" data-toggle="modal" data-target="#asuransiModal" style="color:#fff;"><i class="fa fa-refresh"></i> EMER</a>`
+                                : '';
+                            return `<span class="uuid">${data}</span>${syncBtn}`;
+                        }
                     }
                 },
                 {
@@ -1280,6 +1476,7 @@
         const ttv = "/" + button.data('ttv') || "";
         var modalTitles = {
             encounter: 'Kirim Data Encounter Satu Sehat',
+            updateencounter: 'Sinkronisasi PUT Encounter IGD (EMER)',
             encounterbundle: 'Kirim Data Encounter Satu Sehat',
             condition: 'Kirim Data Condition Satu Sehat',
             clinicalimpression: 'Kirim Data Clinical Impression Satu Sehat',
@@ -1297,8 +1494,8 @@
             forwardnorawat: 'Forward Data Satu Sehat'
         };
         let url = baseURL + "/satu_sehat/" + tipe + "/" + id + ttv + "?t=" + mlite.token
-        if (tipe == 'encounterbundle') {
-            // Untuk encounterbundle, tidak ada ttv
+        if (tipe == 'encounterbundle' || tipe == 'updateencounter') {
+            // Untuk encounterbundle / updateencounter, tidak ada ttv
             url = baseURL + "/satu_sehat/" + tipe + "/" + id + "?t=" + mlite.token
 
         }

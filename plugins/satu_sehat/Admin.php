@@ -38,6 +38,55 @@ class Admin extends AdminModule
     $this->organizationid = $this->settings->get('satu_sehat.organizationid');
   }
 
+  /**
+   * Menentukan judul Composition (Resume Medis) berdasarkan unit layanan (IGD / Ranap / Rajal).
+   */
+  private function resolveJudulResumeMedis($kd_poli, $status_lanjut)
+  {
+    $igd = $this->settings->get('settings.igd') ?: 'UGD';
+    if ((string) $kd_poli === (string) $igd) {
+      return 'Resume Medis Gawat Darurat';
+    }
+    if ((string) $status_lanjut === 'Ranap') {
+      return 'Resume Medis Rawat Inap';
+    }
+    return 'Resume Medis Rawat Jalan';
+  }
+
+  /**
+   * Membaca data pemeriksaan klinis & TTV pasien sesuai acuan standar (pemeriksaan_ralan,
+   * atau pemeriksaan_ranap untuk pasien Rawat Inap). Tidak mengambil dari sumber lain agar
+   * data yang belum diisi di SOAP tetap terdeteksi kosong.
+   */
+  private function resolvePemeriksaanPasien($no_rawat, $status_lanjut = '', $kd_poli = '')
+  {
+    if ($status_lanjut === '') {
+      $status_lanjut = (string) $this->core->getRegPeriksaInfo('status_lanjut', $no_rawat);
+    }
+
+    $pemeriksaan = $this->db('pemeriksaan_ralan')
+      ->where('no_rawat', $no_rawat)
+      ->limit(1)
+      ->desc('tgl_perawatan')
+      ->oneArray();
+    if (!is_array($pemeriksaan)) {
+      $pemeriksaan = [];
+    }
+
+    if ($status_lanjut === 'Ranap' || empty($pemeriksaan)) {
+      $pemeriksaan_ranap = $this->db('pemeriksaan_ranap')
+        ->where('no_rawat', $no_rawat)
+        ->limit(1)
+        ->desc('tgl_perawatan')
+        ->oneArray();
+      if (is_array($pemeriksaan_ranap) && !empty($pemeriksaan_ranap)) {
+        $pemeriksaan = $pemeriksaan_ranap;
+      }
+    }
+
+    return $pemeriksaan;
+  }
+
   public function getObatByCode($code)
   {
     if ($this->getAccessToken() === '') {
@@ -1032,6 +1081,368 @@ class Admin extends AdminModule
     exit();
   }
 
+  /**
+   * Sinkronisasi PUT /Encounter/{id_encounter} ke SatuSehat (mis. memperbaiki class AMB -> EMER
+   * untuk kunjungan IGD/UGD yang telanjur terkirim sebagai Rawat Jalan, serta melengkapi status finished).
+   */
+  private function syncEncounterClassAndStatus($no_rawat)
+  {
+    $no_rawat = revertNoRawat($no_rawat);
+    $reg = $this->db('reg_periksa')->where('no_rawat', $no_rawat)->oneArray();
+    if (!$reg) {
+      return ['status' => 'error', 'no_rawat' => $no_rawat, 'message' => 'Data reg_periksa tidak ditemukan.'];
+    }
+
+    $respRow = $this->db('mlite_satu_sehat_response')->where('no_rawat', $no_rawat)->oneArray();
+    $id_encounter = is_array($respRow) ? trim((string) ($respRow['id_encounter'] ?? '')) : '';
+    if ($id_encounter === '') {
+      return ['status' => 'error', 'no_rawat' => $no_rawat, 'message' => 'ID Encounter belum ada. Kirim Encounter terlebih dahulu.'];
+    }
+
+    $zonawaktu = '+07:00';
+    if ($this->settings->get('satu_sehat.zonawaktu') == 'WITA') {
+      $zonawaktu = '+08:00';
+    } elseif ($this->settings->get('satu_sehat.zonawaktu') == 'WIT') {
+      $zonawaktu = '+09:00';
+    }
+
+    $kd_poli = (string) $reg['kd_poli'];
+    $nm_poli = (string) $this->core->getPoliklinikInfo('nm_poli', $kd_poli);
+    $kd_dokter = (string) $reg['kd_dokter'];
+    $status_lanjut = (string) $reg['status_lanjut'];
+    $tgl_registrasi = (string) $reg['tgl_registrasi'];
+    $jam_reg = (string) $reg['jam_reg'];
+
+    $igd = $this->settings->get('settings.igd') ?: 'UGD';
+    $code = 'AMB';
+    $display = 'ambulatory';
+    if ($kd_poli == $igd) {
+      $code = 'EMER';
+      $display = 'emergency';
+    } elseif ($status_lanjut == 'Ranap') {
+      $kd_kamar = $this->core->getKamarInapInfo('kd_kamar', $no_rawat);
+      $kd_bangsal = $this->core->getKamarInfo('kd_bangsal', $kd_kamar);
+      $nm_bangsal = $this->core->getBangsalInfo('nm_bangsal', $kd_bangsal);
+      $kd_poli = !empty($kd_kamar) ? $kd_kamar : $kd_poli;
+      $nm_poli = !empty($nm_bangsal) ? $nm_bangsal : $nm_poli;
+      $code = 'IMP';
+      $display = 'inpatient encounter';
+    }
+
+    $mlite_satu_sehat_lokasi = $this->db('mlite_satu_sehat_lokasi')->where('kode', $kd_poli)->oneArray();
+    if (!$mlite_satu_sehat_lokasi && $status_lanjut == 'Ranap') {
+      if (!empty($kd_bangsal)) {
+        $mlite_satu_sehat_lokasi = $this->db('mlite_satu_sehat_lokasi')->where('kode', $kd_bangsal)->oneArray();
+      }
+      if (!$mlite_satu_sehat_lokasi) {
+        $mlite_satu_sehat_lokasi = $this->db('mlite_satu_sehat_lokasi')->where('kode', 'RANAP')->oneArray();
+      }
+    }
+    $lokasi_id = isset($mlite_satu_sehat_lokasi['id_lokasi_satusehat']) ? trim((string) $mlite_satu_sehat_lokasi['id_lokasi_satusehat']) : '';
+    $lokasi_display = ($status_lanjut == 'Ranap' && !empty($mlite_satu_sehat_lokasi['lokasi']))
+      ? $mlite_satu_sehat_lokasi['lokasi']
+      : trim($kd_poli . ' ' . $nm_poli);
+
+    $token = $this->getAccessToken();
+    if ($token === '') {
+      return ['status' => 'error', 'no_rawat' => $no_rawat, 'id_encounter' => $id_encounter, 'message' => 'Gagal mendapatkan access token SatuSehat.'];
+    }
+
+    // 1. Ambil resource Encounter saat ini dari SatuSehat agar subject/participant/meta tetap konsisten
+    $chGet = curl_init();
+    curl_setopt_array($chGet, [
+      CURLOPT_URL => $this->fhirurl . '/Encounter/' . rawurlencode($id_encounter),
+      CURLOPT_RETURNTRANSFER => true,
+      CURLOPT_TIMEOUT => 30,
+      CURLOPT_FOLLOWLOCATION => true,
+      CURLOPT_HTTPHEADER => ['Accept: application/json', 'Authorization: Bearer ' . $token],
+      CURLOPT_CUSTOMREQUEST => 'GET',
+    ]);
+    $rawExisting = curl_exec($chGet);
+    curl_close($chGet);
+    $existingEnc = json_decode((string) $rawExisting, true);
+
+    $oldClass = (is_array($existingEnc) && isset($existingEnc['class']['code'])) ? (string) $existingEnc['class']['code'] : '';
+    $oldStatus = (is_array($existingEnc) && isset($existingEnc['status'])) ? (string) $existingEnc['status'] : '';
+
+    $id_condition = is_array($respRow) ? trim((string) ($respRow['id_condition'] ?? '')) : '';
+    if ($oldClass === $code && ($oldStatus === 'finished' || $id_condition === '')) {
+      return [
+        'status' => 'already_emer',
+        'no_rawat' => $no_rawat,
+        'id_encounter' => $id_encounter,
+        'old_class' => $oldClass,
+        'new_class' => $code,
+        'encounter_status' => $oldStatus,
+        'message' => 'Encounter sudah bertipe ' . $code . ' (' . $oldStatus . ').',
+        'raw_response' => is_array($existingEnc) ? $existingEnc : ['id' => $id_encounter, 'class' => $code]
+      ];
+    }
+
+    // Siapkan komponen waktu & klinis untuk upgrade ke finished bila Condition sudah ada
+    $pemeriksaan = $this->resolvePemeriksaanPasien($no_rawat, $status_lanjut, (string) $reg['kd_poli']);
+    $mlite_billing = $this->db('mlite_billing')->where('no_rawat', $no_rawat)->oneArray();
+
+    $startTs = strtotime($tgl_registrasi . ' ' . $jam_reg);
+    if (!$startTs) {
+      $startTs = time();
+    }
+    $inProgDate = !empty($pemeriksaan['tgl_perawatan']) ? $pemeriksaan['tgl_perawatan'] : $tgl_registrasi;
+    $inProgTime = !empty($pemeriksaan['jam_rawat']) ? $pemeriksaan['jam_rawat'] : $jam_reg;
+    $inProgTs = strtotime($inProgDate . ' ' . $inProgTime);
+    if (!$inProgTs || $inProgTs < $startTs) {
+      $inProgTs = $startTs;
+    }
+
+    $endDate = $mlite_billing['tgl_billing'] ?? '';
+    $endTime = $mlite_billing['jam_billing'] ?? '';
+    if (empty($endDate) || $endDate === '0000-00-00') {
+      $endDate = $inProgDate;
+      $endTime = !empty($pemeriksaan['jam_rawat']) ? $pemeriksaan['jam_rawat'] : date('H:i:s', $inProgTs + 600);
+    }
+    $endTs = strtotime($endDate . ' ' . $endTime);
+    if (!$endTs || $endTs < $inProgTs) {
+      $endTs = $inProgTs + 300;
+    }
+
+    $isoStart = date('Y-m-d\TH:i:s', $startTs) . $zonawaktu;
+    $isoInProg = date('Y-m-d\TH:i:s', $inProgTs) . $zonawaktu;
+    $isoEnd = date('Y-m-d\TH:i:s', $endTs) . $zonawaktu;
+
+    // Bangun base payload dari existing Encounter (jika valid) atau dari DB lokal
+    if (is_array($existingEnc) && ($existingEnc['resourceType'] ?? '') === 'Encounter') {
+      $payload = $existingEnc;
+    } else {
+      $no_rkm_medis = (string) $reg['no_rkm_medis'];
+      $no_ktp_pasien = (string) $this->core->getPasienInfo('no_ktp', $no_rkm_medis);
+      $nama_pasien = (string) $this->core->getPasienInfo('nm_pasien', $no_rkm_medis);
+      $nama_dokter = (string) $this->core->getPegawaiInfo('nama', $kd_dokter);
+      $mapPrak = $this->db('mlite_satu_sehat_mapping_praktisi')->select('practitioner_id')->where('kd_dokter', $kd_dokter)->oneArray();
+      $praktisi_id = isset($mapPrak['practitioner_id']) ? trim((string) $mapPrak['practitioner_id']) : '';
+
+      $__patientResp = $this->getPatient($no_ktp_pasien);
+      $__patientJson = json_decode($__patientResp);
+      $ihs_patient = '';
+      if (is_object($__patientJson) && isset($__patientJson->entry[0]->resource->id)) {
+        $ihs_patient = $__patientJson->entry[0]->resource->id;
+      }
+      if ($ihs_patient === '' || $praktisi_id === '' || $lokasi_id === '') {
+        return ['status' => 'error', 'no_rawat' => $no_rawat, 'id_encounter' => $id_encounter, 'message' => 'Data IHS pasien / praktisi / lokasi tidak lengkap untuk PUT Encounter.'];
+      }
+      $payload = [
+        'resourceType' => 'Encounter',
+        'id' => $id_encounter,
+        'status' => 'arrived',
+        'subject' => ['reference' => 'Patient/' . $ihs_patient, 'display' => $nama_pasien],
+        'participant' => [[
+          'type' => [['coding' => [['system' => 'http://terminology.hl7.org/CodeSystem/v3-ParticipationType', 'code' => 'ATND', 'display' => 'attender']]]],
+          'individual' => ['reference' => 'Practitioner/' . $praktisi_id, 'display' => $nama_dokter]
+        ]],
+        'period' => ['start' => $isoStart],
+        'statusHistory' => [['status' => 'arrived', 'period' => ['start' => $isoStart, 'end' => $isoEnd]]],
+        'serviceProvider' => ['reference' => 'Organization/' . $this->organizationid],
+        'identifier' => [['system' => 'http://sys-ids.kemkes.go.id/encounter/' . $this->organizationid, 'value' => $no_rawat]]
+      ];
+    }
+
+    $payload['id'] = $id_encounter;
+    $payload['class'] = [
+      'system' => 'http://terminology.hl7.org/CodeSystem/v3-ActCode',
+      'code' => $code,
+      'display' => $display
+    ];
+    if ($lokasi_id !== '') {
+      $payload['location'] = [[
+        'location' => [
+          'reference' => 'Location/' . $lokasi_id,
+          'display' => $lokasi_display
+        ]
+      ]];
+    }
+
+    // Jika id_condition sudah ada, lengkapi ke finished + diagnosis agar siklus Encounter tuntas
+    $fullPayload = $payload;
+    if ($id_condition !== '') {
+      $diagRow = $this->db('diagnosa_pasien')
+        ->join('penyakit', 'penyakit.kd_penyakit=diagnosa_pasien.kd_penyakit')
+        ->where('no_rawat', $no_rawat)
+        ->where('prioritas', '1')
+        ->oneArray();
+      if (!$diagRow) {
+        $diagRow = $this->db('diagnosa_pasien')
+          ->join('penyakit', 'penyakit.kd_penyakit=diagnosa_pasien.kd_penyakit')
+          ->where('no_rawat', $no_rawat)
+          ->oneArray();
+      }
+      $fullPayload['status'] = 'finished';
+      $fullPayload['period'] = ['start' => $isoStart, 'end' => $isoEnd];
+      $fullPayload['diagnosis'] = [[
+        'condition' => [
+          'reference' => 'Condition/' . $id_condition,
+          'display' => !empty($diagRow['nm_penyakit']) ? $diagRow['nm_penyakit'] : 'Diagnosis'
+        ],
+        'use' => [
+          'coding' => [[
+            'system' => 'http://terminology.hl7.org/CodeSystem/diagnosis-role',
+            'code' => 'DD',
+            'display' => 'Discharge diagnosis'
+          ]]
+        ],
+        'rank' => 1
+      ]];
+      $fullPayload['statusHistory'] = [
+        ['status' => 'arrived', 'period' => ['start' => $isoStart, 'end' => $isoInProg]],
+        ['status' => 'in-progress', 'period' => ['start' => $isoInProg, 'end' => $isoEnd]],
+        ['status' => 'finished', 'period' => ['start' => $isoEnd, 'end' => $isoEnd]]
+      ];
+    }
+
+    $sendPut = function (array $body) use ($id_encounter, $token) {
+      $ch = curl_init();
+      curl_setopt_array($ch, [
+        CURLOPT_URL => $this->fhirurl . '/Encounter/' . rawurlencode($id_encounter),
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT => 30,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_HTTPHEADER => ['Content-Type: application/json', 'Authorization: Bearer ' . $token],
+        CURLOPT_CUSTOMREQUEST => 'PUT',
+        CURLOPT_POSTFIELDS => json_encode($body, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE),
+      ]);
+      $resp = curl_exec($ch);
+      curl_close($ch);
+      return $resp;
+    };
+
+    $putRespRaw = $sendPut($fullPayload);
+    $putDecoded = json_decode((string) $putRespRaw, true);
+
+    // Fallback: bila upgrade ke finished ditolak validator (mis. constraint waktu/condition lama),
+    // tetap lakukan PUT minimal untuk mengubah class ke EMER & lokasi UGD.
+    if ((!is_array($putDecoded) || ($putDecoded['resourceType'] ?? '') !== 'Encounter') && $id_condition !== '') {
+      $putRespRaw = $sendPut($payload);
+      $putDecoded = json_decode((string) $putRespRaw, true);
+    }
+
+    if (is_array($putDecoded) && ($putDecoded['resourceType'] ?? '') === 'Encounter' && !empty($putDecoded['id'])) {
+      $newClass = (string) ($putDecoded['class']['code'] ?? $code);
+      $newStatus = (string) ($putDecoded['status'] ?? '');
+      return [
+        'status' => 'updated',
+        'no_rawat' => $no_rawat,
+        'id_encounter' => $id_encounter,
+        'old_class' => $oldClass ?: '-',
+        'new_class' => $newClass,
+        'encounter_status' => $newStatus,
+        'message' => 'Berhasil update Encounter (' . ($oldClass ?: '?') . ' -> ' . $newClass . ', status: ' . $newStatus . ').',
+        'raw_response' => $putDecoded
+      ];
+    }
+
+    $errText = 'Gagal melakukan PUT Encounter ke SatuSehat.';
+    if (is_array($putDecoded) && isset($putDecoded['issue'][0]['details']['text'])) {
+      $errText = (string) $putDecoded['issue'][0]['details']['text'];
+    } elseif (is_array($putDecoded) && isset($putDecoded['issue'][0]['diagnostics'])) {
+      $errText = (string) $putDecoded['issue'][0]['diagnostics'];
+    }
+    return [
+      'status' => 'error',
+      'no_rawat' => $no_rawat,
+      'id_encounter' => $id_encounter,
+      'old_class' => $oldClass ?: '-',
+      'new_class' => $code,
+      'message' => $errText,
+      'raw_response' => $putDecoded ?: ['raw' => (string) $putRespRaw]
+    ];
+  }
+
+  public function getUpdateEncounter($no_rawat, $render = true)
+  {
+    $res = $this->syncEncounterClassAndStatus($no_rawat);
+    $responseJson = json_encode($res['raw_response'] ?? $res, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    $pesan = $res['message'] ?? 'Sinkronisasi Encounter selesai.';
+    if ($render) {
+      echo $this->draw('encounter.html', ['pesan' => $pesan, 'response' => $responseJson]);
+    } else {
+      header('Content-Type: application/json');
+      echo json_encode($res, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    }
+    exit();
+  }
+
+  public function postListSyncIgd()
+  {
+    header('Content-Type: application/json');
+    $start = isset($_POST['tanggal_awal']) ? trim((string) $_POST['tanggal_awal']) : date('Y-m-d');
+    $end = isset($_POST['tanggal_akhir']) ? trim((string) $_POST['tanggal_akhir']) : date('Y-m-d');
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $start) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $end)) {
+      echo json_encode(['status' => 'error', 'message' => 'Format tanggal tidak valid.']);
+      exit();
+    }
+    if ($start > $end) {
+      $tmp = $start;
+      $start = $end;
+      $end = $tmp;
+    }
+
+    $igd = $this->settings->get('settings.igd') ?: 'UGD';
+    $rows = $this->db('reg_periksa')
+      ->select([
+        'no_rawat' => 'reg_periksa.no_rawat',
+        'tgl_registrasi' => 'reg_periksa.tgl_registrasi',
+        'no_rkm_medis' => 'reg_periksa.no_rkm_medis',
+        'nm_pasien' => 'pasien.nm_pasien',
+        'id_encounter' => 'mlite_satu_sehat_response.id_encounter'
+      ])
+      ->join('pasien', 'pasien.no_rkm_medis=reg_periksa.no_rkm_medis')
+      ->leftJoin('mlite_satu_sehat_response', 'mlite_satu_sehat_response.no_rawat=reg_periksa.no_rawat')
+      ->where('reg_periksa.kd_poli', $igd)
+      ->where('reg_periksa.stts', '!=', 'Batal')
+      ->where('reg_periksa.tgl_registrasi', '>=', $start)
+      ->where('reg_periksa.tgl_registrasi', '<=', $end)
+      ->asc('reg_periksa.tgl_registrasi')
+      ->toArray();
+
+    $sentList = [];
+    $unsentCount = 0;
+    foreach ((array) $rows as $r) {
+      $idEnc = trim((string) ($r['id_encounter'] ?? ''));
+      if ($idEnc !== '') {
+        $sentList[] = [
+          'no_rawat' => (string) $r['no_rawat'],
+          'tgl_registrasi' => (string) $r['tgl_registrasi'],
+          'nm_pasien' => (string) ($r['nm_pasien'] ?? ''),
+          'id_encounter' => $idEnc
+        ];
+      } else {
+        $unsentCount++;
+      }
+    }
+
+    echo json_encode([
+      'status' => 'ok',
+      'kd_poli_igd' => $igd,
+      'total_igd' => count($rows),
+      'total_syncable' => count($sentList),
+      'total_unsent' => $unsentCount,
+      'items' => $sentList
+    ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    exit();
+  }
+
+  public function postSyncIgdItem()
+  {
+    header('Content-Type: application/json');
+    $no_rawat = isset($_POST['no_rawat']) ? trim((string) $_POST['no_rawat']) : '';
+    if ($no_rawat === '' || !preg_match('/^[0-9\/A-Za-z_-]{5,30}$/', $no_rawat)) {
+      echo json_encode(['status' => 'error', 'message' => 'Nomor rawat tidak valid.']);
+      exit();
+    }
+    $res = $this->syncEncounterClassAndStatus($no_rawat);
+    unset($res['raw_response']);
+    echo json_encode($res, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    exit();
+  }
+
   public function getEncounterById($encounter_id, $type)
   {
     if ($type == '') {
@@ -1078,10 +1489,17 @@ class Admin extends AdminModule
     $status_lanjut = $this->core->getRegPeriksaInfo('status_lanjut', $no_rawat);
     $tgl_registrasi = $this->core->getRegPeriksaInfo('tgl_registrasi', $no_rawat);
     $jam_reg = $this->core->getRegPeriksaInfo('jam_reg', $no_rawat);
-    $inProg = $this->db('pemeriksaan_ralan')->select(['tgl' => 'tgl_perawatan', 'jam' => 'jam_rawat', 'respirasi' => 'respirasi', 'suhu' => 'suhu_tubuh', 'tensi' => 'tensi', 'nadi' => 'nadi', 'penilaian' => 'penilaian', 'keluhan' => 'keluhan'])->where('no_rawat', $no_rawat)->oneArray();
-    if (!$inProg && $status_lanjut == 'Ranap') {
-      $inProg = $this->db('pemeriksaan_ranap')->select(['tgl' => 'tgl_perawatan', 'jam' => 'jam_rawat', 'respirasi' => 'respirasi', 'suhu' => 'suhu_tubuh', 'tensi' => 'tensi', 'nadi' => 'nadi', 'penilaian' => 'penilaian', 'keluhan' => 'keluhan'])->where('no_rawat', $no_rawat)->oneArray();
-    }
+    $rawInProg = $this->resolvePemeriksaanPasien($no_rawat, $status_lanjut, $kd_poli);
+    $inProg = [
+      'tgl' => $rawInProg['tgl_perawatan'] ?? '',
+      'jam' => $rawInProg['jam_rawat'] ?? '',
+      'respirasi' => $rawInProg['respirasi'] ?? '',
+      'suhu' => $rawInProg['suhu_tubuh'] ?? '',
+      'tensi' => $rawInProg['tensi'] ?? '',
+      'nadi' => $rawInProg['nadi'] ?? '',
+      'penilaian' => $rawInProg['penilaian'] ?? '',
+      'keluhan' => $rawInProg['keluhan'] ?? '',
+    ];
     $diagnosa_pasien = $this->db('diagnosa_pasien')
       ->join('penyakit', 'penyakit.kd_penyakit=diagnosa_pasien.kd_penyakit')
       ->where('no_rawat', $no_rawat)
@@ -1300,7 +1718,11 @@ class Admin extends AdminModule
 
     $composition_json = [];
     $display_composition = "Kunjungan " . $nama_pasien . " di tanggal " . $tgl_registrasi;
-    $zonaWaktu_composition = $this->convertTimeSatset($mlite_billing['tgl_billing'] . ' ' . $mlite_billing['jam_billing']) . '' . $zonawaktu;
+    $compDateSrc = (!empty($mlite_billing['tgl_billing']) && !empty($mlite_billing['jam_billing']))
+      ? ($mlite_billing['tgl_billing'] . ' ' . $mlite_billing['jam_billing'])
+      : ((!empty($inProg['tgl']) && !empty($inProg['jam'])) ? ($inProg['tgl'] . ' ' . $inProg['jam']) : ($tgl_registrasi . ' ' . $jam_reg));
+    $zonaWaktu_composition = $this->convertTimeSatset($compDateSrc) . '' . $zonawaktu;
+    $judul_resume = $this->resolveJudulResumeMedis($this->core->getRegPeriksaInfo('kd_poli', $no_rawat), $status_lanjut);
     $composition = new Composition(
       $uuid_encounter,
       $uuid_composition,
@@ -1311,7 +1733,8 @@ class Admin extends AdminModule
       $no_rawat,
       $this->organizationid,
       $display_composition,
-      $zonaWaktu_composition
+      $zonaWaktu_composition,
+      $judul_resume
     );
     $composition_json = $composition->toJson();
 
@@ -2266,29 +2689,23 @@ class Admin extends AdminModule
     if (is_object($__patientJson) && isset($__patientJson->entry) && is_array($__patientJson->entry) && isset($__patientJson->entry[0]) && isset($__patientJson->entry[0]->resource) && isset($__patientJson->entry[0]->resource->id)) {
       $ihs_patient = $__patientJson->entry[0]->resource->id;
     }
-    $__pracResp = $this->getPractitioner($no_ktp_dokter);
-    $__pracJson = json_decode($__pracResp);
-    $practitioner_id = '';
-    if (is_object($__pracJson) && isset($__pracJson->entry) && is_array($__pracJson->entry) && isset($__pracJson->entry[0]) && isset($__pracJson->entry[0]->resource) && isset($__pracJson->entry[0]->resource->id)) {
-      $practitioner_id = $__pracJson->entry[0]->resource->id;
+    $mapPraktisiObs = $this->db('mlite_satu_sehat_mapping_praktisi')->select('practitioner_id')->where('kd_dokter', $kd_dokter)->oneArray();
+    $practitioner_id = isset($mapPraktisiObs['practitioner_id']) ? trim((string) $mapPraktisiObs['practitioner_id']) : '';
+    if ($practitioner_id === '' && $no_ktp_dokter !== '') {
+      $__pracResp = $this->getPractitioner($no_ktp_dokter);
+      $__pracJson = json_decode($__pracResp);
+      if (is_object($__pracJson) && isset($__pracJson->entry) && is_array($__pracJson->entry) && isset($__pracJson->entry[0]) && isset($__pracJson->entry[0]->resource) && isset($__pracJson->entry[0]->resource->id)) {
+        $practitioner_id = $__pracJson->entry[0]->resource->id;
+      }
     }
     $encounter_id = $mlite_satu_sehat_response['id_encounter'] ?? null;
 
-    $pemeriksaan = $this->db('pemeriksaan_ralan')
-      ->where('no_rawat', $no_rawat)
-      ->limit(1)
-      ->desc('tgl_perawatan')
-      ->oneArray();
-
-    if ($status_lanjut == 'Ranap' || empty($pemeriksaan)) {
-      $pemeriksaan_ranap = $this->db('pemeriksaan_ranap')
-        ->where('no_rawat', $no_rawat)
-        ->limit(1)
-        ->desc('tgl_perawatan')
-        ->oneArray();
-      if ($pemeriksaan_ranap) {
-        $pemeriksaan = $pemeriksaan_ranap;
-      }
+    $pemeriksaan = $this->resolvePemeriksaanPasien($no_rawat, $status_lanjut, $kd_poli);
+    if (empty($pemeriksaan['tgl_perawatan'])) {
+      $pemeriksaan['tgl_perawatan'] = $tgl_registrasi;
+    }
+    if (empty($pemeriksaan['jam_rawat'])) {
+      $pemeriksaan['jam_rawat'] = $jam_reg;
     }
 
     $ttv_hl7_code = '';
@@ -2499,12 +2916,16 @@ class Admin extends AdminModule
         exit();
       }
       $ttv_unitsofmeasure_value = $val;
-      if ($val === 'Somnolence') {
+      if ($val === 'Somnolence' || $val === 'Somnolen') {
         $ttv_unitsofmeasure_value = 'Voice';
+      } elseif ($val === 'Apatis' || $val === 'Delirium') {
+        $ttv_unitsofmeasure_value = 'Confusion';
       } elseif ($val === 'Sopor') {
         $ttv_unitsofmeasure_value = 'Pain';
       } elseif ($val === 'Compos Mentis') {
         $ttv_unitsofmeasure_value = 'Alert';
+      } elseif ($val === 'Coma' || $val === 'Koma') {
+        $ttv_unitsofmeasure_value = 'Unresponsive';
       }
     }
 
@@ -3700,10 +4121,7 @@ class Admin extends AdminModule
         ->oneArray();
     }
 
-    $pemeriksaan_ralan = $this->db('pemeriksaan_ralan')->where('no_rawat', $no_rawat)->oneArray();
-    if (!$pemeriksaan_ralan && $status_lanjut == 'Ranap') {
-      $pemeriksaan_ralan = $this->db('pemeriksaan_ranap')->where('no_rawat', $no_rawat)->oneArray();
-    }
+    $pemeriksaan_ralan = $this->resolvePemeriksaanPasien($no_rawat, $status_lanjut);
 
     if (!is_array($prosedur_pasien) || !isset($prosedur_pasien['kode']) || !isset($prosedur_pasien['deskripsi_panjang'])) {
       $resp = json_encode(['error' => 'Data tidak lengkap untuk Procedure', 'missing' => ['prosedur_pasien.kode' => 'missing', 'prosedur_pasien.deskripsi_panjang' => 'missing']], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
@@ -4209,7 +4627,7 @@ class Admin extends AdminModule
           "display" => $nama_dokter
         ]
       ],
-      "title" => "Resume Medis Rawat Jalan",
+      "title" => $this->resolveJudulResumeMedis($this->core->getRegPeriksaInfo('kd_poli', $no_rawat), $this->core->getRegPeriksaInfo('status_lanjut', $no_rawat)),
       "custodian" => [
         "reference" => "Organization/" . $this->organizationid
       ]
@@ -4631,10 +5049,7 @@ class Admin extends AdminModule
     $no_rawat = revertNoRawat($no_rawat);
 
     $mlite_satu_sehat_response = $this->db('mlite_satu_sehat_response')->where('no_rawat', $no_rawat)->oneArray();
-    $pemeriksaan_ralan = $this->db('pemeriksaan_ralan')->where('no_rawat', $no_rawat)->oneArray();
-    if (!$pemeriksaan_ralan) {
-      $pemeriksaan_ralan = $this->db('pemeriksaan_ranap')->where('no_rawat', $no_rawat)->oneArray();
-    }
+    $pemeriksaan_ralan = $this->resolvePemeriksaanPasien($no_rawat);
 
     $keluhan = isset_or($pemeriksaan_ralan['keluhan'], '');
     $pemeriksaan = isset_or($pemeriksaan_ralan['pemeriksaan'], '');
@@ -7836,7 +8251,7 @@ class Admin extends AdminModule
     $tgl_registrasi = $this->core->getRegPeriksaInfo('tgl_registrasi', $no_rawat);
     $jam_reg = $this->core->getRegPeriksaInfo('jam_reg', $no_rawat);
     $mlite_billing = $this->db('mlite_billing')->where('no_rawat', $no_rawat)->oneArray();
-    $pemeriksaan = $this->db('pemeriksaan_ralan')->where('no_rawat', $no_rawat)->oneArray();
+    $pemeriksaan = $this->resolvePemeriksaanPasien($no_rawat, $status_lanjut, $kd_poli);
 
     $rtl = $pemeriksaan['rtl'] ?? null;
 
@@ -7851,15 +8266,6 @@ class Admin extends AdminModule
     $kunjungan = 'Kunjungan';
     if ($status_lanjut == 'Ranap') {
       $kunjungan = 'Perawatan';
-      $pemeriksaan_ranap = $this->db('pemeriksaan_ranap')
-        ->where('no_rawat', $no_rawat)
-        ->limit(1)
-        ->desc('tgl_perawatan')
-        ->oneArray();
-      if ($pemeriksaan_ranap) {
-        $pemeriksaan = $pemeriksaan_ranap;
-        $rtl = $pemeriksaan['rtl'] ?? null;
-      }
     }
 
     $__patientResp = $this->getPatient($no_ktp_pasien);
@@ -9296,11 +9702,12 @@ class Admin extends AdminModule
       $praktisi_id = $this->db('mlite_satu_sehat_mapping_praktisi')->where('kd_dokter', $row['kd_dokter'])->oneArray();
       $row['praktisi_id'] = (is_array($praktisi_id) && isset($praktisi_id['practitioner_id'])) ? $praktisi_id['practitioner_id'] : '';
 
+      $orig_kd_poli = $row['kd_poli'];
       $mlite_billing = $this->db('mlite_billing')->where('no_rawat', $row['no_rawat'])->oneArray();
 
-      $pemeriksaan_ralan = $this->db('pemeriksaan_ralan')->where('no_rawat', $row['no_rawat'])->oneArray();
+      $pemeriksaan_resolved = $this->resolvePemeriksaanPasien($row['no_rawat'], $row['status_lanjut'], $orig_kd_poli);
 
-      $row['tgl_pulang'] = isset_or($mlite_billing['tgl_billing'], isset_or($pemeriksaan_ralan['tgl_perawatan'], ''));
+      $row['tgl_pulang'] = isset_or($mlite_billing['tgl_billing'], isset_or($pemeriksaan_resolved['tgl_perawatan'], ''));
 
       if ($row['status_lanjut'] == 'Ranap') {
         $row['kd_kamar'] = $this->core->getKamarInapInfo('kd_kamar', $row['no_rawat']);
@@ -9319,25 +9726,7 @@ class Admin extends AdminModule
       $row['id_organisasi'] = isset_or($mlite_satu_sehat_lokasi['id_organisasi_satusehat'], '');
       $row['id_lokasi'] = isset_or($mlite_satu_sehat_lokasi['id_lokasi_satusehat'], '');
 
-      $row['pemeriksaan'] = $this->db('pemeriksaan_ralan')
-        ->where('no_rawat', $row['no_rawat'])
-        ->limit(1)
-        ->desc('tgl_perawatan')
-        ->oneArray();
-
-      if ($row['status_lanjut'] == 'Ranap' || empty($row['pemeriksaan'])) {
-        $pemeriksaan_ranap = $this->db('pemeriksaan_ranap')
-          ->where('no_rawat', $row['no_rawat'])
-          ->limit(1)
-          ->desc('tgl_perawatan')
-          ->oneArray();
-        if ($pemeriksaan_ranap) {
-          $row['pemeriksaan'] = $pemeriksaan_ranap;
-          if (empty($row['tgl_pulang'])) {
-            $row['tgl_pulang'] = $pemeriksaan_ranap['tgl_perawatan'];
-          }
-        }
-      }
+      $row['pemeriksaan'] = $pemeriksaan_resolved;
 
       $row['diagnosa_pasien'] = $this->db('diagnosa_pasien')
         ->join('penyakit', 'penyakit.kd_penyakit=diagnosa_pasien.kd_penyakit')
