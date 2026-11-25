@@ -70,6 +70,9 @@ class Admin extends AdminModule
       $apotekDB = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'Apotek')->where('postdate', $date)->where('status', '>=', 1)->desc('kd')->oneArray();
       $init_apotek_no = !empty($apotekDB['noantrian']) ? $apotekDB['noantrian'] : 0;
 
+      $geriatriDB = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'Geriatri')->where('postdate', $date)->where('status', '>=', 1)->desc('kd')->oneArray();
+      $init_geriatri_no = !empty($geriatriDB['noantrian']) ? $geriatriDB['noantrian'] : 0;
+
       $init_poli_no = $this->settings->get('anjungan.panggil_poli_nomor') ?: '000';
       if($this->settings->get('anjungan.panggil_poli_tanggal') != $date) {
         $init_poli_no = '000';
@@ -134,6 +137,8 @@ class Admin extends AdminModule
 
           $apotekDB = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'Apotek')->where('postdate', $date)->where('status', '>=', 1)->desc('kd')->oneArray();
           $init_apotek_no = !empty($apotekDB['noantrian']) ? $apotekDB['noantrian'] : 0;
+
+          $init_geriatri_no = $init_geriatri_no ?? 0;
 
           $waitingCount = $this->db('mlite_antrian_loket')->select('COUNT(*) as total')->where('type', 'Loket')->where('postdate', $date)->where('status', 0)->oneArray();
           $waiting_count = !empty($waitingCount['total']) ? intval($waitingCount['total']) : 0;
@@ -546,6 +551,149 @@ class Admin extends AdminModule
           };
 
         break;
+        case "panggil_geriatri":
+          $display = 'Panggil Geriatri';
+          $loketRaw = $this->settings->get('anjungan.antrian_geriatri') ?: '1';
+          $loket = array_values(array_filter(array_map('trim', explode(",", $loketRaw))));
+          if (empty($loket)) $loket = ['1'];
+          $activeLoket = isset($_GET['loket']) && intval($_GET['loket']) > 0 ? intval($_GET['loket']) : (isset($loket[0]) ? intval($loket[0]) : 1);
+          if (!in_array((string)$activeLoket, $loket)) {
+            $loket[] = (string)$activeLoket;
+            natsort($loket);
+            $loket = array_values($loket);
+          }
+          $namaloket = 'g';
+          $panggil_loket = 'panggil_geriatri';
+          $date = date('Y-m-d');
+          $get_antrian = $this->db('mlite_antrian_loket')->select('MAX(CAST(noantrian AS UNSIGNED)) as max_no')->where('type', 'Geriatri')->where('postdate', $date)->oneArray();
+          $noantrian = 0;
+          if(!empty($get_antrian['max_no'])) {
+            $noantrian = intval($get_antrian['max_no']);
+          }
+
+          $calledToday = $this->db('mlite_antrian_loket')->select('MAX(CAST(noantrian AS UNSIGNED)) as max_no')->where('type', 'Geriatri')->where('postdate', $date)->where('status', '>=', 1)->oneArray();
+          $tcounter = !empty($calledToday['max_no']) ? intval($calledToday['max_no']) : 0;
+          $_tcounter = $tcounter + 1;
+
+          $waitingCount = $this->db('mlite_antrian_loket')->select('COUNT(*) as total')->where('type', 'Geriatri')->where('postdate', $date)->where('status', 0)->oneArray();
+          $waiting_count = !empty($waitingCount['total']) ? intval($waitingCount['total']) : 0;
+
+          $waitingRows = $this->db('mlite_antrian_loket')
+            ->select('noantrian')
+            ->where('type', 'Geriatri')
+            ->where('postdate', $date)
+            ->where('status', 0)
+            ->asc('CAST(noantrian AS UNSIGNED)')
+            ->toArray();
+          $waiting_numbers = [];
+          foreach($waitingRows as $wr) {
+            $waiting_numbers[] = 'G-' . sprintf("%03d", intval($wr['noantrian']));
+          }
+          $next_waiting = !empty($waiting_numbers) ? $waiting_numbers[0] : '-';
+
+          $skippedCount = $this->db('mlite_antrian_loket')->select('COUNT(*) as total')->where('type', 'Geriatri')->where('postdate', $date)->where('status', 4)->oneArray();
+          $skipped_count = !empty($skippedCount['total']) ? intval($skippedCount['total']) : 0;
+
+          if((isset($_GET['action']) && $_GET['action'] == 'next') || (isset($_GET['loket']) && isset($_GET['next']))) {
+            $loketVal = isset($_GET['loket']) && $_GET['loket'] != '' ? $_GET['loket'] : '1';
+
+            // 1. Cek antrian menunggu berstatus 0 hari ini
+            $waiting = $this->db('mlite_antrian_loket')
+              ->where('type', 'Geriatri')
+              ->where('postdate', $date)
+              ->where('status', 0)
+              ->asc('CAST(noantrian AS UNSIGNED)')
+              ->oneArray();
+
+            if (!empty($waiting)) {
+              $tcounter = intval($waiting['noantrian']);
+              $targetKd = $waiting['kd'];
+            } else {
+              $latest = $this->db('mlite_antrian_loket')
+                ->select('MAX(CAST(noantrian AS UNSIGNED)) as max_no')
+                ->where('type', 'Geriatri')
+                ->where('postdate', $date)
+                ->oneArray();
+              $tcounter = !empty($latest['max_no']) ? intval($latest['max_no']) + 1 : 1;
+              $targetKd = null;
+            }
+
+            // Bersihkan antrian pending hari ini
+            $this->db('mlite_antrian_loket')
+              ->where('postdate', $date)
+              ->where('type', 'Geriatri')
+              ->where('status', 1)
+              ->save(['status' => 2, 'end_time' => date('H:i:s')]);
+
+            $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_geriatri')->save(['value' => $loketVal]);
+            $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_geriatri_nomor')->save(['value' => $tcounter]);
+            $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_geriatri_tanggal')->save(['value' => $date]);
+
+            if ($targetKd) {
+              $this->db('mlite_antrian_loket')->where('kd', $targetKd)->save(['status' => 2, 'loket' => $loketVal, 'start_time' => date('H:i:s')]);
+            } else {
+              $cek = $this->db('mlite_antrian_loket')->where('type', 'Geriatri')->where('noantrian', $tcounter)->where('postdate', $date)->oneArray();
+              if ($cek) {
+                $this->db('mlite_antrian_loket')->where('kd', $cek['kd'])->save(['status' => 2, 'loket' => $loketVal, 'start_time' => date('H:i:s')]);
+              } else {
+                $this->db('mlite_antrian_loket')->save([
+                  'type' => 'Geriatri',
+                  'noantrian' => $tcounter,
+                  'loket' => $loketVal,
+                  'postdate' => $date,
+                  'start_time' => date('H:i:s'),
+                  'end_time' => '00:00:00',
+                  'status' => 2
+                ]);
+              }
+            }
+            redirect(url(ADMIN.'/anjungan/pemanggil/?show=panggil_geriatri&loket='.$loketVal));
+          }
+
+          if(isset($_GET['antrian']) && $_GET['antrian'] != '') {
+            $jumpAntrian = intval($_GET['antrian']);
+            if($jumpAntrian <= 0) $jumpAntrian = 1;
+            $jumpLoket = isset($_GET['reset']) && $_GET['reset'] != '' ? $_GET['reset'] : (isset($_GET['loket']) ? $_GET['loket'] : '1');
+            $tcounter = $jumpAntrian;
+
+            $this->db('mlite_antrian_loket')
+              ->where('postdate', $date)
+              ->where('type', 'Geriatri')
+              ->where('loket', $jumpLoket)
+              ->where('status', 1)
+              ->save(['status' => 2, 'end_time' => date('H:i:s')]);
+
+            $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_geriatri')->save(['value' => $jumpLoket]);
+            $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_geriatri_nomor')->save(['value' => $tcounter]);
+            $this->db('mlite_settings')->where('module', 'anjungan')->where('field', 'panggil_geriatri_tanggal')->save(['value' => $date]);
+
+            $cek = $this->db('mlite_antrian_loket')->where('type', 'Geriatri')->where('noantrian', $tcounter)->where('postdate', $date)->oneArray();
+            if ($cek) {
+                $this->db('mlite_antrian_loket')->where('kd', $cek['kd'])->save(['status' => 1, 'loket' => $jumpLoket, 'start_time' => date('H:i:s')]);
+            } else {
+                $this->db('mlite_antrian_loket')->save([
+                    'type' => 'Geriatri',
+                    'noantrian' => $tcounter,
+                    'loket' => $jumpLoket,
+                    'postdate' => $date,
+                    'start_time' => date('H:i:s'),
+                    'end_time' => '00:00:00',
+                    'status' => 1
+                ]);
+            }
+            redirect(url(ADMIN.'/anjungan/pemanggil/?show=panggil_geriatri&loket='.$jumpLoket));
+          }
+          $hitung_antrian = $this->db('mlite_antrian_loket')
+            ->where('type', 'Geriatri')
+            ->like('postdate', date('Y-m-d'))
+            ->toArray();
+          $counter = strlen($tcounter);
+          $xcounter = [];
+          for($i=0;$i<$counter;$i++){
+            $xcounter[] = '<audio id="suarabel'.$i.'" src="{?=url()?}/plugins/anjungan/suara/'.substr($tcounter,$i,1).'.wav" ></audio>';
+          };
+
+        break;
         case "panggil_poli":
           $display = 'Panggil Poliklinik';
           $namaloket = 'poli';
@@ -701,6 +849,7 @@ class Admin extends AdminModule
         'init_loket1_no' => sprintf("%03d", intval(isset_or($init_loket1_no, 0))),
         'init_card2_no' => sprintf("%03d", intval(isset_or($init_card2_no, 0))),
         'init_apotek_no' => sprintf("%03d", intval(isset_or($init_apotek_no, 0))),
+        'init_geriatri_no' => sprintf("%03d", intval(isset_or($init_geriatri_no, 0))),
         'init_poli_no' => isset_or($init_poli_no, '000'),
         'daftar_poli' => isset_or($daftar_poli, []),
         'kd_poli_aktif' => isset_or($kd_poli_aktif, ''),
@@ -1184,6 +1333,18 @@ class Admin extends AdminModule
         echo 'Antrian Anjungan Apotek Tidak Ada Data';
       }
       exit();
+    }
+
+    public function getResetAnjunganGeriatri(){
+      date_default_timezone_set($this->settings->get('settings.timezone') ?: 'Asia/Makassar');
+      $date = date('Y-m-d');
+      $this->db('mlite_antrian_loket')->where('type', 'Geriatri')->where('postdate', $date)->delete();
+      $fields = ['panggil_geriatri', 'panggil_geriatri_nomor', 'panggil_geriatri_tanggal'];
+      foreach ($fields as $f) {
+        $this->db('mlite_settings')->where('module', 'anjungan')->where('field', $f)->save(['value' => '']);
+      }
+      echo 'Berhasil Reset Antrian Geriatri';
+      redirect(url(ADMIN.'/anjungan/pemanggil/?show=panggil_geriatri'));
     }
 
 }
