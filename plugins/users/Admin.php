@@ -135,20 +135,153 @@ class Admin extends AdminModule
     public function getManage()
     {
         $rows = $this->db('mlite_users')->toArray();
-        foreach ($rows as &$row) {
-            if (empty($row['fullname'])) {
-                $row['fullname'] = '----';
+
+        // Map nama unit (poliklinik + bangsal) untuk tooltip capability
+        $capMap = [];
+        try {
+            $stmtCap = $this->db()->pdo()->query("SELECT kd_poli AS cap, nm_poli AS nm_cap FROM poliklinik UNION SELECT kd_bangsal AS cap, nm_bangsal AS nm_cap FROM bangsal");
+            if ($stmtCap) {
+                foreach ($stmtCap->fetchAll(\PDO::FETCH_ASSOC) as $c) {
+                    $capMap[trim((string)$c['cap'])] = trim((string)$c['nm_cap']);
+                }
             }
+        } catch (\Throwable $e) {}
+
+        // Map nama modul untuk tampilan & filter akses
+        $modMap = [];
+        $filterModules = [];
+        try {
+            foreach ($this->db('mlite_modules')->toArray() as $m) {
+                $dir = trim((string)($m['dir'] ?? ''));
+                if ($dir === '') continue;
+                $info = $this->core->getModuleInfo($dir);
+                $label = (is_array($info) && !empty($info['name'])) ? (string)$info['name'] : $dir;
+                $modMap[$dir] = $label;
+                $filterModules[] = ['dir' => $dir, 'name' => $label];
+            }
+            usort($filterModules, function ($a, $b) {
+                return strcasecmp($a['name'], $b['name']);
+            });
+        } catch (\Throwable $e) {}
+
+        $roleCounts = [];
+        $kpiAdmin = 0;
+        $kpiKlinis = 0;
+        $kpiLainnya = 0;
+
+        foreach ($rows as &$row) {
+            $rawUsername = (string)($row['username'] ?? '');
+            $rawFullname = trim((string)($row['fullname'] ?? ''));
+            $rawEmail = trim((string)($row['email'] ?? ''));
+            $rawRole = strtolower(trim((string)($row['role'] ?? 'pengguna'))) ?: 'pengguna';
+            $rawCap = trim((string)($row['cap'] ?? ''));
+            $rawAccess = trim((string)($row['access'] ?? ''));
+
+            if ($rawFullname === '') {
+                $rawFullname = '----';
+            }
+
+            $roleCounts[$rawRole] = ($roleCounts[$rawRole] ?? 0) + 1;
+            if ($rawRole === 'admin' || (int)$row['id'] === 1) {
+                $kpiAdmin++;
+            } elseif (in_array($rawRole, ['medis', 'paramedis'], true)) {
+                $kpiKlinis++;
+            } else {
+                $kpiLainnya++;
+            }
+
+            // Avatar URL
+            $avatarFile = trim((string)($row['avatar'] ?? ''));
+            if ($avatarFile !== '' && is_file(UPLOADS . '/users/' . $avatarFile)) {
+                $row['avatarURL'] = url(UPLOADS . '/users/' . $avatarFile);
+            } else {
+                $row['avatarURL'] = url(MODULES . '/users/img/default.png');
+            }
+
+            // Capability badges
+            $capArr = array_values(array_filter(array_map('trim', explode(',', $rawCap))));
+            $capDisplay = [];
+            foreach ($capArr as $cCode) {
+                $capDisplay[] = [
+                    'code' => $cCode,
+                    'name' => $capMap[$cCode] ?? $cCode
+                ];
+            }
+            $row['cap_list'] = $capDisplay;
+            $row['cap_preview'] = array_slice($capDisplay, 0, 2);
+            $row['cap_more'] = max(0, count($capDisplay) - 2);
+            $row['cap_full_text'] = implode(', ', array_map(function ($x) {
+                return $x['name'] !== $x['code'] ? ($x['name'] . ' (' . $x['code'] . ')') : $x['code'];
+            }, $capDisplay));
+
+            // Access badges
+            $isAll = ($rawAccess === 'all');
+            $accessArr = $isAll ? [] : array_values(array_unique(array_filter(array_map('trim', explode(',', $rawAccess)))));
+            $accessLabeled = [];
+            foreach ($accessArr as $aDir) {
+                $accessLabeled[] = [
+                    'dir' => $aDir,
+                    'name' => $modMap[$aDir] ?? $aDir
+                ];
+            }
+            $row['access_is_all'] = $isAll ? '1' : '0';
+            $row['access_count'] = count($accessLabeled);
+            $row['access_preview'] = array_slice($accessLabeled, 0, 3);
+            $row['access_more'] = max(0, count($accessLabeled) - 3);
+            $row['access_raw_csv'] = $isAll ? 'all' : (',' . implode(',', $accessArr) . ',');
+            $row['access_json'] = htmlspecialchars(json_encode($accessLabeled, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8');
+
+            // Role badge color key
+            $roleStyleMap = [
+                'admin' => 'role-admin',
+                'medis' => 'role-medis',
+                'paramedis' => 'role-paramedis',
+                'apoteker' => 'role-apoteker',
+                'rekammedis' => 'role-rm',
+                'radiologi' => 'role-penunjang',
+                'laboratorium' => 'role-penunjang',
+                'kasir' => 'role-kasir',
+                'manajemen' => 'role-manajemen',
+            ];
+            $row['role_class'] = $roleStyleMap[$rawRole] ?? 'role-default';
+            $row['role_raw'] = $rawRole;
+
+            $row['username'] = htmlspecialchars($rawUsername, ENT_QUOTES, 'UTF-8');
+            $row['fullname'] = htmlspecialchars($rawFullname, ENT_QUOTES, 'UTF-8');
+            $row['email'] = htmlspecialchars($rawEmail, ENT_QUOTES, 'UTF-8');
+            $row['role'] = htmlspecialchars($rawRole, ENT_QUOTES, 'UTF-8');
+            $row['cap_full_text'] = htmlspecialchars($row['cap_full_text'], ENT_QUOTES, 'UTF-8');
+
             $row['editURL'] = url([ADMIN, 'users', 'edit', $row['id']]);
             $row['permURL'] = url([ADMIN, 'users', 'permission', $row['id']]);
             $row['resetPassURL'] = url([ADMIN, 'users', 'reset_password', $row['id']]);
             $row['delURL']  = url([ADMIN, 'users', 'delete', $row['id']]);
         }
+        unset($row);
+
+        arsort($roleCounts);
+        $roleFilters = [];
+        foreach ($roleCounts as $rName => $rCnt) {
+            $roleFilters[] = [
+                'name' => htmlspecialchars($rName, ENT_QUOTES, 'UTF-8'),
+                'count' => (int)$rCnt
+            ];
+        }
+
         $this->core->addCSS(url('assets/css/dataTables.bootstrap.min.css'));
-        $this->core->addCSS(url([ADMIN, 'users', 'css']));
         $this->core->addJS(url('assets/jscripts/jquery.dataTables.min.js'));
         $this->core->addJS(url('assets/jscripts/dataTables.bootstrap.min.js'));
-        return $this->draw('manage.html', ['myId' => $this->core->getUserInfo('id'), 'users' => $rows]);
+        return $this->draw('manage.html', [
+            'myId' => $this->core->getUserInfo('id'),
+            'users' => $rows,
+            'addURL' => url([ADMIN, 'users', 'add']),
+            'total_users' => count($rows),
+            'kpi_admin' => $kpiAdmin,
+            'kpi_klinis' => $kpiKlinis,
+            'kpi_lainnya' => $kpiLainnya,
+            'role_filters' => $roleFilters,
+            'filter_modules' => htmlspecialchars_array($filterModules)
+        ]);
     }
 
     /**

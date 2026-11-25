@@ -1,73 +1,712 @@
-<div class="row">
-    <div class="col-md-12">
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <h3 class="panel-title">Kelola Pengguna</h3>
+<style>
+.rsgm-um-wrap {
+    margin-bottom: 40px;
+}
+
+/* Header Card (matching form.html) */
+.rsgm-um-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 14px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 16px 20px;
+    margin-bottom: 18px;
+    box-shadow: 0 4px 14px -2px rgba(15, 23, 42, 0.05);
+}
+.rsgm-um-header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+.rsgm-um-emblem {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    border: 1px solid #bfdbfe;
+    color: #2563eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+}
+.rsgm-um-title {
+    margin: 0 0 3px 0;
+    font-size: 19px;
+    font-weight: 700;
+    color: #0f172a;
+    letter-spacing: -0.3px;
+}
+.rsgm-um-sub {
+    margin: 0;
+    font-size: 12.5px;
+    color: #64748b;
+}
+.rsgm-btn-add-user {
+    background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%) !important;
+    border: 1px solid #1e40af !important;
+    color: #ffffff !important;
+    border-radius: 10px !important;
+    padding: 8px 16px !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+    transition: all 0.16s ease;
+}
+.rsgm-btn-add-user:hover {
+    background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%) !important;
+    transform: translateY(-1px);
+    color: #ffffff !important;
+    text-decoration: none;
+}
+
+/* KPI Summary Cards */
+.rsgm-um-kpi {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-left: 4px solid #cbd5e1;
+    border-radius: 12px;
+    padding: 13px 16px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03);
+}
+.rsgm-um-kpi.kpi-blue { border-left-color: #2563eb; }
+.rsgm-um-kpi.kpi-red { border-left-color: #dc2626; }
+.rsgm-um-kpi.kpi-teal { border-left-color: #0d9488; }
+.rsgm-um-kpi.kpi-amber { border-left-color: #d97706; }
+.rsgm-um-kpi-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #64748b;
+    letter-spacing: 0.3px;
+}
+.rsgm-um-kpi-val {
+    font-size: 24px;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.15;
+    margin-top: 2px;
+}
+.rsgm-um-kpi-ico {
+    font-size: 26px;
+    opacity: 0.25;
+}
+
+/* Main Card & Filter Bar */
+.rsgm-um-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.05);
+    overflow: hidden;
+}
+.rsgm-um-toolbar {
+    padding: 14px 18px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+}
+.rsgm-um-role-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+.rsgm-role-pill {
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    color: #334155;
+    border-radius: 999px;
+    padding: 4px 11px;
+    font-size: 11.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+.rsgm-role-pill:hover {
+    border-color: #3b82f6;
+    color: #1d4ed8;
+    background: #eff6ff;
+}
+.rsgm-role-pill.active {
+    background: #2563eb;
+    border-color: #1d4ed8;
+    color: #ffffff;
+}
+.rsgm-role-pill .pill-cnt {
+    background: rgba(15, 23, 42, 0.08);
+    border-radius: 999px;
+    padding: 1px 6px;
+    font-size: 10.5px;
+}
+.rsgm-role-pill.active .pill-cnt {
+    background: rgba(255, 255, 255, 0.22);
+    color: #ffffff;
+}
+
+.rsgm-um-filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    justify-content: space-between;
+}
+.rsgm-um-search-wrap {
+    position: relative;
+    flex: 1;
+    min-width: 220px;
+    max-width: 380px;
+}
+.rsgm-um-search-wrap i {
+    position: absolute;
+    left: 11px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    font-size: 13px;
+}
+.rsgm-um-search-input {
+    width: 100%;
+    height: 36px;
+    padding: 6px 12px 6px 32px;
+    border: 1px solid #cbd5e1;
+    border-radius: 9px;
+    font-size: 12.5px;
+    background: #ffffff;
+    color: #0f172a;
+}
+.rsgm-um-search-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.14);
+}
+.rsgm-um-filter-right {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+.rsgm-um-select {
+    height: 36px;
+    padding: 5px 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 9px;
+    font-size: 12.5px;
+    background: #ffffff;
+    color: #0f172a;
+}
+
+/* Table Styling */
+.rsgm-users-table {
+    margin-bottom: 0 !important;
+    border-collapse: collapse !important;
+}
+.rsgm-users-table thead th {
+    background: #f8fafc !important;
+    color: #475569 !important;
+    font-size: 11.5px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    padding: 11px 14px !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    white-space: nowrap;
+}
+.rsgm-users-table tbody td {
+    padding: 11px 14px !important;
+    vertical-align: middle !important;
+    border-top: 1px solid #f1f5f9 !important;
+    font-size: 12.5px;
+    white-space: normal;
+}
+.rsgm-users-table tbody tr:hover {
+    background-color: #f8fafc !important;
+}
+
+.rsgm-user-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 220px;
+}
+.rsgm-user-av {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    object-fit: cover;
+    border: 1px solid #e2e8f0;
+    flex-shrink: 0;
+    background: #f1f5f9;
+}
+.rsgm-user-name {
+    font-weight: 700;
+    color: #0f172a;
+    font-size: 13px;
+    line-height: 1.25;
+}
+.rsgm-user-name a {
+    color: #0f172a;
+    text-decoration: none;
+}
+.rsgm-user-name a:hover {
+    color: #2563eb;
+    text-decoration: underline;
+}
+.rsgm-user-meta {
+    font-size: 11.5px;
+    color: #64748b;
+    margin-top: 2px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+}
+.rsgm-user-code {
+    background: #f1f5f9;
+    color: #334155;
+    padding: 1px 6px;
+    border-radius: 5px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 11px;
+}
+
+/* Role Badges */
+.rsgm-role-badge {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.25px;
+    white-space: nowrap;
+}
+.role-admin { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+.role-medis { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+.role-paramedis { background: #f0fdfa; color: #0f766e; border: 1px solid #99f6e4; }
+.role-apoteker { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+.role-rm { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+.role-penunjang { background: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe; }
+.role-kasir { background: #fdf2f8; color: #be185d; border: 1px solid #fbcfe8; }
+.role-manajemen { background: #f5f3ff; color: #6d28d9; border: 1px solid #ddd6fe; }
+.role-default { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+
+/* Chip Lists (Cap & Modules) */
+.rsgm-chip-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    max-width: 260px;
+}
+.rsgm-chip {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    background: #f1f5f9;
+    color: #334155;
+    border: 1px solid #e2e8f0;
+    white-space: nowrap;
+}
+.rsgm-chip-all {
+    background: #ecfdf5;
+    color: #047857;
+    border-color: #a7f3d0;
+}
+.rsgm-chip-cap {
+    background: #f8fafc;
+    color: #475569;
+    border-color: #cbd5e1;
+}
+.rsgm-chip-more {
+    background: #eff6ff;
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
+    cursor: pointer;
+}
+.rsgm-chip-more:hover {
+    background: #dbeafe;
+}
+
+/* Action Buttons */
+.rsgm-um-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+}
+.rsgm-um-actions .btn {
+    border-radius: 7px !important;
+    padding: 4px 8px !important;
+    font-size: 11.5px !important;
+    font-weight: 600 !important;
+}
+
+/* DataTables Footer Cleanup */
+.rsgm-um-card .dataTables_wrapper .dataTables_filter,
+.rsgm-um-card .dataTables_wrapper .dataTables_length {
+    display: none;
+}
+.rsgm-um-footer {
+    padding: 12px 18px;
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.rsgm-um-footer .dataTables_info {
+    padding-top: 0 !important;
+    font-size: 12px;
+    color: #64748b;
+}
+.rsgm-um-footer .dataTables_paginate {
+    margin: 0 !important;
+}
+.rsgm-um-footer .pagination {
+    margin: 0 !important;
+}
+</style>
+
+<div class="rsgm-um-wrap">
+    <!-- HEADER -->
+    <div class="rsgm-um-header">
+        <div class="rsgm-um-header-left">
+            <div class="rsgm-um-emblem"><i class="fa fa-users"></i></div>
+            <div>
+                <h2 class="rsgm-um-title">Kelola Pengguna Sistem</h2>
+                <p class="rsgm-um-sub">Atur akun pegawai, peran wewenang (role), unit kerja (capability), dan hak akses modul SIMRS.</p>
             </div>
-            <div class="panel-body">
-				<div class="table-responsive no-margin">
-					<table class="table table-striped no-margin dataTables" width="100%">
-						<thead>
-							<tr>
-								<th>Nama Pengguna</th>
-								<th>Nama Lengkap</th>
-								<th>Email</th>
-								<th>Role</th>
-								<th>Capability</th>
-								<th>Access</th>
-								<th class="text-right">Aksi</th>
-							</tr>
-						</thead>
-						<tbody>
-							{loop: $users}
-							<tr>
-								<td><a href="{?=isset_or($value.editURL)?}">{?=isset_or($value.username)?}</a></td>
-								<td>{?=isset_or($value.fullname)?}</td>
-								<td>{?=isset_or($value.email)?}</td>
-								<td>{?=isset_or($value.role)?}</td>
-								<td>{?=isset_or($value.cap)?}</td>
-								<td>{?=isset_or($value.access)?}</td>
-								<td class="text-right">
-									<a href="{?=isset_or($value.editURL)?}" class="btn btn-xs btn-success">
-										<i class="fa fa-pencil"></i> <span class="hidden-xs">Edit</span>
-									</a>
-									<a href="{?=isset_or($value.permURL)?}" class="btn btn-xs btn-info">
-										<i class="fa fa-key"></i> <span class="hidden-xs">Hak Akses</span>
-									</a>
-									<a href="{?=isset_or($value.resetPassURL)?}" class="btn btn-xs btn-warning" data-confirm="Yakin ingin mereset kata sandi pengguna [{?=isset_or($value.username)?}] ke '12345678'? Pengguna akan diwajibkan membuat kata sandi baru sesuai standar keamanan ISO/IEC 27001 saat login berikutnya." title="Reset kata sandi ke 12345678">
-										<i class="fa fa-refresh"></i> <span class="hidden-xs">Reset Pass</span>
-									</a>
-									<a href="{?=isset_or($value.delURL)?}" class="btn btn-xs btn-danger {if: $value.id==1 || $value.id==$myId}disabled{/if}" data-confirm="Anda yakin akan menghapus user ini?">
-										<i class="fa fa-trash-o"></i> <span class="hidden-xs">Hapus</span>
-									</a>
-								</td>
-							</tr>
-							{/loop}
-						</tbody>
-					</table>
-				</div>
+        </div>
+        <div>
+            <a href="{?=$addURL?}" class="rsgm-btn-add-user">
+                <i class="fa fa-user-plus"></i> Tambah Pengguna Baru
+            </a>
+        </div>
+    </div>
+
+    <!-- KPI CARDS -->
+    <div class="row">
+        <div class="col-xs-6 col-sm-3">
+            <div class="rsgm-um-kpi kpi-blue">
+                <div>
+                    <div class="rsgm-um-kpi-label">Total Pengguna</div>
+                    <div class="rsgm-um-kpi-val">{?=$total_users?}</div>
+                </div>
+                <i class="fa fa-users rsgm-um-kpi-ico text-primary"></i>
+            </div>
+        </div>
+        <div class="col-xs-6 col-sm-3">
+            <div class="rsgm-um-kpi kpi-red">
+                <div>
+                    <div class="rsgm-um-kpi-label">Administrator / IT</div>
+                    <div class="rsgm-um-kpi-val">{?=$kpi_admin?}</div>
+                </div>
+                <i class="fa fa-shield rsgm-um-kpi-ico text-danger"></i>
+            </div>
+        </div>
+        <div class="col-xs-6 col-sm-3">
+            <div class="rsgm-um-kpi kpi-teal">
+                <div>
+                    <div class="rsgm-um-kpi-label">Medis &amp; Paramedis</div>
+                    <div class="rsgm-um-kpi-val">{?=$kpi_klinis?}</div>
+                </div>
+                <i class="fa fa-user-md rsgm-um-kpi-ico" style="color:#0d9488;"></i>
+            </div>
+        </div>
+        <div class="col-xs-6 col-sm-3">
+            <div class="rsgm-um-kpi kpi-amber">
+                <div>
+                    <div class="rsgm-um-kpi-label">RM, Farmasi &amp; Lainnya</div>
+                    <div class="rsgm-um-kpi-val">{?=$kpi_lainnya?}</div>
+                </div>
+                <i class="fa fa-hospital-o rsgm-um-kpi-ico text-warning"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN TABLE CARD -->
+    <div class="rsgm-um-card">
+        <div class="rsgm-um-toolbar">
+            <!-- Filter Pills by Role -->
+            <div class="rsgm-um-role-pills" id="roleFilterPills">
+                <button type="button" class="rsgm-role-pill active" data-role="">
+                    Semua Role <span class="pill-cnt">{?=$total_users?}</span>
+                </button>
+                {loop: $role_filters}
+                <button type="button" class="rsgm-role-pill" data-role="{?=$value.name?}">
+                    {?=ucfirst($value.name)?} <span class="pill-cnt">{?=$value.count?}</span>
+                </button>
+                {/loop}
+            </div>
+
+            <!-- Search + Module Filter + Page Length -->
+            <div class="rsgm-um-filter-row">
+                <div class="rsgm-um-search-wrap">
+                    <i class="fa fa-search"></i>
+                    <input type="text" id="umSearchInput" class="rsgm-um-search-input" placeholder="Cari nama, username/NIK, email, unit, atau modul...">
+                </div>
+                <div class="rsgm-um-filter-right">
+                    <select id="umModuleFilter" class="rsgm-um-select" title="Filter pengguna berdasarkan modul yang dimiliki">
+                        <option value="">Semua Akses Modul</option>
+                        <option value="__all__">Hanya Full Access (all)</option>
+                        {loop: $filter_modules}
+                        <option value="{?=$value.dir?}">Punya Modul: {?=$value.name?}</option>
+                        {/loop}
+                    </select>
+                    <select id="umPageLength" class="rsgm-um-select" title="Jumlah baris per halaman">
+                        <option value="15" selected>15 baris</option>
+                        <option value="25">25 baris</option>
+                        <option value="50">50 baris</option>
+                        <option value="100">100 baris</option>
+                        <option value="-1">Semua</option>
+                    </select>
+                    <button type="button" id="umResetFilters" class="btn btn-default btn-sm" style="height:36px; border-radius:9px;" title="Reset semua filter">
+                        <i class="fa fa-undo"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-responsive" style="margin:0;">
+            <table id="rsgmUsersTable" class="table table-hover rsgm-users-table" width="100%">
+                <thead>
+                    <tr>
+                        <th>Pengguna</th>
+                        <th style="width:115px;">Role</th>
+                        <th style="width:190px;">Unit / Capability</th>
+                        <th style="width:270px;">Akses Modul</th>
+                        <th class="text-right" style="width:215px;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {loop: $users}
+                    <tr data-role="{?=$value.role_raw?}" data-access="{?=$value.access_raw_csv?}">
+                        <td>
+                            <div class="rsgm-user-cell">
+                                <img src="{?=$value.avatarURL?}" class="rsgm-user-av" alt="">
+                                <div>
+                                    <div class="rsgm-user-name">
+                                        <a href="{?=$value.editURL?}">{?=$value.fullname?}</a>
+                                    </div>
+                                    <div class="rsgm-user-meta">
+                                        <span class="rsgm-user-code">{?=$value.username?}</span>
+                                        {if: !empty($value.email)}
+                                        <span><i class="fa fa-envelope-o"></i> {?=$value.email?}</span>
+                                        {/if}
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td data-search="{?=$value.role_raw?}">
+                            <span class="rsgm-role-badge {?=$value.role_class?}">{?=$value.role?}</span>
+                        </td>
+                        <td data-search="{?=$value.cap_full_text?}">
+                            {if: empty($value.cap_preview)}
+                                <span class="text-muted" style="font-size:11.5px;">&mdash;</span>
+                            {else}
+                                <div class="rsgm-chip-wrap" title="{?=$value.cap_full_text?}">
+                                    {loop: $value.cap_preview as $cp}
+                                    <span class="rsgm-chip rsgm-chip-cap" title="{$cp.name}">{$cp.name}</span>
+                                    {/loop}
+                                    {if: $value.cap_more > 0}
+                                    <span class="rsgm-chip rsgm-chip-more btn-view-cap" data-user="{?=$value.fullname?}" data-cap="{?=$value.cap_full_text?}">+{?=$value.cap_more?} unit</span>
+                                    {/if}
+                                </div>
+                            {/if}
+                        </td>
+                        <td data-search="{?=$value.access_raw_csv?}">
+                            {if: $value.access_is_all == '1'}
+                                <span class="rsgm-chip rsgm-chip-all"><i class="fa fa-check-circle"></i> Akses Penuh (All)</span>
+                            {elseif: $value.access_count == 0}
+                                <span class="text-muted" style="font-size:11.5px;">Dashboard saja</span>
+                            {else}
+                                <div class="rsgm-chip-wrap">
+                                    {loop: $value.access_preview as $mp}
+                                    <span class="rsgm-chip">{$mp.name}</span>
+                                    {/loop}
+                                    {if: $value.access_more > 0}
+                                    <button type="button" class="rsgm-chip rsgm-chip-more btn-view-modules"
+                                        data-user="{?=$value.fullname?} ({?=$value.username?})"
+                                        data-modules="{?=$value.access_json?}">
+                                        +{?=$value.access_more?} modul
+                                    </button>
+                                    {/if}
+                                </div>
+                            {/if}
+                        </td>
+                        <td class="text-right">
+                            <div class="rsgm-um-actions">
+                                <a href="{?=$value.editURL?}" class="btn btn-xs btn-success" title="Edit pengguna & akses modul">
+                                    <i class="fa fa-pencil"></i> Edit
+                                </a>
+                                <a href="{?=$value.permURL?}" class="btn btn-xs btn-info" title="Atur izin CRUD per modul">
+                                    <i class="fa fa-key"></i> CRUD
+                                </a>
+                                <a href="{?=$value.resetPassURL?}" class="btn btn-xs btn-warning"
+                                   data-confirm="Yakin ingin mereset kata sandi pengguna [{?=$value.username?}] ke '12345678'? Pengguna akan diwajibkan membuat kata sandi baru sesuai standar keamanan ISO/IEC 27001 saat login berikutnya."
+                                   title="Reset kata sandi ke 12345678">
+                                    <i class="fa fa-refresh"></i>
+                                </a>
+                                <a href="{?=$value.delURL?}" class="btn btn-xs btn-danger {if: $value.id==1 || $value.id==$myId}disabled{/if}"
+                                   data-confirm="Anda yakin akan menghapus pengguna [{?=$value.username?}]?"
+                                   title="Hapus pengguna">
+                                    <i class="fa fa-trash-o"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {/loop}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Daftar Modul Lengkap -->
+<div class="modal fade" id="modalUserModules" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content" style="border-radius:14px; overflow:hidden;">
+            <div class="modal-header" style="background:#f8fafc; border-bottom:1px solid #e2e8f0;">
+                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+                <h4 class="modal-title" style="font-size:15px; font-weight:700; color:#0f172a;">
+                    <i class="fa fa-cubes text-primary"></i> Daftar Modul Aktif — <span id="modalModUserLabel"></span>
+                </h4>
+            </div>
+            <div class="modal-body" id="modalModListBody" style="max-height:360px; overflow-y:auto;"></div>
+            <div class="modal-footer" style="background:#f8fafc;">
+                <button type="button" class="btn btn-default btn-sm" data-dismiss="modal">Tutup</button>
             </div>
         </div>
     </div>
 </div>
+
 <script type="text/javascript">
-	$('.dataTables').DataTable({
-	  "order": [[ 3, "desc" ]],
-	  "pagingType": "full",
-	  "language": {
-		"paginate": {
-		  "first": "&laquo;",
-		  "last": "&raquo;",
-		  "previous": "‹",
-		  "next":     "›"
-		},
-		"search": "",
-		"searchPlaceholder": "Search..."
-	  },
-	  "lengthChange": false,
-	  "scrollX": true,
-	  dom: "<<'data-table-title'><'datatable-search'f>><'row'<'col-sm-12'tr>><<'pmd-datatable-pagination' l i p>>"
-	});
-	var t = $(".dataTables").DataTable().rows().count();
-	$(".data-table-title").html('<h3 style="display:inline;float:left;margin-top:0;" class="hidden-xs">Total: ' + t + '</h3>');
-  </script>
+$(function() {
+    var activeRole = '';
+    var activeModule = '';
+
+    $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+        if (settings.nTable.id !== 'rsgmUsersTable') return true;
+        var rowNode = settings.aoData[dataIndex].nTr;
+        if (!rowNode) return true;
+
+        var rowRole = (rowNode.getAttribute('data-role') || '').toLowerCase();
+        var rowAccess = (rowNode.getAttribute('data-access') || '').toLowerCase();
+
+        if (activeRole !== '' && rowRole !== activeRole) {
+            return false;
+        }
+        if (activeModule !== '') {
+            if (activeModule === '__all__') {
+                if (rowAccess !== 'all') return false;
+            } else {
+                if (rowAccess !== 'all' && rowAccess.indexOf(',' + activeModule.toLowerCase() + ',') === -1) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    });
+
+    var table = $('#rsgmUsersTable').DataTable({
+        "order": [[1, "asc"], [0, "asc"]],
+        "pageLength": 15,
+        "pagingType": "simple_numbers",
+        "autoWidth": false,
+        "columnDefs": [
+            { "orderable": false, "targets": [3, 4] }
+        ],
+        "language": {
+            "emptyTable": "Belum ada data pengguna.",
+            "zeroRecords": "Tidak ada pengguna yang cocok dengan filter.",
+            "info": "Menampilkan _START_–_END_ dari _TOTAL_ pengguna",
+            "infoEmpty": "Menampilkan 0 pengguna",
+            "infoFiltered": "(disaring dari _MAX_ total pengguna)",
+            "paginate": { "previous": "‹", "next": "›" }
+        },
+        "dom": "rt<'rsgm-um-footer'ip>"
+    });
+
+    // Role pill filter
+    $('#roleFilterPills').on('click', '.rsgm-role-pill', function() {
+        $('#roleFilterPills .rsgm-role-pill').removeClass('active');
+        $(this).addClass('active');
+        activeRole = ($(this).data('role') || '').toString().toLowerCase();
+        table.draw();
+    });
+
+    // Search box
+    $('#umSearchInput').on('keyup input', function() {
+        table.search(this.value).draw();
+    });
+
+    // Module access filter
+    $('#umModuleFilter').on('change', function() {
+        activeModule = $(this).val() || '';
+        table.draw();
+    });
+
+    // Page length selector
+    $('#umPageLength').on('change', function() {
+        table.page.len(parseInt($(this).val(), 10)).draw();
+    });
+
+    // Reset all filters
+    $('#umResetFilters').on('click', function() {
+        activeRole = '';
+        activeModule = '';
+        $('#umSearchInput').val('');
+        $('#umModuleFilter').val('');
+        $('#roleFilterPills .rsgm-role-pill').removeClass('active').first().addClass('active');
+        table.search('').draw();
+    });
+
+    // Modal view all modules for user
+    $(document).on('click', '.btn-view-modules', function() {
+        var userLabel = $(this).data('user') || '';
+        var mods = $(this).data('modules');
+        if (typeof mods === 'string') {
+            try { mods = JSON.parse(mods); } catch (e) { mods = []; }
+        }
+        $('#modalModUserLabel').text(userLabel);
+        var html = '<div style="display:flex; flex-wrap:wrap; gap:6px;">';
+        if (Array.isArray(mods) && mods.length) {
+            $.each(mods, function(_, m) {
+                var safeName = $('<div>').text(m.name || m.dir).html();
+                var safeDir = $('<div>').text(m.dir || '').html();
+                html += '<span class="rsgm-chip" style="padding:5px 10px; font-size:12px;">' + safeName + ' <small style="color:#94a3b8;">(' + safeDir + ')</small></span>';
+            });
+        } else {
+            html += '<span class="text-muted">Tidak ada modul tambahan.</span>';
+        }
+        html += '</div>';
+        $('#modalModListBody').html(html);
+        $('#modalUserModules').modal('show');
+    });
+
+    // Quick alert for extra capabilities
+    $(document).on('click', '.btn-view-cap', function() {
+        var u = $(this).data('user') || '';
+        var cap = $(this).data('cap') || '';
+        bootbox.alert('<strong>Unit / Capability — ' + $('<div>').text(u).html() + ':</strong><br><br>' + $('<div>').text(cap).html());
+    });
+});
+</script>
