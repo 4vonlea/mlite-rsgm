@@ -305,6 +305,7 @@ class Admin extends AdminModule
       if($kamar_inap) {
         $this->db('dpjp_ranap')->save(['no_rawat' => $_POST['no_rawat'], 'kd_dokter' => $_POST['kd_dokter']]);
         $this->db('kamar')->where('kd_kamar', $_POST['kd_kamar'])->save(['status' => 'ISI']);
+        $this->_syncBedAplicare();
       }
       exit();
     }
@@ -325,6 +326,7 @@ class Admin extends AdminModule
         'stts' => 'Sudah'
       ]);
       $this->db('kamar')->where('kd_kamar', $_POST['kd_kamar'])->save(['status' => 'KOSONG']);
+      $this->_syncBedAplicare();
       exit();
     }
 
@@ -3438,6 +3440,369 @@ class Admin extends AdminModule
         } catch (\PDOException $e) {
             return ['status' => 'error', 'message' => $e->getMessage()];
         }
+    }
+
+    /**
+     * Sinkronisasi data ketersediaan bed ke BPJS Aplicare.
+     * Dipanggil otomatis saat pasien masuk/keluar kamar.
+     */
+    private function _syncBedAplicare(string $kelas_kamar = ''): bool
+    {
+        try {
+            $consid     = $this->settings->get('settings.BpjsConsID') ?: $this->settings->get('jkn_mobile.BpjsConsID');
+            $secretkey  = $this->settings->get('settings.BpjsSecretKey') ?: $this->settings->get('jkn_mobile.BpjsSecretKey');
+            $user_key   = $this->settings->get('settings.BpjsUserKey') ?: $this->settings->get('jkn_mobile.BpjsUserKey');
+            $kode_ppk   = $this->settings->get('settings.ppk_bpjs');
+            $BpjsApiUrl = $this->settings->get('settings.BpjsApiUrl');
+
+            if (empty($consid) || empty($kode_ppk) || empty($BpjsApiUrl)) {
+                return false;
+            }
+
+            $parsed   = parse_url($BpjsApiUrl);
+            $base_url = $parsed['scheme'] . '://' . $parsed['host'];
+            $url      = $base_url . '/aplicaresws/rest/bed/update/' . $kode_ppk;
+
+            date_default_timezone_set('UTC');
+            $tStamp = strval(time() - strtotime('1970-01-01 00:00:00'));
+
+            $kelas_map = [
+                'Kelas 1' => 'KL1', 'Kelas 2' => 'KL2', 'Kelas 3' => 'KL3',
+                'VIP'     => 'VIP', 'ICU'     => 'ICU', 'NICU'    => 'NIC',
+                'PICU'    => 'PIC', 'HCU'     => 'HCU',
+            ];
+
+            $sql    = "SELECT b.nm_bangsal, k.kd_bangsal, k.kelas,
+                              COUNT(k.kd_kamar)              AS jml,
+                              SUM(IF(k.status='ISI',1,0))    AS isi,
+                              SUM(IF(k.status='KOSONG',1,0)) AS kosong
+                       FROM kamar k
+                       JOIN bangsal b ON k.kd_bangsal = b.kd_bangsal
+                       WHERE k.statusdata = '1'";
+            $params = [];
+            if (!empty($kelas_kamar)) {
+                $sql     .= ' AND k.kelas = ?';
+                $params[] = $kelas_kamar;
+            }
+            $sql .= ' GROUP BY k.kd_bangsal, k.kelas';
+
+            $stmt = $this->db()->pdo()->prepare($sql);
+            $stmt->execute($params);
+            $beds = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+            $any_ok = false;
+            foreach ($beds as $bed) {
+                $kode_kelas = $kelas_map[$bed['kelas']] ?? null;
+                if (!$kode_kelas) {
+                    continue;
+                }
+
+                $data = json_encode([
+                    'kodekelas'          => $kode_kelas,
+                    'koderuang'          => $bed['kd_bangsal'],
+                    'namaruang'          => $bed['nm_bangsal'],
+                    'kapasitas'          => (int) $bed['jml'],
+                    'tersedia'           => (int) $bed['kosong'],
+                    'tersediapria'       => '0',
+                    'tersediawanita'     => '0',
+                    'tersediapriawanita' => (string) $bed['kosong'],
+                ]);
+
+                $resp = \Systems\Lib\BpjsService::postAplicare($url, $data, $consid, $secretkey, $user_key, $tStamp);
+                $respArr = is_string($resp) ? json_decode($resp, true) : (array) $resp;
+                if (isset($respArr['metadata']['code']) && $respArr['metadata']['code'] == 200) {
+                    $any_ok = true;
+                }
+            }
+
+            if ($any_ok) {
+                $cek = $this->db('mlite_settings')->where('module', 'rawat_inap')->where('field', 'last_bed_sync')->oneArray();
+                $now = date('Y-m-d H:i:s');
+                if ($cek) {
+                    $this->db('mlite_settings')->where('module', 'rawat_inap')->where('field', 'last_bed_sync')->save(['value' => $now]);
+                } else {
+                    $this->db('mlite_settings')->save(['module' => 'rawat_inap', 'field' => 'last_bed_sync', 'value' => $now]);
+                }
+            }
+
+            return true;
+        } catch (\Throwable $e) {
+            error_log('[rawat_inap] _syncBedAplicare error: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Endpoint: ambil data ketersediaan bed dari DB lokal SIMRS + data aktif yang tercatat di BPJS Aplicare.
+     * URL: GET /admin/rawat_inap/bedStatus
+     */
+    public function getBedStatus()
+    {
+        header('Content-Type: application/json');
+        try {
+            $consid     = $this->settings->get('settings.BpjsConsID') ?: $this->settings->get('jkn_mobile.BpjsConsID');
+            $secretkey  = $this->settings->get('settings.BpjsSecretKey') ?: $this->settings->get('jkn_mobile.BpjsSecretKey');
+            $user_key   = $this->settings->get('settings.BpjsUserKey') ?: $this->settings->get('jkn_mobile.BpjsUserKey');
+            $kode_ppk   = $this->settings->get('settings.ppk_bpjs');
+            $BpjsApiUrl = $this->settings->get('settings.BpjsApiUrl');
+
+            // Riwayat terakhir kali simpan/kirim ke BPJS dari SIMRS
+            $last_sync_row = $this->db('mlite_settings')->where('module', 'rawat_inap')->where('field', 'last_bed_sync')->oneArray();
+            $last_sync = $last_sync_row ? $last_sync_row['value'] : null;
+
+            $kelas_map = [
+                'Kelas 1' => 'KL1', 'Kelas 2' => 'KL2', 'Kelas 3' => 'KL3',
+                'VIP'     => 'VIP', 'ICU'     => 'ICU', 'NICU'    => 'NIC',
+                'PICU'    => 'PIC', 'HCU'     => 'HCU',
+            ];
+
+            // 1. Data riil kondisi kamar dari database SIMRS
+            $sql  = "SELECT b.nm_bangsal, k.kd_bangsal, k.kelas,
+                            COUNT(k.kd_kamar)              AS jml,
+                            SUM(IF(k.status='ISI',1,0))    AS isi,
+                            SUM(IF(k.status='KOSONG',1,0)) AS kosong
+                     FROM kamar k
+                     JOIN bangsal b ON k.kd_bangsal = b.kd_bangsal
+                     WHERE k.statusdata = '1'
+                     GROUP BY k.kd_bangsal, k.kelas
+                     ORDER BY b.nm_bangsal, k.kelas";
+            $stmt = $this->db()->pdo()->prepare($sql);
+            $stmt->execute();
+            $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+            // 2. Tarik data ketersediaan yang saat ini tercatat di server BPJS Aplicare
+            $bpjs_beds = [];
+            $bpjs_connected = false;
+            $bpjs_status_msg = 'Kredensial BPJS belum lengkap';
+
+            if (!empty($consid) && !empty($kode_ppk) && !empty($BpjsApiUrl)) {
+                $parsed   = parse_url($BpjsApiUrl);
+                $base_url = $parsed['scheme'] . '://' . $parsed['host'];
+                $url_read = $base_url . '/aplicaresws/rest/bed/read/' . $kode_ppk . '/1/100';
+
+                date_default_timezone_set('UTC');
+                $tStamp = strval(time() - strtotime('1970-01-01 00:00:00'));
+
+                $output = \Systems\Lib\BpjsService::get($url_read, null, $consid, $secretkey, $user_key, $tStamp);
+                $json = is_string($output) ? json_decode($output, true) : (array) $output;
+
+                if (!empty($json['response']['list']) && is_array($json['response']['list'])) {
+                    $bpjs_connected = true;
+                    $bpjs_status_msg = 'Berhasil terhubung ke server BPJS Aplicare';
+                    foreach ($json['response']['list'] as $item) {
+                        $key = ($item['koderuang'] ?? '') . '_' . ($item['kodekelas'] ?? '');
+                        $bpjs_beds[$key] = [
+                            'kapasitas'  => (int) ($item['kapasitas'] ?? 0),
+                            'tersedia'   => (int) ($item['tersedia'] ?? 0),
+                            'lastupdate' => $item['lastupdate'] ?? null,
+                        ];
+                    }
+                } else {
+                    $code = $json['metadata']['code'] ?? '';
+                    $msg  = $json['metadata']['message'] ?? '';
+                    $bpjs_status_msg = ($msg ? $msg : 'Server BPJS merespons tanpa data kamar') . ($code ? " (Code: {$code})" : '');
+                }
+            }
+
+            // 3. Gabungkan data SIMRS dan data tercatat BPJS
+            $beds = [];
+            foreach ($rows as $r) {
+                $kode_bpjs = $kelas_map[$r['kelas']] ?? '-';
+                $key = $r['kd_bangsal'] . '_' . $kode_bpjs;
+                $data_bpjs = $bpjs_beds[$key] ?? null;
+
+                $beds[] = [
+                    'bangsal'         => $r['nm_bangsal'],
+                    'kd_bangsal'      => $r['kd_bangsal'],
+                    'kelas'           => $r['kelas'],
+                    'kode_bpjs'       => $kode_bpjs,
+                    // Data riil SIMRS
+                    'kapasitas'       => (int) $r['jml'],
+                    'terisi'          => (int) $r['isi'],
+                    'tersedia'        => (int) $r['kosong'],
+                    'pct'             => $r['jml'] > 0 ? round(($r['isi'] / $r['jml']) * 100) : 0,
+                    // Data aktif di BPJS
+                    'bpjs_tercatat'   => $data_bpjs ? true : false,
+                    'bpjs_tersedia'   => $data_bpjs ? $data_bpjs['tersedia'] : null,
+                    'bpjs_kapasitas'  => $data_bpjs ? $data_bpjs['kapasitas'] : null,
+                    'bpjs_lastupdate' => $data_bpjs ? $data_bpjs['lastupdate'] : null,
+                ];
+            }
+
+            echo json_encode([
+                'status'          => 'success',
+                'beds'            => $beds,
+                'bpjs_connected'  => $bpjs_connected,
+                'bpjs_status_msg' => $bpjs_status_msg,
+                'last_sync'       => $last_sync,
+                'waktu'           => date('d/m/Y H:i:s'),
+            ]);
+        } catch (\Throwable $e) {
+            echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+        }
+        exit();
+    }
+
+    /**
+     * Endpoint manual: sinkronisasi semua bed ke BPJS Aplicare + simpan riwayat waktu.
+     * URL: POST /admin/rawat_inap/sinkronbedBpjs
+     */
+    public function postSinkronBedBpjs()
+    {
+        header('Content-Type: application/json');
+        try {
+            $consid     = $this->settings->get('settings.BpjsConsID') ?: $this->settings->get('jkn_mobile.BpjsConsID');
+            $secretkey  = $this->settings->get('settings.BpjsSecretKey') ?: $this->settings->get('jkn_mobile.BpjsSecretKey');
+            $user_key   = $this->settings->get('settings.BpjsUserKey') ?: $this->settings->get('jkn_mobile.BpjsUserKey');
+            $kode_ppk   = $this->settings->get('settings.ppk_bpjs');
+            $BpjsApiUrl = $this->settings->get('settings.BpjsApiUrl');
+
+            if (empty($consid) || empty($kode_ppk) || empty($BpjsApiUrl)) {
+                echo json_encode(['status' => 'error', 'message' => 'Konfigurasi API BPJS belum lengkap. Periksa pengaturan konsID, kode PPK, dan URL API BPJS.']);
+                exit();
+            }
+
+            $parsed   = parse_url($BpjsApiUrl);
+            $base_url = $parsed['scheme'] . '://' . $parsed['host'];
+            $url      = $base_url . '/aplicaresws/rest/bed/update/' . $kode_ppk;
+
+            date_default_timezone_set('UTC');
+            $tStamp = strval(time() - strtotime('1970-01-01 00:00:00'));
+
+            $kelas_map = [
+                'Kelas 1' => 'KL1', 'Kelas 2' => 'KL2', 'Kelas 3' => 'KL3',
+                'VIP'     => 'VIP', 'ICU'     => 'ICU', 'NICU'    => 'NIC',
+                'PICU'    => 'PIC', 'HCU'     => 'HCU',
+            ];
+
+            $results = [];
+            $sukses  = 0;
+            $gagal   = 0;
+
+            // Jika petugas mengirim data edit manual dari form modal
+            if (!empty($_POST['beds']) && is_array($_POST['beds'])) {
+                foreach ($_POST['beds'] as $bed) {
+                    $kode_kelas = $bed['kodekelas'] ?? ($kelas_map[$bed['kelas']] ?? null);
+                    if (!$kode_kelas) {
+                        continue;
+                    }
+                    $kapasitas = (int) ($bed['kapasitas'] ?? 0);
+                    $tersedia  = (int) ($bed['tersedia'] ?? 0);
+                    $terisi    = max(0, $kapasitas - $tersedia);
+
+                    $payload = json_encode([
+                        'kodekelas'          => $kode_kelas,
+                        'koderuang'          => $bed['koderuang'],
+                        'namaruang'          => $bed['namaruang'],
+                        'kapasitas'          => $kapasitas,
+                        'tersedia'           => $tersedia,
+                        'tersediapria'       => '0',
+                        'tersediawanita'     => '0',
+                        'tersediapriawanita' => (string) $tersedia,
+                    ]);
+
+                    $resp    = \Systems\Lib\BpjsService::postAplicare($url, $payload, $consid, $secretkey, $user_key, $tStamp);
+                    $respArr = is_string($resp) ? json_decode($resp, true) : (array) $resp;
+                    $ok      = isset($respArr['metadata']['code']) && $respArr['metadata']['code'] == 200;
+
+                    if ($ok) {
+                        $sukses++;
+                    } else {
+                        $gagal++;
+                    }
+
+                    $results[] = [
+                        'bangsal'   => $bed['namaruang'],
+                        'kelas'     => $bed['kelas'] ?? $kode_kelas,
+                        'kapasitas' => $kapasitas,
+                        'terisi'    => $terisi,
+                        'tersedia'  => $tersedia,
+                        'ok'        => $ok,
+                        'pesan'     => $ok ? 'Terkirim' : ($respArr['metadata']['message'] ?? 'Gagal'),
+                    ];
+                }
+            } else {
+                $sql  = "SELECT b.nm_bangsal, k.kd_bangsal, k.kelas,
+                                COUNT(k.kd_kamar)              AS jml,
+                                SUM(IF(k.status='ISI',1,0))    AS isi,
+                                SUM(IF(k.status='KOSONG',1,0)) AS kosong
+                         FROM kamar k
+                         JOIN bangsal b ON k.kd_bangsal = b.kd_bangsal
+                         WHERE k.statusdata = '1'
+                         GROUP BY k.kd_bangsal, k.kelas
+                         ORDER BY b.nm_bangsal, k.kelas";
+                $stmt = $this->db()->pdo()->prepare($sql);
+                $stmt->execute();
+                $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+                foreach ($rows as $bed) {
+                    $kode_kelas = $kelas_map[$bed['kelas']] ?? null;
+                    if (!$kode_kelas) {
+                        continue;
+                    }
+
+                    $payload = json_encode([
+                        'kodekelas'          => $kode_kelas,
+                        'koderuang'          => $bed['kd_bangsal'],
+                        'namaruang'          => $bed['nm_bangsal'],
+                        'kapasitas'          => (int) $bed['jml'],
+                        'tersedia'           => (int) $bed['kosong'],
+                        'tersediapria'       => '0',
+                        'tersediawanita'     => '0',
+                        'tersediapriawanita' => (string) $bed['kosong'],
+                    ]);
+
+                    $resp    = \Systems\Lib\BpjsService::postAplicare($url, $payload, $consid, $secretkey, $user_key, $tStamp);
+                    $respArr = is_string($resp) ? json_decode($resp, true) : (array) $resp;
+                    $ok      = isset($respArr['metadata']['code']) && $respArr['metadata']['code'] == 200;
+
+                    if ($ok) {
+                        $sukses++;
+                    } else {
+                        $gagal++;
+                    }
+
+                    $results[] = [
+                        'bangsal'  => $bed['nm_bangsal'],
+                        'kelas'    => $bed['kelas'],
+                        'kapasitas'=> (int) $bed['jml'],
+                        'terisi'   => (int) $bed['isi'],
+                        'tersedia' => (int) $bed['kosong'],
+                        'ok'       => $ok,
+                        'pesan'    => $ok ? 'Terkirim' : ($respArr['metadata']['message'] ?? 'Gagal'),
+                    ];
+                }
+            }
+
+            if ($sukses > 0) {
+                $now = date('Y-m-d H:i:s');
+                $cek = $this->db('mlite_settings')->where('module', 'rawat_inap')->where('field', 'last_bed_sync')->oneArray();
+                if ($cek) {
+                    $this->db('mlite_settings')->where('module', 'rawat_inap')->where('field', 'last_bed_sync')->save(['value' => $now]);
+                } else {
+                    $this->db('mlite_settings')->save(['module' => 'rawat_inap', 'field' => 'last_bed_sync', 'value' => $now]);
+                }
+            }
+
+            $status = ($gagal === 0 && count($results) > 0) ? 'success' : (($sukses > 0) ? 'partial' : 'error');
+            echo json_encode([
+                'status'  => $status,
+                'sukses'  => $sukses,
+                'gagal'   => $gagal,
+                'total'   => count($results),
+                'waktu'   => date('d/m/Y H:i:s'),
+                'detail'  => $results,
+                'message' => $status === 'success'
+                    ? "✅ Semua {$sukses} data bangsal berhasil dikirim ke BPJS Aplicare."
+                    : ($status === 'partial'
+                        ? "⚠️ {$sukses} berhasil, {$gagal} gagal dikirim ke BPJS Aplicare."
+                        : "❌ Gagal mengirim data ke BPJS Aplicare."),
+            ]);
+        } catch (\Throwable $e) {
+            error_log('[rawat_inap] postSinkronBedBpjs error: ' . $e->getMessage());
+            echo json_encode(['status' => 'error', 'message' => 'Terjadi kesalahan: ' . $e->getMessage()]);
+        }
+        exit();
     }
 
     private function _addHeaderFiles()

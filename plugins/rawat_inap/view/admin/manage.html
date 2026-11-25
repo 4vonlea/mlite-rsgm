@@ -3,7 +3,38 @@
     <div class="panel panel-default">
       <div class="panel-heading rsgm-panel-head">
         <h3 class="panel-title">Kelola Pasien</h3>
+
+        <!-- Modal Ketersediaan Bed BPJS -->
+        <div class="modal fade" id="bedBpjsModal" tabindex="-1" role="dialog" aria-labelledby="bedBpjsModalLabel">
+          <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+              <div class="modal-header" style="background:#1a7abf;color:#fff;border-radius:4px 4px 0 0;">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Tutup" style="color:#fff;opacity:1;">&times;</button>
+                <h4 class="modal-title" id="bedBpjsModalLabel"><i class="fa fa-bed"></i> Ketersediaan Tempat Tidur — BPJS Aplicare</h4>
+              </div>
+              <div class="modal-body" id="bedBpjsModalBody">
+                <div class="text-center" style="padding:30px;">
+                  <i class="fa fa-spinner fa-spin fa-2x"></i><br>Memuat data...
+                </div>
+              </div>
+              <div class="modal-footer">
+                <small id="bedBpjsWaktu" class="text-muted" style="float:left;line-height:34px;"></small>
+                <button type="button" class="btn btn-default" id="btn_tarik_ulang_bpjs" title="Ambil ulang data terbaru dari server BPJS Aplicare dan database SIMRS"><i class="fa fa-cloud-download"></i> Tarik dari BPJS & SIMRS</button>
+                <button type="button" class="btn btn-default" id="btn_reset_bed_simrs" title="Kembalikan angka ke hitungan database SIMRS"><i class="fa fa-undo"></i> Reset Angka SIMRS</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal"><i class="fa fa-times"></i> Tutup</button>
+                <button type="button" class="btn btn-primary" id="btn_sinkron_bed_bpjs">
+                  <i class="fa fa-paper-plane"></i> Kirim ke BPJS Sekarang
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
         <div class="rsgm-filter-bar">
+          {if: $cek_vclaim}
+          <button type="button" class="btn btn-sm btn-info" id="btn_lihat_bed_bpjs" style="margin-right:6px;" title="Lihat & sinkronisasi ketersediaan kamar ke BPJS Aplicare">
+            <i class="fa fa-bed"></i> Ketersediaan Bed BPJS
+          </button>
+          {/if}
           <div class="btn-group rsgm-period-group">
             <span class="btn btn-sm dropdown-toggle rsgm-period-btn" data-toggle="dropdown">
               <i class="fa fa-calendar"></i><span>Periode Rawat</span> <span class="caret"></span>
@@ -87,4 +118,283 @@
          locale: 'id'
        });
    });
+
+   // Cache data awal dari SIMRS & BPJS
+   var rawSimrsBeds = [];
+
+   function loadBedBpjsModal() {
+     $('#bedBpjsModalBody').html('<div class="text-center" style="padding:40px;"><i class="fa fa-spinner fa-spin fa-2x" style="color:#1a7abf;"></i><br><br><strong>Menghubungi server BPJS Aplicare & membaca data kamar SIMRS...</strong><br><small class="text-muted">Mengambil status ketersediaan tempat tidur terkini</small></div>');
+     $('#bedBpjsWaktu').text('');
+     $('#btn_sinkron_bed_bpjs').prop('disabled', false).html('<i class="fa fa-paper-plane"></i> Kirim ke BPJS Sekarang');
+     $('#btn_reset_bed_simrs').show();
+     $('#btn_tarik_ulang_bpjs').show();
+     var url = mlite.url + '/' + mlite.admin + '/rawat_inap/bedStatus?t=' + mlite.token;
+     $.get(url, function(data) {
+       try {
+         var res = (typeof data === 'string') ? JSON.parse(data) : data;
+         rawSimrsBeds = res.beds ? JSON.parse(JSON.stringify(res.beds)) : [];
+         renderBedPreview(res);
+       } catch(e) {
+         $('#bedBpjsModalBody').html('<div class="alert alert-danger"><i class="fa fa-times"></i> Gagal memuat data kamar.</div>');
+       }
+     }).fail(function() {
+       $('#bedBpjsModalBody').html('<div class="alert alert-danger"><i class="fa fa-exclamation-triangle"></i> Gagal menghubungi server SIMRS. Silakan coba lagi.</div>');
+     });
+   }
+
+   // ---- Bed BPJS: buka modal preview dulu ----
+   $(document).on('click', '#btn_lihat_bed_bpjs', function(e) {
+     e.preventDefault();
+     $('#bedBpjsModal').modal('show');
+     loadBedBpjsModal();
+   });
+
+   // ---- Tarik ulang data langsung dari BPJS & SIMRS ----
+   $(document).on('click', '#btn_tarik_ulang_bpjs', function(e) {
+     e.preventDefault();
+     loadBedBpjsModal();
+   });
+
+   // ---- Bed BPJS: kirim ke BPJS (dalam modal) ----
+   $(document).on('click', '#btn_sinkron_bed_bpjs', function(e) {
+     e.preventDefault();
+     var btn = $(this);
+
+     // Kumpulkan data (termasuk nilai manual yang diubah petugas)
+     var beds = [];
+     $('#bedBpjsModalBody table tbody tr').each(function() {
+       var row = $(this);
+       var koderuang = row.data('koderuang');
+       if (koderuang) {
+         beds.push({
+           koderuang: String(koderuang),
+           namaruang: String(row.data('namaruang')),
+           kodekelas: String(row.data('kodekelas')),
+           kelas: String(row.data('kelas')),
+           kapasitas: parseInt(row.find('.bed-kapasitas').val()) || 0,
+           tersedia: parseInt(row.find('.bed-tersedia').val()) || 0
+         });
+       }
+     });
+
+     btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Mengirim...');
+     $('#btn_reset_bed_simrs').hide();
+     $('#btn_tarik_ulang_bpjs').hide();
+     $('#bedBpjsModalBody').html('<div class="text-center" style="padding:40px;"><i class="fa fa-spinner fa-spin fa-2x" style="color:#1a7abf;"></i><br><br><strong>Mengirim ' + beds.length + ' data bangsal ke BPJS Aplicare...</strong><br><small class="text-muted">Proses autentikasi signature & verifikasi respon BPJS</small></div>');
+
+     var url = mlite.url + '/' + mlite.admin + '/rawat_inap/sinkronbedBpjs?t=' + mlite.token;
+     $.post(url, { beds: beds }, function(data) {
+       btn.prop('disabled', false).html('<i class="fa fa-refresh"></i> Kirim Ulang');
+       $('#btn_reset_bed_simrs').show();
+       $('#btn_tarik_ulang_bpjs').show();
+       try {
+         var res = (typeof data === 'string') ? JSON.parse(data) : data;
+         renderBedResult(res);
+         if (res.waktu) $('#bedBpjsWaktu').text('Dikirim: ' + res.waktu);
+       } catch(err) {
+         $('#bedBpjsModalBody').html('<div class="alert alert-danger"><i class="fa fa-times"></i> Gagal memproses respons server.</div>');
+       }
+     }).fail(function() {
+       btn.prop('disabled', false).html('<i class="fa fa-paper-plane"></i> Kirim ke BPJS Sekarang');
+       $('#btn_reset_bed_simrs').show();
+       $('#btn_tarik_ulang_bpjs').show();
+       $('#bedBpjsModalBody').html('<div class="alert alert-danger"><i class="fa fa-exclamation-triangle"></i> Gagal menghubungi server. Periksa koneksi internet atau server BPJS.</div>');
+     });
+   });
+
+   // ---- Live calculate saat petugas edit angka Kapasitas / Tersedia ----
+   $(document).on('input', '.bed-kapasitas, .bed-tersedia', function() {
+     var tr = $(this).closest('tr');
+     var kap = parseInt(tr.find('.bed-kapasitas').val()) || 0;
+     var sedia = parseInt(tr.find('.bed-tersedia').val()) || 0;
+     if (sedia > kap) {
+       sedia = kap;
+       tr.find('.bed-tersedia').val(sedia);
+     }
+     var isi = Math.max(0, kap - sedia);
+     tr.find('.bed-terisi').text(isi);
+
+     var pct = kap > 0 ? Math.round((isi / kap) * 100) : 0;
+     var barCls = pct >= 90 ? 'danger' : (pct >= 70 ? 'warning' : 'success');
+     var pbar = tr.find('.progress-bar');
+     pbar.removeClass('progress-bar-success progress-bar-warning progress-bar-danger')
+         .addClass('progress-bar-' + barCls)
+         .css('width', pct + '%')
+         .text(pct >= 15 ? pct + '%' : '');
+     tr.find('.progress').attr('title', pct + '% terisi');
+
+     updateSummaryMetrics();
+   });
+
+   // ---- Tombol Reset ke hitungan asli SIMRS ----
+   $(document).on('click', '#btn_reset_bed_simrs', function() {
+     if (rawSimrsBeds && rawSimrsBeds.length > 0) {
+       renderBedPreview({ status: 'success', beds: rawSimrsBeds, bpjs_connected: true });
+     }
+   });
+
+   function updateSummaryMetrics() {
+     var total_kap = 0, total_isi = 0, total_kosong = 0;
+     $('#bedBpjsModalBody table tbody tr').each(function() {
+       var kap = parseInt($(this).find('.bed-kapasitas').val()) || 0;
+       var sedia = parseInt($(this).find('.bed-tersedia').val()) || 0;
+       total_kap += kap;
+       total_kosong += sedia;
+       total_isi += Math.max(0, kap - sedia);
+     });
+     $('#sum_total_kap').text(total_kap);
+     $('#sum_total_isi').text(total_isi);
+     $('#sum_total_kosong').text(total_kosong);
+   }
+
+   // Render tabel PREVIEW (dengan status koneksi BPJS & perbandingan jelas)
+   function renderBedPreview(res) {
+     if (res.status !== 'success' || !res.beds || res.beds.length === 0) {
+       $('#bedBpjsModalBody').html('<div class="alert alert-warning"><i class="fa fa-exclamation-triangle"></i> Tidak ada data bed ditemukan di database SIMRS.</div>');
+       return;
+     }
+
+     var waktuAmbil = res.waktu || '';
+     var lastSyncText = res.last_sync ? '<strong style="color:#27ae60;">' + res.last_sync + '</strong>' : '<em style="color:#e67e22;">Belum ada riwayat kirim</em>';
+     $('#bedBpjsWaktu').html('<i class="fa fa-clock-o"></i> Diambil: ' + waktuAmbil + ' | Terakhir Kirim ke BPJS: ' + lastSyncText);
+
+     var total_kap = 0, total_isi = 0, total_kosong = 0;
+     res.beds.forEach(function(b) {
+       total_kap += b.kapasitas;
+       total_isi += b.terisi;
+       total_kosong += b.tersedia;
+     });
+
+     // Status badge koneksi BPJS
+     var bpjsBadge = res.bpjs_connected
+       ? '<span class="label label-success" style="font-size:11px;padding:3px 8px;"><i class="fa fa-check-circle"></i> Server BPJS: Terhubung (Online)</span>'
+       : '<span class="label label-warning" style="font-size:11px;padding:3px 8px;" title="' + (res.bpjs_status_msg || '') + '"><i class="fa fa-exclamation-triangle"></i> Server BPJS: ' + (res.bpjs_status_msg || 'Gunakan Data Lokal') + '</span>';
+
+     var html = '';
+
+     // Info Bar Keterangan untuk Petugas Ranap
+     html += '<div style="background:#f8fbfd;border:1px solid #cbe4f4;border-radius:6px;padding:10px 14px;margin-bottom:12px;">'
+       + '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px;">'
+       + '  <div>' + bpjsBadge + '</div>'
+       + '  <div style="font-size:12px;color:#555;">'
+       + '    <i class="fa fa-history text-primary"></i> <strong>Terakhir Update ke BPJS:</strong> ' + lastSyncText
+       + '  </div>'
+       + '</div>'
+       + '<div style="font-size:12px;color:#444;line-height:1.5;">'
+       + '  <i class="fa fa-info-circle text-info"></i> <strong>Panduan Petugas:</strong> '
+       + '  Kolom <strong>"Data Riil SIMRS"</strong> adalah kondisi kamar aktual di rumah sakit. '
+       + '  Kolom <strong>"Tercatat di BPJS"</strong> adalah data aktif yang sedang tampil di BPJS Mobile JKN. '
+       + '  Petugas dapat langsung mengubah angka pada kolom <strong>"Kirim ke BPJS" (✎)</strong> jika ada bed rusak/renovasi, lalu klik <strong>"Kirim ke BPJS Sekarang"</strong>.'
+       + '</div>'
+       + '</div>';
+
+     // Metric Cards
+     html += '<div class="row" style="margin-bottom:12px;">'
+       + '<div class="col-xs-4 text-center"><div style="background:#fdfdfd;border:1px solid #ddd;border-radius:6px;padding:8px;">'
+       + '<div id="sum_total_kap" style="font-size:22px;font-weight:bold;color:#444;">' + total_kap + '</div>'
+       + '<div style="font-size:11px;color:#777;">Total Kapasitas RS</div></div></div>'
+       + '<div class="col-xs-4 text-center"><div style="background:#fdf2f2;border:1px solid #e74c3c;border-radius:6px;padding:8px;">'
+       + '<div id="sum_total_isi" style="font-size:22px;font-weight:bold;color:#e74c3c;">' + total_isi + '</div>'
+       + '<div style="font-size:11px;color:#777;">Pasien Dirawat (Isi)</div></div></div>'
+       + '<div class="col-xs-4 text-center"><div style="background:#f0faf3;border:1px solid #27ae60;border-radius:6px;padding:8px;">'
+       + '<div id="sum_total_kosong" style="font-size:22px;font-weight:bold;color:#27ae60;">' + total_kosong + '</div>'
+       + '<div style="font-size:11px;color:#777;">Siap Diisi (Tersedia)</div></div></div>'
+       + '</div>';
+
+     // Table Perbandingan
+     html += '<div style="max-height:360px;overflow-y:auto;border:1px solid #d9e2e8;border-radius:4px;">'
+       + '<table class="table table-bordered table-hover table-condensed" style="font-size:12px;margin-bottom:0;">'
+       + '<thead style="background:#1a7abf;color:#fff;position:sticky;top:0;z-index:2;">'
+       + '<tr>'
+       + '  <th rowspan="2" style="vertical-align:middle;">Bangsal / Ruang</th>'
+       + '  <th rowspan="2" style="vertical-align:middle;">Kelas</th>'
+       + '  <th rowspan="2" class="text-center" style="vertical-align:middle;width:60px;">Kode</th>'
+       + '  <th colspan="2" class="text-center" style="background:#1565a0;border-bottom:1px solid #fff;">Data Riil SIMRS</th>'
+       + '  <th class="text-center" style="background:#2e7d32;border-bottom:1px solid #fff;" title="Data yang saat ini aktif tercatat di BPJS Aplicare">Tercatat di BPJS</th>'
+       + '  <th colspan="2" class="text-center" style="background:#e67e22;border-bottom:1px solid #fff;">Kirim ke BPJS (Bisa Diedit ✎)</th>'
+       + '  <th rowspan="2" class="text-center" style="vertical-align:middle;width:95px;">Okupansi</th>'
+       + '</tr>'
+       + '<tr>'
+       + '  <th class="text-center" style="background:#1976d2;width:55px;">Kap</th>'
+       + '  <th class="text-center" style="background:#1976d2;width:55px;">Isi</th>'
+       + '  <th class="text-center" style="background:#388e3c;width:115px;">Kosong / Kap</th>'
+       + '  <th class="text-center" style="background:#f39c12;width:75px;" title="Kapasitas yang akan dikirim">Kapasitas ✎</th>'
+       + '  <th class="text-center" style="background:#f39c12;width:75px;" title="Tersedia yang akan dikirim">Tersedia ✎</th>'
+       + '</tr>'
+       + '</thead><tbody>';
+
+     res.beds.forEach(function(b) {
+       var barCls = b.pct >= 90 ? 'danger' : (b.pct >= 70 ? 'warning' : 'success');
+
+       // Tampilan data BPJS aktif
+       var bpjsCol = '';
+       if (b.bpjs_tercatat) {
+         bpjsCol = '<span class="badge" style="background:#2e7d32;font-size:11px;">' + b.bpjs_tersedia + ' / ' + b.bpjs_kapasitas + '</span>';
+         if (b.bpjs_lastupdate) {
+           bpjsCol += '<br><small class="text-muted" style="font-size:10px;">' + b.bpjs_lastupdate + '</small>';
+         }
+       } else {
+         bpjsCol = '<span class="text-muted" style="font-size:10px;"><i class="fa fa-minus"></i> Belum ada</span>';
+       }
+
+       html += '<tr data-koderuang="' + b.kd_bangsal + '" data-namaruang="' + b.bangsal + '" data-kodekelas="' + b.kode_bpjs + '" data-kelas="' + b.kelas + '">'
+         + '<td style="vertical-align:middle;"><strong>' + b.bangsal + '</strong></td>'
+         + '<td style="vertical-align:middle;">' + b.kelas + '</td>'
+         + '<td class="text-center" style="vertical-align:middle;"><span class="label label-info">' + b.kode_bpjs + '</span></td>'
+         // Data SIMRS
+         + '<td class="text-center" style="vertical-align:middle;background:#f9fbfd;">' + b.kapasitas + '</td>'
+         + '<td class="text-center" style="vertical-align:middle;background:#f9fbfd;"><span class="badge bed-terisi" style="background:#e74c3c;">' + b.terisi + '</span></td>'
+         // Data Aktif di BPJS
+         + '<td class="text-center" style="vertical-align:middle;background:#f4fbf5;">' + bpjsCol + '</td>'
+         // Yang dikirim ke BPJS (Input editable)
+         + '<td class="text-center" style="vertical-align:middle;background:#fffdfa;">'
+         + '  <input type="number" class="form-control input-sm bed-kapasitas text-center" style="height:28px;padding:2px 4px;font-weight:bold;margin:auto;" min="0" value="' + b.kapasitas + '">'
+         + '</td>'
+         + '<td class="text-center" style="vertical-align:middle;background:#fffdfa;">'
+         + '  <input type="number" class="form-control input-sm bed-tersedia text-center" style="height:28px;padding:2px 4px;font-weight:bold;color:#27ae60;border-color:#27ae60;margin:auto;" min="0" max="' + b.kapasitas + '" value="' + b.tersedia + '">'
+         + '</td>'
+         // Okupansi
+         + '<td style="vertical-align:middle;">'
+         + '  <div class="progress" style="margin:0;height:14px;" title="' + b.pct + '% terisi">'
+         + '    <div class="progress-bar progress-bar-' + barCls + '" style="width:' + b.pct + '%;font-size:10px;line-height:14px;">' + (b.pct >= 15 ? b.pct + '%' : '') + '</div>'
+         + '  </div>'
+         + '</td>'
+         + '</tr>';
+     });
+
+     html += '</tbody></table></div>';
+     $('#bedBpjsModalBody').html(html);
+   }
+
+   // Render tabel HASIL (setelah kirim ke BPJS)
+   function renderBedResult(res) {
+     var html = '';
+     if (res.status === 'success') {
+       html += '<div class="alert alert-success" style="margin-bottom:10px;"><i class="fa fa-check-circle fa-lg"></i> <strong>' + (res.message || 'Berhasil dikirim') + '</strong></div>';
+     } else if (res.status === 'partial') {
+       html += '<div class="alert alert-warning" style="margin-bottom:10px;"><i class="fa fa-exclamation-triangle fa-lg"></i> <strong>' + (res.message || 'Sebagian berhasil') + '</strong></div>';
+     } else {
+       html += '<div class="alert alert-danger" style="margin-bottom:10px;"><i class="fa fa-times-circle fa-lg"></i> <strong>' + (res.message || 'Gagal mengirim') + '</strong></div>';
+     }
+     if (res.detail && res.detail.length > 0) {
+       html += '<div style="max-height:360px;overflow-y:auto;border:1px solid #e5e5e5;border-radius:4px;">';
+       html += '<table class="table table-bordered table-condensed" style="font-size:12px;margin-bottom:0;">';
+       html += '<thead style="background:#f5f5f5;position:sticky;top:0;z-index:2;"><tr>'
+         + '<th>Bangsal / Ruang</th><th>Kelas</th><th class="text-center">Kapasitas Dikirim</th><th class="text-center">Tersedia Dikirim</th><th class="text-center">Status Respon BPJS</th></tr></thead><tbody>';
+       res.detail.forEach(function(b) {
+         var badge = b.ok
+           ? '<span class="label label-success"><i class="fa fa-check"></i> ' + b.pesan + '</span>'
+           : '<span class="label label-danger" title="' + b.pesan + '"><i class="fa fa-times"></i> ' + b.pesan + '</span>';
+         html += '<tr' + (b.ok ? '' : ' class="danger"') + '>'
+           + '<td><strong>' + b.bangsal + '</strong></td>'
+           + '<td>' + b.kelas + '</td>'
+           + '<td class="text-center">' + b.kapasitas + '</td>'
+           + '<td class="text-center"><span class="badge" style="background:#27ae60;">' + b.tersedia + '</span></td>'
+           + '<td class="text-center">' + badge + '</td>'
+           + '</tr>';
+       });
+       html += '</tbody></table></div>';
+     }
+     $('#bedBpjsModalBody').html(html);
+   }
 </script>

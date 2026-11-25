@@ -13,6 +13,9 @@
           <th style="white-space: nowrap;">Tgl. Keluar</th>
           <th style="white-space: nowrap;" title="Status Bayar">Bayar</th>
           <th style="white-space: nowrap;" title="Status Pulang">Status</th>
+          {if: $cek_vclaim}
+          <th style="white-space: nowrap;">BPJS Ranap</th>
+          {/if}
         </tr>
       </thead>
       <tbody>
@@ -124,6 +127,29 @@
               <span class="rsgm-badge rsgm-badge-emerald">{?=isset_or($value.stts_pulang)?}</span>
             {/if}
           </td>
+          {if: $cek_vclaim}
+          <td style="white-space:nowrap;">
+            {if: $value.kd_pj == 'BPJ'}
+              {if: $value.no_sep != ''}
+                {if: $value.stts_pulang != '-'}
+                  <a href="#" class="btn btn-xs btn-warning ranap_update_pulang"
+                     data-no_sep="{?=isset_or($value.no_sep)?}"
+                     title="SEP belum diupdate tanggal pulang"
+                  ><i class="fa fa-sign-out"></i> Update Pulang</a>
+                {else}
+                  <span class="label label-success" style="margin-right:2px;"><i class="fa fa-check"></i> SEP Aktif</span>
+                  <a href="#" class="btn btn-xs btn-info ranap_spri"
+                     data-no_peserta="{?=isset_or($value.no_peserta)?}"
+                     data-no_rawat="{?=isset_or($value.no_rawat)?}"
+                     title="Surat Perintah Rawat Inap"
+                  ><i class="fa fa-file-text-o"></i> SPRI</a>
+                {/if}
+              {else}
+                <span class="label label-default" title="Belum ada SEP untuk pasien ini">Belum SEP</span>
+              {/if}
+            {/if}
+          </td>
+          {/if}
         </tr>
         {/loop}
       </tbody>
@@ -149,6 +175,16 @@
         <div class="modal-content">
             ...
         </div>
+    </div>
+</div>
+<div class="modal fade" id="ranap_pulangModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content"></div>
+    </div>
+</div>
+<div class="modal fade" id="ranap_spriModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content"></div>
     </div>
 </div>
 <script type="text/javascript">
@@ -505,5 +541,30 @@
 <script>
   $('body').on('hidden.bs.modal', '.modal', function () {
       $(this).removeData('bs.modal');
+  });
+
+  // ---- BPJS Ranap: Update Tanggal Pulang SEP ----
+  $(document).on('click', '.ranap_update_pulang', function(e) {
+    e.preventDefault();
+    var no_sep = $(this).data('no_sep');
+    var modal = $('#ranap_pulangModal');
+    var modalContent = modal.find('.modal-content');
+    var loadURL = mlite.url + '/' + mlite.admin + '/vclaim/seppulang/' + encodeURIComponent(no_sep) + '?t=' + mlite.token;
+    modalContent.html('<div class="modal-body text-center" style="padding:40px;"><i class="fa fa-spinner fa-spin fa-2x"></i><br>Memuat form...</div>');
+    modal.modal('show');
+    modalContent.load(loadURL);
+  });
+
+  // ---- BPJS Ranap: Surat Perintah Rawat Inap (SPRI) ----
+  $(document).on('click', '.ranap_spri', function(e) {
+    e.preventDefault();
+    var no_peserta = $(this).data('no_peserta');
+    var no_rawat   = String($(this).data('no_rawat')).replace(/\//g, '');
+    var modal = $('#ranap_spriModal');
+    var modalContent = modal.find('.modal-content');
+    var loadURL = mlite.url + '/' + mlite.admin + '/vclaim/spri/' + encodeURIComponent(no_peserta) + '/' + encodeURIComponent(no_rawat) + '?t=' + mlite.token;
+    modalContent.html('<div class="modal-body text-center" style="padding:40px;"><i class="fa fa-spinner fa-spin fa-2x"></i><br>Memuat SPRI...</div>');
+    modal.modal('show');
+    modalContent.load(loadURL);
   });
 </script>
