@@ -1361,7 +1361,8 @@ class Admin extends AdminModule
                             }
                         }
 
-                        // 2. Ambil dari booking_registrasi SIMRS (booking online / antrol)
+                        // 2. Ambil dari booking_registrasi SIMRS (Mobile JKN ke pasien_final, SIMRS Online/Surat Kontrol dipisah ke pasien_simrs_online)
+                        $pasien_simrs_online = [];
                         if ($kd_dokter_rs) {
                             $qBook = $this->db('booking_registrasi')
                                 ->leftJoin('pasien', 'pasien.no_rkm_medis = booking_registrasi.no_rkm_medis')
@@ -1371,6 +1372,7 @@ class Admin extends AdminModule
                                     'no_rawat' => "'-'",
                                     'no_rkm_medis' => 'booking_registrasi.no_rkm_medis',
                                     'nm_pasien' => 'pasien.nm_pasien',
+                                    'no_peserta' => 'pasien.no_peserta',
                                     'png_jawab' => 'penjab.png_jawab',
                                     'jam' => 'booking_registrasi.jam_booking',
                                     'status' => 'booking_registrasi.status',
@@ -1402,8 +1404,8 @@ class Admin extends AdminModule
                                         ->oneArray();
                                 }
 
-                                // Sembunyikan booking lokal SIMRS Online (tanpa referensi Mobile JKN BPJS) & yang sudah Batal
-                                if (!$ref || ($ref['status_kirim'] ?? '') === 'Batal') {
+                                // Lewati jika referensi BPJS sudah berstatus Batal
+                                if ($ref && ($ref['status_kirim'] ?? '') === 'Batal') {
                                     continue;
                                 }
 
@@ -1437,10 +1439,14 @@ class Admin extends AdminModule
                                 $pb['is_pasien_baru'] = $is_baru;
                                 $pb['kd_dokter'] = $kd_dokter_rs;
                                 $pb['kd_poli'] = !empty($list_kd_poli_rs) ? $list_kd_poli_rs[0] : '';
-                                $pasien_final[] = $pb;
 
-                                if (!empty($rm)) $tracked_rms[$rm] = true;
-                                if (!empty($kb)) $tracked_bookings[$kb] = true;
+                                if ($ref) {
+                                    $pasien_final[] = $pb;
+                                    if (!empty($rm)) $tracked_rms[$rm] = true;
+                                    if (!empty($kb)) $tracked_bookings[$kb] = true;
+                                } else {
+                                    $pasien_simrs_online[] = $pb;
+                                }
                             }
                         }
 
@@ -1485,7 +1491,9 @@ class Admin extends AdminModule
                                             $pf['jam_hadir'] = $jam_hadir;
                                             $pf['status'] = $sttsLabel;
                                             $pf['is_hadir'] = true;
-                                            $pf['tipe'] = 'Registrasi Hari H (Hadir)';
+                                            if (($pf['tipe'] ?? '') !== 'Mobile JKN (BPJS)' && strpos($pf['sumber'] ?? '', 'Mobile JKN') === false) {
+                                                $pf['tipe'] = 'Registrasi Hari H (Hadir)';
+                                            }
                                             break;
                                         }
                                     }
@@ -1510,6 +1518,14 @@ class Admin extends AdminModule
                             }
                         }
 
+                        // Filter pasien_simrs_online agar pasien yang sudah hadir di reg_periksa tidak tampil ganda
+                        if (!empty($pasien_simrs_online)) {
+                            $pasien_simrs_online = array_values(array_filter($pasien_simrs_online, function ($so) use ($tracked_rms) {
+                                $srm = $so['no_rkm_medis'] ?? '';
+                                return ($srm === '' || !isset($tracked_rms[$srm]));
+                            }));
+                        }
+
                         $kuota_bpjs = intval($item['kapasitaspasien'] ?? 0);
                         $terdaftar = count($pasien_final);
                         $sisa_kuota = max(0, $kuota_bpjs - $terdaftar);
@@ -1518,6 +1534,7 @@ class Admin extends AdminModule
                         $item['terdaftar'] = $terdaftar;
                         $item['sisa_kuota'] = $sisa_kuota;
                         $item['pasien_list'] = $pasien_final;
+                        $item['pasien_simrs_online'] = $pasien_simrs_online;
                     }
                 } catch (\Throwable $e) {
                     // Fallback jika query lokal gagal, tetap tampilkan jadwal BPJS

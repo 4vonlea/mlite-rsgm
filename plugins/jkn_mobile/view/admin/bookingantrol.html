@@ -84,6 +84,9 @@
         <button type="button" id="btnSyncBatalBpjs" class="btn btn-danger btn-sm" onclick="sinkronStatusBatalBpjs()" title="Cek status pembatalan dari server BPJS (pasien batal sendiri di Mobile JKN) dan otomatis tandai Batal di SIMRS">
           <i class="fa fa-ban"></i> Sinkron Batal BPJS
         </button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="bukaModalBatalBpjsLangsung()" title="Tarik daftar antrean aktif langsung dari Server BPJS atau batalkan antrean menggunakan Kode Booking manual">
+          <i class="fa fa-bolt"></i> Cek Antrean Aktif &amp; Batal BPJS
+        </button>
         <button type="button" class="btn btn-warning btn-sm" onclick="bukaModalSyncMassal()" title="Sinkronkan seluruh Task ID antrean pasien hari ini ke server BPJS Antrean secara otomatis">
           <i class="fa fa-refresh"></i> ⚡ Sinkronkan Semua Task ID Hari Ini
         </button>
@@ -466,6 +469,148 @@
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content" id="modalTaskIDContent" style="border-radius: 6px;">
       <!-- Konten dimuat via AJAX dari taskidinput -->
+    </div>
+  </div>
+</div>
+
+<!-- Modal Cek Antrean Aktif BPJS & Batal Manual via Kode Booking -->
+<div class="modal fade" id="modalBatalBpjsLangsung" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-lg" style="width:92%; max-width:1120px;" role="document">
+    <div class="modal-content" style="border-radius: 8px; overflow: hidden;">
+      <div class="modal-header" style="background: #1e293b; color: #fff; padding: 14px 20px;">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color:#fff; opacity:0.85;">&times;</button>
+        <h4 class="modal-title" style="font-weight: 700;">
+          <i class="fa fa-bolt text-warning"></i> Cek Antrean Aktif Server BPJS &amp; Pembatalan Langsung
+        </h4>
+      </div>
+      <div class="modal-body" style="padding: 18px 20px;">
+        <ul class="nav nav-tabs" role="tablist" style="margin-bottom: 15px;">
+          <li role="presentation" class="active">
+            <a href="#tabAntreanAktifBpjs" aria-controls="tabAntreanAktifBpjs" role="tab" data-toggle="tab" style="font-weight:600;">
+              <i class="fa fa-cloud-download text-primary"></i> Tarik Antrean Aktif / Per Tanggal BPJS
+            </a>
+          </li>
+          <li role="presentation">
+            <a href="#tabBatalManualKb" aria-controls="tabBatalManualKb" role="tab" data-toggle="tab" style="font-weight:600;">
+              <i class="fa fa-keyboard-o text-danger"></i> Batalkan via Kode Booking Manual
+            </a>
+          </li>
+        </ul>
+
+        <div class="tab-content">
+          <!-- TAB 1: Live dari Server BPJS -->
+          <div role="tabpanel" class="tab-pane active" id="tabAntreanAktifBpjs">
+            <div class="well well-sm" style="background:#f8fafc; border:1px solid #e2e8f0; margin-bottom:12px;">
+              <div class="row">
+                <div class="col-md-4 col-sm-6" style="margin-bottom:8px;">
+                  <label style="font-size:12px;"><strong>Sumber Data Server BPJS:</strong></label>
+                  <select id="bpjsLiveMode" class="form-control input-sm" onchange="toggleBpjsLiveDate()">
+                    <option value="aktif">Semua Antrean Aktif / Belum Dilayani (antrean/pendaftaran/aktif)</option>
+                    <option value="tanggal">Antrean Per Tanggal (antrean/pendaftaran/tanggal)</option>
+                  </select>
+                </div>
+                <div class="col-md-3 col-sm-6" id="bpjsLiveDateWrap" style="display:none; margin-bottom:8px;">
+                  <label style="font-size:12px;"><strong>Tanggal Periksa:</strong></label>
+                  <input type="date" id="bpjsLiveTanggal" class="form-control input-sm" value="{?=$tgl_akhir ?: date('Y-m-d')?}">
+                </div>
+                <div class="col-md-3 col-sm-6" style="margin-bottom:8px;">
+                  <label style="font-size:12px;"><strong>Filter Cepat (Dokter / Poli / Nama / KB):</strong></label>
+                  <input type="text" id="bpjsLiveSearch" class="form-control input-sm" placeholder="Ketik nama dokter / pasien / kode booking..." oninput="renderTabelAntreanAktifBpjs()">
+                </div>
+                <div class="col-md-2 col-sm-6" style="padding-top:22px; margin-bottom:8px;">
+                  <button type="button" id="btnLoadBpjsLive" class="btn btn-primary btn-sm btn-block" onclick="muatAntreanAktifBpjs()">
+                    <i class="fa fa-refresh"></i> Muat BPJS
+                  </button>
+                </div>
+              </div>
+              <div class="row" style="margin-top:6px; border-top:1px dashed #cbd5e1; padding-top:10px;">
+                <div class="col-md-8 col-sm-7">
+                  <input type="text" id="bpjsLiveAlasanMassal" class="form-control input-sm" value="Jadwal dokter tutup / dokter berhalangan hadir" placeholder="Alasan pembatalan yang dikirim ke BPJS (misal: Jadwal dokter tutup / cuti)...">
+                </div>
+                <div class="col-md-4 col-sm-5 text-right">
+                  <button type="button" id="btnBatalTerpilihBpjs" class="btn btn-danger btn-sm btn-block" onclick="batalkanTerpilihBpjs()" disabled>
+                    <i class="fa fa-times-circle"></i> Batalkan Terpilih (<span id="countTerpilihBpjs">0</span>)
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div id="bpjsLiveAlertArea"></div>
+
+            <div class="table-responsive" style="max-height: 400px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 4px;">
+              <table class="table table-bordered table-hover table-condensed" style="margin-bottom:0; font-size:12px;">
+                <thead style="background:#f1f5f9;">
+                  <tr>
+                    <th style="width:32px; text-align:center;">
+                      <input type="checkbox" id="chkAllBpjsLive" onclick="togglePilihSemuaBpjs(this)">
+                    </th>
+                    <th style="width:110px;">Tgl &amp; Jam</th>
+                    <th>Pasien</th>
+                    <th>Poli &amp; Dokter</th>
+                    <th style="width:175px;">Kode Booking</th>
+                    <th style="width:125px; text-align:center;">Status BPJS</th>
+                    <th style="width:90px; text-align:center;">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="tbodyAntreanAktifBpjs">
+                  <tr>
+                    <td colspan="7" class="text-center text-muted" style="padding:30px;">
+                      Klik <strong>Muat BPJS</strong> untuk menarik daftar antrean aktif langsung dari Server BPJS (termasuk pasien pada jadwal dokter HFIS yang sudah ditutup).
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- TAB 2: Input Manual Kode Booking -->
+          <div role="tabpanel" class="tab-pane" id="tabBatalManualKb">
+            <div class="alert alert-info" style="font-size:12px; margin-bottom:15px;">
+              <i class="fa fa-info-circle"></i> Gunakan tab ini jika pasien memiliki <strong>Kode Booking</strong> di aplikasi Mobile JKN (misalnya dari screenshot pasien), meskipun datanya tidak tampil di tabel SIMRS atau jadwal dokternya sudah ditutup di HFIS.
+            </div>
+
+            <div class="row">
+              <div class="col-md-8">
+                <div class="form-group">
+                  <label><strong>Kode Booking BPJS:</strong> <span class="text-danger">*</span></label>
+                  <div class="input-group">
+                    <input type="text" id="manual_kodebooking" class="form-control" placeholder="Masukkan kode booking persis seperti di Mobile JKN...">
+                    <span class="input-group-btn">
+                      <button type="button" id="btnCekManualKb" class="btn btn-info" onclick="cekKodeBookingDiBpjs()">
+                        <i class="fa fa-search"></i> Cek di Server BPJS
+                      </button>
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="form-group">
+                  <label><strong>Tanggal Periksa (Opsional):</strong></label>
+                  <input type="date" id="manual_tanggal" class="form-control" value="{?=$tgl_akhir ?: date('Y-m-d')?}">
+                </div>
+              </div>
+            </div>
+
+            <div id="manualKbPreviewArea" style="margin-bottom:12px;"></div>
+
+            <div class="form-group">
+              <label><strong>Alasan Pembatalan:</strong> <span class="text-danger">*</span></label>
+              <textarea id="manual_keterangan" class="form-control" rows="2" placeholder="Contoh: Jadwal dokter tutup / cuti, pasien diarahkan daftar ulang..."></textarea>
+            </div>
+
+            <div id="manualBatalAlertArea"></div>
+
+            <div class="text-right">
+              <button type="button" id="btnSubmitBatalManual" class="btn btn-danger" onclick="submitBatalManualBpjs()">
+                <i class="fa fa-ban"></i> Kirim Pembatalan ke BPJS &amp; SIMRS
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="background: #f8fafc;">
+        <button type="button" class="btn btn-default btn-sm" data-dismiss="modal">Tutup</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1056,6 +1201,398 @@ function sinkronStatusBatalBpjs() {
         '<i class="fa fa-exclamation-triangle"></i> Gagal menghubungi server saat menyinkronkan status batal BPJS.' +
         '</div>'
       );
+    }
+  });
+}
+
+// =========================================================================
+// Modal Cek Antrean Aktif Server BPJS & Batal Manual via Kode Booking
+// =========================================================================
+var bpjsLiveItems = [];
+var bpjsManualPreviewData = null;
+
+function escHtmlAntrol(str) {
+  return String(str === null || str === undefined ? '' : str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function bukaModalBatalBpjsLangsung() {
+  var tglFilter = $('#filter_tgl_akhir').val() || $('#filter_tgl_awal').val() || "{?=date('Y-m-d')?}";
+  $('#bpjsLiveTanggal').val(tglFilter);
+  $('#manual_tanggal').val(tglFilter);
+  $('#bpjsLiveAlertArea').html('');
+  $('#manualBatalAlertArea').html('');
+  $('#manualKbPreviewArea').html('');
+  $('#modalBatalBpjsLangsung').modal('show');
+  muatAntreanAktifBpjs();
+}
+
+function toggleBpjsLiveDate() {
+  var mode = $('#bpjsLiveMode').val();
+  if (mode === 'tanggal') {
+    $('#bpjsLiveDateWrap').show();
+  } else {
+    $('#bpjsLiveDateWrap').hide();
+  }
+}
+
+function muatAntreanAktifBpjs() {
+  var mode = $('#bpjsLiveMode').val() || 'aktif';
+  var tanggal = $('#bpjsLiveTanggal').val() || "{?=date('Y-m-d')?}";
+  var btn = $('#btnLoadBpjsLive');
+
+  btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Memuat...');
+  $('#chkAllBpjsLive').prop('checked', false);
+  $('#bpjsLiveAlertArea').html('');
+  $('#tbodyAntreanAktifBpjs').html(
+    '<tr><td colspan="7" class="text-center text-muted" style="padding:28px;">' +
+    '<i class="fa fa-spinner fa-spin fa-2x text-primary"></i><br><div style="margin-top:8px;">Menarik data antrean langsung dari Server BPJS...</div>' +
+    '</td></tr>'
+  );
+
+  $.ajax({
+    url: "{?=url([ADMIN, 'jkn_mobile', 'antreanaktifbpjs'])?}",
+    method: 'GET',
+    dataType: 'json',
+    data: {
+      mode: mode,
+      tanggal: tanggal
+    },
+    success: function(res) {
+      btn.prop('disabled', false).html('<i class="fa fa-refresh"></i> Muat BPJS');
+      if (res && res.status === 'success') {
+        bpjsLiveItems = res.data || [];
+        var infoMsg = 'Endpoint <code>' + escHtmlAntrol(res.endpoint || '') + '</code> — Respon BPJS: <strong>' + escHtmlAntrol(res.meta_code) + '</strong> (' + escHtmlAntrol(res.meta_message || '') + ') — Ditemukan <strong>' + bpjsLiveItems.length + '</strong> antrean.';
+        var cls = (bpjsLiveItems.length > 0) ? 'alert-info' : 'alert-warning';
+        $('#bpjsLiveAlertArea').html('<div class="alert ' + cls + '" style="padding:8px 12px; font-size:12px; margin-bottom:10px;">' + infoMsg + '</div>');
+        renderTabelAntreanAktifBpjs();
+      } else {
+        bpjsLiveItems = [];
+        $('#bpjsLiveAlertArea').html('<div class="alert alert-danger" style="padding:8px 12px; font-size:12px; margin-bottom:10px;"><i class="fa fa-exclamation-triangle"></i> ' + escHtmlAntrol((res && res.message) ? res.message : 'Gagal mengambil data dari server BPJS.') + '</div>');
+        renderTabelAntreanAktifBpjs();
+      }
+    },
+    error: function() {
+      btn.prop('disabled', false).html('<i class="fa fa-refresh"></i> Muat BPJS');
+      bpjsLiveItems = [];
+      $('#bpjsLiveAlertArea').html('<div class="alert alert-danger" style="padding:8px 12px; font-size:12px; margin-bottom:10px;"><i class="fa fa-plug"></i> Gagal terhubung ke server SIMRS/BPJS.</div>');
+      renderTabelAntreanAktifBpjs();
+    }
+  });
+}
+
+function renderTabelAntreanAktifBpjs() {
+  var q = ($('#bpjsLiveSearch').val() || '').toLowerCase().trim();
+  var tbody = $('#tbodyAntreanAktifBpjs');
+  var html = '';
+  var visibleCount = 0;
+
+  for (var i = 0; i < bpjsLiveItems.length; i++) {
+    var it = bpjsLiveItems[i];
+    if (q !== '') {
+      var hay = (
+        (it.nm_pasien || '') + ' ' +
+        (it.no_rkm_medis || '') + ' ' +
+        (it.nokapst || '') + ' ' +
+        (it.kodebooking || '') + ' ' +
+        (it.nm_dokter || '') + ' ' +
+        (it.kodedokter || '') + ' ' +
+        (it.nm_poli || '') + ' ' +
+        (it.kodepoli || '') + ' ' +
+        (it.tanggalperiksa || '')
+      ).toLowerCase();
+      if (hay.indexOf(q) === -1) {
+        continue;
+      }
+    }
+    visibleCount++;
+
+    var badgeStatus = it.is_batal
+      ? '<span class="label label-danger">Batal</span>'
+      : '<span class="label label-warning">' + escHtmlAntrol(it.status || 'Aktif') + '</span>';
+    var badgeSimrs = it.ada_di_simrs
+      ? '<div style="margin-top:3px;"><span class="label label-success" style="font-size:9px;">Ada di SIMRS</span></div>'
+      : '<div style="margin-top:3px;"><span class="label label-default" style="font-size:9px;">Hanya di BPJS</span></div>';
+
+    var chkHtml = it.is_batal
+      ? '<input type="checkbox" disabled>'
+      : '<input type="checkbox" class="chk-bpjs-live" data-idx="' + i + '" onchange="updateCountTerpilihBpjs()">';
+
+    var aksiHtml = it.is_batal
+      ? '<span class="text-muted" style="font-size:11px;">Sudah Batal</span>'
+      : '<button type="button" class="btn btn-danger btn-xs" onclick="batalkanSatuLiveBpjs(' + i + ', this)"><i class="fa fa-times"></i> Batalkan</button>';
+
+    html += '<tr id="rowBpjsLive_' + i + '">' +
+      '<td style="text-align:center; vertical-align:middle;">' + chkHtml + '</td>' +
+      '<td style="vertical-align:middle;"><strong>' + escHtmlAntrol(it.tanggalperiksa) + '</strong><br><small class="text-muted">' + escHtmlAntrol(it.jampraktek || '-') + '</small></td>' +
+      '<td style="vertical-align:middle;"><strong>' + escHtmlAntrol(it.nm_pasien) + '</strong><br><small class="text-muted">RM: <code>' + escHtmlAntrol(it.no_rkm_medis) + '</code> | BPJS: ' + escHtmlAntrol(it.nokapst) + '</small>' + (it.nohp ? '<br><small class="text-success"><i class="fa fa-phone"></i> ' + escHtmlAntrol(it.nohp) + '</small>' : '') + '</td>' +
+      '<td style="vertical-align:middle;"><strong>' + escHtmlAntrol(it.nm_poli) + '</strong><br><small class="text-muted">' + escHtmlAntrol(it.nm_dokter) + '</small><br><span class="label label-info" style="font-size:9px;">Antrean #' + escHtmlAntrol(it.noantrean) + '</span></td>' +
+      '<td style="vertical-align:middle;"><code>' + escHtmlAntrol(it.kodebooking) + '</code> <i class="fa fa-copy copy-btn" title="Salin" onclick="salinTeks(\'' + escHtmlAntrol(it.kodebooking) + '\')"></i><br><small class="text-muted">' + escHtmlAntrol(it.sumberdata || '') + '</small></td>' +
+      '<td style="text-align:center; vertical-align:middle;">' + badgeStatus + badgeSimrs + '</td>' +
+      '<td style="text-align:center; vertical-align:middle;">' + aksiHtml + '</td>' +
+    '</tr>';
+  }
+
+  if (visibleCount === 0) {
+    html = '<tr><td colspan="7" class="text-center text-muted" style="padding:26px;">Tidak ada antrean yang cocok. Coba ubah mode ke <strong>Antrean Per Tanggal</strong> atau gunakan tab <strong>Batalkan via Kode Booking Manual</strong>.</td></tr>';
+  }
+
+  tbody.html(html);
+  updateCountTerpilihBpjs();
+}
+
+function togglePilihSemuaBpjs(masterEl) {
+  var checked = $(masterEl).is(':checked');
+  $('.chk-bpjs-live').prop('checked', checked);
+  updateCountTerpilihBpjs();
+}
+
+function updateCountTerpilihBpjs() {
+  var cnt = $('.chk-bpjs-live:checked').length;
+  $('#countTerpilihBpjs').text(cnt);
+  $('#btnBatalTerpilihBpjs').prop('disabled', cnt === 0);
+}
+
+function batalkanSatuLiveBpjs(idx, btnEl) {
+  var it = bpjsLiveItems[idx];
+  if (!it) return;
+  var alasan = ($('#bpjsLiveAlasanMassal').val() || '').trim();
+  if (!alasan) {
+    alasan = prompt('Masukkan alasan pembatalan untuk ' + it.nm_pasien + ' (' + it.kodebooking + '):', 'Jadwal dokter tutup / dokter berhalangan hadir');
+    if (!alasan || !alasan.trim()) return;
+  } else {
+    if (!confirm('Batalkan antrean BPJS untuk ' + it.nm_pasien + ' (' + it.kodebooking + ')\nAlasan: ' + alasan + '?')) {
+      return;
+    }
+  }
+
+  var btn = $(btnEl);
+  btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i>');
+
+  $.ajax({
+    url: "{?=url([ADMIN, 'jkn_mobile', 'batalmanualbpjs'])?}",
+    method: 'POST',
+    dataType: 'json',
+    data: {
+      kodebooking: it.kodebooking,
+      keterangan: alasan.trim(),
+      tanggal: it.tanggalperiksa,
+      no_rkm_medis: it.no_rkm_medis,
+      nokapst: it.nokapst,
+      nik: it.nik,
+      nomor_referensi: it.nomorreferensi
+    },
+    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+    success: function(res) {
+      if (res && res.status === 'success') {
+        it.is_batal = true;
+        it.status = 'Batal';
+        $('#bpjsLiveAlertArea').html('<div class="alert alert-success" style="padding:8px 12px; font-size:12px; margin-bottom:10px;"><i class="fa fa-check-circle"></i> ' + escHtmlAntrol(res.message) + '</div>');
+        renderTabelAntreanAktifBpjs();
+      } else {
+        btn.prop('disabled', false).html('<i class="fa fa-times"></i> Batalkan');
+        $('#bpjsLiveAlertArea').html('<div class="alert alert-danger" style="padding:8px 12px; font-size:12px; margin-bottom:10px;"><i class="fa fa-exclamation-triangle"></i> ' + escHtmlAntrol((res && res.message) ? res.message : 'Gagal membatalkan antrean.') + '</div>');
+      }
+    },
+    error: function() {
+      btn.prop('disabled', false).html('<i class="fa fa-times"></i> Batalkan');
+      $('#bpjsLiveAlertArea').html('<div class="alert alert-danger" style="padding:8px 12px; font-size:12px; margin-bottom:10px;"><i class="fa fa-plug"></i> Gagal menghubungi server saat membatalkan antrean.</div>');
+    }
+  });
+}
+
+function batalkanTerpilihBpjs() {
+  var selectedIdxs = [];
+  $('.chk-bpjs-live:checked').each(function() {
+    selectedIdxs.push(parseInt($(this).attr('data-idx'), 10));
+  });
+  if (selectedIdxs.length === 0) return;
+
+  var alasan = ($('#bpjsLiveAlasanMassal').val() || '').trim();
+  if (!alasan) {
+    alert('Silakan isi alasan pembatalan terlebih dahulu.');
+    $('#bpjsLiveAlasanMassal').focus();
+    return;
+  }
+  if (!confirm('Batalkan ' + selectedIdxs.length + ' antrean BPJS terpilih secara massal?\nAlasan: ' + alasan)) {
+    return;
+  }
+
+  var btn = $('#btnBatalTerpilihBpjs');
+  btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Memproses 0/' + selectedIdxs.length + '...');
+
+  var pos = 0;
+  var okCount = 0;
+  var errList = [];
+
+  function nextItem() {
+    if (pos >= selectedIdxs.length) {
+      btn.html('<i class="fa fa-times-circle"></i> Batalkan Terpilih (<span id="countTerpilihBpjs">0</span>)');
+      $('#chkAllBpjsLive').prop('checked', false);
+      renderTabelAntreanAktifBpjs();
+      var summary = 'Pembatalan massal selesai: <strong>' + okCount + ' berhasil</strong>';
+      if (errList.length > 0) {
+        summary += ', <strong>' + errList.length + ' gagal</strong> (' + escHtmlAntrol(errList.join('; ')) + ')';
+      }
+      var alertCls = errList.length > 0 ? 'alert-warning' : 'alert-success';
+      $('#bpjsLiveAlertArea').html('<div class="alert ' + alertCls + '" style="padding:8px 12px; font-size:12px; margin-bottom:10px;"><i class="fa fa-info-circle"></i> ' + summary + '</div>');
+      return;
+    }
+
+    var idx = selectedIdxs[pos];
+    var it = bpjsLiveItems[idx];
+    pos++;
+    btn.html('<i class="fa fa-spinner fa-spin"></i> Memproses ' + pos + '/' + selectedIdxs.length + '...');
+
+    if (!it || it.is_batal) {
+      nextItem();
+      return;
+    }
+
+    $.ajax({
+      url: "{?=url([ADMIN, 'jkn_mobile', 'batalmanualbpjs'])?}",
+      method: 'POST',
+      dataType: 'json',
+      data: {
+        kodebooking: it.kodebooking,
+        keterangan: alasan,
+        tanggal: it.tanggalperiksa,
+        no_rkm_medis: it.no_rkm_medis,
+        nokapst: it.nokapst,
+        nik: it.nik,
+        nomor_referensi: it.nomorreferensi
+      },
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+      success: function(res) {
+        if (res && res.status === 'success') {
+          okCount++;
+          it.is_batal = true;
+          it.status = 'Batal';
+        } else {
+          errList.push(it.kodebooking + ': ' + ((res && res.message) ? res.message : 'Gagal'));
+        }
+        setTimeout(nextItem, 200);
+      },
+      error: function() {
+        errList.push(it.kodebooking + ': Error jaringan');
+        setTimeout(nextItem, 200);
+      }
+    });
+  }
+
+  nextItem();
+}
+
+function cekKodeBookingDiBpjs() {
+  var kb = ($('#manual_kodebooking').val() || '').trim();
+  if (!kb) {
+    alert('Masukkan Kode Booking BPJS terlebih dahulu.');
+    $('#manual_kodebooking').focus();
+    return;
+  }
+
+  var btn = $('#btnCekManualKb');
+  btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Mengecek...');
+  bpjsManualPreviewData = null;
+  $('#manualKbPreviewArea').html('<div class="alert alert-info" style="font-size:12px;"><i class="fa fa-spinner fa-spin"></i> Memeriksa kode booking di server BPJS...</div>');
+
+  $.ajax({
+    url: "{?=url([ADMIN, 'jkn_mobile', 'antreanaktifbpjs'])?}",
+    method: 'GET',
+    dataType: 'json',
+    data: {
+      mode: 'kodebooking',
+      kodebooking: kb
+    },
+    success: function(res) {
+      btn.prop('disabled', false).html('<i class="fa fa-search"></i> Cek di Server BPJS');
+      if (res && res.status === 'success' && res.data && res.data.length > 0) {
+        var d = res.data[0];
+        bpjsManualPreviewData = d;
+        if (d.tanggalperiksa && d.tanggalperiksa !== '-') {
+          $('#manual_tanggal').val(d.tanggalperiksa);
+        }
+        $('#manualKbPreviewArea').html(
+          '<div class="panel panel-info" style="margin-bottom:0;">' +
+            '<div class="panel-heading" style="padding:7px 12px; font-weight:600; font-size:12px;"><i class="fa fa-check-circle"></i> Data Ditemukan di Server BPJS</div>' +
+            '<div class="panel-body" style="padding:10px 12px; font-size:12px;">' +
+              '<div class="row">' +
+                '<div class="col-sm-6"><strong>Pasien:</strong> ' + escHtmlAntrol(d.nm_pasien) + '<br><strong>RM / No. Kartu:</strong> <code>' + escHtmlAntrol(d.no_rkm_medis) + '</code> / ' + escHtmlAntrol(d.nokapst) + '</div>' +
+                '<div class="col-sm-6"><strong>Poli / Dokter:</strong> ' + escHtmlAntrol(d.nm_poli) + ' — ' + escHtmlAntrol(d.nm_dokter) + '<br><strong>Tgl Periksa / Status BPJS:</strong> ' + escHtmlAntrol(d.tanggalperiksa) + ' — <span class="label ' + (d.is_batal ? 'label-danger' : 'label-warning') + '">' + escHtmlAntrol(d.status) + '</span></div>' +
+              '</div>' +
+            '</div>' +
+          '</div>'
+        );
+      } else {
+        var msg = (res && res.meta_message) ? ('Respon BPJS (' + res.meta_code + '): ' + res.meta_message) : ((res && res.message) ? res.message : 'Data tidak ditemukan di server BPJS.');
+        $('#manualKbPreviewArea').html('<div class="alert alert-warning" style="font-size:12px; margin-bottom:0;"><i class="fa fa-exclamation-circle"></i> ' + escHtmlAntrol(msg) + '</div>');
+      }
+    },
+    error: function() {
+      btn.prop('disabled', false).html('<i class="fa fa-search"></i> Cek di Server BPJS');
+      $('#manualKbPreviewArea').html('<div class="alert alert-danger" style="font-size:12px; margin-bottom:0;"><i class="fa fa-plug"></i> Gagal menghubungi server BPJS.</div>');
+    }
+  });
+}
+
+function submitBatalManualBpjs() {
+  var kb = ($('#manual_kodebooking').val() || '').trim();
+  var ket = ($('#manual_keterangan').val() || '').trim();
+  var tgl = ($('#manual_tanggal').val() || '').trim();
+
+  if (!kb) {
+    alert('Kode Booking BPJS wajib diisi!');
+    $('#manual_kodebooking').focus();
+    return;
+  }
+  if (!ket) {
+    alert('Alasan pembatalan wajib diisi!');
+    $('#manual_keterangan').focus();
+    return;
+  }
+
+  var btn = $('#btnSubmitBatalManual');
+  var alertArea = $('#manualBatalAlertArea');
+  btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Mengirim ke BPJS...');
+  alertArea.html('<div class="alert alert-info" style="font-size:12px;"><i class="fa fa-spinner fa-spin"></i> Mengirim pembatalan <code>' + escHtmlAntrol(kb) + '</code> ke server BPJS &amp; SIMRS...</div>');
+
+  var postData = {
+    kodebooking: kb,
+    keterangan: ket,
+    tanggal: tgl
+  };
+  if (bpjsManualPreviewData && bpjsManualPreviewData.kodebooking === kb) {
+    postData.no_rkm_medis = bpjsManualPreviewData.no_rkm_medis || '';
+    postData.nokapst = bpjsManualPreviewData.nokapst || '';
+    postData.nik = bpjsManualPreviewData.nik || '';
+    postData.nomor_referensi = bpjsManualPreviewData.nomorreferensi || '';
+  }
+
+  $.ajax({
+    url: "{?=url([ADMIN, 'jkn_mobile', 'batalmanualbpjs'])?}",
+    method: 'POST',
+    dataType: 'json',
+    data: postData,
+    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+    success: function(res) {
+      btn.prop('disabled', false).html('<i class="fa fa-ban"></i> Kirim Pembatalan ke BPJS &amp; SIMRS');
+      if (res && res.status === 'success') {
+        alertArea.html('<div class="alert alert-success" style="font-size:12px;"><i class="fa fa-check-circle"></i> ' + escHtmlAntrol(res.message) + '</div>');
+        $('#manual_kodebooking').val('');
+        $('#manual_keterangan').val('');
+        $('#manualKbPreviewArea').html('');
+        bpjsManualPreviewData = null;
+      } else {
+        alertArea.html('<div class="alert alert-danger" style="font-size:12px;"><i class="fa fa-exclamation-triangle"></i> ' + escHtmlAntrol((res && res.message) ? res.message : 'Gagal membatalkan antrean di BPJS.') + '</div>');
+      }
+    },
+    error: function() {
+      btn.prop('disabled', false).html('<i class="fa fa-ban"></i> Kirim Pembatalan ke BPJS &amp; SIMRS');
+      alertArea.html('<div class="alert alert-danger" style="font-size:12px;"><i class="fa fa-plug"></i> Gagal menghubungi server SIMRS/BPJS.</div>');
     }
   });
 }

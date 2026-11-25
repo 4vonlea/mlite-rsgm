@@ -644,7 +644,8 @@ class Admin extends AdminModule
                             }
                         }
 
-                        // 2. Ambil dari booking_registrasi SIMRS (booking online / antrol)
+                        // 2. Ambil dari booking_registrasi SIMRS (Mobile JKN ke pasien_final, SIMRS Online/Surat Kontrol dipisah ke pasien_simrs_online)
+                        $pasien_simrs_online = [];
                         if ($kd_dokter_rs) {
                             $qBook = $this->db('booking_registrasi')
                                 ->leftJoin('pasien', 'pasien.no_rkm_medis = booking_registrasi.no_rkm_medis')
@@ -686,8 +687,8 @@ class Admin extends AdminModule
                                         ->oneArray();
                                 }
 
-                                // Sembunyikan booking lokal SIMRS Online (tanpa referensi Mobile JKN BPJS) & yang sudah Batal
-                                if (!$ref || ($ref['status_kirim'] ?? '') === 'Batal') {
+                                // Lewati jika referensi BPJS sudah berstatus Batal
+                                if ($ref && ($ref['status_kirim'] ?? '') === 'Batal') {
                                     continue;
                                 }
 
@@ -725,12 +726,16 @@ class Admin extends AdminModule
                                 $pb['is_pasien_baru'] = $is_baru;
                                 $pb['kd_dokter'] = $kd_dokter_rs;
                                 $pb['kd_poli'] = !empty($list_kd_poli_rs) ? $list_kd_poli_rs[0] : '';
-                                $pasien_final[] = $pb;
 
-                                if (!empty($rm))
-                                    $tracked_rms[$rm] = true;
-                                if (!empty($kb))
-                                    $tracked_bookings[$kb] = true;
+                                if ($ref) {
+                                    $pasien_final[] = $pb;
+                                    if (!empty($rm))
+                                        $tracked_rms[$rm] = true;
+                                    if (!empty($kb))
+                                        $tracked_bookings[$kb] = true;
+                                } else {
+                                    $pasien_simrs_online[] = $pb;
+                                }
                             }
                         }
 
@@ -776,7 +781,9 @@ class Admin extends AdminModule
                                             $pf['jam_hadir'] = $jam_hadir;
                                             $pf['status'] = $sttsLabel;
                                             $pf['is_hadir'] = true;
-                                            $pf['tipe'] = 'Registrasi Hari H (Hadir)';
+                                            if (($pf['tipe'] ?? '') !== 'Mobile JKN (BPJS)' && strpos($pf['sumber'] ?? '', 'Mobile JKN') === false) {
+                                                $pf['tipe'] = 'Registrasi Hari H (Hadir)';
+                                            }
                                             if ((empty($pf['no_peserta']) || $pf['no_peserta'] === '-' || $pf['no_peserta'] === '0') && !empty($pr['no_peserta'])) {
                                                 $pf['no_peserta'] = $pr['no_peserta'];
                                             }
@@ -869,6 +876,14 @@ class Admin extends AdminModule
                             }
                         }
 
+                        // Filter pasien_simrs_online agar pasien yang sudah hadir di reg_periksa tidak tampil ganda
+                        if (!empty($pasien_simrs_online)) {
+                            $pasien_simrs_online = array_values(array_filter($pasien_simrs_online, function ($so) use ($tracked_rms) {
+                                $srm = $so['no_rkm_medis'] ?? '';
+                                return ($srm === '' || !isset($tracked_rms[$srm]));
+                            }));
+                        }
+
                         $kapasitas = intval($item['kapasitaspasien'] ?? 0);
                         $terdaftar = count($pasien_final);
                         $sisa = max(0, $kapasitas - $terdaftar);
@@ -876,6 +891,7 @@ class Admin extends AdminModule
                         $item['terdaftar'] = $terdaftar;
                         $item['sisa_kuota'] = $sisa;
                         $item['pasien_list'] = $pasien_final;
+                        $item['pasien_simrs_online'] = $pasien_simrs_online;
                     }
                 } catch (\Throwable $e) {
                     error_log("postHfis Error: " . $e->getMessage());
@@ -4065,6 +4081,305 @@ class Admin extends AdminModule
             'batal_items' => $batal_items
         ]);
         exit();
+    }
+
+    public function anyAntreanAktifBpjs()
+    {
+        header('Content-Type: application/json');
+        $mode = strtolower(trim($_REQUEST['mode'] ?? 'aktif'));
+        $tanggal = trim($_REQUEST['tanggal'] ?? date('Y-m-d'));
+        $kodebooking = trim($_REQUEST['kodebooking'] ?? '');
+
+        if (empty($this->consid) || empty($this->secretkey) || empty($this->bpjsurl)) {
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Kredensial BPJS Antrean (ConsID / SecretKey / URL) belum diatur di Pengaturan JKN Mobile.'
+            ]);
+            exit();
+        }
+
+        if ($mode === 'kodebooking') {
+            if ($kodebooking === '') {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Kode booking tidak boleh kosong.'
+                ]);
+                exit();
+            }
+            $endpoint = 'antrean/pendaftaran/kodebooking/' . rawurlencode($kodebooking);
+        } elseif ($mode === 'tanggal') {
+            if ($tanggal === '') {
+                $tanggal = date('Y-m-d');
+            }
+            $endpoint = 'antrean/pendaftaran/tanggal/' . rawurlencode($tanggal);
+        } else {
+            $mode = 'aktif';
+            $endpoint = 'antrean/pendaftaran/aktif';
+        }
+
+        try {
+            date_default_timezone_set('UTC');
+            $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+            $key = $this->consid . $this->secretkey . $tStamp;
+            date_default_timezone_set($this->settings->get('settings.timezone') ?: 'Asia/Jakarta');
+
+            $url = $this->bpjsurl . $endpoint;
+            $output = BpjsService::get($url, NULL, $this->consid, $this->secretkey, $this->user_key, $tStamp);
+            $json = json_decode($output, true);
+
+            if (!is_array($json)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'mode' => $mode,
+                    'message' => 'Tidak mendapat respon JSON valid dari server BPJS (' . $endpoint . ').'
+                ]);
+                exit();
+            }
+
+            $metaCode = $json['metadata']['code'] ?? ($json['metaData']['code'] ?? 500);
+            $metaMsg = $json['metadata']['message'] ?? ($json['metaData']['message'] ?? 'Tidak ada pesan dari BPJS');
+            $rawList = [];
+
+            if (!empty($json['response'])) {
+                if (is_string($json['response'])) {
+                    $dec = stringDecrypt($key, $json['response']);
+                    if (!empty($dec)) {
+                        $decomp = \LZCompressor\LZString::decompressFromEncodedURIComponent($dec);
+                        $decoded = json_decode($decomp, true);
+                        if (is_array($decoded)) {
+                            $rawList = isset($decoded['kodebooking']) ? [$decoded] : $decoded;
+                        }
+                    }
+                } elseif (is_array($json['response'])) {
+                    $rawList = isset($json['response']['kodebooking']) ? [$json['response']] : $json['response'];
+                }
+            }
+
+            // Cache mapping dokter & poli agar cepat
+            $dokterMap = [];
+            $dokterRows = $this->db('maping_dokter_dpjpvclaim')->toArray();
+            foreach ($dokterRows as $dr) {
+                $kdBpjs = (string)($dr['kd_dokter_bpjs'] ?? '');
+                if ($kdBpjs !== '') {
+                    $dokterMap[$kdBpjs] = $dr;
+                    $trimKd = ltrim($kdBpjs, '0');
+                    if ($trimKd !== '') {
+                        $dokterMap[$trimKd] = $dr;
+                    }
+                }
+            }
+
+            $poliMap = [];
+            $poliRows = $this->db('maping_poli_bpjs')->toArray();
+            foreach ($poliRows as $pr) {
+                $kdPoliBpjs = (string)($pr['kd_poli_bpjs'] ?? '');
+                if ($kdPoliBpjs !== '') {
+                    $poliMap[$kdPoliBpjs] = $pr;
+                }
+            }
+
+            $items = [];
+            foreach ($rawList as $ba) {
+                if (!is_array($ba)) continue;
+                $kb = trim((string)($ba['kodebooking'] ?? ''));
+                if ($kb === '') continue;
+
+                $norm = trim((string)($ba['norekammedis'] ?? ''));
+                $noka = trim((string)($ba['nokapst'] ?? ''));
+                $nik = trim((string)($ba['nik'] ?? ''));
+                $tglPrk = trim((string)($ba['tanggalperiksa'] ?? ($mode === 'tanggal' ? $tanggal : '')));
+                $nmPasien = '';
+
+                if ($norm !== '' && $norm !== '-') {
+                    $pRow = $this->db('pasien')->where('no_rkm_medis', $norm)->oneArray();
+                    if ($pRow) {
+                        $nmPasien = $pRow['nm_pasien'];
+                        if ($noka === '' && !empty($pRow['no_peserta'])) $noka = $pRow['no_peserta'];
+                        if ($nik === '' && !empty($pRow['no_ktp'])) $nik = $pRow['no_ktp'];
+                    }
+                }
+                if ($nmPasien === '' && $noka !== '') {
+                    $pRow = $this->db('pasien')->where('no_peserta', $noka)->oneArray();
+                    if ($pRow) {
+                        $nmPasien = $pRow['nm_pasien'];
+                        if ($norm === '' || $norm === '-') $norm = $pRow['no_rkm_medis'];
+                    }
+                }
+                if ($nmPasien === '' && $nik !== '') {
+                    $pRow = $this->db('pasien')->where('no_ktp', $nik)->oneArray();
+                    if ($pRow) {
+                        $nmPasien = $pRow['nm_pasien'];
+                        if ($norm === '' || $norm === '-') $norm = $pRow['no_rkm_medis'];
+                    }
+                }
+                if ($nmPasien === '') {
+                    try {
+                        $stg = null;
+                        if ($noka !== '') {
+                            $stg = $this->db('mlite_jkn_pasien_baru')->where('no_peserta', $noka)->oneArray();
+                        }
+                        if (!$stg && $nik !== '') {
+                            $stg = $this->db('mlite_jkn_pasien_baru')->where('no_ktp', $nik)->oneArray();
+                        }
+                        if ($stg && !empty($stg['nm_pasien'])) {
+                            $nmPasien = $stg['nm_pasien'] . ' (Calon Baru)';
+                            if ($norm === '' || $norm === '-') $norm = $stg['temp_norm'] ?? '-';
+                        }
+                    } catch (\Throwable $eStg) {
+                    }
+                }
+                if ($nmPasien === '') {
+                    $nmPasien = !empty($ba['namapasien']) ? $ba['namapasien'] : ('Peserta BPJS (' . ($noka ?: ($norm ?: $kb)) . ')');
+                }
+
+                $kdDokBpjs = (string)($ba['kodedokter'] ?? '');
+                $kdPoliBpjs = (string)($ba['kodepoli'] ?? '');
+                $dMap = $dokterMap[$kdDokBpjs] ?? ($dokterMap[ltrim($kdDokBpjs, '0')] ?? null);
+                $pMap = $poliMap[$kdPoliBpjs] ?? null;
+
+                $nmDokter = !empty($ba['namadokter']) ? $ba['namadokter'] : ($dMap['nm_dokter_bpjs'] ?? ('Dokter #' . ($kdDokBpjs ?: '-')));
+                $nmPoli = !empty($ba['namapoli']) ? $ba['namapoli'] : ($pMap['nm_poli_bpjs'] ?? ($kdPoliBpjs ?: '-'));
+
+                $cekRef = $this->db('mlite_antrian_referensi')->where('kodebooking', $kb)->oneArray();
+                $adaDiSimrs = !empty($cekRef);
+                if (!$adaDiSimrs) {
+                    try {
+                        $cekStgBook = $this->db('mlite_jkn_booking_baru')->where('kodebooking', $kb)->oneArray();
+                        $adaDiSimrs = !empty($cekStgBook);
+                    } catch (\Throwable $eStgB) {
+                    }
+                }
+
+                $statusBpjs = trim((string)($ba['status'] ?? 'Belum dilayani'));
+                $isBatal = $this->_isBpjsStatusBatal($statusBpjs);
+
+                $items[] = [
+                    'kodebooking' => $kb,
+                    'tanggalperiksa' => $tglPrk ?: '-',
+                    'noantrean' => !empty($ba['noantrean']) ? $ba['noantrean'] : (!empty($ba['angkaantrean']) ? (string)$ba['angkaantrean'] : '-'),
+                    'no_rkm_medis' => $norm ?: '-',
+                    'nm_pasien' => $nmPasien,
+                    'nokapst' => $noka ?: '-',
+                    'nik' => $nik ?: '-',
+                    'nohp' => trim((string)($ba['nohp'] ?? '')),
+                    'kodepoli' => $kdPoliBpjs,
+                    'nm_poli' => $nmPoli,
+                    'kodedokter' => $kdDokBpjs,
+                    'nm_dokter' => $nmDokter,
+                    'jampraktek' => trim((string)($ba['jampraktek'] ?? '-')),
+                    'nomorreferensi' => trim((string)($ba['nomorreferensi'] ?? '')),
+                    'jeniskunjungan' => (string)($ba['jeniskunjungan'] ?? '1'),
+                    'sumberdata' => trim((string)($ba['sumberdata'] ?? 'Mobile JKN')),
+                    'status' => $statusBpjs,
+                    'is_batal' => $isBatal,
+                    'ada_di_simrs' => $adaDiSimrs
+                ];
+            }
+
+            echo json_encode([
+                'status' => 'success',
+                'mode' => $mode,
+                'endpoint' => $endpoint,
+                'meta_code' => $metaCode,
+                'meta_message' => $metaMsg,
+                'total' => count($items),
+                'data' => $items
+            ]);
+            exit();
+        } catch (\Throwable $e) {
+            echo json_encode([
+                'status' => 'error',
+                'mode' => $mode,
+                'message' => 'Gagal menghubungi server BPJS: ' . $e->getMessage()
+            ]);
+            exit();
+        }
+    }
+
+    public function postBatalManualBpjs()
+    {
+        header('Content-Type: application/json');
+        $kodebooking = trim($_POST['kodebooking'] ?? '');
+        $keterangan = trim($_POST['keterangan'] ?? '');
+        $tanggal = trim($_POST['tanggal'] ?? '');
+        $norm = trim($_POST['no_rkm_medis'] ?? '');
+        $noka = trim($_POST['nokapst'] ?? '');
+        $nik = trim($_POST['nik'] ?? '');
+        $nomorReferensi = trim($_POST['nomor_referensi'] ?? '');
+
+        if ($kodebooking === '') {
+            echo json_encode(['status' => 'error', 'message' => 'Kode booking BPJS wajib diisi.']);
+            exit();
+        }
+        if ($keterangan === '') {
+            echo json_encode(['status' => 'error', 'message' => 'Alasan pembatalan wajib diisi.']);
+            exit();
+        }
+        if (empty($this->consid) || empty($this->secretkey) || empty($this->bpjsurl)) {
+            echo json_encode(['status' => 'error', 'message' => 'Kredensial BPJS Antrean belum diatur di Pengaturan JKN Mobile.']);
+            exit();
+        }
+
+        try {
+            date_default_timezone_set('UTC');
+            $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+            date_default_timezone_set($this->settings->get('settings.timezone') ?: 'Asia/Jakarta');
+
+            $payload = json_encode([
+                'kodebooking' => $kodebooking,
+                'keterangan' => $keterangan
+            ]);
+            $url = $this->bpjsurl . 'antrean/batal';
+            $output = BpjsService::post($url, $payload, $this->consid, $this->secretkey, $this->user_key, $tStamp);
+            $json = json_decode($output, true);
+
+            $code = $json['metadata']['code'] ?? ($json['metaData']['code'] ?? 500);
+            $msg = $json['metadata']['message'] ?? ($json['metaData']['message'] ?? 'Tidak ada balasan valid dari server BPJS');
+            $alreadyCancelled = (stripos($msg, 'sudah dibatalkan') !== false);
+
+            if ($code == 200 || $alreadyCancelled) {
+                $cekRef = $this->db('mlite_antrian_referensi')->where('kodebooking', $kodebooking)->oneArray();
+                $tglFinal = $tanggal;
+                if ($tglFinal === '' || $tglFinal === '-') {
+                    $tglFinal = !empty($cekRef['tanggal_periksa']) ? $cekRef['tanggal_periksa'] : date('Y-m-d');
+                }
+
+                $ba = [
+                    'kodebooking' => $kodebooking,
+                    'tanggalperiksa' => $tglFinal,
+                    'norekammedis' => $norm,
+                    'nokapst' => $noka,
+                    'nik' => $nik,
+                    'nomorreferensi' => $nomorReferensi,
+                    'keterangan' => $keterangan
+                ];
+                $this->_applyBpjsCancelToSimrs($ba, $tglFinal, $norm);
+
+                echo json_encode([
+                    'status' => 'success',
+                    'bpjs_code' => $code,
+                    'bpjs_message' => $msg,
+                    'message' => $alreadyCancelled
+                        ? "Antrean {$kodebooking} sudah berstatus Batal di BPJS dan berhasil disinkronkan Batal di SIMRS."
+                        : "Antrean {$kodebooking} berhasil dibatalkan di Server BPJS Mobile JKN & SIMRS."
+                ]);
+                exit();
+            }
+
+            echo json_encode([
+                'status' => 'error',
+                'bpjs_code' => $code,
+                'bpjs_message' => $msg,
+                'message' => "BPJS menolak pembatalan (Kode {$code}): {$msg}"
+            ]);
+            exit();
+        } catch (\Throwable $e) {
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Terjadi kesalahan saat menghubungi BPJS: ' . $e->getMessage()
+            ]);
+            exit();
+        }
     }
 
     protected function _syncAntreanBpjsDate($tanggal)

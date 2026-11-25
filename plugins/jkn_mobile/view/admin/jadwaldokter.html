@@ -448,9 +448,10 @@ function bukaModalPasien(index) {
 
   var namaDokter = item.namadokter || '-';
   var list = item.pasien_list || [];
+  var simrsOnlineList = item.pasien_simrs_online || [];
 
   var countJkn = 0;
-  var countOnline = 0;
+  var countOnline = simrsOnlineList.length;
   var countLoket = 0;
   var countHadir = 0;
   var countBelum = 0;
@@ -479,6 +480,10 @@ function bukaModalPasien(index) {
     }
   });
 
+  var simrsBadgeHtml = simrsOnlineList.length > 0
+    ? '<span class="label label-info" style="font-size:11px; padding:4px 8px;"><i class="fa fa-calendar-check-o"></i> SIMRS Online / Kontrol: ' + simrsOnlineList.length + '</span> '
+    : '';
+
   $('#modalSummaryStrip').html(
     '<div style="background:#f8fafc; padding:12px 14px; border-radius:6px; border:1px solid #e2e8f0; border-left:4px solid #0284c7; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">' +
       '<div>' +
@@ -488,6 +493,7 @@ function bukaModalPasien(index) {
       '<div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">' +
         '<span class="label label-success" style="font-size:11px; padding:4px 8px;"><i class="fa fa-check-circle"></i> Sudah Hadir: ' + countHadir + '</span> ' +
         '<span class="label label-warning" style="font-size:11px; padding:4px 8px; background:#f59e0b;"><i class="fa fa-clock-o"></i> Belum Datang: ' + countBelum + '</span> ' +
+        simrsBadgeHtml +
         '<a href="' + URL_PASIEN_BARU_STAGING + '" target="_blank" class="label label-danger" style="font-size:11px; padding:4px 8px; text-decoration:none;" title="Buka menu Calon Pasien Baru Mobile JKN (Staging)"><i class="fa fa-user-plus"></i> Pasien Baru: ' + countBaru + '</a> ' +
         '<span class="label label-primary" style="font-size:11px; padding:4px 8px;"><i class="fa fa-user"></i> Pasien Lama: ' + countLama + '</span> ' +
         '<span class="label label-default" style="font-size:11px; padding:4px 8px;">Kapasitas: ' + (item.kapasitaspasien || 0) + '</span> ' +
@@ -604,7 +610,71 @@ function bukaModalPasien(index) {
 
     html += '</tbody></table></div>';
   } else {
-    html = '<div class="alert alert-info text-center" style="margin-bottom:0;"><i class="fa fa-info-circle"></i> Belum ada pasien yang mendaftar atau booking untuk dokter ini pada tanggal ' + currentTanggal + '.</div>';
+    html = '<div class="alert alert-info text-center" style="margin-bottom:0;"><i class="fa fa-info-circle"></i> Belum ada pasien Mobile JKN atau registrasi hari H untuk dokter ini pada tanggal ' + currentTanggal + '.</div>';
+  }
+
+  // Tabel Terpisah: Booking SIMRS Online / Surat Kontrol (tanpa kode booking Mobile JKN)
+  if (simrsOnlineList.length > 0) {
+    html += '<div style="margin-top:18px; border:1px solid #bae6fd; border-radius:6px; overflow:hidden;">' +
+      '<div style="background:#f0f9ff; padding:10px 14px; border-bottom:1px solid #bae6fd; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">' +
+        '<div style="font-weight:700; color:#0369a1; font-size:13px;">' +
+          '<i class="fa fa-calendar-check-o"></i> Daftar Booking SIMRS Online / Surat Kontrol (' + simrsOnlineList.length + ' Pasien)' +
+        '</div>' +
+        '<small class="text-muted">Booking internal dari Surat Kontrol / SIMRS (tidak memiliki kode booking Mobile JKN BPJS)</small>' +
+      '</div>' +
+      '<div class="table-responsive">' +
+        '<table id="tabelPasienSimrsOnlineModal" class="table table-bordered table-striped table-hover" style="font-size:12px; margin-bottom:0;">' +
+          '<thead>' +
+            '<tr style="background:#f8fafc;">' +
+              '<th style="width:3%; text-align:center;">No</th>' +
+              '<th style="width:10%; text-align:center;">No. Reg Booking</th>' +
+              '<th style="width:14%;">Nama Dokter</th>' +
+              '<th style="width:9%;">No. RM / Tipe</th>' +
+              '<th style="width:14%;">Nama Pasien</th>' +
+              '<th style="width:11%;">No. Kartu BPJS</th>' +
+              '<th style="width:10%;">Penjamin / Bayar</th>' +
+              '<th style="width:8%; text-align:center;">Jam Input</th>' +
+              '<th style="width:8%; text-align:center;">Jalur Daftar</th>' +
+              '<th style="width:8%; text-align:center;">Kehadiran</th>' +
+              '<th style="width:5%; text-align:center;">Aksi</th>' +
+            '</tr>' +
+          '</thead>' +
+          '<tbody>';
+
+    simrsOnlineList.forEach(function(p, idx) {
+      var displayJam = p.jam || '-';
+      var badgePasienBaru = p.is_pasien_baru
+        ? '<span class="label label-danger" style="font-size:9px; padding:1px 5px; font-weight:bold;"><i class="fa fa-star"></i> BARU</span>'
+        : '<span class="label label-primary" style="font-size:9px; padding:1px 5px;">LAMA</span>';
+      var badgeTipe = '<span class="label label-info" style="font-size:10px;"><i class="fa fa-calendar-check-o"></i> SIMRS Online</span>';
+      var badgeKehadiran = p.is_hadir
+        ? '<span class="label label-success" style="font-size:11px; padding:3px 6px;"><i class="fa fa-check-circle"></i> Hadir</span>'
+        : '<span class="label label-warning" style="font-size:11px; padding:3px 6px; background:#f59e0b;"><i class="fa fa-clock-o"></i> Belum Datang</span>';
+      var safeNm = (p.nm_pasien || '').replace(/'/g, "\\'");
+      var btnAksi = '<div class="btn-group" role="group" style="white-space:nowrap;">' +
+        '<button type="button" class="btn btn-xs btn-success" onclick="tandaiPasienHadir(\'\', \'' + (p.no_rkm_medis || '') + '\', \'' + (p.no_reg || '1') + '\', \'' + (item.kd_dokter_rs || '') + '\', \'' + (item.kd_poli_rs || currentPoliCode) + '\', ' + index + ', this)" title="Tandai pasien ini hadir / daftarkan ke poli"><i class="fa fa-check"></i> Hadir</button>' +
+        '<button type="button" class="btn btn-xs btn-danger" onclick="konfirmasiBatalModalPasien(\'\', \'' + (p.no_rkm_medis || '') + '\', \'' + safeNm + '\', ' + index + ')" title="Batalkan booking SIMRS Online ini"><i class="fa fa-times"></i> Batal</button>' +
+      '</div>';
+      var docName = p.nm_dokter || namaDokter || '-';
+      var nokaPasien = p.no_peserta || '-';
+      if (!nokaPasien || nokaPasien === '0') nokaPasien = '-';
+
+      html += '<tr>' +
+        '<td style="text-align:center;">' + (idx + 1) + '</td>' +
+        '<td style="text-align:center;"><b>' + (p.no_reg || '-') + '</b></td>' +
+        '<td><div style="font-weight:600; color:#1e293b;">' + docName + '</div></td>' +
+        '<td><code>' + (p.no_rkm_medis || '-') + '</code><div style="margin-top:2px;">' + badgePasienBaru + '</div></td>' +
+        '<td><b>' + (p.nm_pasien || '-') + '</b></td>' +
+        '<td><span style="font-family:monospace; font-size:11.5px; color:#0369a1; font-weight:600;">' + nokaPasien + '</span></td>' +
+        '<td>' + (p.png_jawab || '-') + '</td>' +
+        '<td style="text-align:center;">' + displayJam + '</td>' +
+        '<td style="text-align:center;">' + badgeTipe + '</td>' +
+        '<td style="text-align:center;">' + badgeKehadiran + '</td>' +
+        '<td style="text-align:center;">' + btnAksi + '</td>' +
+      '</tr>';
+    });
+
+    html += '</tbody></table></div></div>';
   }
 
   $('#modalPasienContent').html(html);
