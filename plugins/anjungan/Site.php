@@ -4297,6 +4297,43 @@ class Site extends SiteModule
           }
         }
 
+        // Normalisasi parameter sesuai Spesifikasi Resmi BPJS Kesehatan VClaim v2.0
+        $tujuanKunj = trim((string)($_POST['tujuanKunj'] ?? '0'));
+        if ($tujuanKunj === '') {
+            $tujuanKunj = '0';
+        }
+
+        $flagProcedure = trim((string)($_POST['flagProcedure'] ?? ''));
+        $kdPenunjang = trim((string)($_POST['kdPenunjang'] ?? ''));
+        $assesmentPel = trim((string)($_POST['assesmentPel'] ?? ''));
+
+        if ($tujuanKunj === '0') {
+            $flagProcedure = '';
+            $kdPenunjang = '';
+            $assesmentPel = '';
+        } elseif ($tujuanKunj === '1') {
+            if ($flagProcedure !== '0' && $flagProcedure !== '1') {
+                $flagProcedure = '0';
+            }
+            $assesmentPel = '';
+        } elseif ($tujuanKunj === '2') {
+            $flagProcedure = '';
+            $kdPenunjang = '';
+            if (!in_array($assesmentPel, ['1', '2', '3', '4', '5'], true)) {
+                $assesmentPel = '5';
+            }
+        } else {
+            $tujuanKunj = '0';
+            $flagProcedure = '';
+            $kdPenunjang = '';
+            $assesmentPel = '';
+        }
+
+        $_POST['tujuanKunj'] = $tujuanKunj;
+        $_POST['flagProcedure'] = $flagProcedure;
+        $_POST['kdPenunjang'] = $kdPenunjang;
+        $_POST['assesmentPel'] = $assesmentPel;
+
         $data = [
             'request' => [
                't_sep' => [

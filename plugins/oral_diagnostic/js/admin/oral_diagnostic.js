@@ -2,6 +2,8 @@
 $("#form_rincian").hide();
 $("#form_soap").hide();
 $("#form_sep").hide();
+$("#form_kontrol").hide();
+$("#surat_kontrol").hide();
 $("#form_berkasdigital").hide();
 $("#histori_pelayanan").hide();
 $("#notif").hide();
@@ -855,6 +857,143 @@ $("#form_rincian").on("click", "#selesai", function(event){
   $("#rincian").hide();
   $("#soap").hide();
   $("#berkasdigital").hide();
+  $("#form_kontrol").hide();
+  $("#surat_kontrol").hide();
+});
+
+// tombol batal kontrol diklik
+$("#form_kontrol").on("click", "#selesai_kontrol", function(event){
+  bersih();
+  $("#form_berkasdigital").hide();
+  $("#form_rincian").hide();
+  $("#form_soap").hide();
+  $("#form").show();
+  $("#display").show();
+  $("#rincian").hide();
+  $("#soap").hide();
+  $("#berkasdigital").hide();
+  $("#form_kontrol").hide();
+  $("#surat_kontrol").hide();
+});
+
+// ketika tombol hapus kontrol ditekan
+$("#surat_kontrol").on("click",".hapus_kontrol", function(event){
+  var baseURL = mlite.url + '/' + mlite.admin;
+  event.preventDefault();
+  var url = baseURL + '/oral_diagnostic/hapuskontrol?t=' + mlite.token;
+  var no_reg = $(this).attr("data-no_reg");
+  var tanggal_periksa = $(this).attr("data-tanggal_periksa");
+  var kd_dokter = $(this).attr("data-kd_dokter");
+  var kd_poli = $(this).attr("data-kd_poli");
+  var no_rkm_medis = $('input:text[name=no_rkm_medis]').val();
+  bootbox.confirm("Apakah Anda yakin ingin menghapus data ini?", function(result){
+    if (result){
+      $.post(url, {
+        no_reg: no_reg,
+        tanggal_periksa: tanggal_periksa,
+        kd_dokter: kd_dokter,
+        kd_poli: kd_poli,
+        no_rkm_medis: no_rkm_medis
+      }, function(data) {
+        var url = baseURL + '/oral_diagnostic/kontrol?t=' + mlite.token;
+        $.post(url, {no_rkm_medis : no_rkm_medis}, function(data) {
+          $("#surat_kontrol").html(data).show();
+        });
+        $('#notif').html("<div class=\"alert alert-danger alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
+        "Data surat kontrol telah dihapus!"+
+        "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
+        "</div>").show();
+      });
+    }
+  });
+});
+
+// ketika tombol simpan kontrol diklik
+$("#form_kontrol").on("click", "#simpan_kontrol", function(event){
+  var baseURL = mlite.url + '/' + mlite.admin;
+  event.preventDefault();
+
+  var no_rkm_medis    = $('input:text[name=no_rkm_medis]').val();
+  var no_rawat        = $('input:text[name=no_rawat]').val();
+  var tanggal_rujukan = $('input:text[name=tanggal_rujukan]').val();
+  var tanggal_datang  = $('input:text[name=tanggal_datang]').val();
+  var diagnosa        = $('input:text[name=diagnosa]').val();
+  var terapi          = $('input:text[name=terapi]').val();
+  var alasan1         = $('textarea[name=alasan1]').val();
+  var rtl1            = $('textarea[name=rtl1]').val();
+  var poli            = $('select[name=poli]').val();
+  var dokter          = $('select[name=dokter]').val();
+
+  var url = baseURL + '/oral_diagnostic/savekontrol?t=' + mlite.token;
+  $.post(url, {
+    no_rawat: no_rawat,
+    no_rkm_medis: no_rkm_medis,
+    tanggal_rujukan: tanggal_rujukan,
+    tanggal_datang: tanggal_datang,
+    diagnosa: diagnosa,
+    terapi: terapi,
+    alasan1: alasan1,
+    rtl1: rtl1,
+    dokter: dokter,
+    poli: poli
+  }, function(data) {
+    $("#display").hide();
+    var url = baseURL + '/oral_diagnostic/kontrol?t=' + mlite.token;
+    $.post(url, {no_rkm_medis: no_rkm_medis}, function(data) {
+      $("#surat_kontrol").html(data).show();
+    });
+    $('input:text[name=nm_perawatan]').val("");
+    $('input:text[name=biaya]').val("");
+    $('input:text[name=diagnosa_klinis]').val("");
+    $('#notif').html("<div class=\"alert alert-success alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
+    "Data surat kontrol telah disimpan! Pasien dapat mendaftar mandiri via Mobile JKN."+
+    "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
+    "</div>").show();
+  });
+});
+
+// ketika tombol simpan kontrol bpjs diklik
+$("#form_kontrol").on("click", "#simpan_kontrol_bpjs", function(event){
+  var baseURL = mlite.url + '/' + mlite.admin;
+  event.preventDefault();
+
+  var no_rkm_medis    = $('input:text[name=no_rkm_medis]').val();
+  var no_rawat        = $('input:text[name=no_rawat]').val();
+  var tanggal_rujukan = $('input:text[name=tanggal_rujukan]').val();
+  var tanggal_datang  = $('input:text[name=tanggal_datang]').val();
+  var diagnosa        = $('input:text[name=diagnosa]').val();
+  var terapi          = $('input:text[name=terapi]').val();
+  var alasan1         = $('textarea[name=alasan1]').val();
+  var rtl1            = $('textarea[name=rtl1]').val();
+  var poli            = $('select[name=poli]').val();
+  var dokter          = $('select[name=dokter]').val();
+
+  var url = baseURL + '/oral_diagnostic/savekontrolbpjs?t=' + mlite.token;
+  $.post(url, {
+    no_rawat: no_rawat,
+    no_rkm_medis: no_rkm_medis,
+    tanggal_rujukan: tanggal_rujukan,
+    tanggal_datang: tanggal_datang,
+    diagnosa: diagnosa,
+    terapi: terapi,
+    alasan1: alasan1,
+    rtl1: rtl1,
+    dokter: dokter,
+    poli: poli
+  }, function(data) {
+    $("#display").hide();
+    var url = baseURL + '/oral_diagnostic/kontrol?t=' + mlite.token;
+    $.post(url, {no_rkm_medis: no_rkm_medis}, function(data) {
+      $("#surat_kontrol").html(data).show();
+    });
+    $('input:text[name=nm_perawatan]').val("");
+    $('input:text[name=biaya]').val("");
+    $('input:text[name=diagnosa_klinis]').val("");
+    $('#notif').html("<div class=\"alert alert-success alert-dismissible fade in\" role=\"alert\" style=\"border-radius:0px;margin-top:-15px;\">"+
+    "Data surat kontrol BPJS telah disimpan!"+
+    "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
+    "</div>").show();
+  });
 });
 
 // tombol batal diklik
@@ -868,6 +1007,8 @@ $("#form_soap").on("click", "#selesai_soap", function(event){
   $("#rincian").hide();
   $("#soap").hide();
   $("#berkasdigital").hide();
+  $("#form_kontrol").hide();
+  $("#surat_kontrol").hide();
 });
 
 // ketika baris data diklik
