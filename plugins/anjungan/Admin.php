@@ -552,8 +552,8 @@ class Admin extends AdminModule
 
         break;
         case "panggil_geriatri":
-          $display = 'Panggil Geriatri';
-          $loketRaw = $this->settings->get('anjungan.antrian_geriatri') ?: '1';
+          $display = 'Panggil Pasien Prioritas';
+          $loketRaw = $this->settings->get('anjungan.antrian_geriatri') ?: $this->settings->get('anjungan.antrian_loket') ?: '1';
           $loket = array_values(array_filter(array_map('trim', explode(",", $loketRaw))));
           if (empty($loket)) $loket = ['1'];
           $activeLoket = isset($_GET['loket']) && intval($_GET['loket']) > 0 ? intval($_GET['loket']) : (isset($loket[0]) ? intval($loket[0]) : 1);

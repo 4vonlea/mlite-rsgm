@@ -394,6 +394,9 @@
       .ticket-number-cs {
         color: #3b82f6;
       }
+      .ticket-number-geriatri {
+        color: #ef4444;
+      }
       .btn-ambil-tiket {
         padding: 18px 20px;
         font-size: 20px;
@@ -703,7 +706,7 @@
   <!-- MODAL 1: AMBIL NOMOR ANTRIAN LOKET & CS                  -->
   <!-- ======================================================== -->
   <div class="modal fade" id="modalAntrian" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static">
-    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+    <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 1100px; width: 95%;">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title"><i class="fa fa-ticket text-success"></i> Ambil Nomor Antrian</h5>
@@ -725,11 +728,11 @@
           <div id="antrianSelectionArea" class="row">
             
             <!-- OPTION A: LOKET PENDAFTARAN -->
-            <div class="col-md-6 mb-3">
+            <div class="col-md-4 mb-3">
               <div class="ticket-box">
                 <div class="ticket-box-header">
                   <h4 class="ticket-box-title text-success"><i class="fa fa-id-card"></i> LOKET PENDAFTARAN</h4>
-                  <div class="ticket-box-subtitle">Pendaftaran Pasien Baru & Lama {if: $display_card2 == 'loket2'}<span class="badge badge-success" style="font-size:11px;background:#10b981;margin-left:4px;">Dilayani di Loket 1 & Loket 2</span>{/if}</div>
+                  <div class="ticket-box-subtitle">PASIEN BARU BPJS & UMUM {if: $display_card2 == 'loket2'}<span class="badge badge-success" style="font-size:10px;background:#10b981;margin-left:4px;">Loket 1 & 2</span>{/if}</div>
                 </div>
                 <div>
                   <div class="text-muted small">Nomor Antrian Berikutnya:</div>
@@ -743,7 +746,7 @@
             </div>
 
             <!-- OPTION B: CUSTOMER SERVICE -->
-            <div class="col-md-6 mb-3">
+            <div class="col-md-4 mb-3">
               <div class="ticket-box">
                 <div class="ticket-box-header">
                   <h4 class="ticket-box-title text-primary"><i class="fa fa-comments"></i> LAYANAN PELANGGAN</h4>
@@ -756,6 +759,24 @@
                 </div>
                 <button type="button" class="btn btn-primary btn-block btn-ambil-tiket" id="btnAmbilCS" onclick="prosesAmbilTiket('CS')">
                   <i class="fa fa-print"></i> AMBIL TIKET CS
+                </button>
+              </div>
+            </div>
+
+            <!-- OPTION G: PASIEN PRIORITAS -->
+            <div class="col-md-4 mb-3">
+              <div class="ticket-box" style="border-color: rgba(239, 68, 68, 0.45); background: rgba(30, 41, 59, 0.95);">
+                <div class="ticket-box-header">
+                  <h4 class="ticket-box-title text-danger"><i class="fa fa-wheelchair"></i> PASIEN PRIORITAS</h4>
+                  <div class="ticket-box-subtitle">(GERIATRI, IBU HAMIL, DIFABEL)</div>
+                </div>
+                <div>
+                  <div class="text-muted small">Nomor Antrian Berikutnya:</div>
+                  <div class="ticket-number-display ticket-number-geriatri" id="previewGeriatriNo">G-...</div>
+                  <div class="small text-muted mb-3"><i class="fa fa-calendar"></i> {$tanggal}</div>
+                </div>
+                <button type="button" class="btn btn-danger btn-block btn-ambil-tiket" id="btnAmbilGeriatri" onclick="prosesAmbilTiket('Geriatri')" style="background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); border: none;">
+                  <i class="fa fa-print"></i> AMBIL TIKET PRIORITAS
                 </button>
               </div>
             </div>
@@ -1106,6 +1127,24 @@
           }
         }
       });
+
+      // Fetch Next Geriatri Number
+      $.ajax({
+        url: '{?=url("anjungan/ajax")?}?show=tampilgeriatri',
+        type: 'GET',
+        cache: false,
+        success: function(html) {
+          var match = html.match(/G-\d+/);
+          if (match && match[0]) {
+            $('#previewGeriatriNo').text(match[0]);
+          } else {
+            var matchOld = html.match(/G\d+/);
+            if (matchOld && matchOld[0]) {
+              $('#previewGeriatriNo').text(matchOld[0]);
+            }
+          }
+        }
+      });
     }
 
     // Refresh immediately when modal opens and then every 3 seconds
@@ -1126,13 +1165,13 @@
     });
 
     // ==========================================
-    // ACTION: AMBIL TIKET LOKET / CS
+    // ACTION: AMBIL TIKET LOKET / CS / GERIATRI
     // ==========================================
     function prosesAmbilTiket(type) {
-      var btn = (type === 'Loket') ? $('#btnAmbilLoket') : $('#btnAmbilCS');
+      var btn = (type === 'Loket') ? $('#btnAmbilLoket') : ((type === 'Geriatri') ? $('#btnAmbilGeriatri') : $('#btnAmbilCS'));
       btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Mencetak...');
 
-      var ajaxUrl = '{?=url("anjungan/ajax")?}?show=' + (type === 'Loket' ? 'simpanloket' : 'simpancs');
+      var ajaxUrl = '{?=url("anjungan/ajax")?}?show=' + (type === 'Loket' ? 'simpanloket' : (type === 'Geriatri' ? 'simpangeriatri' : 'simpancs'));
 
       $.ajax({
         url: ajaxUrl,
@@ -1188,11 +1227,11 @@
         '<div class="header">' + (data.nama_instansi || '{$settings.nama_instansi}') + '</div>' +
         '<div class="sub">' + (data.alamat || '{$settings.alamat}') + '<br>Telp: ' + (data.nomor_telepon || '{$settings.nomor_telepon}') + '</div>' +
         '<div class="divider"></div>' +
-        '<div class="label-antrian">' + (data.nama_loket || (data.type === 'Loket' ? 'LOKET PENDAFTARAN' : 'LAYANAN PELANGGAN')) + '</div>' +
+        '<div class="label-antrian">' + (data.nama_loket || (data.type === 'Loket' ? 'LOKET PENDAFTARAN' : (data.type === 'Geriatri' ? 'PASIEN PRIORITAS' : 'LAYANAN PELANGGAN'))) + '</div>' +
         '<div class="number">' + data.formatted + '</div>' +
         '<div class="sub">Tgl: ' + data.tanggal + ' ' + data.jam + '</div>' +
         '<div class="divider"></div>' +
-        '<div class="footer">Silakan menunggu nomor Anda dipanggil.<br>Terima kasih atas kunjungannya.</div>' +
+        '<div class="footer">' + (data.type === 'Geriatri' ? 'Silakan menunggu di Ruang Tunggu Prioritas.<br>Nomor Anda akan dipanggil di Loket Pendaftaran.<br>Terima kasih atas kunjungannya.' : 'Silakan menunggu nomor Anda dipanggil.<br>Terima kasih atas kunjungannya.') + '</div>' +
         '</body></html>';
 
       var iframe = document.getElementById('printThermalFrame');

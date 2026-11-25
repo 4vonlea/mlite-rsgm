@@ -20,11 +20,12 @@
         padding: 10px;
       }
       .panel-body .no_antrian {
-        font-size:80px;
-        font-weight:bold;
-        padding:0px;
-        margin: 0;
+        font-size: 52px;
+        font-weight: bold;
+        padding: 0px;
+        margin: 5px 0;
         letter-spacing: 2px;
+        line-height: 1.1;
       }
       .panel-footer .no_loket {
         font-size:32px;
@@ -79,17 +80,17 @@
 </head>
 <body>
   <div class="container-fluid">
-    <div class="row" style="margin-top: 15px;">
+    <div class="row" style="margin-top: 15px; display: flex; flex-wrap: wrap;">
       <!-- KARTU NAVIGASI LOKET PERTAMA -->
-      <div class="col-sm-6 col-md-3">
-        <a href="{?=url(ADMIN.'/anjungan/pemanggil/?show=panggil_loket&loket=' . $loket_first)?}">
-          <div class="panel {if: $show == 'panggil_loket' && $active_loket == $loket_first}panel-primary{else}panel-default{/if} text-center" style="box-shadow: 0 4px 10px rgba(0,0,0,0.15); border-radius: 8px;">
-            <div class="panel-heading">
-              <div class="no_loket" style="color: inherit; font-size: 16px; font-weight: bold;">
+      <div class="col-xs-12 col-sm-6 col-md-3" style="display: flex; margin-bottom: 15px;">
+        <a href="{?=url(ADMIN.'/anjungan/pemanggil/?show=panggil_loket&loket=' . $loket_first)?}" style="text-decoration: none; display: flex; flex: 1; width: 100%;">
+          <div class="panel {if: $show == 'panggil_loket' && $active_loket == $loket_first}panel-primary{else}panel-default{/if} text-center" style="box-shadow: 0 4px 10px rgba(0,0,0,0.15); border-radius: 8px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; margin-bottom: 0; width: 100%;">
+            <div class="panel-heading" style="padding: 10px 15px;">
+              <div class="no_loket" style="color: inherit; font-size: 15px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                 <i class="fa fa-id-card"></i> {$nama_loket_1}
               </div>
             </div>
-            <div class="panel-body text-primary">
+            <div class="panel-body text-primary" style="padding: 15px 10px;">
               <div class="no_antrian">A-<span class="antrian_Loket1">{?=isset_or($init_loket1_no, '000')?}</span></div>
             </div>
           </div>
@@ -97,29 +98,29 @@
       </div>
 
       <!-- KARTU NAVIGASI LOKET KEDUA / CUSTOMER SERVICE -->
-      <div class="col-sm-6 col-md-3">
+      <div class="col-xs-12 col-sm-6 col-md-3" style="display: flex; margin-bottom: 15px;">
         {if: $display_card2 == 'loket2'}
-        <a href="{?=url(ADMIN.'/anjungan/pemanggil/?show=panggil_loket&loket=' . $loket_second)?}">
-          <div class="panel {if: $show == 'panggil_loket' && $active_loket == $loket_second}panel-primary{else}panel-default{/if} text-center" style="box-shadow: 0 4px 10px rgba(0,0,0,0.15); border-radius: 8px;">
-            <div class="panel-heading">
-              <div class="no_loket" style="color: inherit; font-size: 16px; font-weight: bold;">
+        <a href="{?=url(ADMIN.'/anjungan/pemanggil/?show=panggil_loket&loket=' . $loket_second)?}" style="text-decoration: none; display: flex; flex: 1; width: 100%;">
+          <div class="panel {if: $show == 'panggil_loket' && $active_loket == $loket_second}panel-primary{else}panel-default{/if} text-center" style="box-shadow: 0 4px 10px rgba(0,0,0,0.15); border-radius: 8px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; margin-bottom: 0; width: 100%;">
+            <div class="panel-heading" style="padding: 10px 15px;">
+              <div class="no_loket" style="color: inherit; font-size: 15px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                 <i class="fa fa-id-card"></i> {$nama_loket_2}
               </div>
             </div>
-            <div class="panel-body text-primary">
+            <div class="panel-body text-primary" style="padding: 15px 10px;">
               <div class="no_antrian">A-<span class="antrian_Loket2">{?=isset_or($init_card2_no, '000')?}</span></div>
             </div>
           </div>
         </a>
         {else}
-        <a href="{?=url(ADMIN.'/anjungan/pemanggil/?show=panggil_cs&loket=1')?}">
-          <div class="panel {if: $show == 'panggil_cs'}panel-success{else}panel-default{/if} text-center" style="box-shadow: 0 4px 10px rgba(0,0,0,0.15); border-radius: 8px;">
-            <div class="panel-heading">
-              <div class="no_loket" style="color: inherit; font-size: 16px; font-weight: bold;">
+        <a href="{?=url(ADMIN.'/anjungan/pemanggil/?show=panggil_cs&loket=1')?}" style="text-decoration: none; display: flex; flex: 1; width: 100%;">
+          <div class="panel {if: $show == 'panggil_cs'}panel-success{else}panel-default{/if} text-center" style="box-shadow: 0 4px 10px rgba(0,0,0,0.15); border-radius: 8px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; margin-bottom: 0; width: 100%;">
+            <div class="panel-heading" style="padding: 10px 15px;">
+              <div class="no_loket" style="color: inherit; font-size: 15px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                 <i class="fa fa-headphones"></i> CUSTOMER SERVICE
               </div>
             </div>
-            <div class="panel-body text-success">
+            <div class="panel-body text-success" style="padding: 15px 10px;">
               <div class="no_antrian">B-<span class="antrian_CS">{?=isset_or($init_card2_no, '000')?}</span></div>
             </div>
           </div>
@@ -127,16 +128,16 @@
         {/if}
       </div>
 
-      <!-- KARTU NAVIGASI GERIATRI (PRIORITAS) -->
-      <div class="col-sm-6 col-md-3">
-        <a href="{?=url(ADMIN.'/anjungan/pemanggil/?show=panggil_geriatri&loket=1')?>">
-          <div class="panel {if: $show == 'panggil_geriatri'}panel-danger{else}panel-default{/if} text-center" style="box-shadow: 0 4px 10px rgba(0,0,0,0.15); border-radius: 8px;">
-            <div class="panel-heading">
-              <div class="no_loket" style="color: inherit; font-size: 16px; font-weight: bold;">
-                <i class="fa fa-wheelchair"></i> GERIATRI (PRIORITAS)
+      <!-- KARTU NAVIGASI PASIEN PRIORITAS -->
+      <div class="col-xs-12 col-sm-6 col-md-3" style="display: flex; margin-bottom: 15px;">
+        <a href="{?=url(ADMIN.'/anjungan/pemanggil/?show=panggil_geriatri&loket=' . $active_loket)?}" style="text-decoration: none; display: flex; flex: 1; width: 100%;">
+          <div class="panel {if: $show == 'panggil_geriatri'}panel-danger{else}panel-default{/if} text-center" style="box-shadow: 0 4px 10px rgba(0,0,0,0.15); border-radius: 8px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; margin-bottom: 0; width: 100%;">
+            <div class="panel-heading" style="padding: 10px 15px;">
+              <div class="no_loket" style="color: inherit; font-size: 15px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                <i class="fa fa-wheelchair"></i> PASIEN PRIORITAS
               </div>
             </div>
-            <div class="panel-body text-danger">
+            <div class="panel-body text-danger" style="padding: 15px 10px;">
               <div class="no_antrian">G-<span class="antrian_Geriatri">{?=isset_or($init_geriatri_no, '000')?}</span></div>
             </div>
           </div>
@@ -144,21 +145,22 @@
       </div>
 
       <!-- KARTU NAVIGASI POLIKLINIK (BARU) -->
-      <div class="col-sm-6 col-md-3">
-        <a href="{?=url(ADMIN.'/anjungan/pemanggil/?show=panggil_poli')?}">
-          <div class="panel {if: $show == 'panggil_poli'}panel-info{else}panel-default{/if} text-center" style="box-shadow: 0 4px 10px rgba(0,0,0,0.15); border-radius: 8px;">
-            <div class="panel-heading">
-              <div class="no_loket" style="color: inherit; font-size: 16px; font-weight: bold;">
+      <div class="col-xs-12 col-sm-6 col-md-3" style="display: flex; margin-bottom: 15px;">
+        <a href="{?=url(ADMIN.'/anjungan/pemanggil/?show=panggil_poli')?}" style="text-decoration: none; display: flex; flex: 1; width: 100%;">
+          <div class="panel {if: $show == 'panggil_poli'}panel-info{else}panel-default{/if} text-center" style="box-shadow: 0 4px 10px rgba(0,0,0,0.15); border-radius: 8px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; margin-bottom: 0; width: 100%;">
+            <div class="panel-heading" style="padding: 10px 15px;">
+              <div class="no_loket" style="color: inherit; font-size: 15px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                 <i class="fa fa-stethoscope"></i> POLIKLINIK
               </div>
             </div>
-            <div class="panel-body text-info">
+            <div class="panel-body text-info" style="padding: 15px 10px;">
               <div class="no_antrian">P-<span class="antrian_Poli">{?=isset_or($init_poli_no, '000')?}</span></div>
             </div>
           </div>
         </a>  
       </div>
     </div>
+    <div class="clearfix"></div>
 
     <!-- ============================================== -->
     <!-- PANEL KHUSUS PEMANGGIL POLIKLINIK (PETUGAS POLI) -->
@@ -430,11 +432,22 @@
     {else}
     <!-- BAR PEMILIH LOKET DINAMIS & FLEKSIBEL -->
     <div style="background: #ffffff; padding: 12px 20px; border-radius: 10px; margin-top: 15px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
-      <div style="font-size: 15px; font-weight: bold; color: #1e293b; display: flex; align-items: center; gap: 8px;">
-        <i class="fa fa-desktop text-primary"></i> Meja / {?=isset_or($sebutan_loket, 'Loket')?} Aktif Petugas:
-        <span class="label label-primary" style="font-size: 14px; padding: 5px 12px; border-radius: 12px;">
-          {?=strtoupper(isset_or($sebutan_loket, 'Loket'))?} {$active_loket}
-        </span>
+      <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+        <div style="font-size: 15px; font-weight: bold; color: #1e293b; display: flex; align-items: center; gap: 8px;">
+          <i class="fa fa-desktop text-primary"></i> Meja / {?=isset_or($sebutan_loket, 'Loket')?} Aktif Petugas:
+          <span class="label label-primary" style="font-size: 14px; padding: 5px 12px; border-radius: 12px;">
+            {?=strtoupper(isset_or($sebutan_loket, 'Loket'))?} {$active_loket}
+          </span>
+        </div>
+        <!-- SWITCH MODE PANGGIL CEPAT: LOKET REGULER (A) vs PASIEN PRIORITAS (G) -->
+        <div class="btn-group btn-group-sm" role="group">
+          <a href="{?=url(ADMIN.'/anjungan/pemanggil/?show=panggil_loket&loket=' . $active_loket)?}" class="btn {if: $show == 'panggil_loket'}btn-primary active{else}btn-default{/if}" style="font-weight: bold;">
+            <i class="fa fa-id-card"></i> Loket Reguler (A)
+          </a>
+          <a href="{?=url(ADMIN.'/anjungan/pemanggil/?show=panggil_geriatri&loket=' . $active_loket)?}" class="btn {if: $show == 'panggil_geriatri'}btn-danger active{else}btn-default{/if}" style="font-weight: bold;">
+            <i class="fa fa-wheelchair"></i> Pasien Prioritas (G)
+          </a>
+        </div>
       </div>
       <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
         <span class="text-muted" style="font-size: 12px; font-weight: 600;">Pilih {?=isset_or($sebutan_loket, 'Loket')?}:</span>
@@ -462,21 +475,21 @@
           {loop: $loket}
           <div class="{if: $active_loket != $value}hidden{/if}">
             <div class="col-xs-12 col-sm-8 col-sm-offset-2 col-md-6 col-md-offset-3 mb-5">
-              <div class="panel panel-info" style="color:#000; box-shadow: 0 6px 20px rgba(0,0,0,0.2); border-radius: 12px; overflow: hidden;">
+              <div class="panel {if: $panggil_loket == 'panggil_geriatri'}panel-danger{else}panel-info{/if}" style="color:#000; box-shadow: 0 6px 20px rgba(0,0,0,0.2); border-radius: 12px; overflow: hidden;">
                 <div class="panel-heading" style="font-size:22px; font-weight:bold;">
                   {if: $panggil_loket == 'panggil_cs'}
                     <i class="fa fa-headphones"></i> CUSTOMER SERVICE (B) - {?=strtoupper(isset_or($sebutan_loket, 'Loket'))?} {$value}
                   {elseif: $panggil_loket == 'panggil_apotek'}
                     <i class="fa fa-medkit"></i> FARMASI & APOTEK (F) - {?=strtoupper(isset_or($sebutan_loket, 'Loket'))?} {$value}
                   {elseif: $panggil_loket == 'panggil_geriatri'}
-                    <i class="fa fa-wheelchair"></i> GERIATRI (PRIORITAS) - G - {?=strtoupper(isset_or($sebutan_loket, 'Loket'))?} {$value}
+                    <i class="fa fa-wheelchair"></i> PASIEN PRIORITAS (G) - {?=strtoupper(isset_or($sebutan_loket, 'Loket'))?} {$value}
                   {else}
                     <i class="fa fa-id-card"></i> {?=strtoupper(isset_or($sebutan_loket, 'Loket'))?} {$value} (ANTRIAN A)
                   {/if}
                 </div>
                 <div class="panel-body" style="padding: 25px 15px;">
                   <div style="font-size: 15px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Nomor Antrian Sedang Dipanggil</div>
-                  <h5 class="panel-title" id="display_num_{$value}" style="font-size:86px; font-weight:900; color:#0284c7; margin: 15px 0; letter-spacing: 2px;">
+                  <h5 class="panel-title" id="display_num_{$value}" style="font-size:86px; font-weight:900; color:{if: $panggil_loket == 'panggil_geriatri'}#dc2626{else}#0284c7{/if}; margin: 15px 0; letter-spacing: 2px;">
                     {?=strtoupper($namaloket)?}-{?=sprintf("%03d", intval(isset_or($antrian, 0)))?}
                   </h5>
                 </div>
@@ -489,7 +502,7 @@
                   <!-- Action Buttons with clear separation: PANGGIL MANUAL vs AMBIL BERIKUTNYA / SKIP -->
                   <div style="margin-bottom: 15px;">
                     <!-- TOMBOL 1 (UTAMA): PANGGIL SUARA MANUAL KE TV & SPEAKER -->
-                    <button type="button" id="btnCall_{$value}" class="btn btn-success btn-lg btn-block" style="font-size: 20px; font-weight: bold; padding: 14px; box-shadow: 0 4px 12px rgba(40,167,69,0.35); border-radius: 8px;" onclick="panggilSuara('{?=str_replace('panggil_','',isset_or($panggil_loket,'loket'))?}', '{$value}')">
+                    <button type="button" id="btnCall_{$value}" class="btn {if: $panggil_loket == 'panggil_geriatri'}btn-danger{else}btn-success{/if} btn-lg btn-block" style="font-size: 20px; font-weight: bold; padding: 14px; box-shadow: 0 4px 12px rgba(40,167,69,0.35); border-radius: 8px;" onclick="panggilSuara('{?=str_replace('panggil_','',isset_or($panggil_loket,'loket'))?}', '{$value}')">
                       <i class="fa fa-bullhorn"></i> PANGGIL SUARA ({?=strtoupper(isset_or($sebutan_loket, 'Loket'))?} {$value})
                     </button>
 
@@ -692,6 +705,7 @@
       </ul>
     </div>
   </div>
+  </div><!-- /.container-fluid -->
 
   <footer>
     Powered by <a href="https://mlite.id/" target="_blank">mLITE</a>

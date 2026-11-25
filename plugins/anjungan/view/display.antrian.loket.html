@@ -450,10 +450,10 @@
         </div>
       </article>
 
-      <!-- Card 3: Pasien Geriatri (Prioritas) -->
+      <!-- Card 3: Pasien Prioritas (Geriatri, Bumil, Difabel) -->
       <article class="queue-card card-geriatri" id="cardGeriatri">
         <div class="card-header-bar">
-          <span class="card-title-text"><i class="fa fa-wheelchair"></i> Pasien Geriatri <small style="font-size:11px; font-weight:400; opacity:0.7;">(Prioritas)</small></span>
+          <span class="card-title-text"><i class="fa fa-wheelchair"></i> Pasien Prioritas <small style="font-size:11px; font-weight:400; opacity:0.7;">(Geriatri, Bumil, Difabel)</small></span>
           <span class="card-badge-letter">G</span>
         </div>
         <div class="card-body-number">
@@ -763,8 +763,8 @@
         noSpoken = (penyebutan === 'terbilang') ? ('F ' + rawNo) : ('F' + formattedNo);
       } else if (typeLower === 'geriatri') {
         letter = 'G';
-        destination = 'Loket Geriatri';
-        noSpoken = (penyebutan === 'terbilang') ? ('G ' + rawNo) : ('G' + formattedNo);
+        destination = sebutan + ' ' + (numLoket > 0 ? numLoket : 1);
+        noSpoken = (penyebutan === 'terbilang') ? ('G ' + rawNo) : ('G ' + formattedNo);
       }
 
       var formatK = data.suara_format || '{?=isset_or($suara_panggilan_format, "di")?}';

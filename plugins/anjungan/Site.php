@@ -2690,23 +2690,17 @@ class Site extends SiteModule
           echo '<br>';
         break;
         case "tampilgeriatri":
-          $result = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'Geriatri')->where('postdate', date('Y-m-d'))->desc('start_time')->oneArray();
-          $noantrian = '';
-          if($result) {
-            $noantrian = $result['noantrian'];
-          }
-        	if($noantrian > 0) {
-        		$next_antrian = $noantrian + 1;
-        	} else {
-        		$next_antrian = 1;
-        	}
-        	echo '<div id="nomernya" align="center">';
-          echo '<h1 class="display-1" style="color:#e74c3c;">';
+          $result = $this->db('mlite_antrian_loket')->select('MAX(CAST(noantrian AS UNSIGNED)) as max_no')->where('type', 'Geriatri')->where('postdate', date('Y-m-d'))->oneArray();
+          $noantrian = !empty($result['max_no']) ? intval($result['max_no']) : 0;
+          $next_antrian = $noantrian + 1;
+          echo '<div id="nomernya" align="center">';
+          echo '<h1 class="display-1" style="color:#e74c3c;font-weight:bold;">';
           echo 'G-'.sprintf("%03d", $next_antrian);
           echo '</h1>';
-          echo '['.date('Y-m-d').']';
+          echo '<span class="badge badge-light" style="font-size:16px;">['.date('d-m-Y').']</span>';
           echo '</div>';
           echo '<br>';
+          exit();
         break;
         case "printapotek":
           $result = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'Apotek')->where('postdate', date('Y-m-d'))->desc('start_time')->oneArray();
@@ -2813,10 +2807,16 @@ class Site extends SiteModule
           echo '<br>';
         break;
         case "simpangeriatri":
+          $result = $this->db('mlite_antrian_loket')->select('MAX(CAST(noantrian AS UNSIGNED)) as max_no')->where('type', 'Geriatri')->where('postdate', date('Y-m-d'))->oneArray();
+          $last_no = !empty($result['max_no']) ? intval($result['max_no']) : 0;
+          $next_antrian = $last_no + 1;
+          if (isset($_REQUEST['noantrian']) && intval($_REQUEST['noantrian']) > 0) {
+            $next_antrian = intval($_REQUEST['noantrian']);
+          }
           $this->db('mlite_antrian_loket')
             ->save([
               'type' => 'Geriatri',
-              'noantrian' => $_GET['noantrian'],
+              'noantrian' => $next_antrian,
               'no_rkm_medis' => $_POST['no_rkm_medis'] ?? '',
               'postdate' => date('Y-m-d'),
               'start_time' => date('H:i:s'),
@@ -2826,11 +2826,13 @@ class Site extends SiteModule
           header('Content-Type: application/json');
           echo json_encode([
             'status' => 'ok',
-            'noantrian' => $_GET['noantrian'],
-            'formatted' => 'G-' . sprintf("%03d", intval($_GET['noantrian'])),
+            'noantrian' => $next_antrian,
+            'formatted' => 'G-' . sprintf("%03d", $next_antrian),
             'type' => 'Geriatri',
-            'nama_loket' => 'Loket Geriatri (Prioritas)',
+            'nama_loket' => 'PASIEN PRIORITAS',
             'nama_instansi' => $this->settings->get('settings.nama_instansi'),
+            'alamat' => $this->settings->get('settings.alamat'),
+            'nomor_telepon' => $this->settings->get('settings.nomor_telepon'),
             'tanggal' => date('d-m-Y'),
             'jam' => date('H:i:s')
           ]);
@@ -3664,7 +3666,7 @@ class Site extends SiteModule
         case "geriatri-panggil-status":
           $set_nomor  = $this->settings->get('anjungan.panggil_geriatri_nomor') ?: '';
           $set_nama   = $this->settings->get('anjungan.panggil_geriatri_nama') ?: '';
-          $set_unit   = $this->settings->get('anjungan.panggil_geriatri_unit') ?: 'Loket Geriatri';
+          $set_unit   = $this->settings->get('anjungan.panggil_geriatri_unit') ?: ($this->settings->get('anjungan.sebutan_loket') ?: 'Loket');
           $set_lokasi = $this->settings->get('anjungan.panggil_geriatri_lokasi') ?: '';
           $set_waktu  = intval($this->settings->get('anjungan.panggil_geriatri_waktu') ?: 0);
           
