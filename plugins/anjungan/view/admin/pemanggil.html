@@ -127,20 +127,20 @@
         {/if}
       </div>
 
-      <!-- KARTU NAVIGASI FARMASI & APOTEK -->
+      <!-- KARTU NAVIGASI GERIATRI (PRIORITAS) -->
       <div class="col-sm-6 col-md-3">
-        <a href="{?=url(ADMIN.'/anjungan/pemanggil/?show=panggil_apotek&loket=1')?}">
-          <div class="panel {if: $show == 'panggil_apotek'}panel-warning{else}panel-default{/if} text-center" style="box-shadow: 0 4px 10px rgba(0,0,0,0.15); border-radius: 8px;">
+        <a href="{?=url(ADMIN.'/anjungan/pemanggil/?show=panggil_geriatri&loket=1')?>">
+          <div class="panel {if: $show == 'panggil_geriatri'}panel-danger{else}panel-default{/if} text-center" style="box-shadow: 0 4px 10px rgba(0,0,0,0.15); border-radius: 8px;">
             <div class="panel-heading">
               <div class="no_loket" style="color: inherit; font-size: 16px; font-weight: bold;">
-                <i class="fa fa-medkit"></i> FARMASI & APOTEK
+                <i class="fa fa-wheelchair"></i> GERIATRI (PRIORITAS)
               </div>
             </div>
-            <div class="panel-body text-warning">
-              <div class="no_antrian">F-<span class="antrian_Apotek">{?=isset_or($init_apotek_no, '000')?}</span></div>
+            <div class="panel-body text-danger">
+              <div class="no_antrian">G-<span class="antrian_Geriatri">{?=isset_or($init_geriatri_no, '000')?}</span></div>
             </div>
           </div>
-        </a>  
+        </a>
       </div>
 
       <!-- KARTU NAVIGASI POLIKLINIK (BARU) -->
@@ -468,6 +468,8 @@
                     <i class="fa fa-headphones"></i> CUSTOMER SERVICE (B) - {?=strtoupper(isset_or($sebutan_loket, 'Loket'))?} {$value}
                   {elseif: $panggil_loket == 'panggil_apotek'}
                     <i class="fa fa-medkit"></i> FARMASI & APOTEK (F) - {?=strtoupper(isset_or($sebutan_loket, 'Loket'))?} {$value}
+                  {elseif: $panggil_loket == 'panggil_geriatri'}
+                    <i class="fa fa-wheelchair"></i> GERIATRI (PRIORITAS) - G - {?=strtoupper(isset_or($sebutan_loket, 'Loket'))?} {$value}
                   {else}
                     <i class="fa fa-id-card"></i> {?=strtoupper(isset_or($sebutan_loket, 'Loket'))?} {$value} (ANTRIAN A)
                   {/if}
@@ -569,7 +571,7 @@
     </label>
     <div class="input-group input-group-lg" style="margin-bottom: 10px;">
         <span class="input-group-addon" style="font-weight: bold; background: #f1f5f9; color: #0284c7;">
-          {if: $panggil_loket == 'panggil_cs'}B-{elseif: $panggil_loket == 'panggil_apotek'}F-{else}A-{/if}
+          {if: $panggil_loket == 'panggil_cs'}B-{elseif: $panggil_loket == 'panggil_apotek'}F-{elseif: $panggil_loket == 'panggil_geriatri'}G-{else}A-{/if}
         </span>
         <input type="number" min="1" class="form-control" id="inputJumpAntrian" placeholder="Ketik nomor antrian (contoh: 10)">
     </div>
@@ -757,6 +759,13 @@
             if (typeof data.apotek.waiting !== 'undefined') $('[id^=display_waiting_]').text(data.apotek.waiting);
           }
         }
+        if (data.geriatri) {
+          $('.antrian_Geriatri').text(data.geriatri.antrian || '000');
+          $('.get_Geriatri').text(data.geriatri.counter || '1');
+          if (curShow === 'panggil_geriatri') {
+            if (typeof data.geriatri.total !== 'undefined') $('[id^=display_total_]').text(data.geriatri.total);
+          }
+        }
 
         // Sinkronkan angka kartu tengah dengan nomor aktif saat ini jika tidak sedang request
         if (!isCalling) {
@@ -782,6 +791,11 @@
             if (data.apotek && data.apotek.antrian) {
               $('#display_num_' + curLoket).text('F-' + data.apotek.antrian);
               $('input:hidden[name=noantrian]').val(data.apotek.raw_antrian);
+            }
+          } else if (curShow === 'panggil_geriatri') {
+            if (data.geriatri && data.geriatri.antrian) {
+              $('#display_num_' + curLoket).text('G-' + data.geriatri.antrian);
+              $('input:hidden[name=noantrian]').val(data.geriatri.raw_antrian);
             }
           }
         }
@@ -961,7 +975,7 @@
       cache: false,
       success: function(data) {
         if (data && data.status) {
-          var letter = (curType === 'cs' ? 'B' : (curType === 'apotek' ? 'F' : 'A'));
+          var letter = (curType === 'cs' ? 'B' : (curType === 'apotek' ? 'F' : (curType === 'geriatri' ? 'G' : 'A')));
           $('#display_num_' + loket).text(letter + '-' + data.noantrian);
           $('input:hidden[name=noantrian]').val(data.raw_noantrian);
           refreshCallerCounters();

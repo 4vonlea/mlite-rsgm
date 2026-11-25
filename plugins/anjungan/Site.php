@@ -1558,12 +1558,19 @@ class Site extends SiteModule
           $card2_title = 'Customer Service / CS';
         }
 
-        // Apotek
+        // Apotek (backend tetap, tidak dihapus)
         $apotekDB = $this->db('mlite_antrian_loket')->select('noantrian')->select('loket')
           ->where('type', 'Apotek')->where('postdate', $dateToday)->where('status', '>=', 1)
           ->desc('kd')->oneArray();
         $init_apotek_no = !empty($apotekDB['noantrian']) ? $apotekDB['noantrian'] : 0;
         $init_apotek_counter = !empty($apotekDB['loket']) ? $apotekDB['loket'] : 1;
+
+        // Geriatri (menggantikan Apotek di Card ke-3 display loket)
+        $geriatriDB = $this->db('mlite_antrian_loket')->select('noantrian')->select('loket')
+          ->where('type', 'Geriatri')->where('postdate', $dateToday)->where('status', '>=', 1)
+          ->desc('kd')->oneArray();
+        $init_geriatri_no = !empty($geriatriDB['noantrian']) ? $geriatriDB['noantrian'] : 0;
+        $init_geriatri_counter = !empty($geriatriDB['loket']) ? $geriatriDB['loket'] : 1;
 
         $content = $this->draw('display.antrian.loket.html', [
           'title' => $title,
@@ -1588,6 +1595,8 @@ class Site extends SiteModule
           'init_card2_counter' => $init_card2_counter,
           'init_apotek_no' => sprintf("%03d", intval($init_apotek_no)),
           'init_apotek_counter' => $init_apotek_counter,
+          'init_geriatri_no' => sprintf("%03d", intval($init_geriatri_no)),
+          'init_geriatri_counter' => $init_geriatri_counter,
           // Legacy aliases
           'init_loket_no' => sprintf("%03d", intval($init_loket1_no)),
           'init_loket_counter' => $init_loket1_counter,
@@ -2174,6 +2183,9 @@ class Site extends SiteModule
               case 'apotek':
                   $kode = 'f';
                   break;
+              case 'geriatri':
+                  $kode = 'g';
+                  break;
               default:
                   $kode = 'a';
                   break;
@@ -2285,6 +2297,9 @@ class Site extends SiteModule
       if($typeParam == 'apotek') {
         $type = 'Apotek';
       }
+      if($typeParam == 'geriatri') {
+        $type = 'Geriatri';
+      }
       $noantrian  = intval($_GET['noantrian'] ?? 1);
       if ($noantrian <= 0) $noantrian = 1;
       $loket  = intval($_GET['loket'] ?? 1);
@@ -2347,6 +2362,7 @@ class Site extends SiteModule
       $type = 'Loket';
       if($typeParam == 'cs') $type = 'CS';
       if($typeParam == 'apotek') $type = 'Apotek';
+      if($typeParam == 'geriatri') $type = 'Geriatri';
 
       $loket = intval($_GET['loket'] ?? 1);
       if ($loket <= 0) $loket = 1;
@@ -2446,6 +2462,7 @@ class Site extends SiteModule
       $type = 'Loket';
       if($typeParam == 'cs') $type = 'CS';
       if($typeParam == 'apotek') $type = 'Apotek';
+      if($typeParam == 'geriatri') $type = 'Geriatri';
 
       $noantrian = intval($_GET['noantrian'] ?? 0);
       $kd = intval($_GET['kd'] ?? 0);
@@ -2492,6 +2509,9 @@ class Site extends SiteModule
       }
       if($_GET['type'] == 'apotek') {
         $type = 'Apotek';
+      }
+      if($_GET['type'] == 'geriatri') {
+        $type = 'Geriatri';
       }
 
       if(strlen($_GET['no_rkm_medis']) != 6) die(json_encode(array('status' => false,'message' => 'Gagal! Nomor Rekam Medis Tidak Valid')));
@@ -2669,6 +2689,25 @@ class Site extends SiteModule
           echo '</div>';
           echo '<br>';
         break;
+        case "tampilgeriatri":
+          $result = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'Geriatri')->where('postdate', date('Y-m-d'))->desc('start_time')->oneArray();
+          $noantrian = '';
+          if($result) {
+            $noantrian = $result['noantrian'];
+          }
+        	if($noantrian > 0) {
+        		$next_antrian = $noantrian + 1;
+        	} else {
+        		$next_antrian = 1;
+        	}
+        	echo '<div id="nomernya" align="center">';
+          echo '<h1 class="display-1" style="color:#e74c3c;">';
+          echo 'G-'.sprintf("%03d", $next_antrian);
+          echo '</h1>';
+          echo '['.date('Y-m-d').']';
+          echo '</div>';
+          echo '<br>';
+        break;
         case "printapotek":
           $result = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'Apotek')->where('postdate', date('Y-m-d'))->desc('start_time')->oneArray();
           $noantrian = '';
@@ -2753,6 +2792,49 @@ class Site extends SiteModule
               BpjsService::post($url, $data_antrian_farmasi, $this->consid, $this->secretkey, $this->user_key, NULL);
             }
           //redirect(url('anjungan/pasien'));
+        break;
+        case "printgeriatri":
+          $result = $this->db('mlite_antrian_loket')->select('noantrian')->where('type', 'Geriatri')->where('postdate', date('Y-m-d'))->desc('start_time')->oneArray();
+          $noantrian = '';
+          if($result) {
+            $noantrian = $result['noantrian'];
+          }
+        	if($noantrian > 0) {
+        		$next_antrian = $noantrian + 1;
+        	} else {
+        		$next_antrian = 1;
+        	}
+        	echo '<div id="nomernya" align="center">';
+          echo '<h1 class="display-1" style="color:#e74c3c;">';
+          echo 'G-'.sprintf("%03d", $next_antrian);
+          echo '</h1>';
+          echo '['.date('Y-m-d').']';
+          echo '</div>';
+          echo '<br>';
+        break;
+        case "simpangeriatri":
+          $this->db('mlite_antrian_loket')
+            ->save([
+              'type' => 'Geriatri',
+              'noantrian' => $_GET['noantrian'],
+              'no_rkm_medis' => $_POST['no_rkm_medis'] ?? '',
+              'postdate' => date('Y-m-d'),
+              'start_time' => date('H:i:s'),
+              'end_time' => '00:00:00',
+              'status' => 0
+            ]);
+          header('Content-Type: application/json');
+          echo json_encode([
+            'status' => 'ok',
+            'noantrian' => $_GET['noantrian'],
+            'formatted' => 'G-' . sprintf("%03d", intval($_GET['noantrian'])),
+            'type' => 'Geriatri',
+            'nama_loket' => 'Loket Geriatri (Prioritas)',
+            'nama_instansi' => $this->settings->get('settings.nama_instansi'),
+            'tanggal' => date('d-m-Y'),
+            'jam' => date('H:i:s')
+          ]);
+          exit();
         break;
         case "loket":
           $loketDB = $this->db('mlite_antrian_loket')->select('loket')->where('type', 'Loket')->where('postdate', date('Y-m-d'))->where('status', '>=', 1)->desc('kd')->oneArray();
@@ -3289,9 +3371,17 @@ class Site extends SiteModule
           $noApotek = !empty($apotekDB['noantrian']) ? $apotekDB['noantrian'] : 0;
           $konterApotek = !empty($apotekDB['loket']) ? $apotekDB['loket'] : 1;
 
+          // Geriatri
+          $geriatriStateDB = $this->db('mlite_antrian_loket')->select('noantrian')->select('loket')
+            ->where('type', 'Geriatri')->where('postdate', $date)->where('status', '>=', 1)
+            ->desc('kd')->oneArray();
+          $noGeriatri = !empty($geriatriStateDB['noantrian']) ? $geriatriStateDB['noantrian'] : 0;
+          $konterGeriatri = !empty($geriatriStateDB['loket']) ? $geriatriStateDB['loket'] : 1;
+
           $totLoket = $this->db('mlite_antrian_loket')->select('MAX(CAST(noantrian AS UNSIGNED)) as noantrian')->where('type', 'Loket')->where('postdate', $date)->oneArray();
           $totCS = $this->db('mlite_antrian_loket')->select('MAX(CAST(noantrian AS UNSIGNED)) as noantrian')->where('type', 'CS')->where('postdate', $date)->oneArray();
           $totApotek = $this->db('mlite_antrian_loket')->select('MAX(CAST(noantrian AS UNSIGNED)) as noantrian')->where('type', 'Apotek')->where('postdate', $date)->oneArray();
+          $totGeriatri = $this->db('mlite_antrian_loket')->select('MAX(CAST(noantrian AS UNSIGNED)) as noantrian')->where('type', 'Geriatri')->where('postdate', $date)->oneArray();
           $totWaiting = $this->db('mlite_antrian_loket')->select('COUNT(*) as total')->where('type', 'Loket')->where('postdate', $date)->where('status', 0)->oneArray();
 
           // Ambil daftar nomor antrian loket yang masih menunggu (status = 0)
@@ -3366,6 +3456,12 @@ class Site extends SiteModule
               'counter' => (string) $konterApotek,
               'total' => !empty($totApotek['noantrian']) ? intval($totApotek['noantrian']) : 0
             ],
+            'geriatri' => [
+              'antrian' => sprintf("%03d", intval($noGeriatri)),
+              'raw_antrian' => intval($noGeriatri),
+              'counter' => (string) $konterGeriatri,
+              'total' => !empty($totGeriatri['noantrian']) ? intval($totGeriatri['noantrian']) : 0
+            ],
             // Backward compatibility
             'loket' => [
               'antrian' => sprintf("%03d", intval($noLoket1)),
@@ -3390,6 +3486,9 @@ class Site extends SiteModule
           } elseif($typeParam == 'apotek') {
             $type = 'Apotek';
             $prefix = 'F';
+          } elseif($typeParam == 'geriatri') {
+            $type = 'Geriatri';
+            $prefix = 'G';
           } elseif($typeParam == 'poli') {
             $type = 'Poli';
             $prefix = 'P';
@@ -3547,6 +3646,27 @@ class Site extends SiteModule
           $set_unit   = $this->settings->get('anjungan.panggil_apotek_unit') ?: 'Apotek';
           $set_lokasi = $this->settings->get('anjungan.panggil_apotek_lokasi') ?: '';
           $set_waktu  = intval($this->settings->get('anjungan.panggil_apotek_waktu') ?: 0);
+          
+          // Aktif jika baru dipanggil dalam 120 detik terakhir
+          $is_active = (!empty($set_nama) && (time() - $set_waktu <= 120));
+          
+          header('Content-Type: application/json');
+          echo json_encode([
+            'status' => $is_active,
+            'nomor'  => $set_nomor,
+            'nama'   => $set_nama,
+            'unit'   => $set_unit,
+            'lokasi' => $set_lokasi,
+            'waktu'  => $set_waktu
+          ]);
+          exit();
+        break;
+        case "geriatri-panggil-status":
+          $set_nomor  = $this->settings->get('anjungan.panggil_geriatri_nomor') ?: '';
+          $set_nama   = $this->settings->get('anjungan.panggil_geriatri_nama') ?: '';
+          $set_unit   = $this->settings->get('anjungan.panggil_geriatri_unit') ?: 'Loket Geriatri';
+          $set_lokasi = $this->settings->get('anjungan.panggil_geriatri_lokasi') ?: '';
+          $set_waktu  = intval($this->settings->get('anjungan.panggil_geriatri_waktu') ?: 0);
           
           // Aktif jika baru dipanggil dalam 120 detik terakhir
           $is_active = (!empty($set_nama) && (time() - $set_waktu <= 120));
