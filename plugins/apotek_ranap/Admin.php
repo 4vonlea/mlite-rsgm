@@ -2224,4 +2224,62 @@ class Admin extends AdminModule
         return ['status' => 'success'];
     }
 
+    /**
+     * postPanggilPasien — Panggil pasien ke loket Apotek Rawat Inap
+     *
+     * Update display TV apotek ranap via mlite_settings.
+     */
+    public function postPanggilPasien()
+    {
+        $no_rawat    = trim($_POST['no_rawat']    ?? '');
+        $no_rkm_medis= trim($_POST['no_rkm_medis'] ?? '');
+        $nm_pasien   = trim($_POST['nm_pasien']   ?? '');
+        $nm_bangsal  = trim($_POST['nm_bangsal']  ?? '');
+        $kd_kamar    = trim($_POST['kd_kamar']    ?? '');
+        $unit        = trim($_POST['unit']        ?? 'Apotek Rawat Inap');
+
+        $now_time = date('H:i:s');
+
+        // Update display TV Apotek
+        $lokasi = $nm_bangsal . (!empty($kd_kamar) ? ' / ' . $kd_kamar : '');
+        $display_fields = [
+            'panggil_apotek_nomor'        => '',
+            'panggil_apotek_nama'         => $nm_pasien,
+            'panggil_apotek_lokasi'       => $lokasi,
+            'panggil_apotek_unit'         => $unit,
+            'panggil_apotek_no_rawat'     => $no_rawat,
+            'panggil_apotek_waktu'        => (string)time(),
+            'panggil_apotek_ranap_nama'   => $nm_pasien,
+            'panggil_apotek_ranap_lokasi' => $lokasi,
+            'panggil_apotek_ranap_unit'   => $unit,
+            'panggil_apotek_ranap_waktu'  => (string)time(),
+        ];
+        foreach ($display_fields as $fld => $fval) {
+            $check = $this->db('mlite_settings')
+                ->where('module', 'anjungan')
+                ->where('field', $fld)
+                ->oneArray();
+            if ($check) {
+                $this->db('mlite_settings')
+                    ->where('module', 'anjungan')
+                    ->where('field', $fld)
+                    ->save(['value' => $fval]);
+            } else {
+                $this->db('mlite_settings')->save([
+                    'module' => 'anjungan',
+                    'field'  => $fld,
+                    'value'  => $fval
+                ]);
+            }
+        }
+
+        header('Content-Type: application/json');
+        echo json_encode([
+            'status'       => 'success',
+            'message'      => 'Pasien ' . $nm_pasien . ' (' . $lokasi . ') berhasil dipanggil ke ' . $unit,
+            'panggil_time' => $now_time
+        ]);
+        exit();
+    }
+
 }

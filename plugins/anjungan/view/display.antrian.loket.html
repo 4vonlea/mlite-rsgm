@@ -201,6 +201,9 @@
       .queue-card.card-apotek {
         border-top: 5px solid #f39c12;
       }
+      .queue-card.card-geriatri {
+        border-top: 5px solid #e74c3c;
+      }
 
       /* Calling Animation Glow */
       .queue-card.calling {
@@ -238,6 +241,7 @@
       .card-loket .card-title-text { color: #00a8ff; }
       .card-cs .card-title-text { color: #2ecc71; }
       .card-apotek .card-title-text { color: #f39c12; }
+      .card-geriatri .card-title-text { color: #e74c3c; }
 
       .card-badge-letter {
         font-size: 16px;
@@ -253,6 +257,7 @@
       .card-loket .card-badge-letter { background: #00a8ff; }
       .card-cs .card-badge-letter { background: #2ecc71; }
       .card-apotek .card-badge-letter { background: #f39c12; }
+      .card-geriatri .card-badge-letter { background: #e74c3c; }
 
       .card-body-number {
         flex: 1;
@@ -273,6 +278,7 @@
       .card-loket .digital-number { color: #58d0ff; text-shadow: 0 0 25px rgba(88, 208, 255, 0.4); }
       .card-cs .digital-number { color: #55efc4; text-shadow: 0 0 25px rgba(85, 239, 196, 0.4); }
       .card-apotek .digital-number { color: #ffeaa7; text-shadow: 0 0 25px rgba(255, 234, 167, 0.4); }
+      .card-geriatri .digital-number { color: #ffb3b3; text-shadow: 0 0 25px rgba(231, 76, 60, 0.4); }
 
       .card-footer-bar {
         padding: 8px 16px;
@@ -444,18 +450,18 @@
         </div>
       </article>
 
-      <!-- Card 3: Farmasi / Apotek (F) -->
-      <article class="queue-card card-apotek" id="cardApotek">
+      <!-- Card 3: Pasien Geriatri (Prioritas) -->
+      <article class="queue-card card-geriatri" id="cardGeriatri">
         <div class="card-header-bar">
-          <span class="card-title-text"><i class="fa fa-medkit"></i> Farmasi & Apotek</span>
-          <span class="card-badge-letter">F</span>
+          <span class="card-title-text"><i class="fa fa-wheelchair"></i> Pasien Geriatri <small style="font-size:11px; font-weight:400; opacity:0.7;">(Prioritas)</small></span>
+          <span class="card-badge-letter">G</span>
         </div>
         <div class="card-body-number">
-          <div class="digital-number">F-<span class="antrian_Apotek">{?=isset_or($init_apotek_no, '000')?}</span></div>
+          <div class="digital-number">G-<span class="antrian_Geriatri">{?=isset_or($init_geriatri_no, '000')?}</span></div>
         </div>
         <div class="card-footer-bar">
-          <div class="footer-counter"><span class="txt-sebutan">{?=strtoupper(isset_or($sebutan_loket, 'Loket'))?}</span> <span class="get_Apotek">{?=isset_or($init_apotek_counter, '1')?}</span></div>
-          <span class="footer-status-label" id="statusApotek">Menunggu</span>
+          <div class="footer-counter"><span class="txt-sebutan">{?=strtoupper(isset_or($sebutan_loket, 'Loket'))?}</span> <span class="get_Geriatri">{?=isset_or($init_geriatri_counter, '1')?}</span></div>
+          <span class="footer-status-label" id="statusGeriatri">Menunggu</span>
         </div>
       </article>
     </section>
@@ -589,6 +595,10 @@
           $('.antrian_Apotek').html(data.apotek.antrian || '000');
           $('.get_Apotek').html(data.apotek.counter || '1');
         }
+        if(data.geriatri) {
+          $('.antrian_Geriatri').html(data.geriatri.antrian || '000');
+          $('.get_Geriatri').html(data.geriatri.counter || '1');
+        }
         // Backward compatibility
         if(data.loket) {
           $('.antrian_Loket').html(data.loket.antrian || '000');
@@ -653,6 +663,11 @@
       statusId = '#statusApotek';
       $('.antrian_Apotek').html(nomor);
       $('.get_Apotek').html(loket || '1');
+    } else if(typeLower === 'geriatri') {
+      cardId = '#cardGeriatri';
+      statusId = '#statusGeriatri';
+      $('.antrian_Geriatri').html(nomor);
+      $('.get_Geriatri').html(loket || '1');
     } else {
       // Type: Loket (Pendaftaran)
       var curSebutan = '{?=isset_or($sebutan_loket, "Loket")?}';
@@ -746,6 +761,10 @@
         letter = 'F';
         destination = 'Apotek Farmasi';
         noSpoken = (penyebutan === 'terbilang') ? ('F ' + rawNo) : ('F' + formattedNo);
+      } else if (typeLower === 'geriatri') {
+        letter = 'G';
+        destination = 'Loket Geriatri';
+        noSpoken = (penyebutan === 'terbilang') ? ('G ' + rawNo) : ('G' + formattedNo);
       }
 
       var formatK = data.suara_format || '{?=isset_or($suara_panggilan_format, "di")?}';

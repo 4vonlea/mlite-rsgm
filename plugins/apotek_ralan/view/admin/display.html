@@ -8,6 +8,7 @@
           <th>Nama Pasien</th>
           <th style="white-space: nowrap;">ID Kunjungan</th>
           <th style="white-space: nowrap;">Antrian</th>
+          <th style="white-space: nowrap; width: 1%;">Panggil</th>
           <th>Poliklinik</th>
           <th>Dokter</th>
           <th style="white-space: nowrap;">Penjamin</th>
@@ -30,6 +31,20 @@
           <td class="rsgm-cell-wrap"><span class="rsgm-patient-name">{?=isset_or($value.nm_pasien)?}</span></td>
           <td class="rsgm-visit-id">{?=isset_or($value.no_rawat)?}</td>
           <td style="white-space: nowrap;"><span class="rsgm-queue-pill">{?=isset_or($value.no_reg)?}</span></td>
+          <td style="white-space: nowrap; text-align: center;">
+            <button type="button"
+              class="btn btn-xs btn-warning apotek-panggil"
+              data-no_rawat="{?=isset_or($value.no_rawat)?}"
+              data-no_rkm_medis="{?=isset_or($value.no_rkm_medis)?}"
+              data-nm_pasien="{?=isset_or($value.nm_pasien)?}"
+              data-nm_poli="{?=isset_or($value.nm_poli)?}"
+              data-kd_poli="{?=isset_or($value.kd_poli)?}"
+              data-kd_dokter="{?=isset_or($value.kd_dokter)?}"
+              data-no_reg="{?=isset_or($value.no_reg)?}"
+              title="Panggil pasien ke loket apotek">
+              <i class="fa fa-bullhorn"></i><span class="hidden-xs hidden-sm"> Panggil</span>
+            </button>
+          </td>
           <td class="rsgm-cell-wrap">{?=isset_or($value.nm_poli)?}</td>
           <td class="rsgm-cell-wrap">{?=isset_or($value.nm_dokter)?}</td>
           <td style="white-space: nowrap;">
@@ -113,6 +128,69 @@
   });
   var t = $(".dataTables").DataTable().rows().count();
   $(".data-table-title").html('<h3 class="hidden-xs">Total: ' + t + '</h3>');
+</script>
+<script type="text/javascript">
+  // ============================================================
+  // Tombol Panggil Pasien — Apotek Ralan
+  // Mengupdate display TV apotek dan mencatat Task ID 5 BPJS
+  // ============================================================
+  $("#display").on("click", ".apotek-panggil", function (event) {
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+    var $btn = $(this);
+    var no_rawat    = $btn.data('no_rawat');
+    var no_rkm_medis= $btn.data('no_rkm_medis');
+    var nm_pasien   = $btn.data('nm_pasien');
+    var nm_poli     = $btn.data('nm_poli');
+    var kd_poli     = $btn.data('kd_poli');
+    var kd_dokter   = $btn.data('kd_dokter');
+    var no_reg      = $btn.data('no_reg');
+
+    // Feedback visual sementara
+    var origHtml = $btn.html();
+    $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Memanggil...');
+
+    var baseURL = mlite.url + '/' + mlite.admin;
+    $.ajax({
+      type: 'POST',
+      url: baseURL + '/apotek_ralan/panggilpasien?t=' + mlite.token,
+      data: {
+        no_rawat    : no_rawat,
+        no_rkm_medis: no_rkm_medis,
+        nm_pasien   : nm_pasien,
+        nm_poli     : nm_poli,
+        kd_poli     : kd_poli,
+        kd_dokter   : kd_dokter,
+        no_reg      : no_reg,
+        unit        : 'Apotek Rawat Jalan'
+      },
+      success: function (resp) {
+        try {
+          var data = typeof resp === 'string' ? JSON.parse(resp) : resp;
+          if (data.status === 'success') {
+            // Ubah tombol jadi "Dipanggil" sementara 3 detik
+            $btn.removeClass('btn-warning').addClass('btn-success')
+                .html('<i class="fa fa-check"></i> Dipanggil');
+            setTimeout(function () {
+              $btn.removeClass('btn-success').addClass('btn-warning')
+                  .prop('disabled', false).html(origHtml);
+            }, 3000);
+          } else {
+            alert('Gagal memanggil: ' + (data.message || 'Terjadi kesalahan'));
+            $btn.prop('disabled', false).html(origHtml);
+          }
+        } catch (e) {
+          alert('Respons server tidak valid');
+          $btn.prop('disabled', false).html(origHtml);
+        }
+      },
+      error: function () {
+        alert('Koneksi bermasalah. Silakan coba lagi.');
+        $btn.prop('disabled', false).html(origHtml);
+      }
+    });
+  });
 </script>
 <script type="text/javascript">
    $(function () {

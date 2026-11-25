@@ -220,9 +220,26 @@ class Admin extends AdminModule
       'kddpjp' => mb_substr(isset_or($input['kddpjp'], '-'), 0, 10, 'UTF-8'),
       'nmdpdjp' => mb_substr(isset_or($input['nmdpdjp'], '-'), 0, 100, 'UTF-8'),
       'tujuankunjungan' => in_array(isset_or($input['tujuankunjungan'], isset_or($input['tujuanKunj'], '0')), ['0', '1', '2']) ? isset_or($input['tujuankunjungan'], isset_or($input['tujuanKunj'], '0')) : '0',
-      'flagprosedur' => isset_or($input['flagprosedur'], isset_or($input['flagProcedure'], '')),
-      'penunjang' => isset_or($input['penunjang'], isset_or($input['kdPenunjang'], '')),
-      'asesmenpelayanan' => isset_or($input['asesmenpelayanan'], isset_or($input['assesmentPel'], '')),
+      'flagprosedur' => (function($input) {
+        $tkn = isset_or($input['tujuankunjungan'], isset_or($input['tujuanKunj'], '0'));
+        $tkn = in_array($tkn, ['0', '1', '2']) ? $tkn : '0';
+        if ($tkn !== '1') return '';
+        $fp = trim((string)isset_or($input['flagprosedur'], isset_or($input['flagProcedure'], '')));
+        return in_array($fp, ['0', '1'], true) ? $fp : '0';
+      })($input),
+      'penunjang' => (function($input) {
+        $tkn = isset_or($input['tujuankunjungan'], isset_or($input['tujuanKunj'], '0'));
+        $tkn = in_array($tkn, ['0', '1', '2']) ? $tkn : '0';
+        if ($tkn === '0' || $tkn === '2') return '';
+        return isset_or($input['penunjang'], isset_or($input['kdPenunjang'], ''));
+      })($input),
+      'asesmenpelayanan' => (function($input) {
+        $tkn = isset_or($input['tujuankunjungan'], isset_or($input['tujuanKunj'], '0'));
+        $tkn = in_array($tkn, ['0', '1', '2']) ? $tkn : '0';
+        if ($tkn !== '2') return '';
+        $ap = trim((string)isset_or($input['asesmenpelayanan'], isset_or($input['assesmentPel'], '')));
+        return in_array($ap, ['1','2','3','4','5'], true) ? $ap : '5';
+      })($input),
       'kddpjplayanan' => mb_substr(isset_or($input['kddpjplayanan'], isset_or($input['kddpjppelayanan'], '-')), 0, 10, 'UTF-8'),
       'nmdpjplayanan' => mb_substr(isset_or($input['nmdpjplayanan'], isset_or($input['nmdpjppelayanan'], '-')), 0, 100, 'UTF-8')
     ];
@@ -405,6 +422,46 @@ class Admin extends AdminModule
     $userFullName = $this->core->getUserInfo('fullname', null, true);
     $userName = $this->core->getUserInfo('username', null, true);
     $_POST['sep_user'] = !empty($userFullName) ? $userFullName : (!empty($userName) ? $userName : 'Admin');
+
+    // Normalisasi parameter sesuai Spesifikasi Resmi BPJS Kesehatan VClaim v2.0
+    $tujuanKunj = trim((string)($_POST['tujuanKunj'] ?? '0'));
+    if ($tujuanKunj === '') {
+      $tujuanKunj = '0';
+    }
+
+    $flagProcedure = trim((string)($_POST['flagProcedure'] ?? ''));
+    $kdPenunjang = trim((string)($_POST['kdPenunjang'] ?? ''));
+    $assesmentPel = trim((string)($_POST['assesmentPel'] ?? ''));
+
+    if ($tujuanKunj === '0') {
+      // Kunjungan Normal: flagProcedure, kdPenunjang, dan assesmentPel WAJIB KOSONG ("")
+      $flagProcedure = '';
+      $kdPenunjang = '';
+      $assesmentPel = '';
+    } elseif ($tujuanKunj === '1') {
+      // Prosedur: flagProcedure WAJIB "0" (Tidak Berkelanjutan) atau "1" (Berkelanjutan), assesmentPel WAJIB KOSONG
+      if ($flagProcedure !== '0' && $flagProcedure !== '1') {
+        $flagProcedure = '0';
+      }
+      $assesmentPel = '';
+    } elseif ($tujuanKunj === '2') {
+      // Konsul Dokter: flagProcedure & kdPenunjang WAJIB KOSONG, assesmentPel WAJIB '1'-'5'
+      $flagProcedure = '';
+      $kdPenunjang = '';
+      if (!in_array($assesmentPel, ['1', '2', '3', '4', '5'], true)) {
+        $assesmentPel = '5';
+      }
+    } else {
+      $tujuanKunj = '0';
+      $flagProcedure = '';
+      $kdPenunjang = '';
+      $assesmentPel = '';
+    }
+
+    $_POST['tujuanKunj'] = $tujuanKunj;
+    $_POST['flagProcedure'] = $flagProcedure;
+    $_POST['kdPenunjang'] = $kdPenunjang;
+    $_POST['assesmentPel'] = $assesmentPel;
 
     $data = [
       'request' => [
@@ -3963,11 +4020,7 @@ class Admin extends AdminModule
         ->desc('no_surat')
         ->toArray();
     } else {
-      $bridging_surat_kontrol_bpjs = $this->db('bridging_surat_kontrol_bpjs')
-        ->desc('tgl_rencana')
-        ->desc('tgl_surat')
-        ->desc('no_surat')
-        ->toArray();
+      $bridging_surat_kontrol_bpjs = [];
     }
 
     $this->tpl->set('no_sep', htmlspecialchars($no_sep, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'));
@@ -3993,11 +4046,7 @@ class Admin extends AdminModule
         ->desc('no_surat')
         ->toArray();
     } else {
-      $bridging_surat_kontrol_bpjs = $this->db('bridging_surat_kontrol_bpjs')
-        ->desc('tgl_rencana')
-        ->desc('tgl_surat')
-        ->desc('no_surat')
-        ->toArray();
+      $bridging_surat_kontrol_bpjs = [];
     }
 
     $this->tpl->set('kontrol', $this->tpl->noParse_array(htmlspecialchars_array($bridging_surat_kontrol_bpjs)));
@@ -4174,6 +4223,7 @@ class Admin extends AdminModule
         ]);
       }
 
+      $oldSurkon = null;
       if ($no_surkon == '') {
         $this->db('bridging_surat_kontrol_bpjs')->save([
           'no_sep' => $no_sep,
@@ -4186,6 +4236,7 @@ class Admin extends AdminModule
           'nm_poli_bpjs' => $nm_poli
         ]);
       } else {
+        $oldSurkon = $this->db('bridging_surat_kontrol_bpjs')->where('no_surat', $no_surkon)->oneArray();
         $this->db('bridging_surat_kontrol_bpjs')->where('no_surat', $no_surkon)->update([
           'no_sep' => $no_sep,
           'tgl_surat' => $_POST['tanggal_surat'] ?? date('Y-m-d'),
@@ -4215,6 +4266,42 @@ class Admin extends AdminModule
           'kd_dokter' => !empty($_POST['no_rawat']) ? $this->core->getRegPeriksaInfo('kd_dokter', $_POST['no_rawat']) : '',
           'status' => 'Menunggu'
         ]);
+      }
+
+      // Pasien mendaftar mandiri via aplikasi Mobile JKN BPJS (tidak didaftarkan otomatis ke booking_registrasi).
+      // Bersihkan data booking internal berstatus Belum tanpa kodebooking Mobile JKN jika ada (termasuk jika surat kontrol dirubah)
+      $normKontrol = $_POST['no_rkm_medis'] ?? '';
+      if (empty($normKontrol) && !empty($chk_sep['no_rawat'])) {
+        $normKontrol = $this->core->getRegPeriksaInfo('no_rkm_medis', $chk_sep['no_rawat']);
+      }
+      if (empty($normKontrol) && !empty($chk_sep['no_kartu'])) {
+        $pasienPst = $this->db('pasien')->where('no_peserta', $chk_sep['no_kartu'])->oneArray();
+        if ($pasienPst) {
+          $normKontrol = $pasienPst['no_rkm_medis'];
+        }
+      }
+      if (!empty($normKontrol)) {
+        $tglListToClean = array_unique(array_filter([$tgl_rencana, $oldSurkon['tgl_rencana'] ?? null]));
+        foreach ($tglListToClean as $tglClean) {
+          $existingBooking = $this->db('booking_registrasi')
+            ->where('no_rkm_medis', $normKontrol)
+            ->where('tanggal_periksa', $tglClean)
+            ->where('status', 'Belum')
+            ->oneArray();
+          if ($existingBooking) {
+            $ref = $this->db('mlite_antrian_referensi')
+              ->where('no_rkm_medis', $normKontrol)
+              ->where('tanggal_periksa', $tglClean)
+              ->oneArray();
+            if (!$ref || empty($ref['kodebooking'])) {
+              $this->db('booking_registrasi')
+                ->where('no_rkm_medis', $normKontrol)
+                ->where('tanggal_periksa', $tglClean)
+                ->where('status', 'Belum')
+                ->delete();
+            }
+          }
+        }
       }
 
       echo json_encode([

@@ -1276,25 +1276,61 @@ class Admin extends AdminModule
 
     public function anyKontrol()
     {
-      $rows = $this->db('booking_registrasi')
-        ->select([
-          'tanggal_periksa' => 'booking_registrasi.tanggal_periksa',
-          'no_reg' => 'booking_registrasi.no_reg',
-          'nm_poli' => 'poliklinik.nm_poli',
-          'nm_dokter' => 'dokter.nm_dokter',
-          'png_jawab' => 'penjab.png_jawab',
-          'status' => 'booking_registrasi.status'
-        ])
-        ->join('poliklinik', 'poliklinik.kd_poli=booking_registrasi.kd_poli')
-        ->join('dokter', 'dokter.kd_dokter=booking_registrasi.kd_dokter')
-        ->join('penjab', 'penjab.kd_pj=booking_registrasi.kd_pj')
-        ->where('no_rkm_medis', $_POST['no_rkm_medis'])
+      $no_rkm_medis = $_POST['no_rkm_medis'] ?? '';
+      $skdpList = $this->db('skdp_bpjs')
+        ->leftJoin('dokter', 'dokter.kd_dokter = skdp_bpjs.kd_dokter')
+        ->where('skdp_bpjs.no_rkm_medis', $no_rkm_medis)
+        ->desc('skdp_bpjs.tanggal_datang')
         ->toArray();
-      $i = 1;
+
       $result = [];
-      foreach ($rows as $row) {
-        $row['nomor'] = $i++;
-        $result[] = $row;
+      $i = 1;
+
+      if (!empty($skdpList)) {
+        foreach ($skdpList as $sk) {
+          $bk = $this->db('booking_registrasi')
+            ->leftJoin('poliklinik', 'poliklinik.kd_poli = booking_registrasi.kd_poli')
+            ->leftJoin('penjab', 'penjab.kd_pj = booking_registrasi.kd_pj')
+            ->where('booking_registrasi.no_rkm_medis', $no_rkm_medis)
+            ->where('booking_registrasi.tanggal_periksa', $sk['tanggal_datang'])
+            ->oneArray();
+
+          $stts = 'Belum Daftar (Mandiri JKN)';
+          if ($bk) {
+            $stts = ($bk['status'] === 'Terdaftar') ? 'Terdaftar' : 'Sudah Booking (' . $bk['status'] . ')';
+          }
+
+          $result[] = [
+            'nomor' => $i++,
+            'tanggal_periksa' => $sk['tanggal_datang'],
+            'no_reg' => !empty($bk['no_reg']) ? $bk['no_reg'] : $sk['no_antrian'],
+            'nm_poli' => !empty($bk['nm_poli']) ? $bk['nm_poli'] : '-',
+            'nm_dokter' => !empty($sk['nm_dokter']) ? $sk['nm_dokter'] : ($bk['nm_dokter'] ?? '-'),
+            'png_jawab' => !empty($bk['png_jawab']) ? $bk['png_jawab'] : 'BPJS Kesehatan',
+            'status' => $stts,
+            'kd_dokter' => $sk['kd_dokter'],
+            'kd_poli' => !empty($bk['kd_poli']) ? $bk['kd_poli'] : ''
+          ];
+        }
+      } else {
+        $rows = $this->db('booking_registrasi')
+          ->select([
+            'tanggal_periksa' => 'booking_registrasi.tanggal_periksa',
+            'no_reg' => 'booking_registrasi.no_reg',
+            'nm_poli' => 'poliklinik.nm_poli',
+            'nm_dokter' => 'dokter.nm_dokter',
+            'png_jawab' => 'penjab.png_jawab',
+            'status' => 'booking_registrasi.status'
+          ])
+          ->join('poliklinik', 'poliklinik.kd_poli=booking_registrasi.kd_poli')
+          ->join('dokter', 'dokter.kd_dokter=booking_registrasi.kd_dokter')
+          ->join('penjab', 'penjab.kd_pj=booking_registrasi.kd_pj')
+          ->where('no_rkm_medis', $no_rkm_medis)
+          ->toArray();
+        foreach ($rows as $row) {
+          $row['nomor'] = $i++;
+          $result[] = $row;
+        }
       }
       echo $this->draw('kontrol.html', ['booking_registrasi' => htmlspecialchars_array($result)]);
       exit();
@@ -1319,28 +1355,29 @@ class Admin extends AdminModule
         'status' => 'Menunggu'
       ]);
 
-      if ($query) {
-        $this->db('booking_registrasi')
-          ->save([
-            'tanggal_booking' => date('Y-m-d'),
-            'jam_booking' => date('H:i:s'),
-            'no_rkm_medis' => $_POST['no_rkm_medis'],
-            'tanggal_periksa' => $_POST['tanggal_datang'],
-            'kd_dokter' => $this->core->getUserInfo('username', null, true),
-            'kd_poli' => $this->core->getRegPeriksaInfo('kd_poli', $_POST['no_rawat']),
-            'no_reg' => $this->core->setNoBooking($this->core->getUserInfo('username', null, true), $this->core->getRegPeriksaInfo('kd_poli', $_POST['no_rawat']), $_POST['tanggal_rujukan']),
-            'kd_pj' => $this->core->getRegPeriksaInfo('kd_pj', $_POST['no_rawat']),
-            'limit_reg' => 0,
-            'waktu_kunjungan' => $_POST['tanggal_datang'].' '.date('H:i:s'),
-            'status' => 'Belum'
-          ]);
+      // Pasien mendaftar mandiri via aplikasi Mobile JKN BPJS (tidak didaftarkan otomatis ke booking_registrasi)
+      // Bersihkan data booking internal sisa jika ada yang berstatus Belum tanpa kodebooking Mobile JKN
+      if ($query && !empty($_POST['no_rkm_medis']) && !empty($_POST['tanggal_datang'])) {
+        $existingBooking = $this->db('booking_registrasi')
+          ->where('no_rkm_medis', $_POST['no_rkm_medis'])
+          ->where('tanggal_periksa', $_POST['tanggal_datang'])
+          ->where('status', 'Belum')
+          ->oneArray();
+        if ($existingBooking) {
+          $ref = $this->db('mlite_antrian_referensi')
+            ->where('no_rkm_medis', $_POST['no_rkm_medis'])
+            ->where('tanggal_periksa', $_POST['tanggal_datang'])
+            ->oneArray();
+          if (!$ref || empty($ref['kodebooking'])) {
+            $this->db('booking_registrasi')
+              ->where('no_rkm_medis', $_POST['no_rkm_medis'])
+              ->where('tanggal_periksa', $_POST['tanggal_datang'])
+              ->where('status', 'Belum')
+              ->delete();
+          }
+        }
       }
 
-      /*if(!$this->db('pemeriksaan_ranap')->where('no_rawat', $_POST['no_rawat'])->where('tgl_perawatan', $_POST['tgl_perawatan'])->where('jam_rawat', $_POST['jam_rawat'])->oneArray()) {
-        $this->db('pemeriksaan_ranap')->save($_POST);
-      } else {
-        $this->db('pemeriksaan_ranap')->where('no_rawat', $_POST['no_rawat'])->save($_POST);
-      }*/
       exit();
     }
 

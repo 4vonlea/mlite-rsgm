@@ -48,6 +48,15 @@
               <li><a href="#layanan_obat" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-no_rkm_medis="{?=isset_or($value.no_rkm_medis)?}" data-nm_pasien="{?=isset_or($value.nm_pasien)?}" data-kd_dokter="{?=isset_or($value.kd_dokter)?}" data-nm_dokter="{?=isset_or($value.nm_dokter)?}"><i class="fa fa-medkit rsgm-ico-teal"></i> Layanan &amp; Obat</a></li>
               <li><a href="#set_poli_tujuan" data-no_rawat="{?=isset_or($value.no_rawat)?}"><i class="fa fa-share-alt rsgm-ico-amber"></i> Poli Tujuan Pelayanan</a></li>
               <li class="dropdown-submenu">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><i class="fa fa-envelope-o rsgm-ico-indigo"></i><span>Surat-Surat</span></a>
+                <ul class="dropdown-menu">
+                  <li><a href="#surat_kontrol" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-no_rkm_medis="{?=isset_or($value.no_rkm_medis)?}" data-nm_pasien="{?=isset_or($value.nm_pasien)?}" data-tgl_registrasi="{?=isset_or($value.tgl_registrasi)?}"><i class="fa fa-calendar-check-o rsgm-ico-indigo"></i> Surat Kontrol</a></li>
+                  <li><a href="{?=url([ADMIN, 'oral_diagnostic', 'suratrujukan', $value.no_rawat])?}" data-toggle="modal" data-target="#suratModal"><i class="fa fa-file-text-o rsgm-ico-teal"></i> Surat Rujukan</a></li>
+                  <li><a href="{?=url([ADMIN, 'oral_diagnostic', 'suratsehat', $value.no_rawat])?}" data-toggle="modal" data-target="#suratModal"><i class="fa fa-file-text-o rsgm-ico-emerald"></i> Surat Sehat</a></li>
+                  <li><a href="{?=url([ADMIN, 'oral_diagnostic', 'suratsakit', $value.no_rawat])?}" data-toggle="modal" data-target="#suratModal"><i class="fa fa-file-text-o rsgm-ico-rose"></i> Surat Sakit</a></li>
+                </ul>
+              </li>
+              <li class="dropdown-submenu">
                 <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><i class="fa fa-sliders rsgm-ico-amber"></i><span>Set Status</span></a>
                 <ul class="dropdown-menu">
                   <li><a href="#status_rawat" data-no_rawat="{?=isset_or($value.no_rawat)?}" data-stts="{?=isset_or($value.stts)?}" data-checkin_time="{?=isset_or($value.checkin_time)?}" data-nm_pasien="{?=isset_or($value.nm_pasien)?}"><i class="fa fa-tag rsgm-ico-blue"></i> Status Rawat</a></li>
@@ -246,6 +255,32 @@
   });  
 </script>
 <script type="text/javascript">
+  $(document).off('click', 'a[href="#surat_kontrol"]').on('click', 'a[href="#surat_kontrol"]', function(event){
+    var baseURL = mlite.url + '/' + mlite.admin;
+    event.preventDefault();
+
+    var no_rawat = $(this).attr("data-no_rawat");
+    var no_rkm_medis = $(this).attr("data-no_rkm_medis");
+    var nm_pasien = $(this).attr("data-nm_pasien");
+    var tgl_registrasi = $(this).attr("data-tgl_registrasi");
+
+    $('input:text[name=no_rawat]').val(no_rawat);
+    $('input:text[name=no_rkm_medis]').val(no_rkm_medis);
+    $('input:text[name=nm_pasien]').val(nm_pasien);
+    $('input:text[name=tgl_registrasi]').val(tgl_registrasi);
+    $("#display").hide();
+
+    var url = baseURL + '/oral_diagnostic/kontrol?t=' + mlite.token;
+    $.post(url, {no_rkm_medis : no_rkm_medis}, function(data) {
+      $("#form_rincian").hide();
+      $("#form").hide();
+      $("#notif").hide();
+      $("#form_soap").hide();
+      $("#form_kontrol").show();
+      $("#surat_kontrol").html(data).show();
+    });
+  });
+
   $(document).off('click', 'a[href="#soap"]').on('click', 'a[href="#soap"]', function(event){
     var baseURL = mlite.url + '/' + mlite.admin;
     event.preventDefault();

@@ -2448,4 +2448,110 @@ class Admin extends AdminModule
         return ['status' => 'success'];
     }
 
+    /**
+     * postPanggilPasien — Panggil pasien ke loket Apotek Rawat Jalan
+     *
+     * Dipanggil via AJAX dari display.html apotek_ralan saat petugas klik tombol Panggil.
+     * Fungsi:
+     *   1. Update display TV apotek (mlite_settings: panggil_apotek_*)
+     *   2. Catat Task ID 5 BPJS Antrean (mulai pelayanan farmasi)
+     */
+    public function postPanggilPasien()
+    {
+        $no_rawat    = trim($_POST['no_rawat']    ?? '');
+        $no_rkm_medis= trim($_POST['no_rkm_medis'] ?? '');
+        $nm_pasien   = trim($_POST['nm_pasien']   ?? '');
+        $nm_poli     = trim($_POST['nm_poli']     ?? '');
+        $kd_poli     = trim($_POST['kd_poli']     ?? '');
+        $kd_dokter   = trim($_POST['kd_dokter']   ?? '');
+        $no_reg      = trim($_POST['no_reg']      ?? '');
+        $unit        = trim($_POST['unit']        ?? 'Apotek Rawat Jalan');
+
+        $now_time = date('H:i:s');
+        $tgl      = date('Y-m-d');
+        $now_ms   = time() * 1000;
+
+        // Ambil tanggal registrasi asli dari DB jika no_rawat tersedia
+        if (!empty($no_rawat)) {
+            $reg = $this->db('reg_periksa')->where('no_rawat', $no_rawat)->oneArray();
+            if ($reg && !empty($reg['tgl_registrasi'])) {
+                $tgl = $reg['tgl_registrasi'];
+            }
+        }
+
+        // 1. Update display TV Apotek (field di mlite_settings module 'anjungan')
+        $display_fields = [
+            'panggil_apotek_nomor'    => $no_reg,
+            'panggil_apotek_nama'     => $nm_pasien,
+            'panggil_apotek_unit'     => $unit,
+            'panggil_apotek_lokasi'   => $nm_poli,
+            'panggil_apotek_no_rawat' => $no_rawat,
+            'panggil_apotek_waktu'    => (string)time(),
+        ];
+        foreach ($display_fields as $fld => $fval) {
+            $check = $this->db('mlite_settings')
+                ->where('module', 'anjungan')
+                ->where('field', $fld)
+                ->oneArray();
+            if ($check) {
+                $this->db('mlite_settings')
+                    ->where('module', 'anjungan')
+                    ->where('field', $fld)
+                    ->save(['value' => $fval]);
+            } else {
+                $this->db('mlite_settings')->save([
+                    'module' => 'anjungan',
+                    'field'  => $fld,
+                    'value'  => $fval
+                ]);
+            }
+        }
+
+        // 2. Catat Task ID 5 BPJS Antrean (mulai pelayanan farmasi)
+        if (!empty($no_rkm_medis)) {
+            $antrol = $this->db('mlite_antrian_referensi')
+                ->where('tanggal_periksa', $tgl)
+                ->where('no_rkm_medis', $no_rkm_medis)
+                ->oneArray();
+
+            if (!$antrol) {
+                $p = $this->db('pasien')->where('no_rkm_medis', $no_rkm_medis)->oneArray();
+                if ($p && !empty($p['no_peserta'])) {
+                    $antrol = $this->db('mlite_antrian_referensi')
+                        ->where('tanggal_periksa', $tgl)
+                        ->where('nomor_kartu', $p['no_peserta'])
+                        ->oneArray();
+                }
+            }
+
+            if ($antrol && !empty($antrol['kodebooking'])) {
+                $kb = $antrol['kodebooking'];
+
+                // Task ID 5: Resep diserahkan ke farmasi / mulai pelayanan apotek
+                $t5 = $this->db('mlite_antrian_referensi_taskid')
+                    ->where('nomor_referensi', $kb)
+                    ->where('taskid', '5')
+                    ->oneArray();
+                if (!$t5) {
+                    $this->db('mlite_antrian_referensi_taskid')->save([
+                        'tanggal_periksa' => $tgl,
+                        'nomor_referensi' => $kb,
+                        'taskid'          => 5,
+                        'waktu'           => $now_ms,
+                        'status'          => 'Belum',
+                        'keterangan'      => 'Panggil ke ' . $unit . ' jam ' . $now_time
+                    ]);
+                }
+            }
+        }
+
+        header('Content-Type: application/json');
+        echo json_encode([
+            'status'       => 'success',
+            'message'      => 'Pasien ' . $nm_pasien . ' berhasil dipanggil ke ' . $unit,
+            'panggil_time' => $now_time
+        ]);
+        exit();
+    }
+
 }

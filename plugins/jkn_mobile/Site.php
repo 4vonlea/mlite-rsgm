@@ -305,10 +305,35 @@ class Site extends SiteModule
                         $sisaKuota = max(0, $totalKuota - $totalTerdaftar);
 
                         // HARD LOCK: Jika total pendaftar sudah mencapai atau melebihi kuota, kunci seketika!
-                        if ($totalKuota > 0 && $sisaKuota > 0) {
+                        // Kecuali pasien ini SENDIRI sudah memiliki booking manual (mis. Surat Kontrol SIMRS) yang belum terhubung ke MJKN
+                        $hasOwnUnlinkedBooking = false;
+                        if ($totalKuota > 0 && $sisaKuota <= 0 && !empty($data_pasien['no_rkm_medis'])) {
+                            $ownBk = $this->db('booking_registrasi')
+                                ->where('no_rkm_medis', $data_pasien['no_rkm_medis'])
+                                ->where('tanggal_periksa', $tanggal)
+                                ->where('kd_poli', $kdPoliRs)
+                                ->where('kd_dokter', $kdDokterRs)
+                                ->where('status', 'Belum')
+                                ->oneArray();
+                            if (!empty($ownBk)) {
+                                $ownRef = $this->db()->pdo()->prepare(
+                                    "SELECT kodebooking FROM mlite_antrian_referensi
+                                     WHERE no_rkm_medis = ? AND tanggal_periksa = ?
+                                       AND (status_kirim IS NULL OR status_kirim != 'Batal')
+                                     LIMIT 1"
+                                );
+                                $ownRef->execute([$data_pasien['no_rkm_medis'], $tanggal]);
+                                if (!$ownRef->fetchColumn()) {
+                                    $hasOwnUnlinkedBooking = true;
+                                }
+                            }
+                        }
+
+                        if ($totalKuota > 0 && ($sisaKuota > 0 || $hasOwnUnlinkedBooking)) {
                             $cek_kuota = $rowJadwal;
                             $cek_kuota['sisa_kuota'] = $sisaKuota;
                             $cek_kuota['total_terdaftar'] = $totalTerdaftar;
+                            $cek_kuota['own_reserved'] = $hasOwnUnlinkedBooking;
                         } else {
                             $cek_kuota = false;
                         }
@@ -328,12 +353,41 @@ class Site extends SiteModule
                     $jadwal = $jadwal_q->oneArray();
                 }
 
-                $cek_referensi = ($nomorreferensi !== '' && $tanggal !== '')
-                    ? $this->db('mlite_antrian_referensi')->where('nomor_referensi', $nomorreferensi)->where('tanggal_periksa', $tanggal)->oneArray()
-                    : null;
-                $cek_referensi_noka = ($nomorkartu !== '' && $tanggal !== '')
-                    ? $this->db('mlite_antrian_referensi')->where('nomor_kartu', $nomorkartu)->where('tanggal_periksa', $tanggal)->oneArray()
-                    : null;
+                $cek_referensi = null;
+                if ($nomorreferensi !== '' && $tanggal !== '') {
+                    $stRef1 = $this->db()->pdo()->prepare(
+                        "SELECT * FROM mlite_antrian_referensi
+                         WHERE nomor_referensi = ? AND tanggal_periksa = ?
+                           AND (status_kirim IS NULL OR status_kirim != 'Batal')
+                         LIMIT 1"
+                    );
+                    $stRef1->execute([$nomorreferensi, $tanggal]);
+                    $candRef1 = $stRef1->fetch(\PDO::FETCH_ASSOC) ?: null;
+                    if ($candRef1 && !empty($candRef1['kodebooking'])) {
+                        $isBatal1 = $this->db('mlite_antrian_referensi_batal')->where('kodebooking', $candRef1['kodebooking'])->oneArray();
+                        if (!$isBatal1) {
+                            $cek_referensi = $candRef1;
+                        }
+                    }
+                }
+
+                $cek_referensi_noka = null;
+                if ($nomorkartu !== '' && $tanggal !== '') {
+                    $stRef2 = $this->db()->pdo()->prepare(
+                        "SELECT * FROM mlite_antrian_referensi
+                         WHERE nomor_kartu = ? AND tanggal_periksa = ?
+                           AND (status_kirim IS NULL OR status_kirim != 'Batal')
+                         LIMIT 1"
+                    );
+                    $stRef2->execute([$nomorkartu, $tanggal]);
+                    $candRef2 = $stRef2->fetch(\PDO::FETCH_ASSOC) ?: null;
+                    if ($candRef2 && !empty($candRef2['kodebooking'])) {
+                        $isBatal2 = $this->db('mlite_antrian_referensi_batal')->where('kodebooking', $candRef2['kodebooking'])->oneArray();
+                        if (!$isBatal2) {
+                            $cek_referensi_noka = $candRef2;
+                        }
+                    }
+                }
 
                 $errors = [];
                 if (!empty($cek_referensi['tanggal_periksa'])) {
@@ -394,7 +448,7 @@ class Site extends SiteModule
                     );
                     $httpCode = 201;
                 } else {
-                    if (!empty($cek_kuota) && (int)$cek_kuota['sisa_kuota'] > 0) {
+                    if (!empty($cek_kuota) && ((int)$cek_kuota['sisa_kuota'] > 0 || !empty($cek_kuota['own_reserved']))) {
                         if (empty($data_pasien)) {
                             $autoPasienBaru = strtolower(trim((string)($this->settings->get('jkn_mobile.auto_pasien_baru') ?? 'ya')));
                             if ($autoPasienBaru === 'tidak') {
@@ -552,13 +606,103 @@ class Site extends SiteModule
                             }
 
                             if (!empty($existingBooking)) {
-                                $response = array(
-                                    'metadata' => array(
-                                        'message' => 'Anda sudah terdaftar dalam antrian ditanggal ' . $tanggal . '. Silahkan pilih tanggal lain.',
-                                        'code' => 201
-                                    )
+                                // Cek apakah booking di booking_registrasi berasal dari booking manual / Surat Kontrol SIMRS
+                                // yang belum terhubung ke mlite_antrian_referensi -> jika cocok poli & dokter, sambungkan otomatis ke Mobile JKN!
+                                $kdDokterRsMatch = $cek_kuota['kd_dokter'] ?: ($jadwal['kd_dokter'] ?? $dokter['kd_dokter']);
+                                $kdPoliRsMatch = $cek_kuota['kd_poli'] ?: ($jadwal['kd_poli'] ?? $poli['kd_poli_rs']);
+
+                                $stLinked = $this->db()->pdo()->prepare(
+                                    "SELECT kodebooking FROM mlite_antrian_referensi
+                                     WHERE no_rkm_medis = ? AND tanggal_periksa = ?
+                                       AND (status_kirim IS NULL OR status_kirim != 'Batal')
+                                     LIMIT 1"
                                 );
-                                $httpCode = 201;
+                                $stLinked->execute([$data_pasien['no_rkm_medis'], $tanggal]);
+                                $linkedKb = $stLinked->fetchColumn();
+                                if ($linkedKb) {
+                                    $isLinkedBatal = $this->db('mlite_antrian_referensi_batal')->where('kodebooking', $linkedKb)->oneArray();
+                                    if ($isLinkedBatal) {
+                                        $linkedKb = false;
+                                    }
+                                }
+
+                                $canAutoLinkSuratKontrol = (
+                                    !$linkedKb &&
+                                    ($existingBooking['status'] ?? '') === 'Belum' &&
+                                    ($existingBooking['kd_poli'] ?? '') === $kdPoliRsMatch &&
+                                    ($kodedokter === '' || ($existingBooking['kd_dokter'] ?? '') === $kdDokterRsMatch)
+                                );
+
+                                if ($canAutoLinkSuratKontrol) {
+                                    $no_reg = (string)$existingBooking['no_reg'];
+                                    $no_urut_reg = (int)substr($no_reg, 0, 3);
+                                    $minutes = $no_urut_reg * 10;
+                                    $jamMulaiEst = date('H:i:s', strtotime('+' . $minutes . ' minutes', strtotime($cek_kuota['jam_mulai'])));
+                                    $keterangan = 'Peserta harap datang 30 menit lebih awal.';
+                                    $estimasi = strtotime($tanggal . ' ' . $jamMulaiEst) * 1000;
+                                    if (strtotime($tanggal) == strtotime(date('Y-m-d'))) {
+                                        $jamNowEst = date('H:i:s', strtotime('+' . $minutes . ' minutes', strtotime(date('H:i:s'))));
+                                        $estimasi = strtotime($tanggal . ' ' . $jamNowEst) * 1000;
+                                    }
+
+                                    $this->db('booking_registrasi')
+                                        ->where('no_rkm_medis', $data_pasien['no_rkm_medis'])
+                                        ->where('tanggal_periksa', $tanggal)
+                                        ->save([
+                                            'kd_pj' => $this->settings->get('jkn_mobile.kd_pj_bpjs') ?: ($existingBooking['kd_pj'] ?? 'BPJ'),
+                                            'limit_reg' => 1
+                                        ]);
+
+                                    $kodebooking = $this->settings->get('settings.ppk_bpjs') . date('YmdHis') . $kodepoli . $no_reg . 'MJKN';
+                                    $sisaKuota = max(0, (int)$cek_kuota['sisa_kuota']); // Slot sudah terhitung sebelumnya
+                                    $totalKuota = (int)$cek_kuota['kuota'];
+                                    $namaDokter = !empty($jadwal['nm_dokter_bpjs']) ? $jadwal['nm_dokter_bpjs'] : ($dokter['nm_dokter_bpjs'] ?? $cek_kuota['nm_dokter']);
+                                    $pasienbaru = ($data_pasien['tgl_daftar'] == $tanggal) ? 1 : 0;
+
+                                    $response = array(
+                                        'response' => array(
+                                            'nomorantrean' => $kodepoli . '-' . $no_reg,
+                                            'angkaantrean' => (int)$no_reg,
+                                            'kodebooking' => $kodebooking,
+                                            'pasienbaru' => (int)$pasienbaru,
+                                            'norm' => (string)$data_pasien['no_rkm_medis'],
+                                            'namapoli' => (string)$cek_kuota['nm_poli'],
+                                            'namadokter' => (string)$namaDokter,
+                                            'estimasidilayani' => (int)$estimasi,
+                                            'sisakuotajkn' => $sisaKuota,
+                                            'kuotajkn' => $totalKuota,
+                                            'sisakuotanonjkn' => $sisaKuota,
+                                            'kuotanonjkn' => $totalKuota,
+                                            'keterangan' => $keterangan
+                                        ),
+                                        'metadata' => array(
+                                            'message' => 'Ok',
+                                            'code' => 200
+                                        )
+                                    );
+                                    $httpCode = 200;
+
+                                    if ($nomorreferensi !== '') {
+                                        $this->db('mlite_antrian_referensi')->save([
+                                            'tanggal_periksa' => $tanggal,
+                                            'no_rkm_medis' => $data_pasien['no_rkm_medis'],
+                                            'nomor_kartu' => $nomorkartu,
+                                            'nomor_referensi' => $nomorreferensi,
+                                            'kodebooking' => $kodebooking,
+                                            'jenis_kunjungan' => $jeniskunjungan,
+                                            'status_kirim' => 'Belum',
+                                            'keterangan' => ''
+                                        ]);
+                                    }
+                                } else {
+                                    $response = array(
+                                        'metadata' => array(
+                                            'message' => 'Anda sudah terdaftar dalam antrian ditanggal ' . $tanggal . '. Silahkan pilih tanggal lain.',
+                                            'code' => 201
+                                        )
+                                    );
+                                    $httpCode = 201;
+                                }
                             } else {
                                 $kdDokterRs = $cek_kuota['kd_dokter'] ?: ($jadwal['kd_dokter'] ?? $dokter['kd_dokter']);
                                 $kdPoliRs = $cek_kuota['kd_poli'] ?: ($jadwal['kd_poli'] ?? $poli['kd_poli_rs']);

@@ -2,16 +2,26 @@
 namespace Plugins\Oral_Diagnostic;
 
 use Systems\AdminModule;
+use Systems\Lib\BpjsService;
+use LZCompressor\LZString;
 
 class Admin extends AdminModule
 {
   protected $oral_diagnostic;
+  protected $consid;
+  protected $secretkey;
+  protected $user_key;
+  protected $api_url;
   protected $assign = [];
   private $_uploads = WEBAPPS_PATH . '/berkasrawat/pages/upload';
 
   public function init()
   {
     $this->oral_diagnostic = 'OD';
+    $this->consid = $this->settings->get('settings.BpjsConsID');
+    $this->secretkey = $this->settings->get('settings.BpjsSecretKey');
+    $this->user_key = $this->settings->get('settings.BpjsUserKey');
+    $this->api_url = $this->settings->get('settings.BpjsApiUrl');
   }
 
   public function navigation()
@@ -838,6 +848,19 @@ class Admin extends AdminModule
         $update['kd_dokter'] = $kd_dokter;
       }
       $this->db('reg_periksa')->where('no_rawat', $no_rawat)->save($update);
+
+      // Sync booking_registrasi jika pasien ini sebelumnya terdaftar dari booking hari ini
+      $curr_reg = $this->db('reg_periksa')->where('no_rawat', $no_rawat)->oneArray();
+      if ($curr_reg && isset($curr_reg['no_reg']) && isset($curr_reg['tgl_registrasi'])) {
+        $bkUpdate = ['kd_poli' => $kd_poli];
+        if (!empty($kd_dokter)) {
+          $bkUpdate['kd_dokter'] = $kd_dokter;
+        }
+        $this->db('booking_registrasi')
+          ->where('no_reg', $curr_reg['no_reg'])
+          ->where('tanggal_periksa', $curr_reg['tgl_registrasi'])
+          ->save($bkUpdate);
+      }
 
       // Simpan juga ke mlite_rujukan_internal_poli (jika tabel tersedia di server)
       try {
@@ -2716,6 +2739,205 @@ class Admin extends AdminModule
     } catch (\Exception $e) {
       echo json_encode(['status' => 'error', 'message' => 'Error: ' . $e->getMessage()]);
     }
+    exit();
+  }
+
+  public function anyKontrol()
+  {
+    $no_rkm_medis = $_POST['no_rkm_medis'] ?? '';
+    $skdpList = $this->db('skdp_bpjs')
+      ->leftJoin('dokter', 'dokter.kd_dokter = skdp_bpjs.kd_dokter')
+      ->where('skdp_bpjs.no_rkm_medis', $no_rkm_medis)
+      ->desc('skdp_bpjs.tanggal_datang')
+      ->toArray();
+
+    $result = [];
+    $i = 1;
+
+    if (!empty($skdpList)) {
+      foreach ($skdpList as $sk) {
+        $bk = $this->db('booking_registrasi')
+          ->leftJoin('poliklinik', 'poliklinik.kd_poli = booking_registrasi.kd_poli')
+          ->leftJoin('penjab', 'penjab.kd_pj = booking_registrasi.kd_pj')
+          ->where('booking_registrasi.no_rkm_medis', $no_rkm_medis)
+          ->where('booking_registrasi.tanggal_periksa', $sk['tanggal_datang'])
+          ->oneArray();
+
+        $stts = 'Belum Daftar (Mandiri JKN)';
+        if ($bk) {
+          $stts = ($bk['status'] === 'Terdaftar') ? 'Terdaftar' : 'Sudah Booking (' . $bk['status'] . ')';
+        }
+
+        $result[] = [
+          'nomor' => $i++,
+          'tanggal_periksa' => $sk['tanggal_datang'],
+          'no_reg' => !empty($bk['no_reg']) ? $bk['no_reg'] : $sk['no_antrian'],
+          'nm_poli' => !empty($bk['nm_poli']) ? $bk['nm_poli'] : '-',
+          'nm_dokter' => !empty($sk['nm_dokter']) ? $sk['nm_dokter'] : ($bk['nm_dokter'] ?? '-'),
+          'png_jawab' => !empty($bk['png_jawab']) ? $bk['png_jawab'] : 'BPJS Kesehatan',
+          'status' => $stts,
+          'kd_dokter' => $sk['kd_dokter'],
+          'kd_poli' => !empty($bk['kd_poli']) ? $bk['kd_poli'] : ''
+        ];
+      }
+    } else {
+      $rows = $this->db('booking_registrasi')
+        ->join('poliklinik', 'poliklinik.kd_poli=booking_registrasi.kd_poli')
+        ->join('dokter', 'dokter.kd_dokter=booking_registrasi.kd_dokter')
+        ->join('penjab', 'penjab.kd_pj=booking_registrasi.kd_pj')
+        ->where('no_rkm_medis', $no_rkm_medis)
+        ->toArray();
+      foreach ($rows as $row) {
+        $row['nomor'] = $i++;
+        $result[] = $row;
+      }
+    }
+
+    echo $this->draw('kontrol.html', ['booking_registrasi' => htmlspecialchars_array($result)]);
+    exit();
+  }
+
+  public function postSaveKontrol()
+  {
+    $query = $this->db('skdp_bpjs')->save([
+      'tahun' => date('Y'),
+      'no_rkm_medis' => $_POST['no_rkm_medis'],
+      'diagnosa' => $_POST['diagnosa'],
+      'terapi' => $_POST['terapi'],
+      'alasan1' => $_POST['alasan1'],
+      'alasan2' => '',
+      'rtl1' => $_POST['rtl1'],
+      'rtl2' => '',
+      'tanggal_datang' => $_POST['tanggal_datang'],
+      'tanggal_rujukan' => $_POST['tanggal_rujukan'],
+      'no_antrian' => $this->core->setNoSKDP(),
+      'kd_dokter' => $this->core->getRegPeriksaInfo('kd_dokter', $_POST['no_rawat']),
+      'status' => 'Menunggu'
+    ]);
+
+    // Pasien mendaftar mandiri via aplikasi Mobile JKN BPJS (tidak didaftarkan otomatis ke booking_registrasi)
+    // Bersihkan data booking internal sisa jika ada yang berstatus Belum tanpa kodebooking Mobile JKN
+    if ($query && !empty($_POST['no_rkm_medis']) && !empty($_POST['tanggal_datang'])) {
+      $existingBooking = $this->db('booking_registrasi')
+        ->where('no_rkm_medis', $_POST['no_rkm_medis'])
+        ->where('tanggal_periksa', $_POST['tanggal_datang'])
+        ->where('status', 'Belum')
+        ->oneArray();
+      if ($existingBooking) {
+        $ref = $this->db('mlite_antrian_referensi')
+          ->where('no_rkm_medis', $_POST['no_rkm_medis'])
+          ->where('tanggal_periksa', $_POST['tanggal_datang'])
+          ->oneArray();
+        if (!$ref || empty($ref['kodebooking'])) {
+          $this->db('booking_registrasi')
+            ->where('no_rkm_medis', $_POST['no_rkm_medis'])
+            ->where('tanggal_periksa', $_POST['tanggal_datang'])
+            ->where('status', 'Belum')
+            ->delete();
+        }
+      }
+    }
+
+    exit();
+  }
+
+  public function postSaveKontrolBPJS()
+  {
+    date_default_timezone_set('UTC');
+    $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+    $key = $this->consid . $this->secretkey . $tStamp;
+    $_POST['sep_user']  = $this->core->getUserInfo('fullname', null, true);
+
+    $maping_dokter_dpjpvclaim = $this->db('maping_dokter_dpjpvclaim')->where('kd_dokter', $this->core->getRegPeriksaInfo('kd_dokter', $_POST['no_rawat']))->oneArray();
+    $maping_poli_bpjs = $this->db('maping_poli_bpjs')->where('kd_poli_rs', $this->core->getRegPeriksaInfo('kd_poli', $_POST['no_rawat']))->oneArray();
+    $get_sep = $this->db('bridging_sep')->where('no_rawat', $_POST['no_rawat'])->oneArray();
+    $_POST['no_sep'] = $get_sep['no_sep'];
+    $get_sep_internal = $this->db('bridging_sep_internal')->where('no_rawat', $_POST['no_rawat'])->oneArray();
+
+    if(empty($get_sep['no_sep'])) {
+      $_POST['no_sep'] = $get_sep_internal['no_sep'];
+    }
+
+    $data = [
+      'request' => [
+        'noSEP' => $_POST['no_sep'],
+        'kodeDokter' => $maping_dokter_dpjpvclaim['kd_dokter_bpjs'],
+        'poliKontrol' => $maping_poli_bpjs['kd_poli_bpjs'],
+        'tglRencanaKontrol' => $_POST['tanggal_datang'],
+        'user' => $_POST['sep_user']
+      ]
+    ];
+    $statusUrl = 'insert';
+    $method = 'post';
+
+    $data = json_encode($data);
+
+    $url = $this->api_url . 'RencanaKontrol/' . $statusUrl;
+    $output = BpjsService::$method($url, $data, $this->consid, $this->secretkey, $this->user_key, $tStamp);
+    $data = json_decode($output, true);
+    if ($data == NULL) {
+      echo 'Koneksi ke server BPJS terputus. Silahkan ulangi beberapa saat lagi!';
+    } else if ($data['metaData']['code'] == 200) {
+      $stringDecrypt = stringDecrypt($key, $data['response']);
+      $decompress = '""';
+      $decompress = \LZCompressor\LZString::decompressFromEncodedURIComponent(($stringDecrypt));
+      $spri = json_decode($decompress, true);
+
+      $this->db('bridging_surat_kontrol_bpjs')->save([
+        'no_sep' => $_POST['no_sep'],
+        'tgl_surat' => $_POST['tanggal_rujukan'],
+        'no_surat' => $spri['noSuratKontrol'],
+        'tgl_rencana' => $_POST['tanggal_datang'],
+        'kd_dokter_bpjs' => $maping_dokter_dpjpvclaim['kd_dokter_bpjs'],
+        'nm_dokter_bpjs' => $maping_dokter_dpjpvclaim['nm_dokter_bpjs'],
+        'kd_poli_bpjs' => $maping_poli_bpjs['kd_poli_bpjs'],
+        'nm_poli_bpjs' => $maping_poli_bpjs['nm_poli_bpjs']
+      ]);
+    }
+
+    exit();
+  }
+
+  public function postHapusKontrol()
+  {
+    $no_rkm_medis = $_POST['no_rkm_medis'] ?? '';
+    $tanggal_periksa = $_POST['tanggal_periksa'] ?? '';
+    $kd_dokter = $_POST['kd_dokter'] ?? '';
+
+    // Batalkan juga di BPJS Antrean Mobile JKN jika ada mapping referensi
+    if (!empty($no_rkm_medis) && !empty($tanggal_periksa)) {
+      $ref = $this->db('mlite_antrian_referensi')
+        ->where('no_rkm_medis', $no_rkm_medis)
+        ->where('tanggal_periksa', $tanggal_periksa)
+        ->oneArray();
+      if ($ref && !empty($ref['kodebooking'])) {
+        $bpjsUrl = $this->settings->get('jkn_mobile.BpjsAntrianUrl');
+        $consId = $this->settings->get('jkn_mobile.BpjsConsID');
+        $secretKey = $this->settings->get('jkn_mobile.BpjsSecretKey');
+        $userKey = $this->settings->get('jkn_mobile.BpjsUserKey');
+        if (!empty($bpjsUrl) && !empty($consId) && !empty($secretKey)) {
+          date_default_timezone_set('UTC');
+          $tStamp = strval(time() - strtotime("1970-01-01 00:00:00"));
+          $payload = json_encode([
+            'kodebooking' => $ref['kodebooking'],
+            'keterangan' => 'Dibatalkan oleh petugas di SIMRS Oral Diagnostic'
+          ]);
+          try {
+            \Plugins\JKN_Mobile\BpjsService::post($bpjsUrl . 'antrean/batal', $payload, $consId, $secretKey, $userKey, $tStamp);
+          } catch (\Throwable $e) {}
+        }
+        $this->db('mlite_antrian_referensi_batal')->save([
+          'tanggal_batal' => date('Y-m-d'),
+          'nomor_referensi' => $ref['nomor_referensi'] ?? '-',
+          'kodebooking' => $ref['kodebooking'],
+          'keterangan' => 'Dibatalkan oleh petugas di SIMRS Oral Diagnostic'
+        ]);
+        $this->db('mlite_antrian_referensi')->where('kodebooking', $ref['kodebooking'])->delete();
+      }
+    }
+
+    $this->db('booking_registrasi')->where('kd_dokter', $kd_dokter)->where('no_rkm_medis', $no_rkm_medis)->where('tanggal_periksa', $tanggal_periksa)->where('status', 'Belum')->delete();
+    $this->db('skdp_bpjs')->where('kd_dokter', $kd_dokter)->where('no_rkm_medis', $no_rkm_medis)->where('tanggal_datang', $tanggal_periksa)->where('status', 'Menunggu')->delete();
     exit();
   }
 
