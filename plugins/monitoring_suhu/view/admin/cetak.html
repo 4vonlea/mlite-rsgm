@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <title>Form Monitoring Suhu &amp; Kelembaban — {?=$room.nama_ruangan?}</title>
+  <style>
+    @page { size: A4 landscape; margin: 12mm; }
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 11px;
+      color: #111827;
+      margin: 0;
+      padding: 15px;
+      background: #f3f4f6;
+    }
+    .sheet {
+      background: #fff;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 20px 24px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+    .toolbar-print {
+      max-width: 1100px;
+      margin: 0 auto 12px auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .btn-print {
+      background: #0284c7;
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 5px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-close {
+      background: #e5e7eb;
+      color: #111827;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .kop-header {
+      display: flex;
+      align-items: center;
+      border-bottom: 2px solid #111827;
+      padding-bottom: 10px;
+      margin-bottom: 12px;
+      gap: 14px;
+    }
+    .kop-logo img { height: 54px; width: auto; }
+    .kop-title { flex: 1; text-align: center; }
+    .kop-title h2 { margin: 0; font-size: 16px; text-transform: uppercase; letter-spacing: 0.4px; }
+    .kop-title p { margin: 3px 0 0 0; font-size: 11px; color: #374151; }
+    .doc-title {
+      text-align: center;
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin: 8px 0 12px 0;
+    }
+    .meta-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 12px;
+    }
+    .meta-table td {
+      padding: 4px 8px;
+      border: 1px solid #d1d5db;
+      font-size: 11px;
+    }
+    .meta-label { background: #f8fafc; font-weight: 700; width: 16%; }
+    .chart-wrap {
+      border: 1px solid #d1d5db;
+      padding: 8px 10px;
+      margin-bottom: 12px;
+      height: 190px;
+    }
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 16px;
+    }
+    .data-table th, .data-table td {
+      border: 1px solid #9ca3af;
+      padding: 5px 7px;
+      font-size: 10.5px;
+    }
+    .data-table th {
+      background: #f1f5f9;
+      text-align: center;
+      font-weight: 700;
+    }
+    .row-alert { background: #fef2f2; }
+    .badge-ok { color: #15803d; font-weight: 700; }
+    .badge-warn { color: #b91c1c; font-weight: 700; }
+    .ttd-grid {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 18px;
+      page-break-inside: avoid;
+    }
+    .ttd-box {
+      width: 34%;
+      text-align: center;
+      font-size: 11px;
+    }
+    .ttd-space { height: 55px; }
+    @media print {
+      body { background: #fff; padding: 0; }
+      .toolbar-print { display: none !important; }
+      .sheet { box-shadow: none; max-width: 100%; padding: 0; }
+    }
+  </style>
+  <script src="{?=url('assets/jscripts/Chart.bundle.min.js')?}"></script>
+</head>
+<body>
+  <div class="toolbar-print">
+    <div><strong>Pratinjau Cetak — Formulir Monitoring {?=($show_suhu && $show_kel ? 'Suhu & Kelembaban' : ($show_suhu ? 'Suhu' : 'Kelembaban'))?}</strong></div>
+    <div>
+      <button type="button" class="btn-print" onclick="window.print()">Cetak / Simpan PDF</button>
+      <button type="button" class="btn-close" onclick="window.close()">Tutup</button>
+    </div>
+  </div>
+
+  <div class="sheet">
+    <div class="kop-header">
+      {if: !empty($logo)}
+      <div class="kop-logo"><img src="{?=url($logo)?}" alt="Logo"></div>
+      {/if}
+      <div class="kop-title">
+        <h2>{?=$nama_instansi?}</h2>
+        {if: !empty($alamat)}<p>{?=$alamat?}</p>{/if}
+      </div>
+    </div>
+
+    <div class="doc-title">
+      LEMBAR MONITORING {?=($show_suhu && $show_kel ? 'SUHU DAN KELEMBABAN' : ($show_suhu ? 'SUHU' : 'KELEMBABAN'))?}
+    </div>
+
+    <table class="meta-table">
+      <tr>
+        <td class="meta-label">Unit</td>
+        <td><strong>[{?=$room.kode_unit?}] {?=$room.nama_unit?}</strong></td>
+        <td class="meta-label">Periode</td>
+        <td>{?=date('d/m/Y', strtotime($tgl_awal))?} s.d. {?=date('d/m/Y', strtotime($tgl_akhir))?}</td>
+      </tr>
+      <tr>
+        <td class="meta-label">Titik Ukur / Objek</td>
+        <td><strong>[{?=$room.kode_ruangan?}] {?=$room.nama_ruangan?}</strong> ({?=$room.jenis_objek?})</td>
+        <td class="meta-label">Standar Suhu</td>
+        <td><strong>{?=($show_suhu ? $room['suhu_min'] . ' – ' . $room['suhu_max'] . ' °C' : 'Tidak diukur')?}</strong></td>
+      </tr>
+      <tr>
+        <td class="meta-label">Lokasi / Alat Ukur</td>
+        <td>{?=($room.lokasi ?: '-')?} | Alat: {?=($room.kode_alat ?: '-')?}</td>
+        <td class="meta-label">Standar Kelembaban</td>
+        <td><strong>{?=($show_kel ? $room['kelembaban_min'] . ' – ' . $room['kelembaban_max'] . ' %RH' : 'Tidak diukur')?}</strong></td>
+      </tr>
+      <tr>
+        <td class="meta-label">Ringkasan Periode</td>
+        <td colspan="3">
+          Total Pencatatan: <strong>{?=count($logs)?}</strong>
+          {if: $show_suhu} | Rentang Suhu: <strong>{?=($min_suhu !== null ? $min_suhu . ' – ' . $max_suhu . ' °C' : '-')?}</strong>{/if}
+          {if: $show_kel} | Rentang Kelembaban: <strong>{?=($min_kel !== null ? $min_kel . ' – ' . $max_kel . ' %RH' : '-')?}</strong>{/if}
+          | Kejadian Di Luar Standar: <strong class="{?=($alert_count > 0 ? 'badge-warn' : 'badge-ok')?}">{?=$alert_count?}</strong>
+        </td>
+      </tr>
+    </table>
+
+    {if: !empty($logs)}
+    <div class="chart-wrap">
+      <canvas id="chartCetakSuhu"></canvas>
+    </div>
+    {/if}
+
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th style="width:4%;">No</th>
+          <th style="width:11%;">Tanggal</th>
+          <th style="width:8%;">Jam</th>
+          {if: $show_suhu}<th style="width:10%;">Suhu (°C)</th>{/if}
+          {if: $show_kel}<th style="width:11%;">Kelembaban (%RH)</th>{/if}
+          <th style="width:11%;">Status</th>
+          <th>Tindakan Perbaikan / Keterangan</th>
+          <th style="width:15%;">Petugas</th>
+        </tr>
+      </thead>
+      <tbody>
+        {if: empty($logs)}
+        <tr>
+          <td colspan="8" style="text-align:center; padding:18px; color:#6b7280;">Tidak ada data pencatatan pada periode ini.</td>
+        </tr>
+        {else}
+        {loop: $logs}
+        <tr class="{?=($value['status_keseluruhan'] == 'Peringatan' ? 'row-alert' : '')?}">
+          <td style="text-align:center;">{?=$key + 1?}</td>
+          <td style="text-align:center;">{?=date('d/m/Y', strtotime($value.tanggal))?}</td>
+          <td style="text-align:center;">{?=substr($value.jam, 0, 5)?}</td>
+          {if: $show_suhu}
+          <td style="text-align:center;" class="{?=(($value['status_suhu'] == 'Rendah' || $value['status_suhu'] == 'Tinggi') ? 'badge-warn' : '')?}">
+            {?=($value['suhu'] !== null ? $value['suhu'] : '-')?}{if: $value.status_suhu == 'Rendah' || $value.status_suhu == 'Tinggi'} ({?=$value.status_suhu?}){/if}
+          </td>
+          {/if}
+          {if: $show_kel}
+          <td style="text-align:center;" class="{?=(($value['status_kelembaban'] == 'Rendah' || $value['status_kelembaban'] == 'Tinggi') ? 'badge-warn' : '')?}">
+            {?=($value['kelembaban'] !== null ? $value['kelembaban'] : '-')?}{if: $value.status_kelembaban == 'Rendah' || $value.status_kelembaban == 'Tinggi'} ({?=$value.status_kelembaban?}){/if}
+          </td>
+          {/if}
+          <td style="text-align:center;">
+            {if: $value.status_keseluruhan == 'Peringatan'}
+              <span class="badge-warn">PERINGATAN</span>
+            {else}
+              <span class="badge-ok">Normal</span>
+            {/if}
+          </td>
+          <td>
+            {if: !empty($value.tindakan_perbaikan)}<strong>Tindakan:</strong> {?=$value.tindakan_perbaikan?}{/if}
+            {if: !empty($value.keterangan)}{if: !empty($value.tindakan_perbaikan)}<br>{/if}{?=$value.keterangan?}{/if}
+            {if: empty($value.tindakan_perbaikan) && empty($value.keterangan)}-{/if}
+          </td>
+          <td>{?=$value.petugas_nama?}</td>
+        </tr>
+        {/loop}
+        {/if}
+      </tbody>
+    </table>
+
+    <div class="ttd-grid">
+      <div class="ttd-box">
+        <div>Mengetahui,</div>
+        <div><strong>Kepala Instalasi / Penanggung Jawab Unit</strong></div>
+        <div class="ttd-space"></div>
+        <div>( ........................................................ )</div>
+      </div>
+      <div class="ttd-box">
+        <div>{?=$kota?}, {?=date('d/m/Y')?}</div>
+        <div><strong>Petugas Pencatat</strong></div>
+        <div class="ttd-space"></div>
+        <div><strong>{?=$dicetak_oleh?}</strong></div>
+      </div>
+    </div>
+    <div style="font-size:9.5px; color:#6b7280; margin-top:10px; text-align:right;">
+      Dicetak dari SIMRS mLITE pada {?=$dicetak_pada?}
+    </div>
+  </div>
+
+  <script>
+  (function() {
+    var chartCetak = {?=$chart_json?};
+    var canvas = document.getElementById('chartCetakSuhu');
+    if (!canvas || typeof Chart === 'undefined' || !chartCetak || !chartCetak.labels || chartCetak.labels.length === 0) return;
+
+    var n = chartCetak.labels.length;
+    var datasets = [];
+    var yAxes = [];
+
+    if (chartCetak.show_suhu) {
+      datasets.push({
+        label: 'Suhu (°C)',
+        data: chartCetak.suhu,
+        borderColor: '#dc2626',
+        backgroundColor: 'rgba(220,38,38,0.06)',
+        borderWidth: 2,
+        pointRadius: 2,
+        yAxisID: 'y-suhu'
+      });
+      yAxes.push({ id: 'y-suhu', position: 'left', scaleLabel: { display: true, labelString: 'Suhu (°C)' } });
+      if (chartCetak.suhu_max !== null && chartCetak.suhu_min !== null) {
+        var sMax = [];
+        var sMin = [];
+        for (var i = 0; i < n; i++) {
+          sMax.push(chartCetak.suhu_max);
+          sMin.push(chartCetak.suhu_min);
+        }
+        datasets.push({ label: 'Batas Atas Suhu (' + chartCetak.suhu_max + ' °C)', data: sMax, borderColor: 'rgba(220,38,38,0.5)', borderDash: [5, 4], borderWidth: 1, pointRadius: 0, fill: false, yAxisID: 'y-suhu' });
+        datasets.push({ label: 'Batas Bawah Suhu (' + chartCetak.suhu_min + ' °C)', data: sMin, borderColor: 'rgba(217,119,6,0.6)', borderDash: [5, 4], borderWidth: 1, pointRadius: 0, fill: false, yAxisID: 'y-suhu' });
+      }
+    }
+
+    if (chartCetak.show_kel) {
+      datasets.push({
+        label: 'Kelembaban (%RH)',
+        data: chartCetak.kelembaban,
+        borderColor: '#0284c7',
+        backgroundColor: 'rgba(2,132,199,0.05)',
+        borderWidth: 2,
+        pointRadius: 2,
+        yAxisID: 'y-kel'
+      });
+      yAxes.push({
+        id: 'y-kel',
+        position: chartCetak.show_suhu ? 'right' : 'left',
+        gridLines: { drawOnChartArea: !chartCetak.show_suhu },
+        scaleLabel: { display: true, labelString: '%RH' }
+      });
+      if (!chartCetak.show_suhu && chartCetak.kelembaban_max !== null && chartCetak.kelembaban_min !== null) {
+        var kMax = [];
+        var kMin = [];
+        for (var j = 0; j < n; j++) {
+          kMax.push(chartCetak.kelembaban_max);
+          kMin.push(chartCetak.kelembaban_min);
+        }
+        datasets.push({ label: 'Batas Atas RH (' + chartCetak.kelembaban_max + ' %)', data: kMax, borderColor: 'rgba(2,132,199,0.5)', borderDash: [5, 4], borderWidth: 1, pointRadius: 0, fill: false, yAxisID: 'y-kel' });
+        datasets.push({ label: 'Batas Bawah RH (' + chartCetak.kelembaban_min + ' %)', data: kMin, borderColor: 'rgba(217,119,6,0.6)', borderDash: [5, 4], borderWidth: 1, pointRadius: 0, fill: false, yAxisID: 'y-kel' });
+      }
+    }
+
+    new Chart(canvas.getContext('2d'), {
+      type: 'line',
+      data: { labels: chartCetak.labels, datasets: datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { duration: 0 },
+        scales: { yAxes: yAxes }
+      }
+    });
+  })();
+  </script>
+</body>
+</html>

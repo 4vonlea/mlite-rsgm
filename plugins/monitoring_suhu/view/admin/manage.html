@@ -1,0 +1,1175 @@
+<style>
+  .suhu-kpi-card {
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    border-left: 4px solid #cbd5e1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .suhu-kpi-card.kpi-blue { border-left-color: #0284c7; }
+  .suhu-kpi-card.kpi-green { border-left-color: #16a34a; }
+  .suhu-kpi-card.kpi-red { border-left-color: #dc2626; }
+  .suhu-kpi-card.kpi-amber { border-left-color: #d97706; }
+  .suhu-kpi-title { font-size: 11px; font-weight: 700; text-transform: uppercase; color: #64748b; margin-bottom: 4px; }
+  .suhu-kpi-val { font-size: 24px; font-weight: 700; color: #0f172a; line-height: 1.1; }
+  .suhu-kpi-ico { font-size: 28px; opacity: 0.25; }
+
+  .room-monitor-card {
+    background: #fff;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    border-top: 4px solid #94a3b8;
+    padding: 14px 15px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    transition: box-shadow 0.15s ease;
+  }
+  .room-monitor-card:hover { box-shadow: 0 4px 12px rgba(15,23,42,0.09); }
+  .room-monitor-card.state-normal { border-top-color: #16a34a; }
+  .room-monitor-card.state-peringatan { border-top-color: #dc2626; background: #fffafa; }
+  .room-monitor-card.state-belum { border-top-color: #f59e0b; }
+  .room-monitor-card.is-selected { box-shadow: 0 0 0 2px #0284c7; }
+
+  .room-metrics-box {
+    display: flex;
+    gap: 10px;
+    margin: 10px 0;
+  }
+  .room-metric-item {
+    flex: 1;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 8px 10px;
+    text-align: center;
+  }
+  .room-metric-item.metric-alert {
+    background: #fef2f2;
+    border-color: #fecaca;
+  }
+  .room-metric-label { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #64748b; }
+  .room-metric-val { font-size: 20px; font-weight: 700; color: #0f172a; line-height: 1.2; margin: 2px 0; }
+  .room-metric-item.metric-alert .room-metric-val { color: #dc2626; }
+  .room-metric-std { font-size: 10px; color: #64748b; }
+
+  .table-suhu th {
+    background: #f8fafc;
+    color: #334155;
+    font-size: 12px;
+    font-weight: 600;
+    vertical-align: middle !important;
+  }
+  .table-suhu td {
+    vertical-align: middle !important;
+    font-size: 12px;
+  }
+</style>
+
+<!-- Header -->
+<div class="row" style="margin-bottom: 15px;">
+  <div class="col-xs-12">
+    <div style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:10px;">
+      <div>
+        <h3 style="margin:0 0 4px 0; font-weight:700; color:#0f172a;">
+          <i class="fa fa-thermometer-half text-primary"></i> Monitoring Suhu &amp; Kelembaban
+        </h3>
+        <p class="text-muted" style="margin:0; font-size:13px;">
+          Monitoring ruang, kulkas, freezer, inkubator, dan alat lainnya per unit sesuai hak akses masing-masing.
+        </p>
+      </div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+        {if: $can_manage_titik}
+        <button type="button" class="btn btn-info btn-sm" style="font-weight:600;" onclick="bukaModalTitikUkur(0)">
+          <i class="fa fa-plus-square"></i> Tambah Titik Ukur (Ruang/Kulkas)
+        </button>
+        {/if}
+        {if: $can_input_log}
+        <button type="button" class="btn btn-primary btn-sm" style="font-weight:600;" onclick="bukaModalInputLog(0)">
+          <i class="fa fa-plus-circle"></i> Catat Nilai
+        </button>
+        {/if}
+        {if: $is_admin}
+        <a href="{?=url([ADMIN, 'monitoring_suhu', 'unit'])?}" class="btn btn-warning btn-sm" style="font-weight:600;">
+          <i class="fa fa-shield"></i> Kelola Unit &amp; Hak Akses
+        </a>
+        {/if}
+        {if: !empty($selected_titik)}
+        <a href="{?=url([ADMIN, 'monitoring_suhu', 'cetak'])?}&ruangan_id={?=$selected_titik.id?}&tgl_awal={?=$tgl_awal?}&tgl_akhir={?=$tgl_akhir?}" target="_blank" class="btn btn-default btn-sm">
+          <i class="fa fa-print text-primary"></i> Cetak Form ({?=$selected_titik.kode_ruangan?})
+        </a>
+        {/if}
+        {if: !empty($filtered_titik)}
+        <a href="{?=url([ADMIN, 'monitoring_suhu', 'exportcsv'])?}&unit_id={?=$unit_filter?}&ruangan_id={?=$ruangan_filter?}&tgl_awal={?=$tgl_awal?}&tgl_akhir={?=$tgl_akhir?}&status={?=$status_filter?}" class="btn btn-success btn-sm">
+          <i class="fa fa-file-excel-o"></i> Unduh CSV / Excel
+        </a>
+        {/if}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Empty State: Belum Ada Unit (Khusus Admin awal) -->
+{if: empty($allowed_units)}
+<div class="panel panel-default" style="border-radius:8px; box-shadow:0 1px 4px rgba(0,0,0,0.06);">
+  <div class="panel-body text-center" style="padding:45px 20px;">
+    <i class="fa fa-sitemap fa-3x" style="color:#cbd5e1; margin-bottom:12px;"></i>
+    <h4 style="font-weight:700; color:#1e293b;">Belum Ada Unit Monitoring yang Dibuat</h4>
+    <p class="text-muted" style="max-width:540px; margin:0 auto 16px auto; font-size:13px;">
+      Silakan buat unit/rumahan terlebih dahulu di menu <strong>Kelola Unit &amp; Hak Akses</strong> (misalnya: <em>Unit Laboratorium</em>, <em>Unit Server IT</em>, <em>Unit Farmasi</em>), lalu berikan hak akses ke pengguna unit terkait.
+    </p>
+    {if: $is_admin}
+    <a href="{?=url([ADMIN, 'monitoring_suhu', 'unit'])?}" class="btn btn-primary">
+      <i class="fa fa-shield"></i> Buat Unit &amp; Atur Hak Akses Sekarang
+    </a>
+    {/if}
+  </div>
+</div>
+{else}
+
+<!-- KPI Summary -->
+<div class="row">
+  <div class="col-xs-6 col-sm-3">
+    <div class="suhu-kpi-card kpi-blue">
+      <div>
+        <div class="suhu-kpi-title">Titik Ukur Aktif</div>
+        <div class="suhu-kpi-val">{?=$total_titik?}</div>
+      </div>
+      <i class="fa fa-cubes suhu-kpi-ico text-primary"></i>
+    </div>
+  </div>
+  <div class="col-xs-6 col-sm-3">
+    <div class="suhu-kpi-card kpi-green">
+      <div>
+        <div class="suhu-kpi-title">Normal Hari Ini</div>
+        <div class="suhu-kpi-val">{?=$count_normal_today?}</div>
+      </div>
+      <i class="fa fa-check-circle suhu-kpi-ico text-success"></i>
+    </div>
+  </div>
+  <div class="col-xs-6 col-sm-3">
+    <div class="suhu-kpi-card kpi-red">
+      <div>
+        <div class="suhu-kpi-title">Peringatan Hari Ini</div>
+        <div class="suhu-kpi-val">{?=$count_alert_today?}</div>
+      </div>
+      <i class="fa fa-exclamation-triangle suhu-kpi-ico text-danger"></i>
+    </div>
+  </div>
+  <div class="col-xs-6 col-sm-3">
+    <div class="suhu-kpi-card kpi-amber">
+      <div>
+        <div class="suhu-kpi-title">Belum Dicek Hari Ini</div>
+        <div class="suhu-kpi-val">{?=$count_unchecked_today?}</div>
+      </div>
+      <i class="fa fa-clock-o suhu-kpi-ico text-warning"></i>
+    </div>
+  </div>
+</div>
+
+<!-- Empty State: Unit sudah ada, tapi belum ada Titik Ukur -->
+{if: empty($titik_cards)}
+<div class="panel panel-default" style="border-radius:8px; box-shadow:0 1px 4px rgba(0,0,0,0.06); margin-bottom:16px;">
+  <div class="panel-body text-center" style="padding:36px 20px;">
+    <i class="fa fa-thermometer-empty fa-3x" style="color:#cbd5e1; margin-bottom:10px;"></i>
+    <h4 style="font-weight:700; color:#1e293b;">Belum Ada Titik Ukur di Unit Ini</h4>
+    <p class="text-muted" style="max-width:560px; margin:0 auto 14px auto; font-size:13px;">
+      Tambahkan ruangan, kulkas, freezer, inkubator, atau lemari penyimpanan yang ingin diukur. Anda dapat memilih apakah yang diukur <strong>Suhu saja</strong>, <strong>Kelembaban saja</strong>, atau <strong>Keduanya</strong>.
+    </p>
+    {if: $can_manage_titik}
+    <button type="button" class="btn btn-info" onclick="bukaModalTitikUkur(0)">
+      <i class="fa fa-plus-square"></i> Tambah Titik Ukur Pertama
+    </button>
+    {/if}
+  </div>
+</div>
+{else}
+<!-- Kartu Status Titik Ukur -->
+<div class="row">
+  {loop: $titik_cards}
+  <div class="col-md-4 col-sm-6">
+    <div class="room-monitor-card state-{?=$value.card_state?} {?=($ruangan_filter == $value['id'] ? 'is-selected' : '')?}">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+        <div>
+          <span class="label label-primary" style="font-size:10px;">{?=$value.nama_unit?}</span>
+          <span class="label label-default" style="font-size:10px;">{?=$value.jenis_objek?}</span>
+          {if: $value.mode_ukur == 'suhu'}
+            <span class="label label-warning" style="font-size:9.5px;">Suhu Saja</span>
+          {elseif: $value.mode_ukur == 'kelembaban'}
+            <span class="label label-info" style="font-size:9.5px;">Kelembaban Saja</span>
+          {/if}
+          <h4 style="margin:5px 0 2px 0; font-size:15px; font-weight:700; color:#0f172a;">{?=$value.nama_ruangan?}</h4>
+          <div style="font-size:11px; color:#64748b;">
+            <code>{?=$value.kode_ruangan?}</code>{if: !empty($value.lokasi)} · <i class="fa fa-map-marker"></i> {?=$value.lokasi?}{/if}
+          </div>
+        </div>
+        <div style="text-align:right; white-space:nowrap;">
+          {if: $value.card_state == 'peringatan'}
+            <span class="label label-danger"><i class="fa fa-exclamation-triangle"></i> Peringatan</span>
+          {elseif: $value.card_state == 'normal'}
+            <span class="label label-success"><i class="fa fa-check"></i> Normal</span>
+          {else}
+            <span class="label label-warning"><i class="fa fa-clock-o"></i> Belum Dicek</span>
+          {/if}
+          <div style="font-size:10px; color:#64748b; margin-top:4px;">Hari ini: <strong>{?=$value.today_count?}x</strong></div>
+        </div>
+      </div>
+
+      <div class="room-metrics-box">
+        {if: $value.mode_ukur == 'suhu' || $value.mode_ukur == 'keduanya'}
+        <div class="room-metric-item {?=(!empty($value['last_log']) && ($value['last_log']['status_suhu'] == 'Rendah' || $value['last_log']['status_suhu'] == 'Tinggi') ? 'metric-alert' : '')?}">
+          <div class="room-metric-label"><i class="fa fa-thermometer-half"></i> Suhu Terakhir</div>
+          <div class="room-metric-val">
+            {if: !empty($value.last_log) && $value.last_log.suhu !== null}{?=$value.last_log.suhu?} °C{else}-{/if}
+          </div>
+          <div class="room-metric-std">Standar: {?=$value.suhu_min?}–{?=$value.suhu_max?} °C</div>
+        </div>
+        {/if}
+        {if: $value.mode_ukur == 'kelembaban' || $value.mode_ukur == 'keduanya'}
+        <div class="room-metric-item {?=(!empty($value['last_log']) && ($value['last_log']['status_kelembaban'] == 'Rendah' || $value['last_log']['status_kelembaban'] == 'Tinggi') ? 'metric-alert' : '')?}">
+          <div class="room-metric-label"><i class="fa fa-tint"></i> Kelembaban</div>
+          <div class="room-metric-val">
+            {if: !empty($value.last_log) && $value.last_log.kelembaban !== null}{?=$value.last_log.kelembaban?} %{else}-{/if}
+          </div>
+          <div class="room-metric-std">Standar: {?=$value.kelembaban_min?}–{?=$value.kelembaban_max?} %</div>
+        </div>
+        {/if}
+      </div>
+
+      <div style="font-size:11px; color:#64748b; margin-bottom:10px; min-height:16px;">
+        {if: !empty($value.last_log)}
+          <i class="fa fa-history"></i> {?=date('d/m/Y', strtotime($value.last_log.tanggal))?} {?=substr($value.last_log.jam, 0, 5)?} — {?=$value.last_log.petugas_nama?}
+        {else}
+          <i class="fa fa-info-circle"></i> Belum ada pencatatan pada titik ukur ini.
+        {/if}
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; border-top:1px solid #f1f5f9; padding-top:8px;">
+        <div class="btn-group btn-group-xs">
+          <a href="{?=url([ADMIN, 'monitoring_suhu', 'manage'])?}&unit_id={?=$value.unit_id?}&ruangan_id={?=$value.id?}&tgl_awal={?=$tgl_awal?}&tgl_akhir={?=$tgl_akhir?}" class="btn btn-default" title="Filter Grafik & Riwayat">
+            <i class="fa fa-filter"></i> Filter
+          </a>
+          <a href="{?=url([ADMIN, 'monitoring_suhu', 'cetak'])?}&ruangan_id={?=$value.id?}&tgl_awal={?=$tgl_awal?}&tgl_akhir={?=$tgl_akhir?}" target="_blank" class="btn btn-default" title="Cetak Formulir">
+            <i class="fa fa-print"></i>
+          </a>
+          {if: $value.hak_akses == 'input'}
+          <button type="button" class="btn btn-default" title="Edit Titik Ukur" onclick="bukaModalTitikUkur({?=$value.id?})">
+            <i class="fa fa-pencil text-primary"></i>
+          </button>
+          <button type="button" class="btn btn-default" title="Hapus Titik Ukur" onclick="hapusTitikUkur({?=$value.id?}, '{?=addslashes($value.nama_ruangan)?}')">
+            <i class="fa fa-trash text-danger"></i>
+          </button>
+          {/if}
+        </div>
+        {if: $value.hak_akses == 'input'}
+        <button type="button" class="btn btn-primary btn-xs" onclick="bukaModalInputLog({?=$value.id?})">
+          <i class="fa fa-plus"></i> Catat
+        </button>
+        {/if}
+      </div>
+    </div>
+  </div>
+  {/loop}
+</div>
+{/if}
+
+<!-- Filter Panel -->
+<div class="panel panel-default" style="border-radius:6px; box-shadow:0 1px 3px rgba(0,0,0,0.05); margin-bottom:16px;">
+  <div class="panel-heading" style="background:#f8fafc; font-weight:600;">
+    <i class="fa fa-filter text-primary"></i> Filter Riwayat &amp; Grafik Monitoring
+  </div>
+  <div class="panel-body" style="padding:12px 15px;">
+    <form method="GET" action="{?=url([ADMIN, 'monitoring_suhu', 'manage'])?}">
+      <input type="hidden" name="t" value="{?=isset_or($_GET['t'])?}">
+      <div class="row">
+        <div class="col-md-2 col-sm-6">
+          <div class="form-group" style="margin-bottom:8px;">
+            <label style="font-size:12px;"><strong>Dari Tanggal:</strong></label>
+            <input type="date" name="tgl_awal" class="form-control input-sm" value="{?=$tgl_awal?}">
+          </div>
+        </div>
+        <div class="col-md-2 col-sm-6">
+          <div class="form-group" style="margin-bottom:8px;">
+            <label style="font-size:12px;"><strong>Sampai Tanggal:</strong></label>
+            <input type="date" name="tgl_akhir" class="form-control input-sm" value="{?=$tgl_akhir?}">
+          </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+          <div class="form-group" style="margin-bottom:8px;">
+            <label style="font-size:12px;"><strong>Unit:</strong></label>
+            <select name="unit_id" class="form-control input-sm">
+              {if: count($allowed_units) > 1}
+              <option value="0">-- Semua Unit Saya ({?=count($allowed_units)?}) --</option>
+              {/if}
+              {loop: $allowed_units}
+              <option value="{?=$value.id?}" {?=($unit_filter == $value['id'] ? 'selected' : '')?}>
+                [{?=$value.kode_unit?}] {?=$value.nama_unit?}
+              </option>
+              {/loop}
+            </select>
+          </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+          <div class="form-group" style="margin-bottom:8px;">
+            <label style="font-size:12px;"><strong>Titik Ukur:</strong></label>
+            <select name="ruangan_id" class="form-control input-sm">
+              <option value="0">-- Semua Titik Ukur --</option>
+              {loop: $filtered_titik}
+              <option value="{?=$value.id?}" {?=($ruangan_filter == $value['id'] ? 'selected' : '')?}>
+                [{?=$value.kode_ruangan?}] {?=$value.nama_ruangan?} ({?=$value.jenis_objek?})
+              </option>
+              {/loop}
+            </select>
+          </div>
+        </div>
+        <div class="col-md-2 col-sm-12">
+          <div class="form-group" style="margin-bottom:8px;">
+            <label style="font-size:12px;"><strong>Status:</strong></label>
+            <div style="display:flex; gap:6px;">
+              <select name="status" class="form-control input-sm">
+                <option value="Semua" {?=($status_filter == 'Semua' ? 'selected' : '')?}>Semua</option>
+                <option value="Normal" {?=($status_filter == 'Normal' ? 'selected' : '')?}>Normal</option>
+                <option value="Peringatan" {?=($status_filter == 'Peringatan' ? 'selected' : '')?}>Peringatan</option>
+              </select>
+              <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-search"></i></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Grafik Tren -->
+{if: !empty($logs)}
+<div class="panel panel-default" style="border-radius:6px; box-shadow:0 1px 3px rgba(0,0,0,0.05); margin-bottom:16px;">
+  <div class="panel-heading" style="background:#f8fafc; font-weight:600; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+    <div>
+      <i class="fa fa-line-chart text-primary"></i> Grafik Tren Pengukuran
+      {if: !empty($selected_titik)}
+        — <span class="text-primary">{?=$selected_titik.nama_ruangan?}</span>
+        <small class="text-muted">({?=$selected_titik.nama_unit?} · {?=$selected_titik.jenis_objek?})</small>
+      {/if}
+    </div>
+    <div style="font-size:11px; color:#64748b;">Menampilkan hingga 60 pengukuran terakhir</div>
+  </div>
+  <div class="panel-body">
+    <div style="position:relative; height:260px;">
+      <canvas id="chartSuhuKelembaban"></canvas>
+    </div>
+  </div>
+</div>
+{/if}
+
+<!-- Tabel Riwayat Pengukuran -->
+<div class="panel panel-default" style="border-radius:6px; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+  <div class="panel-heading" style="background:#f8fafc; font-weight:600;">
+    <i class="fa fa-table text-primary"></i> Riwayat Pengukuran (Total: {?=$total_logs?} catatan{if: $total_alert_logs > 0}, <span class="text-danger">{?=$total_alert_logs?} Peringatan</span>{/if})
+  </div>
+  <div class="panel-body" style="padding:12px 15px;">
+    <div class="table-responsive">
+      <table class="table table-bordered table-hover table-striped table-suhu" id="tabelMonitoringSuhu" style="width:100%;">
+        <thead>
+          <tr>
+            <th style="width:4%; text-align:center;">No</th>
+            <th style="width:12%;">Tanggal &amp; Jam</th>
+            <th style="width:19%;">Unit &amp; Titik Ukur</th>
+            <th style="width:12%; text-align:center;">Suhu (°C)</th>
+            <th style="width:12%; text-align:center;">Kelembaban (%RH)</th>
+            <th style="width:9%; text-align:center;">Status</th>
+            <th style="width:17%;">Tindakan / Catatan</th>
+            <th style="width:9%;">Petugas</th>
+            <th style="width:6%; text-align:center;">Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          {if: empty($logs)}
+          <tr>
+            <td colspan="9" class="text-center text-muted" style="padding:32px;">
+              <i class="fa fa-inbox fa-2x" style="color:#cbd5e1;"></i>
+              <p style="margin:8px 0 0 0;">Belum ada riwayat pengukuran pada filter ini.</p>
+            </td>
+          </tr>
+          {else}
+          {loop: $logs}
+          <tr class="{?=($value['status_keseluruhan'] == 'Peringatan' ? 'danger' : '')?}">
+            <td style="text-align:center;">{?=$key + 1?}</td>
+            <td>
+              <strong>{?=date('d/m/Y', strtotime($value.tanggal))?}</strong><br>
+              <small class="text-muted"><i class="fa fa-clock-o"></i> {?=substr($value.jam, 0, 5)?}</small>
+            </td>
+            <td>
+              <span class="label label-primary" style="font-size:9px;">{?=$value.nama_unit?}</span>
+              <span class="label label-default" style="font-size:9px;">{?=$value.jenis_objek?}</span><br>
+              <strong>{?=$value.nama_ruangan?}</strong> <small class="text-muted">({?=$value.kode_ruangan?})</small>
+            </td>
+            <td style="text-align:center;">
+              {if: $value.suhu !== null}
+                <strong style="font-size:14px;" class="{?=(($value['status_suhu'] == 'Rendah' || $value['status_suhu'] == 'Tinggi') ? 'text-danger' : 'text-success')?}">{?=$value.suhu?} °C</strong><br>
+                <small class="text-muted">({?=$value.suhu_min?}–{?=$value.suhu_max?})</small>
+                {if: $value.status_suhu == 'Rendah' || $value.status_suhu == 'Tinggi'}
+                  <div><span class="label label-danger" style="font-size:9px;">{?=$value.status_suhu?}</span></div>
+                {/if}
+              {else}
+                <span class="text-muted">-</span>
+              {/if}
+            </td>
+            <td style="text-align:center;">
+              {if: $value.kelembaban !== null}
+                <strong style="font-size:14px;" class="{?=(($value['status_kelembaban'] == 'Rendah' || $value['status_kelembaban'] == 'Tinggi') ? 'text-danger' : 'text-primary')?}">{?=$value.kelembaban?} %</strong><br>
+                <small class="text-muted">({?=$value.kelembaban_min?}–{?=$value.kelembaban_max?})</small>
+                {if: $value.status_kelembaban == 'Rendah' || $value.status_kelembaban == 'Tinggi'}
+                  <div><span class="label label-danger" style="font-size:9px;">{?=$value.status_kelembaban?}</span></div>
+                {/if}
+              {else}
+                <span class="text-muted">-</span>
+              {/if}
+            </td>
+            <td style="text-align:center;">
+              {if: $value.status_keseluruhan == 'Peringatan'}
+                <span class="label label-danger" style="font-size:11px; padding:4px 7px;"><i class="fa fa-exclamation-triangle"></i> Peringatan</span>
+              {else}
+                <span class="label label-success" style="font-size:11px; padding:4px 7px;"><i class="fa fa-check"></i> Normal</span>
+              {/if}
+            </td>
+            <td>
+              {if: !empty($value.tindakan_perbaikan)}
+                <div><strong class="text-danger">Tindakan:</strong> {?=$value.tindakan_perbaikan?}</div>
+              {/if}
+              {if: !empty($value.keterangan)}
+                <div class="text-muted">{?=$value.keterangan?}</div>
+              {/if}
+              {if: empty($value.tindakan_perbaikan) && empty($value.keterangan)}
+                <span class="text-muted">-</span>
+              {/if}
+            </td>
+            <td><small>{?=$value.petugas_nama?}</small></td>
+            <td style="text-align:center; white-space:nowrap;">
+              {if: $value.can_edit}
+              <div class="btn-group btn-group-xs">
+                <button type="button" class="btn btn-default" title="Edit" onclick="editLogSuhu({?=$value.id?})">
+                  <i class="fa fa-pencil text-primary"></i>
+                </button>
+                <button type="button" class="btn btn-danger" title="Hapus" onclick="hapusLogSuhu({?=$value.id?})">
+                  <i class="fa fa-trash"></i>
+                </button>
+              </div>
+              {else}
+                <span class="text-muted" title="Hanya Lihat"><i class="fa fa-lock"></i></span>
+              {/if}
+            </td>
+          </tr>
+          {/loop}
+          {/if}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{/if}
+
+<!-- Modal Tambah / Edit Titik Ukur (Ruang / Kulkas / Freezer / Inkubator / dll.) -->
+<div class="modal fade" id="modalTitikUkur" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content" style="border-radius:8px; overflow:hidden;">
+      <div class="modal-header" style="background:#0f172a; color:#fff; padding:14px 18px;">
+        <button type="button" class="close" data-dismiss="modal" style="color:#fff; opacity:0.85;">&times;</button>
+        <h4 class="modal-title" id="modalTitikTitle" style="font-weight:700; color:#fff;">
+          <i class="fa fa-plus-square text-info"></i> Tambah Titik Ukur (Ruangan / Kulkas / Alat)
+        </h4>
+      </div>
+      <form id="formTitikUkur" onsubmit="event.preventDefault(); simpanTitikUkur();">
+        <input type="hidden" id="t_id" name="id" value="0">
+        <div class="modal-body" style="padding:18px;">
+          <div class="row">
+            <div class="col-sm-6">
+              <div class="form-group">
+                <label><strong>Unit:</strong> <span class="text-danger">*</span></label>
+                <select id="t_unit_id" name="unit_id" class="form-control" required>
+                  {loop: $input_units}
+                  <option value="{?=$value.id?}">[{?=$value.kode_unit?}] {?=$value.nama_unit?}</option>
+                  {/loop}
+                </select>
+              </div>
+            </div>
+            <div class="col-sm-6">
+              <div class="form-group">
+                <label><strong>Jenis Objek:</strong> <span class="text-danger">*</span></label>
+                <select id="t_jenis" name="jenis_objek" class="form-control">
+                  <option value="Ruangan">Ruangan</option>
+                  <option value="Kulkas / Chiller">Kulkas / Chiller</option>
+                  <option value="Freezer">Freezer</option>
+                  <option value="Inkubator">Inkubator</option>
+                  <option value="Gudang / Lemari">Gudang / Lemari</option>
+                  <option value="Lainnya">Lainnya</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-sm-8">
+              <div class="form-group">
+                <label><strong>Nama Titik Ukur:</strong> <span class="text-danger">*</span></label>
+                <input type="text" id="t_nama" name="nama_ruangan" class="form-control" placeholder="Contoh: Kulkas Reagen 1 / Ruang Pemeriksaan Lab" required>
+              </div>
+            </div>
+            <div class="col-sm-4">
+              <div class="form-group">
+                <label><strong>Kode (Opsional):</strong></label>
+                <input type="text" id="t_kode" name="kode_ruangan" class="form-control" placeholder="Otomatis jika kosong">
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label><strong>Parameter yang Diukur:</strong> <span class="text-danger">*</span></label>
+            <select id="t_mode_ukur" name="mode_ukur" class="form-control" onchange="toggleFieldModeTitik()">
+              <option value="keduanya">Suhu (°C) &amp; Kelembaban (%RH) — Keduanya</option>
+              <option value="suhu">Hanya Suhu (°C) — Misal: Kulkas, Freezer, Inkubator</option>
+              <option value="kelembaban">Hanya Kelembaban (%RH)</option>
+            </select>
+          </div>
+
+          <div class="row">
+            <div class="col-xs-6 col-sm-3 wrap-std-suhu">
+              <div class="form-group">
+                <label style="font-size:12px;"><strong>Suhu Min (°C):</strong></label>
+                <input type="number" step="0.1" id="t_suhu_min" name="suhu_min" class="form-control" value="18.0">
+              </div>
+            </div>
+            <div class="col-xs-6 col-sm-3 wrap-std-suhu">
+              <div class="form-group">
+                <label style="font-size:12px;"><strong>Suhu Max (°C):</strong></label>
+                <input type="number" step="0.1" id="t_suhu_max" name="suhu_max" class="form-control" value="25.0">
+              </div>
+            </div>
+            <div class="col-xs-6 col-sm-3 wrap-std-kel">
+              <div class="form-group">
+                <label style="font-size:12px;"><strong>RH Min (%):</strong></label>
+                <input type="number" step="0.1" id="t_kel_min" name="kelembaban_min" class="form-control" value="40.0">
+              </div>
+            </div>
+            <div class="col-xs-6 col-sm-3 wrap-std-kel">
+              <div class="form-group">
+                <label style="font-size:12px;"><strong>RH Max (%):</strong></label>
+                <input type="number" step="0.1" id="t_kel_max" name="kelembaban_max" class="form-control" value="60.0">
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-sm-6">
+              <div class="form-group">
+                <label><strong>Lokasi / Penempatan:</strong></label>
+                <input type="text" id="t_lokasi" name="lokasi" class="form-control" placeholder="Misal: Lantai 1 sisi kanan">
+              </div>
+            </div>
+            <div class="col-sm-6">
+              <div class="form-group">
+                <label><strong>Alat Ukur / Kalibrasi:</strong></label>
+                <input type="text" id="t_alat" name="kode_alat" class="form-control" placeholder="Misal: HTC-2 SN-01">
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-sm-8">
+              <div class="form-group" style="margin-bottom:8px;">
+                <label><strong>Keterangan:</strong></label>
+                <input type="text" id="t_ket" name="keterangan" class="form-control" placeholder="Catatan opsional...">
+              </div>
+            </div>
+            <div class="col-sm-4">
+              <div class="form-group" style="margin-bottom:8px;">
+                <label><strong>Status:</strong></label>
+                <select id="t_aktif" name="aktif" class="form-control">
+                  <option value="1">Aktif</option>
+                  <option value="0">Nonaktif</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div id="titikFormAlert"></div>
+        </div>
+        <div class="modal-footer" style="background:#f8fafc;">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Batal</button>
+          <button type="submit" class="btn btn-info" id="btnSimpanTitik">
+            <i class="fa fa-save"></i> Simpan Titik Ukur
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Input / Edit Nilai Suhu & Kelembaban -->
+<div class="modal fade" id="modalInputSuhu" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content" style="border-radius:8px; overflow:hidden;">
+      <div class="modal-header" style="background:#0f172a; color:#fff; padding:14px 18px;">
+        <button type="button" class="close" data-dismiss="modal" style="color:#fff; opacity:0.85;">&times;</button>
+        <h4 class="modal-title" id="modalInputSuhuTitle" style="font-weight:700; color:#fff;">
+          <i class="fa fa-thermometer-half text-info"></i> Catat Nilai Suhu / Kelembaban
+        </h4>
+      </div>
+      <form id="formInputSuhu" onsubmit="event.preventDefault(); simpanLogSuhu();">
+        <input type="hidden" id="log_id" name="id" value="0">
+        <div class="modal-body" style="padding:18px;">
+          <div class="form-group">
+            <label><strong>Titik Ukur (Ruangan / Kulkas / Alat):</strong> <span class="text-danger">*</span></label>
+            <select id="log_ruangan_id" name="ruangan_id" class="form-control" required onchange="updateInfoStandarTitik(); cekLiveAmbangBatas();">
+              <option value="">-- Pilih Titik Ukur --</option>
+              {loop: $input_titik}
+              <option value="{?=$value.id?}">[{?=$value.nama_unit?}] {?=$value.nama_ruangan?} ({?=$value.jenis_objek?})</option>
+              {/loop}
+            </select>
+            <div id="infoStandarRuanganBox" style="margin-top:6px; font-size:12px;"></div>
+          </div>
+
+          <div class="row">
+            <div class="col-sm-6">
+              <div class="form-group">
+                <label><strong>Tanggal:</strong> <span class="text-danger">*</span></label>
+                <input type="date" id="log_tanggal" name="tanggal" class="form-control" value="{?=date('Y-m-d')?}" required>
+              </div>
+            </div>
+            <div class="col-sm-6">
+              <div class="form-group">
+                <label><strong>Jam:</strong> <span class="text-danger">*</span></label>
+                <input type="time" id="log_jam" name="jam" class="form-control" value="{?=date('H:i')?}" required>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-sm-6" id="wrapInputSuhu">
+              <div class="form-group">
+                <label><strong>Suhu (°C):</strong> <span class="text-danger">*</span></label>
+                <input type="number" step="0.1" id="log_suhu" name="suhu" class="form-control input-lg" placeholder="Contoh: 22.5" oninput="cekLiveAmbangBatas()">
+              </div>
+            </div>
+            <div class="col-sm-6" id="wrapInputKelembaban">
+              <div class="form-group">
+                <label><strong>Kelembaban (%RH):</strong> <span class="text-danger">*</span></label>
+                <input type="number" step="0.1" id="log_kelembaban" name="kelembaban" class="form-control input-lg" placeholder="Contoh: 52.0" oninput="cekLiveAmbangBatas()">
+              </div>
+            </div>
+          </div>
+
+          <div id="liveAmbangAlert"></div>
+
+          <div class="form-group" id="wrapTindakanPerbaikan">
+            <label><strong>Tindakan Perbaikan (Jika di luar standar):</strong></label>
+            <textarea id="log_tindakan" name="tindakan_perbaikan" class="form-control" rows="2" placeholder="Contoh: Atur ulang suhu AC/kulkas, koordinasi IPSRS, pindahkan reagen..."></textarea>
+          </div>
+
+          <div class="form-group" style="margin-bottom:8px;">
+            <label><strong>Keterangan Tambahan:</strong></label>
+            <textarea id="log_keterangan" name="keterangan" class="form-control" rows="2" placeholder="Catatan opsional..."></textarea>
+          </div>
+
+          <div id="logFormAlert"></div>
+        </div>
+        <div class="modal-footer" style="background:#f8fafc;">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Batal</button>
+          <button type="submit" class="btn btn-primary" id="btnSimpanLogSuhu">
+            <i class="fa fa-save"></i> Simpan Pengukuran
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+var suhuTitikData = {?=$titik_json?};
+var suhuChartData = {?=$chart_json?};
+var suhuLogsData = {?=$logs_json?};
+
+function setSelectVal(selector, val) {
+  var el = $(selector);
+  el.val(val);
+  if (el.data('selectator') !== undefined) {
+    el.selectator('refresh');
+  }
+}
+
+function getTitikById(tid) {
+  tid = parseInt(tid, 10);
+  for (var i = 0; i < suhuTitikData.length; i++) {
+    if (parseInt(suhuTitikData[i].id, 10) === tid) {
+      return suhuTitikData[i];
+    }
+  }
+  return null;
+}
+
+$(document).ready(function() {
+  if ($('#tabelMonitoringSuhu tbody tr').length > 0 && !$('#tabelMonitoringSuhu tbody td[colspan]').length) {
+    $('#tabelMonitoringSuhu').DataTable({
+      pageLength: 25,
+      lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, 'Semua']],
+      order: [],
+      language: {
+        search: 'Cari:',
+        lengthMenu: 'Tampilkan _MENU_ data',
+        zeroRecords: 'Tidak ada data yang cocok',
+        info: 'Menampilkan _START_ s.d. _END_ dari _TOTAL_ catatan',
+        infoEmpty: 'Tidak ada data',
+        paginate: { first: 'Awal', last: 'Akhir', next: 'Berikutnya', previous: 'Sebelumnya' }
+      }
+    });
+  }
+  renderChartSuhu();
+});
+
+function renderChartSuhu() {
+  var canvas = document.getElementById('chartSuhuKelembaban');
+  if (!canvas || typeof Chart === 'undefined') return;
+  if (!suhuChartData || !suhuChartData.labels || suhuChartData.labels.length === 0) return;
+
+  var datasets = [];
+  var yAxes = [];
+
+  if (suhuChartData.has_suhu) {
+    datasets.push({
+      label: 'Suhu (°C)',
+      data: suhuChartData.suhu,
+      borderColor: '#ef4444',
+      backgroundColor: 'rgba(239, 68, 68, 0.08)',
+      yAxisID: 'y-suhu',
+      borderWidth: 2,
+      pointRadius: 3,
+      fill: true,
+      lineTension: 0.2,
+      spanGaps: true
+    });
+    yAxes.push({
+      id: 'y-suhu',
+      type: 'linear',
+      position: 'left',
+      scaleLabel: { display: true, labelString: 'Suhu (°C)' }
+    });
+    if (suhuChartData.suhu_max !== null && suhuChartData.suhu_min !== null) {
+      var n = suhuChartData.labels.length;
+      var sMaxArr = [];
+      var sMinArr = [];
+      for (var i = 0; i < n; i++) {
+        sMaxArr.push(suhuChartData.suhu_max);
+        sMinArr.push(suhuChartData.suhu_min);
+      }
+      datasets.push({
+        label: 'Batas Atas Suhu (' + suhuChartData.suhu_max + ' °C)',
+        data: sMaxArr,
+        borderColor: 'rgba(220, 38, 38, 0.55)',
+        borderDash: [6, 4],
+        borderWidth: 1.5,
+        pointRadius: 0,
+        fill: false,
+        yAxisID: 'y-suhu'
+      });
+      datasets.push({
+        label: 'Batas Bawah Suhu (' + suhuChartData.suhu_min + ' °C)',
+        data: sMinArr,
+        borderColor: 'rgba(245, 158, 11, 0.65)',
+        borderDash: [6, 4],
+        borderWidth: 1.5,
+        pointRadius: 0,
+        fill: false,
+        yAxisID: 'y-suhu'
+      });
+    }
+  }
+
+  if (suhuChartData.has_kelembaban) {
+    datasets.push({
+      label: 'Kelembaban (%RH)',
+      data: suhuChartData.kelembaban,
+      borderColor: '#0284c7',
+      backgroundColor: 'rgba(2, 132, 199, 0.06)',
+      yAxisID: 'y-kel',
+      borderWidth: 2,
+      pointRadius: 3,
+      fill: true,
+      lineTension: 0.2,
+      spanGaps: true
+    });
+    yAxes.push({
+      id: 'y-kel',
+      type: 'linear',
+      position: suhuChartData.has_suhu ? 'right' : 'left',
+      gridLines: { drawOnChartArea: !suhuChartData.has_suhu },
+      scaleLabel: { display: true, labelString: 'Kelembaban (%RH)' },
+      ticks: { suggestedMin: 20, suggestedMax: 80 }
+    });
+    if (!suhuChartData.has_suhu && suhuChartData.kelembaban_max !== null && suhuChartData.kelembaban_min !== null) {
+      var m = suhuChartData.labels.length;
+      var kMaxArr = [];
+      var kMinArr = [];
+      for (var j = 0; j < m; j++) {
+        kMaxArr.push(suhuChartData.kelembaban_max);
+        kMinArr.push(suhuChartData.kelembaban_min);
+      }
+      datasets.push({
+        label: 'Batas Atas RH (' + suhuChartData.kelembaban_max + ' %)',
+        data: kMaxArr,
+        borderColor: 'rgba(2, 132, 199, 0.55)',
+        borderDash: [6, 4],
+        borderWidth: 1.5,
+        pointRadius: 0,
+        fill: false,
+        yAxisID: 'y-kel'
+      });
+      datasets.push({
+        label: 'Batas Bawah RH (' + suhuChartData.kelembaban_min + ' %)',
+        data: kMinArr,
+        borderColor: 'rgba(245, 158, 11, 0.65)',
+        borderDash: [6, 4],
+        borderWidth: 1.5,
+        pointRadius: 0,
+        fill: false,
+        yAxisID: 'y-kel'
+      });
+    }
+  }
+
+  new Chart(canvas.getContext('2d'), {
+    type: 'line',
+    data: { labels: suhuChartData.labels, datasets: datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      tooltips: { mode: 'index', intersect: false },
+      scales: { yAxes: yAxes }
+    }
+  });
+}
+
+// ==================== MODAL TITIK UKUR ====================
+function toggleFieldModeTitik() {
+  var mode = $('#t_mode_ukur').val();
+  var needSuhu = (mode === 'suhu' || mode === 'keduanya');
+  var needKel = (mode === 'kelembaban' || mode === 'keduanya');
+
+  if (needSuhu) {
+    $('.wrap-std-suhu').show();
+    $('#t_suhu_min, #t_suhu_max').prop('required', true);
+  } else {
+    $('.wrap-std-suhu').hide();
+    $('#t_suhu_min, #t_suhu_max').prop('required', false);
+  }
+
+  if (needKel) {
+    $('.wrap-std-kel').show();
+    $('#t_kel_min, #t_kel_max').prop('required', true);
+  } else {
+    $('.wrap-std-kel').hide();
+    $('#t_kel_min, #t_kel_max').prop('required', false);
+  }
+}
+
+function bukaModalTitikUkur(tid) {
+  $('#titikFormAlert').html('');
+  $('#btnSimpanTitik').prop('disabled', false).html('<i class="fa fa-save"></i> Simpan Titik Ukur');
+
+  if (tid > 0) {
+    var t = getTitikById(tid);
+    if (!t) return;
+    $('#modalTitikTitle').html('<i class="fa fa-pencil text-warning"></i> Edit Titik Ukur');
+    $('#t_id').val(t.id);
+    setSelectVal('#t_unit_id', String(t.unit_id));
+    setSelectVal('#t_jenis', t.jenis_objek || 'Ruangan');
+    $('#t_nama').val(t.nama_ruangan);
+    $('#t_kode').val(t.kode_ruangan);
+    setSelectVal('#t_mode_ukur', t.mode_ukur || 'keduanya');
+    $('#t_suhu_min').val(t.suhu_min !== null ? t.suhu_min : '18.0');
+    $('#t_suhu_max').val(t.suhu_max !== null ? t.suhu_max : '25.0');
+    $('#t_kel_min').val(t.kelembaban_min !== null ? t.kelembaban_min : '40.0');
+    $('#t_kel_max').val(t.kelembaban_max !== null ? t.kelembaban_max : '60.0');
+    $('#t_lokasi').val(t.lokasi || '');
+    $('#t_alat').val(t.kode_alat || '');
+    $('#t_ket').val(t.keterangan || '');
+    setSelectVal('#t_aktif', String(t.aktif));
+  } else {
+    $('#modalTitikTitle').html('<i class="fa fa-plus-square text-info"></i> Tambah Titik Ukur (Ruangan / Kulkas / Alat)');
+    $('#t_id').val('0');
+    var defUnit = "{?=$unit_filter?}";
+    if (defUnit && $('#t_unit_id option[value="' + defUnit + '"]').length) {
+      setSelectVal('#t_unit_id', String(defUnit));
+    } else if ($('#t_unit_id option').length > 0) {
+      setSelectVal('#t_unit_id', $('#t_unit_id option:first').val());
+    }
+    setSelectVal('#t_jenis', 'Ruangan');
+    $('#t_nama').val('');
+    $('#t_kode').val('');
+    setSelectVal('#t_mode_ukur', 'keduanya');
+    $('#t_suhu_min').val('18.0');
+    $('#t_suhu_max').val('25.0');
+    $('#t_kel_min').val('40.0');
+    $('#t_kel_max').val('60.0');
+    $('#t_lokasi').val('');
+    $('#t_alat').val('');
+    $('#t_ket').val('');
+    setSelectVal('#t_aktif', '1');
+  }
+  toggleFieldModeTitik();
+  $('#modalTitikUkur').modal('show');
+}
+
+function simpanTitikUkur() {
+  var btn = $('#btnSimpanTitik');
+  btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Menyimpan...');
+  $('#titikFormAlert').html('');
+
+  $.ajax({
+    url: "{?=url([ADMIN, 'monitoring_suhu', 'savetitik'])?}",
+    method: 'POST',
+    dataType: 'json',
+    data: $('#formTitikUkur').serialize(),
+    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+    success: function(res) {
+      if (res && res.status === 'success') {
+        $('#titikFormAlert').html('<div class="alert alert-success" style="padding:8px 12px; font-size:12px;"><i class="fa fa-check-circle"></i> ' + res.message + '</div>');
+        setTimeout(function() { location.reload(); }, 550);
+      } else {
+        btn.prop('disabled', false).html('<i class="fa fa-save"></i> Simpan Titik Ukur');
+        $('#titikFormAlert').html('<div class="alert alert-danger" style="padding:8px 12px; font-size:12px;"><i class="fa fa-exclamation-triangle"></i> ' + ((res && res.message) ? res.message : 'Gagal menyimpan titik ukur.') + '</div>');
+      }
+    },
+    error: function(xhr) {
+      btn.prop('disabled', false).html('<i class="fa fa-save"></i> Simpan Titik Ukur');
+      var msg = (xhr && xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Gagal menghubungi server.';
+      $('#titikFormAlert').html('<div class="alert alert-danger" style="padding:8px 12px; font-size:12px;">' + msg + '</div>');
+    }
+  });
+}
+
+function hapusTitikUkur(tid, nama) {
+  if (!confirm('Hapus titik ukur "' + nama + '" secara permanen?')) return;
+  $.ajax({
+    url: "{?=url([ADMIN, 'monitoring_suhu', 'deletetitik'])?}",
+    method: 'POST',
+    dataType: 'json',
+    data: { id: tid },
+    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+    success: function(res) {
+      if (res && res.status === 'success') {
+        location.reload();
+      } else {
+        alert((res && res.message) ? res.message : 'Gagal menghapus titik ukur.');
+      }
+    },
+    error: function(xhr) {
+      var msg = (xhr && xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Gagal menghubungi server.';
+      alert(msg);
+    }
+  });
+}
+
+// ==================== MODAL INPUT / EDIT NILAI ====================
+function bukaModalInputLog(defaultTitikId) {
+  $('#modalInputSuhuTitle').html('<i class="fa fa-thermometer-half text-info"></i> Catat Nilai Suhu / Kelembaban');
+  $('#log_id').val('0');
+  var selTitik = defaultTitikId || "{?=$ruangan_filter?}";
+  if (selTitik && $('#log_ruangan_id option[value="' + selTitik + '"]').length) {
+    setSelectVal('#log_ruangan_id', String(selTitik));
+  } else if ($('#log_ruangan_id option').length === 2) {
+    setSelectVal('#log_ruangan_id', $('#log_ruangan_id option').eq(1).val());
+  } else {
+    setSelectVal('#log_ruangan_id', '');
+  }
+  $('#log_tanggal').val("{?=date('Y-m-d')?}");
+  var now = new Date();
+  $('#log_jam').val(String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0'));
+  $('#log_suhu').val('');
+  $('#log_kelembaban').val('');
+  $('#log_tindakan').val('');
+  $('#log_keterangan').val('');
+  $('#liveAmbangAlert').html('');
+  $('#logFormAlert').html('');
+  $('#wrapTindakanPerbaikan').css({ background: '', padding: '', borderRadius: '', border: '' });
+  updateInfoStandarTitik();
+  $('#modalInputSuhu').modal('show');
+}
+
+function editLogSuhu(logId) {
+  var target = null;
+  for (var i = 0; i < suhuLogsData.length; i++) {
+    if (parseInt(suhuLogsData[i].id, 10) === parseInt(logId, 10)) {
+      target = suhuLogsData[i];
+      break;
+    }
+  }
+  if (!target) return;
+
+  $('#modalInputSuhuTitle').html('<i class="fa fa-pencil text-warning"></i> Edit Catatan Pengukuran');
+  $('#log_id').val(target.id);
+  setSelectVal('#log_ruangan_id', String(target.ruangan_id));
+  $('#log_tanggal').val(target.tanggal);
+  $('#log_jam').val((target.jam || '').substring(0, 5));
+  $('#log_suhu').val(target.suhu !== null ? target.suhu : '');
+  $('#log_kelembaban').val(target.kelembaban !== null ? target.kelembaban : '');
+  $('#log_tindakan').val(target.tindakan_perbaikan || '');
+  $('#log_keterangan').val(target.keterangan || '');
+  $('#logFormAlert').html('');
+  updateInfoStandarTitik();
+  cekLiveAmbangBatas();
+  $('#modalInputSuhu').modal('show');
+}
+
+function updateInfoStandarTitik() {
+  var tid = $('#log_ruangan_id').val();
+  var t = getTitikById(tid);
+  if (!t) {
+    $('#infoStandarRuanganBox').html('');
+    $('#wrapInputSuhu, #wrapInputKelembaban').show().removeClass('col-sm-12').addClass('col-sm-6');
+    $('#log_suhu, #log_kelembaban').prop('required', false);
+    return;
+  }
+
+  var mode = t.mode_ukur || 'keduanya';
+  var parts = [];
+  if (mode === 'suhu' || mode === 'keduanya') {
+    parts.push('Suhu <strong>' + t.suhu_min + ' – ' + t.suhu_max + ' °C</strong>');
+    $('#wrapInputSuhu').show();
+    $('#log_suhu').prop('required', true);
+  } else {
+    $('#wrapInputSuhu').hide();
+    $('#log_suhu').prop('required', false).val('');
+  }
+
+  if (mode === 'kelembaban' || mode === 'keduanya') {
+    parts.push('Kelembaban <strong>' + t.kelembaban_min + ' – ' + t.kelembaban_max + ' %RH</strong>');
+    $('#wrapInputKelembaban').show();
+    $('#log_kelembaban').prop('required', true);
+  } else {
+    $('#wrapInputKelembaban').hide();
+    $('#log_kelembaban').prop('required', false).val('');
+  }
+
+  if (mode === 'suhu') {
+    $('#wrapInputSuhu').removeClass('col-sm-6').addClass('col-sm-12');
+  } else if (mode === 'kelembaban') {
+    $('#wrapInputKelembaban').removeClass('col-sm-6').addClass('col-sm-12');
+  } else {
+    $('#wrapInputSuhu, #wrapInputKelembaban').removeClass('col-sm-12').addClass('col-sm-6');
+  }
+
+  var alat = t.kode_alat ? ' | Alat: <strong>' + t.kode_alat + '</strong>' : '';
+  $('#infoStandarRuanganBox').html(
+    '<div class="alert alert-info" style="padding:7px 10px; margin:0; font-size:12px;">' +
+    '<i class="fa fa-info-circle"></i> Standar <strong>' + t.nama_ruangan + '</strong> (' + t.jenis_objek + '): ' +
+    parts.join(' | ') + alat +
+    '</div>'
+  );
+}
+
+function cekLiveAmbangBatas() {
+  var t = getTitikById($('#log_ruangan_id').val());
+  if (!t) {
+    $('#liveAmbangAlert').html('');
+    return;
+  }
+  var mode = t.mode_ukur || 'keduanya';
+  var sVal = $('#log_suhu').val();
+  var kVal = $('#log_kelembaban').val();
+  var needSuhu = (mode === 'suhu' || mode === 'keduanya');
+  var needKel = (mode === 'kelembaban' || mode === 'keduanya');
+
+  if ((needSuhu && sVal === '') && (needKel && kVal === '')) {
+    $('#liveAmbangAlert').html('');
+    $('#wrapTindakanPerbaikan').css({ background: '', padding: '', borderRadius: '', border: '' });
+    return;
+  }
+
+  var warnings = [];
+  if (needSuhu && sVal !== '' && !isNaN(parseFloat(sVal))) {
+    var s = parseFloat(sVal);
+    if (s < parseFloat(t.suhu_min)) warnings.push('Suhu terlalu RENDAH (< ' + t.suhu_min + ' °C)');
+    if (s > parseFloat(t.suhu_max)) warnings.push('Suhu terlalu TINGGI (> ' + t.suhu_max + ' °C)');
+  }
+  if (needKel && kVal !== '' && !isNaN(parseFloat(kVal))) {
+    var k = parseFloat(kVal);
+    if (k < parseFloat(t.kelembaban_min)) warnings.push('Kelembaban terlalu RENDAH (< ' + t.kelembaban_min + ' %RH)');
+    if (k > parseFloat(t.kelembaban_max)) warnings.push('Kelembaban terlalu TINGGI (> ' + t.kelembaban_max + ' %RH)');
+  }
+
+  var complete = (!needSuhu || sVal !== '') && (!needKel || kVal !== '');
+  if (warnings.length > 0) {
+    $('#liveAmbangAlert').html(
+      '<div class="alert alert-danger" style="padding:8px 12px; font-size:12px; margin-bottom:12px;">' +
+      '<i class="fa fa-exclamation-triangle"></i> <strong>PERINGATAN DI LUAR STANDAR:</strong> ' + warnings.join(' &amp; ') + '. Mohon tuliskan tindakan perbaikan di bawah.' +
+      '</div>'
+    );
+    $('#wrapTindakanPerbaikan').css({ background: '#fffbeb', padding: '10px', borderRadius: '6px', border: '1px solid #fde68a' });
+  } else if (complete) {
+    $('#liveAmbangAlert').html(
+      '<div class="alert alert-success" style="padding:8px 12px; font-size:12px; margin-bottom:12px;">' +
+      '<i class="fa fa-check-circle"></i> <strong>NORMAL:</strong> Nilai berada dalam rentang standar.' +
+      '</div>'
+    );
+    $('#wrapTindakanPerbaikan').css({ background: '', padding: '', borderRadius: '', border: '' });
+  } else {
+    $('#liveAmbangAlert').html('');
+  }
+}
+
+function simpanLogSuhu() {
+  var btn = $('#btnSimpanLogSuhu');
+  btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Menyimpan...');
+  $('#logFormAlert').html('');
+
+  $.ajax({
+    url: "{?=url([ADMIN, 'monitoring_suhu', 'savelog'])?}",
+    method: 'POST',
+    dataType: 'json',
+    data: $('#formInputSuhu').serialize(),
+    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+    success: function(res) {
+      if (res && res.status === 'success') {
+        var cls = (res.status_keseluruhan === 'Peringatan') ? 'alert-warning' : 'alert-success';
+        $('#logFormAlert').html('<div class="alert ' + cls + '" style="padding:8px 12px; font-size:12px;"><i class="fa fa-check-circle"></i> ' + res.message + '</div>');
+        setTimeout(function() {
+          $('#modalInputSuhu').modal('hide');
+          location.reload();
+        }, 650);
+      } else {
+        btn.prop('disabled', false).html('<i class="fa fa-save"></i> Simpan Pengukuran');
+        $('#logFormAlert').html('<div class="alert alert-danger" style="padding:8px 12px; font-size:12px;"><i class="fa fa-exclamation-triangle"></i> ' + ((res && res.message) ? res.message : 'Gagal menyimpan data.') + '</div>');
+      }
+    },
+    error: function(xhr) {
+      btn.prop('disabled', false).html('<i class="fa fa-save"></i> Simpan Pengukuran');
+      var msg = (xhr && xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Gagal menghubungi server.';
+      $('#logFormAlert').html('<div class="alert alert-danger" style="padding:8px 12px; font-size:12px;">' + msg + '</div>');
+    }
+  });
+}
+
+function hapusLogSuhu(logId) {
+  if (!confirm('Hapus catatan pengukuran ini?')) return;
+  $.ajax({
+    url: "{?=url([ADMIN, 'monitoring_suhu', 'deletelog'])?}",
+    method: 'POST',
+    dataType: 'json',
+    data: { id: logId },
+    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+    success: function(res) {
+      if (res && res.status === 'success') {
+        location.reload();
+      } else {
+        alert((res && res.message) ? res.message : 'Gagal menghapus catatan.');
+      }
+    },
+    error: function(xhr) {
+      var msg = (xhr && xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Gagal menghubungi server.';
+      alert(msg);
+    }
+  });
+}
+</script>

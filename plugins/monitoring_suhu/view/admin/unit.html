@@ -1,0 +1,510 @@
+<style>
+  .table-unit th {
+    background: #f8fafc;
+    color: #334155;
+    font-size: 12px;
+    font-weight: 600;
+    vertical-align: middle !important;
+  }
+  .table-unit td {
+    vertical-align: middle !important;
+    font-size: 12px;
+  }
+  .user-pill-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    border-radius: 14px;
+    padding: 2px 8px;
+    font-size: 11px;
+    margin: 2px 3px 2px 0;
+  }
+  .user-pill-tag.pill-view {
+    background: #eff6ff;
+    border-color: #bfdbfe;
+  }
+  .titik-chip {
+    display: inline-block;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-size: 10.5px;
+    margin: 2px 3px 2px 0;
+    color: #334155;
+  }
+  .user-picker-list {
+    max-height: 240px;
+    overflow-y: auto;
+    border: 1px solid #cbd5e1;
+    border-radius: 5px;
+    padding: 6px 8px;
+    background: #fff;
+  }
+  .user-picker-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 6px;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .user-picker-row:hover { background: #f8fafc; }
+</style>
+
+<!-- Header -->
+<div class="row" style="margin-bottom: 15px;">
+  <div class="col-xs-12">
+    <div style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:10px;">
+      <div>
+        <h3 style="margin:0 0 4px 0; font-weight:700; color:#0f172a;">
+          <i class="fa fa-shield text-warning"></i> Kelola Unit &amp; Hak Akses Monitoring Suhu
+        </h3>
+        <p class="text-muted" style="margin:0; font-size:13px;">
+          Buat unit/rumahan monitoring (misal: Unit Laboratorium, Unit Server IT, Unit Farmasi) dan tentukan pengguna yang berhak mengelola &amp; mengisi di masing-masing unit.
+        </p>
+      </div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <a href="{?=url([ADMIN, 'monitoring_suhu', 'manage'])?}" class="btn btn-default btn-sm">
+          <i class="fa fa-arrow-left"></i> Kembali ke Monitoring
+        </a>
+        <button type="button" class="btn btn-primary btn-sm" style="font-weight:600;" onclick="bukaModalUnit(0)">
+          <i class="fa fa-plus-circle"></i> Tambah Unit Baru
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="alert alert-info" style="font-size:12px; border-radius:6px; margin-bottom:16px;">
+  <i class="fa fa-info-circle"></i> <strong>Cara Kerja Hak Akses Per Unit:</strong>
+  <ol style="margin:5px 0 0 18px; padding:0;">
+    <li>Admin membuat <strong>Unit</strong> (rumahan), misalnya <em>Unit Laboratorium</em>, <em>Unit Server IT</em>, atau <em>Unit Farmasi</em>.</li>
+    <li>Admin menugaskan pengguna yang berhak pada masing-masing unit (hak akses modul <code>monitoring_suhu</code> otomatis disinkronkan).</li>
+    <li>Pengguna unit dengan hak <strong>Pengisi &amp; Kelola Titik Ukur</strong> dapat menambahkan sendiri <strong>Ruangan / Kulkas / Freezer / Inkubator</strong> di unitnya (memilih ukur Suhu saja, Kelembaban saja, atau Keduanya) lalu menginput nilai hariannya.</li>
+  </ol>
+</div>
+
+<!-- Tabel Master Unit & Hak Akses -->
+<div class="panel panel-default" style="border-radius:6px; box-shadow:0 1px 3px rgba(0,0,0,0.06);">
+  <div class="panel-heading" style="background:#f8fafc; font-weight:600;">
+    <i class="fa fa-sitemap text-primary"></i> Daftar Unit Monitoring ({?=count($units)?} Unit)
+  </div>
+  <div class="panel-body" style="padding:12px 15px;">
+    {if: empty($units)}
+    <div class="text-center text-muted" style="padding:40px 20px;">
+      <i class="fa fa-building-o fa-3x" style="color:#cbd5e1; margin-bottom:10px;"></i>
+      <h4 style="color:#334155; font-weight:600;">Belum Ada Unit Monitoring</h4>
+      <p style="font-size:13px; max-width:520px; margin:0 auto 15px auto;">
+        Mulai dengan membuat unit terlebih dahulu (contoh: <strong>Unit Laboratorium</strong>, <strong>Unit Server IT</strong>, <strong>Unit Farmasi</strong>), lalu tambahkan petugas yang diberi hak akses pada unit tersebut.
+      </p>
+      <button type="button" class="btn btn-primary" onclick="bukaModalUnit(0)">
+        <i class="fa fa-plus-circle"></i> Buat Unit Pertama
+      </button>
+    </div>
+    {else}
+    <div class="table-responsive">
+      <table class="table table-bordered table-hover table-unit" style="width:100%; margin-bottom:0;">
+        <thead>
+          <tr>
+            <th style="width:4%; text-align:center;">No</th>
+            <th style="width:20%;">Unit / Rumahan</th>
+            <th style="width:26%;">Titik Ukur (Ruang / Kulkas / Alat)</th>
+            <th style="width:33%;">Pengguna Berhak Akses</th>
+            <th style="width:7%; text-align:center;">Status</th>
+            <th style="width:10%; text-align:center;">Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          {loop: $units}
+          <tr class="{?=($value['aktif'] == 0 ? 'active' : '')?}">
+            <td style="text-align:center;">{?=$key + 1?}</td>
+            <td>
+              <span class="label label-primary" style="font-size:10px;">{?=$value.kode_unit?}</span>
+              <div style="font-weight:700; color:#0f172a; margin-top:4px; font-size:13px;">{?=$value.nama_unit?}</div>
+              {if: !empty($value.keterangan)}
+              <small class="text-muted">{?=$value.keterangan?}</small><br>
+              {/if}
+              <small class="text-muted">{?=$value.total_titik?} titik ukur · {?=$value.total_log?} catatan</small>
+            </td>
+            <td>
+              {if: empty($value.titik_list)}
+                <span class="text-muted" style="font-size:11px;"><em>Belum ada titik ukur — petugas unit atau admin dapat menambahkannya di halaman Monitoring.</em></span>
+              {else}
+                {loop: $value.titik_list as $t}
+                <span class="titik-chip">
+                  <strong>{?=$t.nama_ruangan?}</strong>
+                  <span class="text-muted">({?=$t.jenis_objek?} · {?=($t['mode_ukur'] == 'suhu' ? 'Suhu' : ($t['mode_ukur'] == 'kelembaban' ? 'RH' : 'Suhu+RH'))?})</span>
+                </span>
+                {/loop}
+              {/if}
+            </td>
+            <td>
+              {if: empty($value.users)}
+                <span class="text-muted" style="font-size:11px;"><em>Hanya Administrator (belum ada petugas unit ditugaskan)</em></span>
+              {else}
+                {loop: $value.users as $u}
+                <span class="user-pill-tag {?=($u['hak_akses'] == 'view' ? 'pill-view' : '')?}">
+                  <i class="fa {?=($u['hak_akses'] == 'input' ? 'fa-pencil text-success' : 'fa-eye text-primary')?}" title="{?=($u['hak_akses'] == 'input' ? 'Pengisi &amp; Kelola Titik Ukur' : 'Lihat Saja')?}"></i>
+                  <strong>{?=($u.fullname ?: $u.username)?}</strong>
+                  <a href="javascript:void(0)" onclick="cabutAksesUnit({?=$u.id?}, '{?=addslashes($u.fullname ?: $u.username)?}')" title="Cabut akses dari unit ini" style="color:#dc2626; font-weight:bold; text-decoration:none;">&times;</a>
+                </span>
+                {/loop}
+              {/if}
+              <div style="margin-top:6px;">
+                <button type="button" class="btn btn-info btn-xs" onclick="bukaModalAksesUnit({?=$value.id?})">
+                  <i class="fa fa-user-plus"></i> Atur / Tambah User
+                </button>
+              </div>
+            </td>
+            <td style="text-align:center;">
+              {if: $value.aktif == 1}
+                <span class="label label-success">Aktif</span>
+              {else}
+                <span class="label label-default">Nonaktif</span>
+              {/if}
+            </td>
+            <td style="text-align:center; white-space:nowrap;">
+              <div class="btn-group btn-group-xs">
+                <a href="{?=url([ADMIN, 'monitoring_suhu', 'manage'])?}&unit_id={?=$value.id?}" class="btn btn-default" title="Buka Monitoring Unit Ini">
+                  <i class="fa fa-external-link text-info"></i>
+                </a>
+                <button type="button" class="btn btn-default" title="Edit Unit" onclick="bukaModalUnit({?=$value.id?})">
+                  <i class="fa fa-pencil text-primary"></i>
+                </button>
+                <button type="button" class="btn btn-danger" title="Hapus Unit" onclick="hapusUnit({?=$value.id?}, '{?=addslashes($value.nama_unit)?}')">
+                  <i class="fa fa-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          {/loop}
+        </tbody>
+      </table>
+    </div>
+    {/if}
+  </div>
+</div>
+
+<!-- Modal Tambah / Edit Unit -->
+<div class="modal fade" id="modalUnitSuhu" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content" style="border-radius:8px; overflow:hidden;">
+      <div class="modal-header" style="background:#0f172a; color:#fff; padding:14px 18px;">
+        <button type="button" class="close" data-dismiss="modal" style="color:#fff; opacity:0.85;">&times;</button>
+        <h4 class="modal-title" id="modalUnitTitle" style="font-weight:700; color:#fff;">
+          <i class="fa fa-sitemap text-info"></i> Tambah Unit Monitoring
+        </h4>
+      </div>
+      <form id="formUnitSuhu" onsubmit="event.preventDefault(); simpanUnitSuhu();">
+        <input type="hidden" id="u_id" name="id" value="0">
+        <div class="modal-body" style="padding:18px;">
+          <div class="row">
+            <div class="col-sm-4">
+              <div class="form-group">
+                <label><strong>Kode Unit:</strong> <span class="text-danger">*</span></label>
+                <input type="text" id="u_kode" name="kode_unit" class="form-control" placeholder="Misal: LAB" required>
+              </div>
+            </div>
+            <div class="col-sm-8">
+              <div class="form-group">
+                <label><strong>Nama Unit:</strong> <span class="text-danger">*</span></label>
+                <input type="text" id="u_nama" name="nama_unit" class="form-control" placeholder="Misal: Unit Laboratorium" required>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label><strong>Keterangan / Deskripsi Unit:</strong></label>
+            <textarea id="u_ket" name="keterangan" class="form-control" rows="2" placeholder="Opsional: ruang lingkup monitoring pada unit ini..."></textarea>
+          </div>
+
+          <div class="form-group" style="margin-bottom:8px;">
+            <label><strong>Status:</strong></label>
+            <select id="u_aktif" name="aktif" class="form-control">
+              <option value="1">Aktif</option>
+              <option value="0">Nonaktif</option>
+            </select>
+          </div>
+
+          <div id="unitFormAlert"></div>
+        </div>
+        <div class="modal-footer" style="background:#f8fafc;">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Batal</button>
+          <button type="submit" class="btn btn-primary" id="btnSimpanUnit">
+            <i class="fa fa-save"></i> Simpan Unit
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Tambah Hak Akses User ke Unit -->
+<div class="modal fade" id="modalAksesUnit" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content" style="border-radius:8px; overflow:hidden;">
+      <div class="modal-header" style="background:#1e293b; color:#fff; padding:14px 18px;">
+        <button type="button" class="close" data-dismiss="modal" style="color:#fff; opacity:0.85;">&times;</button>
+        <h4 class="modal-title" style="font-weight:700; color:#fff;">
+          <i class="fa fa-user-plus text-info"></i> Tambah Hak Akses Pengguna Unit
+        </h4>
+      </div>
+      <form id="formAksesUnit" onsubmit="event.preventDefault(); simpanAksesUnit();">
+        <input type="hidden" id="akses_unit_id" name="unit_id" value="0">
+        <div class="modal-body" style="padding:18px;">
+          <div id="aksesUnitInfo" class="alert alert-info" style="padding:8px 12px; font-size:12px;"></div>
+
+          <div class="form-group">
+            <label><strong>Tingkat Hak Akses:</strong></label>
+            <select id="akses_hak" name="hak_akses" class="form-control">
+              <option value="input">Pengisi &amp; Pengelola Unit (Bisa tambah Ruang/Kulkas/Alat + Input/Edit Nilai)</option>
+              <option value="view">Hanya Lihat &amp; Cetak Laporan (Supervisor / Kepala Unit)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label><strong>Cari &amp; Pilih Pengguna:</strong></label>
+            <input type="text" id="cariUserAkses" class="form-control input-sm" placeholder="Ketik nama, username/NIP, atau role..." oninput="renderDaftarUserPicker()" style="margin-bottom:8px;">
+            <div class="user-picker-list" id="userPickerContainer"></div>
+          </div>
+
+          <div id="aksesFormAlert"></div>
+        </div>
+        <div class="modal-footer" style="background:#f8fafc;">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Tutup</button>
+          <button type="submit" class="btn btn-primary" id="btnSimpanAkses">
+            <i class="fa fa-check"></i> Simpan Hak Akses Terpilih
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+var masterUnitsList = {?=$units_json?};
+var masterUsersList = {?=$users_json?};
+var selectedAccessUsers = {};
+
+function findMasterUnit(uid) {
+  uid = parseInt(uid, 10);
+  for (var i = 0; i < masterUnitsList.length; i++) {
+    if (parseInt(masterUnitsList[i].id, 10) === uid) return masterUnitsList[i];
+  }
+  return null;
+}
+
+function escHtmlUnit(str) {
+  return String(str === null || str === undefined ? '' : str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function setSelectValUnit(selector, val) {
+  var el = $(selector);
+  el.val(val);
+  if (el.data('selectator') !== undefined) {
+    el.selectator('refresh');
+  }
+}
+
+function bukaModalUnit(uid) {
+  $('#unitFormAlert').html('');
+  $('#btnSimpanUnit').prop('disabled', false).html('<i class="fa fa-save"></i> Simpan Unit');
+  if (uid > 0) {
+    var u = findMasterUnit(uid);
+    if (!u) return;
+    $('#modalUnitTitle').html('<i class="fa fa-pencil text-warning"></i> Edit Unit Monitoring');
+    $('#u_id').val(u.id);
+    $('#u_kode').val(u.kode_unit);
+    $('#u_nama').val(u.nama_unit);
+    $('#u_ket').val(u.keterangan || '');
+    setSelectValUnit('#u_aktif', String(u.aktif));
+  } else {
+    $('#modalUnitTitle').html('<i class="fa fa-sitemap text-info"></i> Tambah Unit Monitoring');
+    $('#u_id').val('0');
+    $('#u_kode').val('');
+    $('#u_nama').val('');
+    $('#u_ket').val('');
+    setSelectValUnit('#u_aktif', '1');
+  }
+  $('#modalUnitSuhu').modal('show');
+}
+
+function simpanUnitSuhu() {
+  var btn = $('#btnSimpanUnit');
+  btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Menyimpan...');
+  $('#unitFormAlert').html('');
+
+  $.ajax({
+    url: "{?=url([ADMIN, 'monitoring_suhu', 'saveunit'])?}",
+    method: 'POST',
+    dataType: 'json',
+    data: $('#formUnitSuhu').serialize(),
+    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+    success: function(res) {
+      if (res && res.status === 'success') {
+        $('#unitFormAlert').html('<div class="alert alert-success" style="padding:8px 12px; font-size:12px;"><i class="fa fa-check-circle"></i> ' + escHtmlUnit(res.message) + '</div>');
+        setTimeout(function() { location.reload(); }, 500);
+      } else {
+        btn.prop('disabled', false).html('<i class="fa fa-save"></i> Simpan Unit');
+        $('#unitFormAlert').html('<div class="alert alert-danger" style="padding:8px 12px; font-size:12px;"><i class="fa fa-exclamation-triangle"></i> ' + escHtmlUnit((res && res.message) ? res.message : 'Gagal menyimpan unit.') + '</div>');
+      }
+    },
+    error: function() {
+      btn.prop('disabled', false).html('<i class="fa fa-save"></i> Simpan Unit');
+      $('#unitFormAlert').html('<div class="alert alert-danger" style="padding:8px 12px; font-size:12px;">Gagal menghubungi server.</div>');
+    }
+  });
+}
+
+function hapusUnit(uid, nama) {
+  if (!confirm('Hapus unit "' + nama + '" secara permanen?')) return;
+  $.ajax({
+    url: "{?=url([ADMIN, 'monitoring_suhu', 'deleteunit'])?}",
+    method: 'POST',
+    dataType: 'json',
+    data: { id: uid },
+    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+    success: function(res) {
+      if (res && res.status === 'success') {
+        location.reload();
+      } else {
+        alert((res && res.message) ? res.message : 'Gagal menghapus unit.');
+      }
+    },
+    error: function() {
+      alert('Gagal menghubungi server.');
+    }
+  });
+}
+
+function bukaModalAksesUnit(uid) {
+  var u = findMasterUnit(uid);
+  if (!u) return;
+  selectedAccessUsers = {};
+  $('#akses_unit_id').val(u.id);
+  setSelectValUnit('#akses_hak', 'input');
+  $('#cariUserAkses').val('');
+  $('#aksesFormAlert').html('');
+  $('#btnSimpanAkses').prop('disabled', false).html('<i class="fa fa-check"></i> Simpan Hak Akses Terpilih');
+  $('#aksesUnitInfo').html('<i class="fa fa-sitemap"></i> Unit: <strong>[' + escHtmlUnit(u.kode_unit) + '] ' + escHtmlUnit(u.nama_unit) + '</strong>');
+  renderDaftarUserPicker();
+  $('#modalAksesUnit').modal('show');
+}
+
+function togglePilihUserAkses(userId, cbEl) {
+  if (cbEl.checked) {
+    selectedAccessUsers[userId] = true;
+  } else {
+    delete selectedAccessUsers[userId];
+  }
+}
+
+function renderDaftarUserPicker() {
+  var unitId = parseInt($('#akses_unit_id').val(), 10);
+  var unit = findMasterUnit(unitId);
+  var existingMap = {};
+  if (unit && unit.users) {
+    for (var j = 0; j < unit.users.length; j++) {
+      existingMap[parseInt(unit.users[j].user_id, 10)] = unit.users[j].hak_akses;
+    }
+  }
+
+  var q = ($('#cariUserAkses').val() || '').toLowerCase().trim();
+  var html = '';
+  var shown = 0;
+
+  for (var i = 0; i < masterUsersList.length; i++) {
+    var u = masterUsersList[i];
+    var userId = parseInt(u.id, 10);
+    var hay = ((u.fullname || '') + ' ' + (u.username || '') + ' ' + (u.role || '')).toLowerCase();
+    if (q !== '' && hay.indexOf(q) === -1) continue;
+    shown++;
+
+    var checkedAttr = selectedAccessUsers[userId] ? 'checked' : '';
+    var badgeExisting = existingMap[userId]
+      ? ' <span class="label label-success" style="font-size:9px;">Sudah: ' + escHtmlUnit(existingMap[userId]) + '</span>'
+      : '';
+
+    html += '<label class="user-picker-row">' +
+      '<input type="checkbox" value="' + userId + '" ' + checkedAttr + ' onchange="togglePilihUserAkses(' + userId + ', this)">' +
+      '<div style="flex:1;">' +
+        '<strong>' + escHtmlUnit(u.fullname || u.username) + '</strong>' + badgeExisting +
+        '<div style="font-size:11px; color:#64748b;">' + escHtmlUnit(u.username) + ' · Role: <code>' + escHtmlUnit(u.role || '-') + '</code></div>' +
+      '</div>' +
+    '</label>';
+  }
+
+  if (shown === 0) {
+    html = '<div class="text-center text-muted" style="padding:18px; font-size:12px;">Pengguna tidak ditemukan.</div>';
+  }
+  $('#userPickerContainer').html(html);
+}
+
+function simpanAksesUnit() {
+  var unitId = $('#akses_unit_id').val();
+  var hak = $('#akses_hak').val();
+  var uids = Object.keys(selectedAccessUsers);
+  if (uids.length === 0) {
+    alert('Silakan centang minimal 1 pengguna.');
+    return;
+  }
+
+  var btn = $('#btnSimpanAkses');
+  btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Menyimpan...');
+  $('#aksesFormAlert').html('');
+
+  $.ajax({
+    url: "{?=url([ADMIN, 'monitoring_suhu', 'saveakses'])?}",
+    method: 'POST',
+    dataType: 'json',
+    data: {
+      unit_id: unitId,
+      hak_akses: hak,
+      user_ids: uids
+    },
+    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+    success: function(res) {
+      if (res && res.status === 'success') {
+        $('#aksesFormAlert').html('<div class="alert alert-success" style="padding:8px 12px; font-size:12px;"><i class="fa fa-check-circle"></i> ' + escHtmlUnit(res.message) + '</div>');
+        setTimeout(function() { location.reload(); }, 500);
+      } else {
+        btn.prop('disabled', false).html('<i class="fa fa-check"></i> Simpan Hak Akses Terpilih');
+        $('#aksesFormAlert').html('<div class="alert alert-danger" style="padding:8px 12px; font-size:12px;">' + escHtmlUnit((res && res.message) ? res.message : 'Gagal menyimpan hak akses.') + '</div>');
+      }
+    },
+    error: function() {
+      btn.prop('disabled', false).html('<i class="fa fa-check"></i> Simpan Hak Akses Terpilih');
+      $('#aksesFormAlert').html('<div class="alert alert-danger" style="padding:8px 12px; font-size:12px;">Gagal menghubungi server.</div>');
+    }
+  });
+}
+
+function cabutAksesUnit(aksesId, namaUser) {
+  if (!confirm('Cabut hak akses "' + namaUser + '" dari unit ini?')) return;
+  $.ajax({
+    url: "{?=url([ADMIN, 'monitoring_suhu', 'deleteakses'])?}",
+    method: 'POST',
+    dataType: 'json',
+    data: { id: aksesId },
+    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+    success: function(res) {
+      if (res && res.status === 'success') {
+        location.reload();
+      } else {
+        alert((res && res.message) ? res.message : 'Gagal mencabut hak akses.');
+      }
+    },
+    error: function() {
+      alert('Gagal menghubungi server.');
+    }
+  });
+}
+</script>
