@@ -1395,6 +1395,17 @@ class Admin extends AdminModule
                                     ->where('no_rkm_medis', $rm)
                                     ->where('tanggal_periksa', $tanggal)
                                     ->oneArray();
+                                if (!$ref && !empty($pb['no_peserta']) && $pb['no_peserta'] !== '0') {
+                                    $ref = $this->db('mlite_antrian_referensi')
+                                        ->where('nomor_kartu', $pb['no_peserta'])
+                                        ->where('tanggal_periksa', $tanggal)
+                                        ->oneArray();
+                                }
+
+                                // Sembunyikan booking lokal SIMRS Online (tanpa referensi Mobile JKN BPJS) & yang sudah Batal
+                                if (!$ref || ($ref['status_kirim'] ?? '') === 'Batal') {
+                                    continue;
+                                }
 
                                 $kb = $ref['kodebooking'] ?? '';
                                 if (!empty($kb) && isset($tracked_bookings[$kb])) {
