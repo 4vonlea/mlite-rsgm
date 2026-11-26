@@ -81,7 +81,7 @@
                 data-nm_pasien="{?=isset_or($value.nm_pasien)?}"
                 data-no_rawat="{?=isset_or($value.no_rawat)?}"
                 data-no_peserta="{?=isset_or($value.no_peserta)?}"
-                {if: $this->core->getUserInfo('role') == 'medis' || $this->core->getUserInfo('role') == 'paramedis'}
+                {if: $this->core->getUserInfo('role') == 'medis'}
                 disabled
                 {/if}
               ><span class="fa fa-send"></span> BPJS</button>

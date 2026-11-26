@@ -124,7 +124,7 @@
                 data-kd_poli="{?=!empty($value.kd_poli_bpjs) ? $value.kd_poli_bpjs : (!empty($value.kd_poli_rujukan) ? $value.kd_poli_rujukan : (isset_or($value.kd_poli) ? $value.kd_poli : ''))?}"
                 data-nm_poli="{?=!empty($value.nm_poli_bpjs) ? $value.nm_poli_bpjs : (!empty($value.poli_rujukan) ? $value.poli_rujukan : (isset_or($value.nm_poli) ? $value.nm_poli : ''))?}"
                 data-tgl_registrasi="{?=isset_or($value.tgl_registrasi)?}"
-                {if: $this->core->getUserInfo('role') == 'medis' || $this->core->getUserInfo('role') == 'paramedis'}
+                {if: $this->core->getUserInfo('role') == 'medis'}
                 disabled
                 {/if}
               ><span class="fa fa-send"></span> BPJS</button>

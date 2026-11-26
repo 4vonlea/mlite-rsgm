@@ -121,8 +121,9 @@ class Admin extends Main
             $isPasienDuplikat = ($name === 'pasien' && strpos(strtolower((string)$method), 'duplikat') === 0 && \Systems\Lib\PasienMergeService::canManageMerge($this));
             $isPasienRmeAudit = ($name === 'pasien' && (strpos(strtolower((string)$method), 'akseslog') === 0 || in_array(strtolower((string)$method), ['klpcm', 'klpcmdata', 'klpcmsave', 'klpcmcsv', 'klpcmppas'], true)) && \Systems\Lib\RmeService::canManageRmeAudit($this));
             $isPasienSingkatan = ($name === 'pasien' && (strpos(strtolower((string)$method), 'singkatan') === 0 || in_array(strtolower((string)$method), ['klpcmnotif', 'klpcmresubmit', 'riwayatrme', 'riwayatrmedata'], true)) && !empty($_SESSION['mlite_user']));
+            $isParamedisVclaimSep = ($name === 'vclaim' && $this->getUserInfo('role') === 'paramedis' && !in_array(strtolower((string)$method), ['manage', 'index', 'settings'], true) && !empty($_SESSION['mlite_user']));
             $isProfil = ($name === 'profil' && !empty($_SESSION['mlite_user']));
-            if ($hasAllAccess || in_array($name, $userAccess, true) || ($name === 'form_rme' && in_array('update_bmt', $userAccess, true)) || ($name === 'update_bmt' && in_array('form_rme', $userAccess, true)) || $isSaveSignature || $isRadiologiLaporanPacs || $isPasienRiwayat || $isPasienDuplikat || $isPasienRmeAudit || $isPasienSingkatan || $isProfil) {
+            if ($hasAllAccess || in_array($name, $userAccess, true) || ($name === 'form_rme' && in_array('update_bmt', $userAccess, true)) || ($name === 'update_bmt' && in_array('form_rme', $userAccess, true)) || $isSaveSignature || $isRadiologiLaporanPacs || $isPasienRiwayat || $isPasienDuplikat || $isPasienRmeAudit || $isPasienSingkatan || $isParamedisVclaimSep || $isProfil) {
                 $rawMethodForAudit = (string)$method;
                 if ($name === 'laporan' && strtolower($method) === 'manage' && $this->getUserInfo('role') === 'radiologi' && !in_array('laporan', explode(',', $this->getUserInfo('access')))) {
                     redirect(url([ADMIN, 'laporan', 'laporanradiologipacs']));
