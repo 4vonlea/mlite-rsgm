@@ -67,6 +67,7 @@ class Site extends SiteModule
         $this->route('anjungan/presensi', 'getPresensi');
         $this->route('anjungan/presensi/upload', 'getUpload');
         $this->route('anjungan/bed', 'getDisplayBed');
+        $this->route('anjungan/bedm', 'getDisplayBed');
         $this->route('anjungan/sep', 'getSepMandiri');
         $this->route('anjungan/sep/cek', 'getSepMandiriCek');
         $this->route('anjungan/sep/(:int)/(:int)', 'getSepMandiriNokaNorm');
@@ -3703,12 +3704,36 @@ class Site extends SiteModule
         break;
         case "bed-display":
           $rows = $this->_resultDisplayBed();
+          if (isset($_GET['format']) && $_GET['format'] == 'json') {
+            header('Content-Type: application/json');
+            $total_kapasitas = 0; $total_terisi = 0; $total_kosong = 0;
+            foreach ($rows as $r) {
+                $total_kapasitas += (int) $r['kapasitas'];
+                $total_terisi    += (int) $r['terisi'];
+                $total_kosong    += (int) $r['tersedia'];
+            }
+            $total_okupansi = $total_kapasitas > 0 ? round(($total_terisi / $total_kapasitas) * 100) : 0;
+            echo json_encode([
+                'status'  => 'success',
+                'summary' => [
+                    'total_kapasitas' => $total_kapasitas,
+                    'total_terisi'    => $total_terisi,
+                    'total_kosong'    => $total_kosong,
+                    'total_okupansi'  => $total_okupansi,
+                    'total_bangsal'   => count($rows),
+                    'waktu'           => date('H:i:s'),
+                    'tanggal'         => getDayIndonesia(date('Y-m-d')).', '.dateIndonesia(date('Y-m-d'))
+                ],
+                'beds' => $rows
+            ]);
+            exit();
+          }
           foreach ($rows as $row) {      
             echo '<tr>'
                .  '<td width="30%">' . $row['nm_bangsal'] . '</td>'
                .  '<td width="20%">' . $row['kelas'] . '</td>'
                .  '<td>'
-               .  'Jumlah Kosong : ' . $row['kosong']['jumlah'] . ' | Jumlah Terisi : ' . $row['isi']['jumlah']
+               .  'Jumlah Kosong : ' . $row['tersedia'] . ' | Jumlah Terisi : ' . $row['terisi']
                .  '</td>'
                . '</tr>';
           }
@@ -3918,7 +3943,7 @@ class Site extends SiteModule
 
     public function getDisplayBed()
     {
-        $title = 'Display Bed Management';
+        $title = 'Display Ketersediaan Tempat Tidur (Bed Management)';
         $logo  = $this->settings->get('settings.logo');
         $display = $this->_resultDisplayBed();
 
@@ -3931,14 +3956,32 @@ class Site extends SiteModule
         $tanggal       = getDayIndonesia(date('Y-m-d')).', '.dateIndonesia(date('Y-m-d'));
         $username      = !empty($_username) ? $_username : $__username;
 
+        $total_kapasitas = 0;
+        $total_terisi = 0;
+        $total_kosong = 0;
+        foreach ($display as $d) {
+            $total_kapasitas += (int)$d['kapasitas'];
+            $total_terisi    += (int)$d['terisi'];
+            $total_kosong    += (int)$d['tersedia'];
+        }
+        $total_okupansi = $total_kapasitas > 0 ? round(($total_terisi / $total_kapasitas) * 100) : 0;
+
         $content = $this->draw('display.bed.html', [
           'title' => $title,
           'logo' => $logo,
           'powered' => 'Powered by <a href="https://mlite.id/">mLITE</a>',
           'username' => $username,
           'tanggal' => $tanggal,
-          'running_text' => $this->settings->get('anjungan.text_poli'),
-          'display' => $display
+          'running_text' => $this->settings->get('anjungan.text_poli') ?: 'Informasi Ketersediaan Tempat Tidur Rawat Inap Rumah Sakit Terkini.',
+          'nama_instansi' => $this->settings->get('settings.nama_instansi'),
+          'alamat' => $this->settings->get('settings.alamat'),
+          'nomor_telepon' => $this->settings->get('settings.nomor_telepon'),
+          'display' => $display,
+          'total_kapasitas' => $total_kapasitas,
+          'total_terisi' => $total_terisi,
+          'total_kosong' => $total_kosong,
+          'total_okupansi' => $total_okupansi,
+          'total_bangsal' => count($display)
         ]);
 
         $assign = [
@@ -3955,55 +3998,34 @@ class Site extends SiteModule
 
     public function _resultDisplayBed()
     {
-
-        $query = $this->db()->pdo()->prepare("SELECT a.nm_bangsal, b.kelas , a.kd_bangsal FROM bangsal a, kamar b WHERE a.kd_bangsal = b.kd_bangsal AND b.statusdata = '1' GROUP BY b.kd_bangsal, b.kelas");
+        $sql = "SELECT a.nm_bangsal, b.kelas, a.kd_bangsal,
+                       COUNT(b.kd_kamar) AS kapasitas,
+                       SUM(IF(b.status='ISI',1,0)) AS terisi,
+                       SUM(IF(b.status='KOSONG',1,0)) AS tersedia
+                FROM bangsal a
+                JOIN kamar b ON a.kd_bangsal = b.kd_bangsal
+                WHERE b.statusdata = '1'
+                GROUP BY b.kd_bangsal, b.kelas
+                ORDER BY FIELD(b.kelas, 'VVIP', 'VIP', 'Kelas 1', 'Kelas 2', 'Kelas 3', 'ICU', 'NICU', 'PICU', 'HCU'), a.nm_bangsal";
+        $query = $this->db()->pdo()->prepare($sql);
         $query->execute();
         $rows = $query->fetchAll(\PDO::FETCH_ASSOC);
-
-        // Fallback 1: Jika tabel jadwal kosong hari ini, ambil dari registrasi aktif hari ini
-        if (empty($rows)) {
-            $filterDokter = (isset($slug[4]) && $slug[4] != '') ? " AND reg_periksa.kd_dokter = '" . addslashes($slug[4]) . "'" : "";
-            $filterPoli = ($slug[3] != 'all') ? " AND reg_periksa.kd_poli = '" . addslashes($poliklinik) . "'" : "";
-            $query2 = $this->db()->pdo()->prepare("SELECT DISTINCT reg_periksa.kd_dokter, reg_periksa.kd_poli, poliklinik.nm_poli, dokter.nm_dokter, '08:00:00' as jam_mulai, '16:00:00' as jam_selesai FROM reg_periksa JOIN poliklinik ON poliklinik.kd_poli = reg_periksa.kd_poli JOIN dokter ON dokter.kd_dokter = reg_periksa.kd_dokter WHERE reg_periksa.tgl_registrasi = '$date' $filterPoli $filterDokter");
-            $query2->execute();
-            $rows = $query2->fetchAll(\PDO::FETCH_ASSOC);
-        }
-
-        // Fallback 2: Jika belum ada pasien terdaftar hari ini, tampilkan poliklinik aktif agar TV tidak blank
-        if (empty($rows)) {
-            $filterActive = ($slug[3] != 'all') ? " WHERE poliklinik.kd_poli = '" . addslashes($poliklinik) . "'" : " WHERE poliklinik.status = '1'";
-            $query3 = $this->db()->pdo()->prepare("SELECT '-' as kd_dokter, poliklinik.kd_poli, poliklinik.nm_poli, 'Dokter Poliklinik' as nm_dokter, '08:00:00' as jam_mulai, '16:00:00' as jam_selesai FROM poliklinik $filterActive");
-            $query3->execute();
-            $rows = $query3->fetchAll(\PDO::FETCH_ASSOC);
-        }
 
         $result = [];
         if (count($rows)) {
             foreach ($rows as $row) {
-                $row['kosong'] = $this->db('kamar')
-                  ->select(['jumlah' => 'COUNT(kamar.status)'])
-                  ->join('bangsal', 'bangsal.kd_bangsal = kamar.kd_bangsal')
-                  ->where('bangsal.kd_bangsal', $row['kd_bangsal'])
-                  ->where('kamar.kelas',$row['kelas'])
-                  ->where('kamar.status','KOSONG')
-                  ->where('kamar.statusdata','1')
-                  ->group(array('kamar.kd_bangsal','kamar.kelas'))
-                  ->oneArray();
-                if(empty($row['kosong']['jumlah'])) {
-                  $row['kosong']['jumlah'] = 0;
-                }
-                $row['isi'] = $this->db('kamar')
-                  ->select(['jumlah' => 'COUNT(kamar.status)'])
-                  ->join('bangsal', 'bangsal.kd_bangsal = kamar.kd_bangsal')
-                  ->where('bangsal.kd_bangsal', $row['kd_bangsal'])
-                  ->where('kamar.kelas',$row['kelas'])
-                  ->where('kamar.status','ISI')
-                  ->where('kamar.statusdata','1')
-                  ->group(array('kamar.kd_bangsal','kamar.kelas'))
-                  ->oneArray();
-                if(empty($row['isi']['jumlah'])) {
-                  $row['isi']['jumlah'] = 0;
-                }
+                $kap = (int) $row['kapasitas'];
+                $isi = (int) $row['terisi'];
+                $kosong = (int) $row['tersedia'];
+                $pct = $kap > 0 ? round(($isi / $kap) * 100) : 0;
+
+                $row['kapasitas'] = $kap;
+                $row['terisi']    = $isi;
+                $row['tersedia']  = $kosong;
+                $row['okupansi']  = $pct;
+                $row['kosong']    = ['jumlah' => $kosong];
+                $row['isi']       = ['jumlah' => $isi];
+
                 $result[] = $row;
             }
         }

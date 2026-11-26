@@ -1,103 +1,881 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="id">
 <head>
   <meta charset="utf-8">
-  <meta http-equiv="refresh" content="180">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="">
   <title>{?=isset_or($title)?} - {?=isset_or($settings.nama_instansi)?}</title>
   <link rel="icon" href="{?=url()?}/favicon.png" type="image/x-icon">
   <link rel="stylesheet" href="{?=url()?}/assets/css/bootstrap.min.css">
   <link href="{?=url()?}/assets/css/font-awesome.css" rel="stylesheet">
   <script src="{?=url()?}/assets/jscripts/jquery.min.js"></script>
   <script src="{?=url()?}/assets/jscripts/bootstrap.min.js"></script>
-  <script type='text/javascript' src='//cdn.jsdelivr.net/jquery.marquee/1.4.0/jquery.marquee.min.js'></script>
-  <style media="screen">
+
+  <style>
+    :root {
+      --bg-main: #070d18;
+      --bg-card: rgba(15, 23, 42, 0.88);
+      --border-card: rgba(255, 255, 255, 0.08);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent-blue: #38bdf8;
+      --accent-emerald: #10b981;
+      --accent-rose: #f43f5e;
+      --accent-amber: #f59e0b;
+      --accent-indigo: #818cf8;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-      color: #fff;
-      background: #0264d6;
-      height: calc(100vh);
-      width: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: radial-gradient(circle at 50% 0%, #111e38 0%, #070d18 70%);
+      color: var(--text-main);
+      min-height: 100vh;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
     }
 
-    footer {
-      position: fixed;
-      right: 0px;
-      bottom: 0px;
-      height: 40px;
-      width: calc(100% - 0px);
-      font-size: 14px;
-      color: #fff;
+    /* ---- HEADER ---- */
+    .app-header {
+      background: rgba(11, 19, 38, 0.92);
+      border-bottom: 1px solid var(--border-card);
+      backdrop-filter: blur(16px);
+      padding: 12px 24px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
 
-    footer a,
-    footer a:hover {
-      color: #fff;
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 16px;
     }
 
-    tr:nth-child(even) {
+    .brand-logo {
+      width: 58px;
+      height: 58px;
+      object-fit: contain;
+      background: #ffffff;
+      padding: 5px;
+      border-radius: 12px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+    }
+
+    .brand-title {
+      font-size: 22px;
+      font-weight: 800;
       color: #ffffff;
+      letter-spacing: -0.3px;
+      margin: 0 0 4px 0;
+      line-height: 1.2;
     }
 
-    .marquee {
+    .brand-subtitle {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      color: var(--accent-blue);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      padding: 2px 10px;
+      border-radius: 20px;
+    }
+
+    .header-info {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 18px;
+    }
+
+    .live-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(16, 185, 129, 0.14);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      color: #34d399;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      padding: 5px 12px;
+      border-radius: 20px;
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      background: #10b981;
+      border-radius: 50%;
+      box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+      animation: pulse 1.8s infinite;
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+      70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+
+    .time-block {
+      text-align: right;
+    }
+
+    .digital-clock {
+      font-size: 26px;
+      font-weight: 800;
+      color: #ffffff;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 1px;
+      line-height: 1;
+      text-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+    }
+
+    .date-text {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      font-weight: 500;
+    }
+
+    .btn-fs {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #ffffff;
+      border-radius: 8px;
+      padding: 8px 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .btn-fs:hover {
+      background: rgba(255, 255, 255, 0.18);
+      color: #38bdf8;
+    }
+
+    /* ---- MAIN CONTENT ---- */
+    .app-main {
+      flex: 1;
+      padding: 16px 24px 70px 24px;
+      max-width: 1920px;
       width: 100%;
-      overflow: scroll;
-      height: calc(75vh);
-      /* border: 1px solid #ccc; */
-      background: #0264d6;
+      margin: 0 auto;
+    }
+
+    /* ---- STATS CARDS ---- */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 16px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+    }
+
+    .stat-card.blue::before { background: var(--accent-blue); }
+    .stat-card.rose::before { background: var(--accent-rose); }
+    .stat-card.emerald::before { background: var(--accent-emerald); }
+    .stat-card.amber::before { background: var(--accent-amber); }
+
+    .stat-card.emerald {
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(15, 23, 42, 0.95) 100%);
+      box-shadow: 0 8px 30px rgba(16, 185, 129, 0.18);
+    }
+
+    .stat-info .stat-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.7px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .stat-info .stat-value {
+      font-size: 36px;
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: -0.5px;
+    }
+
+    .stat-card.blue .stat-value { color: var(--accent-blue); }
+    .stat-card.rose .stat-value { color: var(--accent-rose); }
+    .stat-card.emerald .stat-value { color: #34d399; text-shadow: 0 0 16px rgba(16, 185, 129, 0.4); }
+    .stat-card.amber .stat-value { color: var(--accent-amber); }
+
+    .stat-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 6px;
+      font-weight: 500;
+    }
+
+    .stat-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+
+    .stat-card.blue .stat-icon { background: rgba(56, 189, 248, 0.15); color: var(--accent-blue); }
+    .stat-card.rose .stat-icon { background: rgba(244, 63, 94, 0.15); color: var(--accent-rose); }
+    .stat-card.emerald .stat-icon { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+    .stat-card.amber .stat-icon { background: rgba(245, 158, 11, 0.15); color: var(--accent-amber); }
+
+    /* ---- TABLE CARD ---- */
+    .table-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+      overflow: hidden;
+    }
+
+    .table-card-head {
+      padding: 14px 20px;
+      background: rgba(255, 255, 255, 0.03);
+      border-bottom: 1px solid var(--border-card);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .table-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .refresh-pill {
+      font-size: 11px;
+      color: var(--text-muted);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 3px 10px;
+      border-radius: 12px;
+    }
+
+    .bed-table-wrap {
+      max-height: calc(100vh - 310px);
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255,255,255,0.2) transparent;
+    }
+
+    .bed-table-wrap::-webkit-scrollbar {
+      width: 6px;
+    }
+    .bed-table-wrap::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,0.2);
+      border-radius: 3px;
+    }
+
+    .table-bed {
+      width: 100%;
+      margin: 0;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    .table-bed thead {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: #0f1c34;
+      border-bottom: 2px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .table-bed th {
+      padding: 13px 16px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: #cbd5e1;
+      border: none;
+      vertical-align: middle;
+    }
+
+    .table-bed td {
+      padding: 13px 16px;
+      vertical-align: middle;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      color: #f1f5f9;
+      font-size: 14px;
+      transition: background 0.15s ease;
+    }
+
+    .table-bed tbody tr:nth-child(even) td {
+      background: rgba(255, 255, 255, 0.015);
+    }
+
+    .table-bed tbody tr:hover td {
+      background: rgba(56, 189, 248, 0.07);
+    }
+
+    /* Column Highlights */
+    .col-bangsal {
+      font-weight: 700;
+      color: #ffffff;
+      font-size: 15px;
+    }
+
+    .kelas-tag {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .kelas-vvip, .kelas-vip {
+      background: rgba(245, 158, 11, 0.18);
+      border: 1px solid rgba(245, 158, 11, 0.45);
+      color: #fbbf24;
+    }
+
+    .kelas-1 {
+      background: rgba(56, 189, 248, 0.18);
+      border: 1px solid rgba(56, 189, 248, 0.45);
+      color: #38bdf8;
+    }
+
+    .kelas-2 {
+      background: rgba(45, 212, 191, 0.18);
+      border: 1px solid rgba(45, 212, 191, 0.45);
+      color: #2dd4bf;
+    }
+
+    .kelas-3 {
+      background: rgba(148, 163, 184, 0.18);
+      border: 1px solid rgba(148, 163, 184, 0.45);
+      color: #cbd5e1;
+    }
+
+    .kelas-icu, .kelas-nicu, .kelas-picu, .kelas-hcu {
+      background: rgba(244, 63, 94, 0.18);
+      border: 1px solid rgba(244, 63, 94, 0.45);
+      color: #fb7185;
+    }
+
+    .num-pill {
+      display: inline-block;
+      min-width: 44px;
+      padding: 4px 10px;
+      font-size: 14px;
+      font-weight: 800;
+      border-radius: 8px;
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .num-pill.kapasitas {
+      background: rgba(255, 255, 255, 0.06);
+      color: #e2e8f0;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .num-pill.terisi {
+      background: rgba(244, 63, 94, 0.15);
+      color: #fb7185;
+      border: 1px solid rgba(244, 63, 94, 0.35);
+    }
+
+    .num-pill.tersedia {
+      background: rgba(16, 185, 129, 0.22);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.5);
+      font-size: 16px;
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.25);
+    }
+
+    .num-pill.tersedia.zero {
+      background: rgba(255, 255, 255, 0.05);
+      color: #64748b;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: none;
+    }
+
+    /* Progress bar */
+    .bar-container {
+      width: 100%;
+      min-width: 90px;
+    }
+
+    .bar-bg {
+      height: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 4px;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.4s ease;
+    }
+
+    .bar-fill.safe { background: var(--accent-emerald); }
+    .bar-fill.warn { background: var(--accent-amber); }
+    .bar-fill.danger { background: var(--accent-rose); }
+
+    .bar-text {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    /* Status badge */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 20px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .status-badge.tersedia {
+      background: rgba(16, 185, 129, 0.16);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+    }
+
+    .status-badge.penuh {
+      background: rgba(244, 63, 94, 0.16);
+      color: #fb7185;
+      border: 1px solid rgba(244, 63, 94, 0.4);
+    }
+
+    /* ---- FOOTER TICKER ---- */
+    .app-footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 48px;
+      background: #091122;
+      border-top: 1px solid var(--border-card);
+      display: flex;
+      align-items: center;
+      z-index: 100;
+    }
+
+    .ticker-label {
+      background: var(--accent-blue);
+      color: #04101e;
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      padding: 0 16px;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+      box-shadow: 4px 0 12px rgba(0,0,0,0.3);
+    }
+
+    .ticker-body {
+      flex: 1;
+      overflow: hidden;
+      white-space: nowrap;
+      padding: 0 16px;
+    }
+
+    .ticker-text {
+      display: inline-block;
+      font-size: 13px;
+      color: #e2e8f0;
+      font-weight: 500;
+      animation: ticker-anim 40s linear infinite;
+    }
+
+    .ticker-text:hover {
+      animation-play-state: paused;
+    }
+
+    @keyframes ticker-anim {
+      0% { transform: translateX(100%); }
+      100% { transform: translateX(-100%); }
+    }
+
+    .footer-meta {
+      padding: 0 18px;
+      font-size: 11px;
+      color: var(--text-muted);
+      border-left: 1px solid var(--border-card);
+      white-space: nowrap;
+    }
+
+    .footer-meta a {
+      color: var(--accent-blue);
+      text-decoration: none;
+      font-weight: 700;
+    }
+    .footer-meta a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 992px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .brand-title {
+        font-size: 18px;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
 
 <body>
-  <div class="container-fluid">
-    <h1 class="display-3 text-center text-white m-3"><img class="logo" src="{?=url()?}/{?=isset_or($logo)?}" alt=""
-        width="60px"> Bed Management {?=isset_or($settings.nama_instansi)?}</h1>
-    <table class="table table-bordered table-striped lead text-primary">
-      <thead class="bg-primary">
-        <tr>
-          <th width="30%">Bangsal</th>
-          <th width="20%">Kelas</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-    </table>
-    <div class="marquee" data-direction='up' data-duration='20000' startVisible='true' data-gap='10'
-      data-duplicated='false'>
-      <table class="table table-bordered table-striped lead text-primary">
-        <tbody id="bed-display">
-        </tbody>
-      </table>
+  <!-- HEADER -->
+  <header class="app-header">
+    <div class="row" style="margin:0;display:flex;align-items:center;justify-content:space-between;">
+      <div class="col-xs-8 brand-wrap" style="padding:0;">
+        <img class="brand-logo" src="{?=url('assets/img/logo_rsgm_gha.png')?}" alt="Logo RSGM">
+        <div>
+          <h1 class="brand-title">{?=isset_or($nama_instansi)?}</h1>
+          <div class="brand-subtitle">
+            <i class="fa fa-hospital-o"></i> Informasi Ketersediaan Tempat Tidur Rawat Inap
+          </div>
+        </div>
+      </div>
+      <div class="col-xs-4 header-info" style="padding:0;">
+        <div class="live-badge">
+          <div class="pulse-dot"></div>
+          <span>LIVE SIMRS</span>
+        </div>
+        <div class="time-block">
+          <div class="digital-clock" id="live_clock">--:--:--</div>
+          <div class="date-text" id="live_date">{?=isset_or($tanggal)?}</div>
+        </div>
+        <button type="button" class="btn-fs" id="btn_fullscreen" title="Layar Penuh (F11)">
+          <i class="fa fa-arrows-alt"></i>
+        </button>
+      </div>
     </div>
-  </div>
-  <footer class="visible-lg visible-md bg-primary" style="padding:10px;z-index:1000;">
-    <div class="canvas">
-      <p class="pull-right">
-        Made with <i class="fa fa-heart text-danger"></i> by <a href="https://basoro.id/" target="_blank"><b>drg. F.
-            Basoro</b>.</a>
-        {?=isset_or($powered)?}.
-      </p>
-      <p><i class="fa fa-fw fa-calendar"></i> <span>{?=isset_or($tanggal)?}</span> <i
-          class="fa fa-fw fa-clock-o"></i><span id="clock"></span> <i class="fa fa-fw fa-user"></i> <span>{?=
-          sprintf('Login sebagai <strong>%s</strong>', $username) ?}</span></p>
+  </header>
+
+  <!-- MAIN DASHBOARD -->
+  <main class="app-main">
+    <!-- STATS CARDS -->
+    <div class="stats-grid">
+      <!-- 1. Total Kapasitas -->
+      <div class="stat-card blue">
+        <div class="stat-info">
+          <div class="stat-label">Total Kapasitas</div>
+          <div class="stat-value" id="kpi_kapasitas">{?=isset_or($total_kapasitas, 0)?}</div>
+          <div class="stat-sub"><i class="fa fa-building-o"></i> <span id="kpi_bangsal">{?=isset_or($total_bangsal, 0)?}</span> Bangsal / Ruangan</div>
+        </div>
+        <div class="stat-icon">
+          <i class="fa fa-hospital-o"></i>
+        </div>
+      </div>
+
+      <!-- 2. Terisi -->
+      <div class="stat-card rose">
+        <div class="stat-info">
+          <div class="stat-label">Pasien Dirawat (Isi)</div>
+          <div class="stat-value" id="kpi_terisi">{?=isset_or($total_terisi, 0)?}</div>
+          <div class="stat-sub"><i class="fa fa-bed"></i> Tempat tidur terisi</div>
+        </div>
+        <div class="stat-icon">
+          <i class="fa fa-user-times"></i>
+        </div>
+      </div>
+
+      <!-- 3. Tersedia (Kosong) -->
+      <div class="stat-card emerald">
+        <div class="stat-info">
+          <div class="stat-label" style="color:#34d399;">Tempat Tidur Kosong</div>
+          <div class="stat-value" id="kpi_tersedia">{?=isset_or($total_kosong, 0)?}</div>
+          <div class="stat-sub" style="color:#a7f3d0;"><i class="fa fa-check-circle"></i> Siap digunakan pasien baru</div>
+        </div>
+        <div class="stat-icon">
+          <i class="fa fa-check-circle"></i>
+        </div>
+      </div>
+
+      <!-- 4. Okupansi BOR -->
+      <div class="stat-card amber">
+        <div class="stat-info">
+          <div class="stat-label">Okupansi RS (BOR)</div>
+          <div class="stat-value" id="kpi_okupansi">{?=isset_or($total_okupansi, 0)?}%</div>
+          <div class="stat-sub"><i class="fa fa-pie-chart"></i> Bed Occupancy Rate</div>
+        </div>
+        <div class="stat-icon">
+          <i class="fa fa-line-chart"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- TABLE CARD -->
+    <div class="table-card">
+      <div class="table-card-head">
+        <div class="table-title">
+          <i class="fa fa-list-alt" style="color:var(--accent-blue);"></i>
+          <span>Rincian Ketersediaan Per Ruangan / Kelas</span>
+        </div>
+        <div class="refresh-pill">
+          <i class="fa fa-refresh fa-spin" style="margin-right:4px;"></i>
+          Auto-update: <span id="countdown_timer">30</span>d
+        </div>
+      </div>
+      <div class="bed-table-wrap" id="table_container">
+        <table class="table-bed">
+          <thead>
+            <tr>
+              <th style="width: 50px; text-align: center;">No</th>
+              <th>Bangsal / Ruang Rawat</th>
+              <th style="width: 140px;">Kelas</th>
+              <th style="width: 110px; text-align: center;">Kapasitas</th>
+              <th style="width: 110px; text-align: center;">Terisi</th>
+              <th style="width: 130px; text-align: center;">Tersedia</th>
+              <th style="width: 160px;">Tingkat Okupansi</th>
+              <th style="width: 130px; text-align: center;">Status</th>
+            </tr>
+          </thead>
+          <tbody id="bed_rows">
+            {loop: $display as $key => $row}
+            <tr>
+              <td style="text-align: center; color: var(--text-muted);">{?= $key + 1 ?}</td>
+              <td class="col-bangsal">
+                <i class="fa fa-building-o" style="color:var(--accent-blue);margin-right:6px;"></i>
+                {?=isset_or($row.nm_bangsal)?}
+              </td>
+              <td>
+                {? $kls = strtolower(str_replace(' ', '-', $row['kelas'])) ?}
+                <span class="kelas-tag kelas-{?= $kls ?}">{?=isset_or($row.kelas)?}</span>
+              </td>
+              <td style="text-align: center;">
+                <span class="num-pill kapasitas">{?=isset_or($row.kapasitas, 0)?}</span>
+              </td>
+              <td style="text-align: center;">
+                <span class="num-pill terisi">{?=isset_or($row.terisi, 0)?}</span>
+              </td>
+              <td style="text-align: center;">
+                <span class="num-pill tersedia{if: $row.tersedia == 0} zero{/if}">{?=isset_or($row.tersedia, 0)?}</span>
+              </td>
+              <td>
+                <div class="bar-container">
+                  <div class="bar-bg">
+                    <div class="bar-fill {if: $row.okupansi >= 90}danger{elseif: $row.okupansi >= 70}warn{else}safe{/if}" style="width: {?=isset_or($row.okupansi, 0)?}%;"></div>
+                  </div>
+                  <div class="bar-text">{?=isset_or($row.okupansi, 0)?}% Terisi</div>
+                </div>
+              </td>
+              <td style="text-align: center;">
+                {if: $row.tersedia > 0}
+                <span class="status-badge tersedia"><i class="fa fa-check"></i> Tersedia</span>
+                {else}
+                <span class="status-badge penuh"><i class="fa fa-times"></i> Penuh</span>
+                {/if}
+              </td>
+            </tr>
+            {/loop}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <!-- FOOTER TICKER -->
+  <footer class="app-footer">
+    <div class="ticker-label">
+      <i class="fa fa-bullhorn"></i> PENGUMUMAN
+    </div>
+    <div class="ticker-body">
+      <div class="ticker-text">
+        {?=isset_or($running_text)?} &bull; Selamat datang di {?=isset_or($nama_instansi)?} &bull; Alamat: {?=isset_or($alamat)?} {if: !empty($nomor_telepon)}&bull; Telp: {?=isset_or($nomor_telepon)?}{/if} &bull; Informasi tempat tidur diperbarui secara otomatis dan langsung dari sistem SIMRS mLITE.
+      </div>
+    </div>
+    <div class="footer-meta">
+      Powered by <a href="https://mlite.id/">mLITE</a>
     </div>
   </footer>
-</body>
 
-</html>
-<script>
-  $('.marquee').marquee()
+  <script>
+    // ---- 1. REALTIME CLOCK ----
+    function updateClock() {
+      var now = new Date();
+      var h = String(now.getHours()).padStart(2, '0');
+      var m = String(now.getMinutes()).padStart(2, '0');
+      var s = String(now.getSeconds()).padStart(2, '0');
+      document.getElementById('live_clock').innerText = h + ':' + m + ':' + s;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
 
-  $(document).ready(function () {
-    loadBed();
-  });
-  function loadBed() {
-    $.get('{?=url()?}/anjungan/ajax?show=bed-display', function (html) {
-      $("#bed-display").html(html);
-
+    // ---- 2. FULLSCREEN TOGGLE ----
+    $('#btn_fullscreen').on('click', function() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(function(err) {});
+      } else {
+        document.exitFullscreen().catch(function(err) {});
+      }
     });
-  }
-</script>
+
+    // ---- 3. AJAX REAL-TIME REFRESH (EVERY 30s) ----
+    var refreshInterval = 30;
+    var currentTimer = refreshInterval;
+
+    function renderBedData(data) {
+      if (!data || !data.beds) return;
+
+      // Update KPI
+      if (data.summary) {
+        $('#kpi_kapasitas').text(data.summary.total_kapasitas || 0);
+        $('#kpi_terisi').text(data.summary.total_terisi || 0);
+        $('#kpi_tersedia').text(data.summary.total_kosong || 0);
+        $('#kpi_okupansi').text((data.summary.total_okupansi || 0) + '%');
+        $('#kpi_bangsal').text(data.summary.total_bangsal || 0);
+        if (data.summary.tanggal) {
+          $('#live_date').text(data.summary.tanggal);
+        }
+      }
+
+      // Update Table Rows
+      var html = '';
+      data.beds.forEach(function(row, idx) {
+        var klsClass = (row.kelas || '').toLowerCase().replace(/\s+/g, '-');
+        var kap = parseInt(row.kapasitas) || 0;
+        var isi = parseInt(row.terisi) || 0;
+        var sedia = parseInt(row.tersedia) || 0;
+        var okupansi = parseInt(row.okupansi) || 0;
+
+        var barCls = okupansi >= 90 ? 'danger' : (okupansi >= 70 ? 'warn' : 'safe');
+        var zeroCls = sedia === 0 ? ' zero' : '';
+        var statusBadge = sedia > 0
+          ? '<span class="status-badge tersedia"><i class="fa fa-check"></i> Tersedia</span>'
+          : '<span class="status-badge penuh"><i class="fa fa-times"></i> Penuh</span>';
+
+        html += '<tr>'
+          + '<td style="text-align: center; color: var(--text-muted);">' + (idx + 1) + '</td>'
+          + '<td class="col-bangsal"><i class="fa fa-building-o" style="color:var(--accent-blue);margin-right:6px;"></i> ' + row.nm_bangsal + '</td>'
+          + '<td><span class="kelas-tag kelas-' + klsClass + '">' + row.kelas + '</span></td>'
+          + '<td style="text-align: center;"><span class="num-pill kapasitas">' + kap + '</span></td>'
+          + '<td style="text-align: center;"><span class="num-pill terisi">' + isi + '</span></td>'
+          + '<td style="text-align: center;"><span class="num-pill tersedia' + zeroCls + '">' + sedia + '</span></td>'
+          + '<td>'
+          + '  <div class="bar-container">'
+          + '    <div class="bar-bg"><div class="bar-fill ' + barCls + '" style="width:' + okupansi + '%;"></div></div>'
+          + '    <div class="bar-text">' + okupansi + '% Terisi</div>'
+          + '  </div>'
+          + '</td>'
+          + '<td style="text-align: center;">' + statusBadge + '</td>'
+          + '</tr>';
+      });
+
+      $('#bed_rows').html(html);
+    }
+
+    function fetchBedData() {
+      $.ajax({
+        url: '{?=url()?}/anjungan/ajax?show=bed-display&format=json',
+        type: 'GET',
+        dataType: 'json',
+        cache: false,
+        success: function(res) {
+          if (res && res.status === 'success') {
+            renderBedData(res);
+          }
+        }
+      });
+    }
+
+    setInterval(function() {
+      currentTimer--;
+      if (currentTimer <= 0) {
+        currentTimer = refreshInterval;
+        fetchBedData();
+      }
+      $('#countdown_timer').text(currentTimer);
+    }, 1000);
+
+    // ---- 4. AUTO-SCROLL UNTUK LAYAR TV JIKA DATA BANYAK ----
+    var tableWrap = document.getElementById('table_container');
+    var scrollSpeed = 1;
+    var scrollDirection = 1;
+    var isHovered = false;
+
+    if (tableWrap) {
+      tableWrap.addEventListener('mouseenter', function() { isHovered = true; });
+      tableWrap.addEventListener('mouseleave', function() { isHovered = false; });
+      tableWrap.addEventListener('touchstart', function() { isHovered = true; });
+      tableWrap.addEventListener('touchend', function() { isHovered = false; });
+
+      setInterval(function() {
+        if (isHovered) return;
+        var maxScroll = tableWrap.scrollHeight - tableWrap.clientHeight;
+        if (maxScroll <= 20) return; // Tidak perlu scroll jika pas di layar
+
+        tableWrap.scrollTop += scrollSpeed * scrollDirection;
+
+        if (tableWrap.scrollTop >= maxScroll) {
+          scrollDirection = 0;
+          setTimeout(function() {
+            scrollDirection = -1;
+          }, 3000); // Tahan 3 detik di bawah
+        } else if (tableWrap.scrollTop <= 0) {
+          scrollDirection = 0;
+          setTimeout(function() {
+            scrollDirection = 1;
+          }, 3000); // Tahan 3 detik di atas
+        }
+      }, 50);
+    }
+  </script>
+</body>
+</html>
