@@ -3615,10 +3615,10 @@ class Site extends SiteModule
               $badgeText = 'Order Masuk';
               if ($row['status_resep'] == 'Diserahkan') {
                 $badgeBg = '#10b981'; // hijau
-                $badgeText = 'Siap Diambil';
+                $badgeText = 'Selesai Dilayani';
               } elseif ($row['status_resep'] == 'Disiapkan') {
                 $badgeBg = '#f59e0b'; // kuning
-                $badgeText = 'Sedang Disiapkan';
+                $badgeText = 'Siap Ambil';
               }
               
               $jenisBadge = ($row['jenis_resep'] == 'Racikan') 
