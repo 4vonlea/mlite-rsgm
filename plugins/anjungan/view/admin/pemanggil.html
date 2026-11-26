@@ -1449,6 +1449,56 @@
           $('#poli_stat_sudah').text(resp.stats.sudah);
         }
 
+        // Update hidden fields with current active patient data
+        // Priority: first patient with stts === 'Berkas Diterima' (sedang diperiksa), or first 'Belum' patient
+        var activeRawat = '';
+        var activeReg = '';
+        var activeNama = '';
+        var activeKdPoli = '';
+        var activeNmPoli = '';
+        var activeKdDokter = '';
+        var activeNmDokter = '';
+
+        if (resp.patients && resp.patients.length > 0) {
+          var prioritizedPatient = null;
+          for (var i = 0; i < resp.patients.length; i++) {
+            if (resp.patients[i].stts === 'Berkas Diterima') {
+              prioritizedPatient = resp.patients[i];
+              break;
+            }
+          }
+          if (!prioritizedPatient) {
+            for (var i = 0; i < resp.patients.length; i++) {
+              if (resp.patients[i].stts === 'Belum') {
+                prioritizedPatient = resp.patients[i];
+                break;
+              }
+            }
+          }
+          if (!prioritizedPatient && resp.patients.length > 0) {
+            prioritizedPatient = resp.patients[0];
+          }
+
+          if (prioritizedPatient) {
+            activeRawat = prioritizedPatient.no_rawat || '';
+            activeReg = prioritizedPatient.no_reg || '';
+            activeNama = prioritizedPatient.nm_pasien || '';
+            activeKdPoli = prioritizedPatient.kd_poli || '';
+            activeNmPoli = prioritizedPatient.nm_poli || '';
+            activeKdDokter = prioritizedPatient.kd_dokter || '';
+            activeNmDokter = prioritizedPatient.nm_dokter || '';
+          }
+        }
+
+        // Set hidden fields
+        $('#active_poli_rawat').val(activeRawat);
+        $('#active_poli_reg').val(activeReg);
+        $('#active_poli_nama').val(activeNama);
+        $('#active_poli_kd_poli').val(activeKdPoli);
+        $('#active_poli_nm_poli').val(activeNmPoli);
+        $('#active_poli_kd_dokter').val(activeKdDokter);
+        $('#active_poli_nm_dokter').val(activeNmDokter);
+
         // Render rows
         if (resp.patients && resp.patients.length > 0) {
           var html = '';
