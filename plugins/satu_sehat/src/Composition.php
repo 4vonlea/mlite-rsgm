@@ -14,8 +14,9 @@ class Composition
     private $org_id;
     private $display_encounter;
     private $zonawaktu;
+    private $title;
 
-    public function __construct($uuid_encounter, $uuid_composition, $ihs_patient, $no_ktp_dokter, $nama_pasien, $nama_dokter, $no_rawat, $org_id, $display_encounter, $zonawaktu)
+    public function __construct($uuid_encounter, $uuid_composition, $ihs_patient, $no_ktp_dokter, $nama_pasien, $nama_dokter, $no_rawat, $org_id, $display_encounter, $zonawaktu, $title = "Resume Medis Rawat Jalan")
     {
         $this->uuid_encounter = $uuid_encounter;
         $this->uuid_composition = $uuid_composition;
@@ -27,6 +28,7 @@ class Composition
         $this->org_id = $org_id;
         $this->display_encounter = $display_encounter;
         $this->zonawaktu = $zonawaktu;
+        $this->title = $title ?: "Resume Medis Rawat Jalan";
     }
 
     public function toJson()
@@ -75,7 +77,7 @@ class Composition
                         "display" => $this->nama_dokter
                     ]
                 ],
-                "title" => "Resume Medis Rawat Jalan",
+                "title" => $this->title,
                 "custodian" => [
                     "reference" => "Organization/".$this->org_id
                 ]
