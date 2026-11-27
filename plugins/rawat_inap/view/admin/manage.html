@@ -134,7 +134,7 @@
        url: url,
        type: 'GET',
        dataType: 'json',
-       timeout: 12000,
+       timeout: 20000,
        success: function(res) {
          if (res && res.status === 'success' && res.beds && res.beds.length > 0) {
            rawSimrsBeds = JSON.parse(JSON.stringify(res.beds));
@@ -206,23 +206,38 @@
      $('#bedBpjsModalBody').html('<div class="text-center" style="padding:40px;"><i class="fa fa-spinner fa-spin fa-2x" style="color:#1a7abf;"></i><br><br><strong>Mengirim ' + beds.length + ' data bangsal ke BPJS Aplicare...</strong><br><small class="text-muted">Proses autentikasi signature & verifikasi respon BPJS</small></div>');
 
      var url = mlite.url + '/' + mlite.admin + '/rawat_inap/sinkronbedBpjs?t=' + mlite.token;
-     $.post(url, { beds: beds }, function(data) {
-       btn.prop('disabled', false).html('<i class="fa fa-refresh"></i> Kirim Ulang');
-       $('#btn_reset_bed_simrs').show();
-       $('#btn_tarik_ulang_bpjs').show();
-       try {
-         var res = (typeof data === 'string') ? JSON.parse(data) : data;
-         renderBedResult(res);
-         if (res.waktu) $('#bedBpjsWaktu').text('Dikirim: ' + res.waktu);
-       } catch(err) {
-         $('#bedBpjsModalBody').html('<div class="alert alert-danger"><i class="fa fa-times"></i> Gagal memproses respons server.</div>');
-       }
-     }).fail(function() {
-       btn.prop('disabled', false).html('<i class="fa fa-paper-plane"></i> Kirim ke BPJS Sekarang');
-       $('#btn_reset_bed_simrs').show();
-       $('#btn_tarik_ulang_bpjs').show();
-       $('#bedBpjsModalBody').html('<div class="alert alert-danger"><i class="fa fa-exclamation-triangle"></i> Gagal menghubungi server. Periksa koneksi internet atau server BPJS.</div>');
-     });
+      $.ajax({
+        url: url,
+        type: 'POST',
+        data: { beds: beds },
+        dataType: 'json',
+        timeout: 45000,
+        success: function(res) {
+          btn.prop('disabled', false).html('<i class="fa fa-refresh"></i> Kirim Ulang');
+          $('#btn_reset_bed_simrs').show();
+          $('#btn_tarik_ulang_bpjs').show();
+          renderBedResult(res);
+          if (res.waktu) $('#bedBpjsWaktu').text('Dikirim: ' + res.waktu);
+        },
+        error: function(xhr, status, error) {
+          btn.prop('disabled', false).html('<i class="fa fa-paper-plane"></i> Kirim ke BPJS Sekarang');
+          $('#btn_reset_bed_simrs').show();
+          $('#btn_tarik_ulang_bpjs').show();
+          var msg = 'Terjadi kendala saat menghubungi server. Periksa koneksi internet atau status BPJS.';
+          if (status === 'timeout') {
+            msg = 'Proses ke server BPJS memakan waktu cukup lama (Timeout). Beberapa bangsal mungkin sudah berhasil diperbarui oleh BPJS. Silakan klik tombol <strong>"Tarik dari BPJS & SIMRS"</strong> untuk memeriksa status terakhir.';
+          }
+          $('#bedBpjsModalBody').html(
+            '<div class="alert alert-warning" style="margin-bottom:15px;">' +
+            '  <h4><i class="fa fa-clock-o"></i> Waktu Tunggu Habis / Gangguan Respon BPJS</h4>' +
+            '  <p>' + msg + '</p>' +
+            '</div>' +
+            '<div class="text-center">' +
+            '  <button type="button" class="btn btn-primary" onclick="loadBedBpjsModal()"><i class="fa fa-cloud-download"></i> Cek Status Terkini di BPJS</button>' +
+            '</div>'
+          );
+        }
+      });
    });
 
    // ---- Live calculate saat petugas edit angka Kapasitas / Tersedia ----
@@ -339,9 +354,9 @@
        + '<table class="table table-bordered table-hover table-condensed" style="font-size:12px;margin-bottom:0;">'
        + '<thead style="background:#1a7abf;color:#fff;position:sticky;top:0;z-index:2;">'
        + '<tr>'
-       + '  <th rowspan="2" style="vertical-align:middle;">Bangsal / Ruang</th>'
+        + '  <th rowspan="2" style="vertical-align:middle;">Bangsal / Ruang BPJS</th>'
        + '  <th rowspan="2" style="vertical-align:middle;">Kelas</th>'
-       + '  <th rowspan="2" class="text-center" style="vertical-align:middle;width:60px;">Kode</th>'
+        + '  <th rowspan="2" class="text-center" style="vertical-align:middle;width:80px;">Kode BPJS</th>'
        + '  <th colspan="2" class="text-center" style="background:#1565a0;border-bottom:1px solid #fff;">Data Riil SIMRS</th>'
        + '  <th class="text-center" style="background:#2e7d32;border-bottom:1px solid #fff;" title="Data yang saat ini aktif tercatat di BPJS Aplicare">Tercatat di BPJS</th>'
        + '  <th colspan="2" class="text-center" style="background:#e67e22;border-bottom:1px solid #fff;">Kirim ke BPJS (Bisa Diedit ✎)</th>'
@@ -370,10 +385,13 @@
          bpjsCol = '<span class="text-muted" style="font-size:10px;"><i class="fa fa-minus"></i> Belum ada</span>';
        }
 
-       html += '<tr data-koderuang="' + b.kd_bangsal + '" data-namaruang="' + b.bangsal + '" data-kodekelas="' + b.kode_bpjs + '" data-kelas="' + b.kelas + '">'
-         + '<td style="vertical-align:middle;"><strong>' + b.bangsal + '</strong></td>'
-         + '<td style="vertical-align:middle;">' + b.kelas + '</td>'
-         + '<td class="text-center" style="vertical-align:middle;"><span class="label label-info">' + b.kode_bpjs + '</span></td>'
+        var kodeRuangBpjs = b.koderuang || b.kd_bangsal;
+        var namaRuangBpjs = b.namaruang || b.bangsal;
+        var kodeKelasBpjs = b.kodekelas || b.kode_bpjs;
+        html += '<tr data-koderuang="' + kodeRuangBpjs + '" data-namaruang="' + namaRuangBpjs + '" data-kodekelas="' + kodeKelasBpjs + '" data-kelas="' + b.kelas + '" data-kd_bangsal="' + (b.kd_bangsal || '') + '">'
+          + '<td style="vertical-align:middle;"><strong>' + namaRuangBpjs + '</strong><br><small class="text-muted" style="font-size:10px;"><i class="fa fa-tag"></i> Kode Ruang: <strong style="color:#1565c0;">' + kodeRuangBpjs + '</strong></small></td>'
+          + '<td style="vertical-align:middle;">' + b.kelas + '</td>'
+          + '<td class="text-center" style="vertical-align:middle;"><span class="label label-info" style="font-size:11px;">' + kodeKelasBpjs + '</span></td>'
          // Data SIMRS
          + '<td class="text-center" style="vertical-align:middle;background:#f9fbfd;">' + b.kapasitas + '</td>'
          + '<td class="text-center" style="vertical-align:middle;background:#f9fbfd;"><span class="badge bed-terisi" style="background:#e74c3c;">' + b.terisi + '</span></td>'

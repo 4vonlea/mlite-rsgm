@@ -3473,9 +3473,9 @@ class Admin extends AdminModule
     }
 
     /**
-     * Helper cURL mandiri khusus BPJS Aplicare dengan timeout memadai & isolasi error.
+     * Helper cURL mandiri khusus BPJS Aplicare dengan timeout memadai, Keep-Alive, dan isolasi IPv4.
      */
-    private function _callAplicare(string $method, string $url, ?string $payload, string $consid, string $secretkey, string $user_key, int $timeoutSeconds = 12)
+    private function _callAplicare(string $method, string $url, ?string $payload, string $consid, string $secretkey, string $user_key, int $timeoutSeconds = 12, $existingCh = null)
     {
         $tStamp = strval(time());
         $signature = hash_hmac('sha256', $consid . "&" . $tStamp, $secretkey, true);
@@ -3488,13 +3488,16 @@ class Admin extends AdminModule
             'user_key: ' . $user_key,
             'Accept: application/json',
             'Content-Type: application/json',
+            'Connection: keep-alive',
         ];
 
-        $ch = curl_init();
+        $ch = $existingCh ?: curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, strtoupper($method));
         if ($payload !== null) {
             curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+        } else {
+            curl_setopt($ch, CURLOPT_POSTFIELDS, null);
         }
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 8); // Beri waktu 8 detik untuk handshake jaringan BPJS
@@ -3502,13 +3505,17 @@ class Admin extends AdminModule
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
+        curl_setopt($ch, CURLOPT_TCP_NODELAY, true);
 
         $output = curl_exec($ch);
         if ($output === false) {
             $err = curl_error($ch);
             error_log("[rawat_inap] cURL error to {$url}: {$err}");
         }
-        curl_close($ch);
+        if (!$existingCh) {
+            curl_close($ch);
+        }
         return $output;
     }
 
@@ -3516,13 +3523,13 @@ class Admin extends AdminModule
      * Kirim data tempat tidur ke BPJS Aplicare:
      * Mencoba update terlebih dahulu; jika ruangan belum terdaftar di BPJS Aplicare, otomatis mendaftarkan via create.
      */
-    private function _sendBedToAplicare(string $base_url, string $kode_ppk, string $payload, string $consid, string $secretkey, string $user_key): array
+    private function _sendBedToAplicare(string $base_url, string $kode_ppk, string $payload, string $consid, string $secretkey, string $user_key, $ch = null): array
     {
         $url_update = $base_url . '/aplicaresws/rest/bed/update/' . $kode_ppk;
         $url_create = $base_url . '/aplicaresws/rest/bed/create/' . $kode_ppk;
 
         // 1. Coba update terlebih dahulu
-        $resp = $this->_callAplicare('POST', $url_update, $payload, $consid, $secretkey, $user_key, 12);
+        $resp = $this->_callAplicare('POST', $url_update, $payload, $consid, $secretkey, $user_key, 12, $ch);
         $respArr = is_string($resp) ? json_decode($resp, true) : (array) $resp;
         $code = $respArr['metadata']['code'] ?? null;
         $msg  = $respArr['metadata']['message'] ?? '';
@@ -3531,7 +3538,7 @@ class Admin extends AdminModule
         // 2. Jika ruangan belum terdaftar di database BPJS Aplicare ("Data tidak ada di database"), otomatis create (daftarkan)
         if (!$isSuccess && (stripos($msg, 'tidak ada') !== false || stripos($msg, 'belum') !== false)) {
             usleep(250000); // jeda 0.25 detik
-            $respCreate = $this->_callAplicare('POST', $url_create, $payload, $consid, $secretkey, $user_key, 12);
+            $respCreate = $this->_callAplicare('POST', $url_create, $payload, $consid, $secretkey, $user_key, 12, $ch);
             $respCreateArr = is_string($respCreate) ? json_decode($respCreate, true) : (array) $respCreate;
             $codeCreate = $respCreateArr['metadata']['code'] ?? null;
             $msgCreate  = $respCreateArr['metadata']['message'] ?? '';
@@ -3552,12 +3559,118 @@ class Admin extends AdminModule
     }
 
     /**
+     * Master data 7 ruangan tempat tidur RSGM Gusti Hasan Aman yang terdaftar resmi di BPJS Aplicare.
+     */
+    private function _getMasterBpjsBeds(): array
+    {
+        return [
+            '6.K.KRIS' => [
+                'koderuang' => '6.K.KRIS',
+                'namaruang' => 'KRIS',
+                'kelas'     => 'Kelas 3',
+                'kodekelas' => 'KL3',
+                'kapasitas' => 4,
+                'tersedia'  => 4,
+            ],
+            '3.K3' => [
+                'koderuang' => '3.K3',
+                'namaruang' => 'Molars',
+                'kelas'     => 'Kelas 3',
+                'kodekelas' => 'KL3',
+                'kapasitas' => 4,
+                'tersedia'  => 4,
+            ],
+            '6.K.ISO' => [
+                'koderuang' => '6.K.ISO',
+                'namaruang' => 'RUANG ISOLASI',
+                'kelas'     => 'Ruang Isolasi',
+                'kodekelas' => 'ISO',
+                'kapasitas' => 1,
+                'tersedia'  => 1,
+            ],
+            '3.K.ICU' => [
+                'koderuang' => '3.K.ICU',
+                'namaruang' => 'RUANG ICU',
+                'kelas'     => 'ICU',
+                'kodekelas' => 'ICU',
+                'kapasitas' => 1,
+                'tersedia'  => 1,
+            ],
+            '3.K2' => [
+                'koderuang' => '3.K2',
+                'namaruang' => 'Incisors',
+                'kelas'     => 'Kelas 2',
+                'kodekelas' => 'KL2',
+                'kapasitas' => 2,
+                'tersedia'  => 2,
+            ],
+            '3.K1' => [
+                'koderuang' => '3.K1',
+                'namaruang' => 'Canines',
+                'kelas'     => 'Kelas 1',
+                'kodekelas' => 'KL1',
+                'kapasitas' => 1,
+                'tersedia'  => 1,
+            ],
+            '3.K.VIP' => [
+                'koderuang' => '3.K.VIP',
+                'namaruang' => 'Premolar',
+                'kelas'     => 'VIP',
+                'kodekelas' => 'VIP',
+                'kapasitas' => 1,
+                'tersedia'  => 1,
+            ],
+        ];
+    }
+
+    /**
+     * Helper pencocokan kamar antara master BPJS dan database SIMRS (bangsal/kamar).
+     */
+    private function _matchSimrsBed(array $masterRoom, array $simrsRows): ?array
+    {
+        $kode = strtolower(trim($masterRoom['koderuang']));
+        $nama = strtolower(trim($masterRoom['namaruang']));
+
+        foreach ($simrsRows as $r) {
+            $simrsKd = strtolower(trim($r['kd_bangsal'] ?? ''));
+            $simrsNm = strtolower(trim($r['nm_bangsal'] ?? ''));
+
+            if ($simrsKd === $kode || $simrsNm === $nama) {
+                return $r;
+            }
+            if (stripos($simrsNm, 'canine') !== false && stripos($nama, 'canine') !== false) {
+                return $r;
+            }
+            if (stripos($simrsNm, 'incisor') !== false && stripos($nama, 'incisor') !== false) {
+                return $r;
+            }
+            if (stripos($simrsNm, 'molar') !== false && stripos($nama, 'molar') !== false && stripos($simrsNm, 'premolar') === false && stripos($nama, 'premolar') === false) {
+                return $r;
+            }
+            if (stripos($simrsNm, 'premolar') !== false && stripos($nama, 'premolar') !== false) {
+                return $r;
+            }
+            if (stripos($simrsNm, 'kris') !== false && stripos($nama, 'kris') !== false) {
+                return $r;
+            }
+            if ((stripos($simrsNm, 'isolasi') !== false || stripos($simrsNm, 'iso') !== false) && (stripos($nama, 'isolasi') !== false || stripos($nama, 'iso') !== false)) {
+                return $r;
+            }
+            if (stripos($simrsNm, 'icu') !== false && stripos($nama, 'icu') !== false) {
+                return $r;
+            }
+        }
+        return null;
+    }
+
+    /**
      * Sinkronisasi data ketersediaan bed ke BPJS Aplicare.
      * Dipanggil otomatis saat pasien masuk/keluar kamar.
      */
     private function _syncBedAplicare(string $kelas_kamar = ''): bool
     {
         try {
+            @set_time_limit(60);
             $consid     = $this->settings->get('settings.BpjsConsID') ?: $this->settings->get('jkn_mobile.BpjsConsID');
             $secretkey  = $this->settings->get('settings.BpjsSecretKey') ?: $this->settings->get('jkn_mobile.BpjsSecretKey');
             $user_key   = $this->settings->get('settings.BpjsUserKey') ?: $this->settings->get('jkn_mobile.BpjsUserKey');
@@ -3568,55 +3681,54 @@ class Admin extends AdminModule
                 return false;
             }
 
-            $url = $base_url . '/aplicaresws/rest/bed/update/' . $kode_ppk;
+            $master_beds = $this->_getMasterBpjsBeds();
 
-            $kelas_map = [
-                'Kelas 1' => 'KL1', 'Kelas 2' => 'KL2', 'Kelas 3' => 'KL3',
-                'VIP'     => 'VIP', 'ICU'     => 'ICU', 'NICU'    => 'NIC',
-                'PICU'    => 'PIC', 'HCU'     => 'HCU',
-            ];
-
-            $sql    = "SELECT b.nm_bangsal, k.kd_bangsal, k.kelas,
-                              COUNT(k.kd_kamar)              AS jml,
-                              SUM(IF(k.status='ISI',1,0))    AS isi,
-                              SUM(IF(k.status='KOSONG',1,0)) AS kosong
-                       FROM kamar k
-                       JOIN bangsal b ON k.kd_bangsal = b.kd_bangsal
-                       WHERE k.statusdata = '1'";
-            $params = [];
-            if (!empty($kelas_kamar)) {
-                $sql     .= ' AND k.kelas = ?';
-                $params[] = $kelas_kamar;
-            }
-            $sql .= ' GROUP BY k.kd_bangsal, k.kelas, b.nm_bangsal';
-
+            $sql = "SELECT b.nm_bangsal, k.kd_bangsal, k.kelas,
+                           COUNT(k.kd_kamar)              AS jml,
+                           SUM(IF(k.status='ISI',1,0))    AS isi,
+                           SUM(IF(k.status='KOSONG',1,0)) AS kosong
+                    FROM kamar k
+                    JOIN bangsal b ON k.kd_bangsal = b.kd_bangsal
+                    WHERE k.statusdata = '1'
+                    GROUP BY k.kd_bangsal, k.kelas, b.nm_bangsal";
             $stmt = $this->db()->pdo()->prepare($sql);
-            $stmt->execute($params);
-            $beds = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            $stmt->execute();
+            $simrs_rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
             $any_ok = false;
-            foreach ($beds as $bed) {
-                $kode_kelas = $kelas_map[$bed['kelas']] ?? null;
-                if (!$kode_kelas) {
-                    continue;
-                }
+            $ch = curl_init();
+            try {
+                foreach ($master_beds as $bed) {
+                    if (!empty($kelas_kamar) && strcasecmp($bed['kelas'], $kelas_kamar) !== 0) {
+                        continue;
+                    }
 
-                $data = json_encode([
-                    'kodekelas'          => $kode_kelas,
-                    'koderuang'          => $bed['kd_bangsal'],
-                    'namaruang'          => $bed['nm_bangsal'],
-                    'kapasitas'          => (int) $bed['jml'],
-                    'tersedia'           => (int) $bed['kosong'],
-                    'tersediapria'       => '0',
-                    'tersediawanita'     => '0',
-                    'tersediapriawanita' => (string) $bed['kosong'],
-                ]);
+                    $matched = $this->_matchSimrsBed($bed, $simrs_rows);
+                    $simrs_isi = $matched ? (int) $matched['isi'] : 0;
+                    $kapasitas = (int) $bed['kapasitas'];
+                    $tersedia  = max(0, $kapasitas - $simrs_isi);
 
-                $res = $this->_sendBedToAplicare($base_url, $kode_ppk, $data, $consid, $secretkey, $user_key);
-                if ($res['ok']) {
-                    $any_ok = true;
+                    $data = json_encode([
+                        'kodekelas'          => $bed['kodekelas'],
+                        'koderuang'          => $bed['koderuang'],
+                        'namaruang'          => $bed['namaruang'],
+                        'kapasitas'          => $kapasitas,
+                        'tersedia'           => $tersedia,
+                        'tersediapria'       => '0',
+                        'tersediawanita'     => '0',
+                        'tersediapriawanita' => (string) $tersedia,
+                    ]);
+
+                    $res = $this->_sendBedToAplicare($base_url, $kode_ppk, $data, $consid, $secretkey, $user_key, $ch);
+                    if ($res['ok']) {
+                        $any_ok = true;
+                    }
+                    usleep(100000);
                 }
-                usleep(150000);
+            } finally {
+                if ($ch) {
+                    curl_close($ch);
+                }
             }
 
             if ($any_ok) {
@@ -3646,6 +3758,7 @@ class Admin extends AdminModule
      */
     public function getBedStatus()
     {
+        @set_time_limit(60);
         header('Content-Type: application/json; charset=utf-8');
         try {
             $consid     = $this->settings->get('settings.BpjsConsID') ?: $this->settings->get('jkn_mobile.BpjsConsID');
@@ -3663,48 +3776,43 @@ class Admin extends AdminModule
                 // Ignore DB mlite_settings error if any
             }
 
-            $kelas_map = [
-                'Kelas 1' => 'KL1', 'Kelas 2' => 'KL2', 'Kelas 3' => 'KL3',
-                'VIP'     => 'VIP', 'ICU'     => 'ICU', 'NICU'    => 'NIC',
-                'PICU'    => 'PIC', 'HCU'     => 'HCU',
-            ];
+            // Inisialisasi daftar 7 ruangan master BPJS
+            $master_beds = $this->_getMasterBpjsBeds();
 
-            // 1. Data riil kondisi kamar dari database SIMRS
-            $sql  = "SELECT b.nm_bangsal, k.kd_bangsal, k.kelas,
-                            COUNT(k.kd_kamar)              AS jml,
-                            SUM(IF(k.status='ISI',1,0))    AS isi,
-                            SUM(IF(k.status='KOSONG',1,0)) AS kosong
-                     FROM kamar k
-                     JOIN bangsal b ON k.kd_bangsal = b.kd_bangsal
-                     WHERE k.statusdata = '1'
-                     GROUP BY k.kd_bangsal, k.kelas, b.nm_bangsal
-                     ORDER BY b.nm_bangsal, k.kelas";
-            $stmt = $this->db()->pdo()->prepare($sql);
-            $stmt->execute();
-            $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-
-            // 2. Tarik data ketersediaan yang saat ini tercatat di server BPJS Aplicare (isolasi try-catch agar kegagalan BPJS tidak membatalkan data SIMRS)
-            $bpjs_beds = [];
             $bpjs_connected = false;
             $bpjs_status_msg = 'Kredensial BPJS belum lengkap';
 
+            // 1. Tarik data live dari BPJS Aplicare
             if (!empty($consid) && !empty($kode_ppk) && !empty($base_url)) {
                 $url_read = $base_url . '/aplicaresws/rest/bed/read/' . $kode_ppk . '/1/100';
-
                 try {
-                    $output = $this->_callAplicare('GET', $url_read, null, $consid, $secretkey, $user_key, 3);
+                    $output = $this->_callAplicare('GET', $url_read, null, $consid, $secretkey, $user_key, 8);
                     if ($output) {
                         $json = json_decode($output, true);
                         if (!empty($json['response']['list']) && is_array($json['response']['list'])) {
                             $bpjs_connected = true;
                             $bpjs_status_msg = 'Berhasil terhubung ke server BPJS Aplicare';
                             foreach ($json['response']['list'] as $item) {
-                                $key = ($item['koderuang'] ?? '') . '_' . ($item['kodekelas'] ?? '');
-                                $bpjs_beds[$key] = [
-                                    'kapasitas'  => (int) ($item['kapasitas'] ?? 0),
-                                    'tersedia'   => (int) ($item['tersedia'] ?? 0),
-                                    'lastupdate' => $item['lastupdate'] ?? null,
-                                ];
+                                $kr = $item['koderuang'] ?? '';
+                                if (!$kr) continue;
+
+                                if (isset($master_beds[$kr])) {
+                                    $master_beds[$kr]['kapasitas']  = (int) ($item['kapasitas'] ?? $master_beds[$kr]['kapasitas']);
+                                    $master_beds[$kr]['tersedia']   = (int) ($item['tersedia'] ?? $master_beds[$kr]['tersedia']);
+                                    $master_beds[$kr]['kodekelas']  = $item['kodekelas'] ?? $master_beds[$kr]['kodekelas'];
+                                    $master_beds[$kr]['namaruang']  = $item['namaruang'] ?? $master_beds[$kr]['namaruang'];
+                                    $master_beds[$kr]['lastupdate'] = $item['lastupdate'] ?? null;
+                                } else {
+                                    $master_beds[$kr] = [
+                                        'koderuang'  => $kr,
+                                        'namaruang'  => $item['namaruang'] ?? $kr,
+                                        'kelas'      => $item['namakelas'] ?? ($item['kodekelas'] ?? 'Kelas 3'),
+                                        'kodekelas'  => $item['kodekelas'] ?? 'KL3',
+                                        'kapasitas'  => (int) ($item['kapasitas'] ?? 1),
+                                        'tersedia'   => (int) ($item['tersedia'] ?? 1),
+                                        'lastupdate' => $item['lastupdate'] ?? null,
+                                    ];
+                                }
                             }
                         } else {
                             $code = $json['metadata']['code'] ?? '';
@@ -3719,28 +3827,56 @@ class Admin extends AdminModule
                 }
             }
 
-            // 3. Gabungkan data SIMRS dan data tercatat BPJS
+            // 2. Ambil data kondisi riil kamar dari database SIMRS
+            $simrs_rows = [];
+            try {
+                $sql  = "SELECT b.nm_bangsal, k.kd_bangsal, k.kelas,
+                                COUNT(k.kd_kamar)              AS jml,
+                                SUM(IF(k.status='ISI',1,0))    AS isi,
+                                SUM(IF(k.status='KOSONG',1,0)) AS kosong
+                         FROM kamar k
+                         JOIN bangsal b ON k.kd_bangsal = b.kd_bangsal
+                         WHERE k.statusdata = '1'
+                         GROUP BY k.kd_bangsal, k.kelas, b.nm_bangsal";
+                $stmt = $this->db()->pdo()->prepare($sql);
+                $stmt->execute();
+                $simrs_rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            } catch (\Throwable $dbe) {
+                error_log('[rawat_inap] DB kamar query error: ' . $dbe->getMessage());
+            }
+
+            // 3. Gabungkan master BPJS dengan riil occupancy SIMRS
             $beds = [];
-            foreach ($rows as $r) {
-                $kode_bpjs = $kelas_map[$r['kelas']] ?? '-';
-                $key = $r['kd_bangsal'] . '_' . $kode_bpjs;
-                $data_bpjs = $bpjs_beds[$key] ?? null;
+            foreach ($master_beds as $m) {
+                $matched = $this->_matchSimrsBed($m, $simrs_rows);
+                $simrs_isi = $matched ? (int) $matched['isi'] : 0;
+                $kapasitas = (int) $m['kapasitas'];
+
+                // Jika ada data tercatat dari BPJS, tampilkan data tercatatnya
+                $bpjs_tersedia  = isset($m['tersedia']) ? (int) $m['tersedia'] : max(0, $kapasitas - $simrs_isi);
+                $bpjs_kapasitas = $kapasitas;
+
+                // Angka yang akan dikirim (default siap diisi = kapasitas - pasien riil SIMRS)
+                $tersedia_kirim = max(0, $kapasitas - $simrs_isi);
 
                 $beds[] = [
-                    'bangsal'         => $r['nm_bangsal'],
-                    'kd_bangsal'      => $r['kd_bangsal'],
-                    'kelas'           => $r['kelas'],
-                    'kode_bpjs'       => $kode_bpjs,
-                    // Data riil SIMRS
-                    'kapasitas'       => (int) $r['jml'],
-                    'terisi'          => (int) $r['isi'],
-                    'tersedia'        => (int) $r['kosong'],
-                    'pct'             => $r['jml'] > 0 ? round(($r['isi'] / $r['jml']) * 100) : 0,
-                    // Data aktif di BPJS
-                    'bpjs_tercatat'   => $data_bpjs ? true : false,
-                    'bpjs_tersedia'   => $data_bpjs ? $data_bpjs['tersedia'] : null,
-                    'bpjs_kapasitas'  => $data_bpjs ? $data_bpjs['kapasitas'] : null,
-                    'bpjs_lastupdate' => $data_bpjs ? $data_bpjs['lastupdate'] : null,
+                    'bangsal'         => $m['namaruang'],
+                    'namaruang'       => $m['namaruang'],
+                    'kd_bangsal'      => $matched ? $matched['kd_bangsal'] : $m['koderuang'],
+                    'koderuang'       => $m['koderuang'],
+                    'kelas'           => $m['kelas'],
+                    'kode_bpjs'       => $m['kodekelas'],
+                    'kodekelas'       => $m['kodekelas'],
+                    // Angka riil SIMRS
+                    'kapasitas'       => $kapasitas,
+                    'terisi'          => $simrs_isi,
+                    'tersedia'        => $tersedia_kirim,
+                    'pct'             => $kapasitas > 0 ? round(($simrs_isi / $kapasitas) * 100) : 0,
+                    // Angka tercatat di BPJS
+                    'bpjs_tercatat'   => $bpjs_connected || !empty($m['lastupdate']),
+                    'bpjs_tersedia'   => $bpjs_tersedia,
+                    'bpjs_kapasitas'  => $bpjs_kapasitas,
+                    'bpjs_lastupdate' => $m['lastupdate'] ?? null,
                 ];
             }
 
@@ -3767,6 +3903,7 @@ class Admin extends AdminModule
      */
     public function postSinkronBedBpjs()
     {
+        @set_time_limit(60);
         header('Content-Type: application/json; charset=utf-8');
         try {
             $consid     = $this->settings->get('settings.BpjsConsID') ?: $this->settings->get('jkn_mobile.BpjsConsID');
@@ -3780,8 +3917,6 @@ class Admin extends AdminModule
                 exit();
             }
 
-            $url = $base_url . '/aplicaresws/rest/bed/update/' . $kode_ppk;
-
             $kelas_map = [
                 'Kelas 1' => 'KL1', 'Kelas 2' => 'KL2', 'Kelas 3' => 'KL3',
                 'VIP'     => 'VIP', 'ICU'     => 'ICU', 'NICU'    => 'NIC',
@@ -3791,123 +3926,151 @@ class Admin extends AdminModule
             $results = [];
             $sukses  = 0;
             $gagal   = 0;
+            $ch = curl_init();
 
-            // Jika petugas mengirim data edit manual dari form modal
-            if (!empty($_POST['beds']) && is_array($_POST['beds'])) {
-                foreach ($_POST['beds'] as $bed) {
-                    $kode_kelas = $bed['kodekelas'] ?? ($kelas_map[$bed['kelas']] ?? null);
-                    if (!$kode_kelas) {
-                        continue;
-                    }
-                    $kapasitas = (int) ($bed['kapasitas'] ?? 0);
-                    $tersedia  = (int) ($bed['tersedia'] ?? 0);
-                    $terisi    = max(0, $kapasitas - $tersedia);
-
-                    $payload = json_encode([
-                        'kodekelas'          => $kode_kelas,
-                        'koderuang'          => $bed['koderuang'],
-                        'namaruang'          => $bed['namaruang'],
-                        'kapasitas'          => $kapasitas,
-                        'tersedia'           => $tersedia,
-                        'tersediapria'       => '0',
-                        'tersediawanita'     => '0',
-                        'tersediapriawanita' => (string) $tersedia,
-                    ]);
-
-                    $res = $this->_sendBedToAplicare($base_url, $kode_ppk, $payload, $consid, $secretkey, $user_key);
-                    if ($res['ok']) {
-                        $sukses++;
-                    } else {
-                        $gagal++;
-                    }
-
-                    // Sinkronkan status tempat tidur di database SIMRS lokal (tabel kamar)
-                    try {
-                        $kamarQuery = $this->db('kamar')
-                            ->where('kd_bangsal', $bed['koderuang'])
-                            ->where('statusdata', '1');
-                        $kelasNama = $bed['kelas'] ?? (array_search($kode_kelas, $kelas_map) ?: null);
-                        if ($kelasNama) {
-                            $kamarQuery->where('kelas', $kelasNama);
+            try {
+                // Jika petugas mengirim data edit manual dari form modal
+                if (!empty($_POST['beds']) && is_array($_POST['beds'])) {
+                    foreach ($_POST['beds'] as $bed) {
+                        $koderuang  = $bed['koderuang'] ?? ($bed['kd_bangsal'] ?? '');
+                        $namaruang  = $bed['namaruang'] ?? ($bed['bangsal'] ?? '');
+                        $kode_kelas = $bed['kodekelas'] ?? ($bed['kode_bpjs'] ?? ($kelas_map[$bed['kelas']] ?? null));
+                        if (!$kode_kelas || !$koderuang) {
+                            continue;
                         }
-                        $kamarList = $kamarQuery->toArray();
+                        $kapasitas = (int) ($bed['kapasitas'] ?? 0);
+                        $tersedia  = (int) ($bed['tersedia'] ?? 0);
+                        $terisi    = max(0, $kapasitas - $tersedia);
 
-                        $targetKosong = min($tersedia, count($kamarList));
-                        $currKosong = 0;
-                        foreach ($kamarList as $kItem) {
-                            $sttsTarget = ($currKosong < $targetKosong) ? 'KOSONG' : 'ISI';
-                            if ($sttsTarget === 'KOSONG') {
-                                $currKosong++;
-                            }
-                            if ($kItem['status'] !== $sttsTarget) {
-                                $this->db('kamar')->where('kd_kamar', $kItem['kd_kamar'])->save(['status' => $sttsTarget]);
-                            }
+                        $payload = json_encode([
+                            'kodekelas'          => $kode_kelas,
+                            'koderuang'          => $koderuang,
+                            'namaruang'          => $namaruang,
+                            'kapasitas'          => $kapasitas,
+                            'tersedia'           => $tersedia,
+                            'tersediapria'       => '0',
+                            'tersediawanita'     => '0',
+                            'tersediapriawanita' => (string) $tersedia,
+                        ]);
+
+                        $res = $this->_sendBedToAplicare($base_url, $kode_ppk, $payload, $consid, $secretkey, $user_key, $ch);
+                        if ($res['ok']) {
+                            $sukses++;
+                        } else {
+                            $gagal++;
                         }
-                    } catch (\Throwable $kEx) {
-                        error_log('[rawat_inap] Gagal update status kamar SIMRS: ' . $kEx->getMessage());
+
+                        // Sinkronkan status tempat tidur di database SIMRS lokal (tabel kamar)
+                        try {
+                            $kamarList = $this->db('kamar')
+                                ->join('bangsal', 'bangsal.kd_bangsal=kamar.kd_bangsal')
+                                ->where('kamar.statusdata', '1')
+                                ->toArray();
+
+                            $matchedKamar = [];
+                            foreach ($kamarList as $kItem) {
+                                $simrsKd = strtolower(trim($kItem['kd_bangsal'] ?? ''));
+                                $simrsNm = strtolower(trim($kItem['nm_bangsal'] ?? ''));
+                                $krLower = strtolower(trim($koderuang));
+                                $nrLower = strtolower(trim($namaruang));
+
+                                if ($simrsKd === $krLower || $simrsNm === $nrLower
+                                    || (stripos($simrsNm, 'canine') !== false && stripos($nrLower, 'canine') !== false)
+                                    || (stripos($simrsNm, 'incisor') !== false && stripos($nrLower, 'incisor') !== false)
+                                    || (stripos($simrsNm, 'molar') !== false && stripos($nrLower, 'molar') !== false && stripos($simrsNm, 'premolar') === false && stripos($nrLower, 'premolar') === false)
+                                    || (stripos($simrsNm, 'premolar') !== false && stripos($nrLower, 'premolar') !== false)
+                                    || (stripos($simrsNm, 'kris') !== false && stripos($nrLower, 'kris') !== false)
+                                    || ((stripos($simrsNm, 'isolasi') !== false || stripos($simrsNm, 'iso') !== false) && (stripos($nrLower, 'isolasi') !== false || stripos($nrLower, 'iso') !== false))
+                                    || (stripos($simrsNm, 'icu') !== false && stripos($nrLower, 'icu') !== false)
+                                ) {
+                                    $matchedKamar[] = $kItem;
+                                }
+                            }
+
+                            if (!empty($matchedKamar)) {
+                                $targetKosong = min($tersedia, count($matchedKamar));
+                                $currKosong = 0;
+                                foreach ($matchedKamar as $kItem) {
+                                    $sttsTarget = ($currKosong < $targetKosong) ? 'KOSONG' : 'ISI';
+                                    if ($sttsTarget === 'KOSONG') {
+                                        $currKosong++;
+                                    }
+                                    if ($kItem['status'] !== $sttsTarget) {
+                                        $this->db('kamar')->where('kd_kamar', $kItem['kd_kamar'])->save(['status' => $sttsTarget]);
+                                    }
+                                }
+                            }
+                        } catch (\Throwable $kEx) {
+                            error_log('[rawat_inap] Gagal update status kamar SIMRS: ' . $kEx->getMessage());
+                        }
+
+                        $results[] = [
+                            'bangsal'   => $namaruang . ' (' . $koderuang . ')',
+                            'kelas'     => $bed['kelas'] ?? $kode_kelas,
+                            'kapasitas' => $kapasitas,
+                            'terisi'    => $terisi,
+                            'tersedia'  => $tersedia,
+                            'ok'        => $res['ok'],
+                            'pesan'     => $res['pesan'],
+                        ];
+
+                        usleep(150000); // jeda 0.15 detik antar request ke BPJS
                     }
+                } else {
+                    $master_beds = $this->_getMasterBpjsBeds();
 
-                    $results[] = [
-                        'bangsal'   => $bed['namaruang'],
-                        'kelas'     => $bed['kelas'] ?? $kode_kelas,
-                        'kapasitas' => $kapasitas,
-                        'terisi'    => $terisi,
-                        'tersedia'  => $tersedia,
-                        'ok'        => $res['ok'],
-                        'pesan'     => $res['pesan'],
-                    ];
+                    $sql  = "SELECT b.nm_bangsal, k.kd_bangsal, k.kelas,
+                                    COUNT(k.kd_kamar)              AS jml,
+                                    SUM(IF(k.status='ISI',1,0))    AS isi,
+                                    SUM(IF(k.status='KOSONG',1,0)) AS kosong
+                             FROM kamar k
+                             JOIN bangsal b ON k.kd_bangsal = b.kd_bangsal
+                             WHERE k.statusdata = '1'
+                             GROUP BY k.kd_bangsal, k.kelas, b.nm_bangsal";
+                    $stmt = $this->db()->pdo()->prepare($sql);
+                    $stmt->execute();
+                    $simrs_rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
-                    usleep(250000); // jeda 0.25 detik antar request ke BPJS
+                    foreach ($master_beds as $bed) {
+                        $matched = $this->_matchSimrsBed($bed, $simrs_rows);
+                        $simrs_isi = $matched ? (int) $matched['isi'] : 0;
+                        $kapasitas = (int) $bed['kapasitas'];
+                        $tersedia  = max(0, $kapasitas - $simrs_isi);
+
+                        $payload = json_encode([
+                            'kodekelas'          => $bed['kodekelas'],
+                            'koderuang'          => $bed['koderuang'],
+                            'namaruang'          => $bed['namaruang'],
+                            'kapasitas'          => $kapasitas,
+                            'tersedia'           => $tersedia,
+                            'tersediapria'       => '0',
+                            'tersediawanita'     => '0',
+                            'tersediapriawanita' => (string) $tersedia,
+                        ]);
+
+                        $res = $this->_sendBedToAplicare($base_url, $kode_ppk, $payload, $consid, $secretkey, $user_key, $ch);
+                        if ($res['ok']) {
+                            $sukses++;
+                        } else {
+                            $gagal++;
+                        }
+
+                        $results[] = [
+                            'bangsal'  => $bed['namaruang'] . ' (' . $bed['koderuang'] . ')',
+                            'kelas'    => $bed['kelas'],
+                            'kapasitas'=> $kapasitas,
+                            'terisi'   => $simrs_isi,
+                            'tersedia' => $tersedia,
+                            'ok'       => $res['ok'],
+                            'pesan'    => $res['pesan'],
+                        ];
+
+                        usleep(150000); // jeda 0.15 detik antar request ke BPJS
+                    }
                 }
-            } else {
-                $sql  = "SELECT b.nm_bangsal, k.kd_bangsal, k.kelas,
-                                COUNT(k.kd_kamar)              AS jml,
-                                SUM(IF(k.status='ISI',1,0))    AS isi,
-                                SUM(IF(k.status='KOSONG',1,0)) AS kosong
-                         FROM kamar k
-                         JOIN bangsal b ON k.kd_bangsal = b.kd_bangsal
-                         WHERE k.statusdata = '1'
-                         GROUP BY k.kd_bangsal, k.kelas, b.nm_bangsal
-                         ORDER BY b.nm_bangsal, k.kelas";
-                $stmt = $this->db()->pdo()->prepare($sql);
-                $stmt->execute();
-                $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-
-                foreach ($rows as $bed) {
-                    $kode_kelas = $kelas_map[$bed['kelas']] ?? null;
-                    if (!$kode_kelas) {
-                        continue;
-                    }
-
-                    $payload = json_encode([
-                        'kodekelas'          => $kode_kelas,
-                        'koderuang'          => $bed['kd_bangsal'],
-                        'namaruang'          => $bed['nm_bangsal'],
-                        'kapasitas'          => (int) $bed['jml'],
-                        'tersedia'           => (int) $bed['kosong'],
-                        'tersediapria'       => '0',
-                        'tersediawanita'     => '0',
-                        'tersediapriawanita' => (string) $bed['kosong'],
-                    ]);
-
-                    $res = $this->_sendBedToAplicare($base_url, $kode_ppk, $payload, $consid, $secretkey, $user_key);
-                    if ($res['ok']) {
-                        $sukses++;
-                    } else {
-                        $gagal++;
-                    }
-
-                    $results[] = [
-                        'bangsal'  => $bed['nm_bangsal'],
-                        'kelas'    => $bed['kelas'],
-                        'kapasitas'=> (int) $bed['jml'],
-                        'terisi'   => (int) $bed['isi'],
-                        'tersedia' => (int) $bed['kosong'],
-                        'ok'       => $res['ok'],
-                        'pesan'    => $res['pesan'],
-                    ];
-
-                    usleep(150000); // jeda 0.15 detik antar request ke BPJS
+            } finally {
+                if ($ch) {
+                    curl_close($ch);
                 }
             }
 

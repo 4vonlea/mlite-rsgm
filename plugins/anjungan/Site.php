@@ -3998,36 +3998,71 @@ class Site extends SiteModule
 
     public function _resultDisplayBed()
     {
-        $sql = "SELECT a.nm_bangsal, b.kelas, a.kd_bangsal,
-                       COUNT(b.kd_kamar) AS kapasitas,
-                       SUM(IF(b.status='ISI',1,0)) AS terisi,
-                       SUM(IF(b.status='KOSONG',1,0)) AS tersedia
-                FROM bangsal a
-                JOIN kamar b ON a.kd_bangsal = b.kd_bangsal
-                WHERE b.statusdata = '1'
-                GROUP BY b.kd_bangsal, b.kelas
-                ORDER BY FIELD(b.kelas, 'VVIP', 'VIP', 'Kelas 1', 'Kelas 2', 'Kelas 3', 'ICU', 'NICU', 'PICU', 'HCU'), a.nm_bangsal";
-        $query = $this->db()->pdo()->prepare($sql);
-        $query->execute();
-        $rows = $query->fetchAll(\PDO::FETCH_ASSOC);
+        $master_rooms = [
+            '3.K.VIP'  => ['nm_bangsal' => 'Premolar', 'kelas' => 'VIP', 'kapasitas' => 1],
+            '3.K1'     => ['nm_bangsal' => 'Canines', 'kelas' => 'Kelas 1', 'kapasitas' => 1],
+            '3.K2'     => ['nm_bangsal' => 'Incisors', 'kelas' => 'Kelas 2', 'kapasitas' => 2],
+            '3.K3'     => ['nm_bangsal' => 'Molars', 'kelas' => 'Kelas 3', 'kapasitas' => 4],
+            '6.K.KRIS' => ['nm_bangsal' => 'KRIS', 'kelas' => 'Kelas 3', 'kapasitas' => 4],
+            '3.K.ICU'  => ['nm_bangsal' => 'RUANG ICU', 'kelas' => 'ICU', 'kapasitas' => 1],
+            '6.K.ISO'  => ['nm_bangsal' => 'RUANG ISOLASI', 'kelas' => 'Ruang Isolasi', 'kapasitas' => 1],
+        ];
+
+        $simrs_data = [];
+        try {
+            $sql = "SELECT a.nm_bangsal, b.kelas, a.kd_bangsal,
+                           COUNT(b.kd_kamar) AS kapasitas,
+                           SUM(IF(b.status='ISI',1,0)) AS terisi,
+                           SUM(IF(b.status='KOSONG',1,0)) AS tersedia
+                    FROM bangsal a
+                    JOIN kamar b ON a.kd_bangsal = b.kd_bangsal
+                    WHERE b.statusdata = '1'
+                    GROUP BY b.kd_bangsal, b.kelas";
+            $query = $this->db()->pdo()->prepare($sql);
+            $query->execute();
+            $simrs_data = $query->fetchAll(\PDO::FETCH_ASSOC);
+        } catch (\Throwable $e) {
+            error_log('[anjungan] _resultDisplayBed DB error: ' . $e->getMessage());
+        }
 
         $result = [];
-        if (count($rows)) {
-            foreach ($rows as $row) {
-                $kap = (int) $row['kapasitas'];
-                $isi = (int) $row['terisi'];
-                $kosong = (int) $row['tersedia'];
-                $pct = $kap > 0 ? round(($isi / $kap) * 100) : 0;
+        foreach ($master_rooms as $kode => $m) {
+            $terisi = 0;
+            $namaLower = strtolower($m['nm_bangsal']);
 
-                $row['kapasitas'] = $kap;
-                $row['terisi']    = $isi;
-                $row['tersedia']  = $kosong;
-                $row['okupansi']  = $pct;
-                $row['kosong']    = ['jumlah' => $kosong];
-                $row['isi']       = ['jumlah' => $isi];
+            foreach ($simrs_data as $s) {
+                $sNm = strtolower($s['nm_bangsal'] ?? '');
+                $sKd = strtolower($s['kd_bangsal'] ?? '');
 
-                $result[] = $row;
+                if ($sKd === strtolower($kode) || $sNm === $namaLower
+                    || (stripos($sNm, 'canine') !== false && stripos($namaLower, 'canine') !== false)
+                    || (stripos($sNm, 'incisor') !== false && stripos($namaLower, 'incisor') !== false)
+                    || (stripos($sNm, 'molar') !== false && stripos($namaLower, 'molar') !== false && stripos($sNm, 'premolar') === false && stripos($namaLower, 'premolar') === false)
+                    || (stripos($sNm, 'premolar') !== false && stripos($namaLower, 'premolar') !== false)
+                    || (stripos($sNm, 'kris') !== false && stripos($namaLower, 'kris') !== false)
+                    || ((stripos($sNm, 'isolasi') !== false || stripos($sNm, 'iso') !== false) && (stripos($namaLower, 'isolasi') !== false || stripos($namaLower, 'iso') !== false))
+                    || (stripos($sNm, 'icu') !== false && stripos($namaLower, 'icu') !== false)
+                ) {
+                    $terisi = (int) $s['terisi'];
+                    break;
+                }
             }
+
+            $kap = (int) $m['kapasitas'];
+            $kosong = max(0, $kap - $terisi);
+            $pct = $kap > 0 ? round(($terisi / $kap) * 100) : 0;
+
+            $result[] = [
+                'nm_bangsal' => $m['nm_bangsal'],
+                'kd_bangsal' => $kode,
+                'kelas'      => $m['kelas'],
+                'kapasitas'  => $kap,
+                'terisi'     => $terisi,
+                'tersedia'   => $kosong,
+                'okupansi'   => $pct,
+                'kosong'     => ['jumlah' => $kosong],
+                'isi'        => ['jumlah' => $terisi],
+            ];
         }
 
         return $result;
