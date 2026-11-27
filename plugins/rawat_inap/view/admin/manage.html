@@ -19,6 +19,7 @@
               </div>
               <div class="modal-footer">
                 <small id="bedBpjsWaktu" class="text-muted" style="float:left;line-height:34px;"></small>
+                <button type="button" class="btn btn-warning" id="btn_semua_kosong" title="Set semua tempat tidur menjadi Siap Diisi / Kosong (0 Pasien Dirawat)"><i class="fa fa-check-circle"></i> Set Semua Siap Diisi (0 Pasien)</button>
                 <button type="button" class="btn btn-default" id="btn_tarik_ulang_bpjs" title="Ambil ulang data terbaru dari server BPJS Aplicare dan database SIMRS"><i class="fa fa-cloud-download"></i> Tarik dari BPJS & SIMRS</button>
                 <button type="button" class="btn btn-default" id="btn_reset_bed_simrs" title="Kembalikan angka ke hitungan database SIMRS"><i class="fa fa-undo"></i> Reset Angka SIMRS</button>
                 <button type="button" class="btn btn-default" data-dismiss="modal"><i class="fa fa-times"></i> Tutup</button>
@@ -123,22 +124,44 @@
    var rawSimrsBeds = [];
 
    function loadBedBpjsModal() {
-     $('#bedBpjsModalBody').html('<div class="text-center" style="padding:40px;"><i class="fa fa-spinner fa-spin fa-2x" style="color:#1a7abf;"></i><br><br><strong>Menghubungi server BPJS Aplicare & membaca data kamar SIMRS...</strong><br><small class="text-muted">Mengambil status ketersediaan tempat tidur terkini</small></div>');
+     $('#bedBpjsModalBody').html('<div class="text-center" style="padding:40px;"><i class="fa fa-spinner fa-spin fa-2x" style="color:#1a7abf;"></i><br><br><strong>Membaca data kamar SIMRS & status BPJS Aplicare...</strong><br><small class="text-muted">Mengambil status ketersediaan tempat tidur terkini</small></div>');
      $('#bedBpjsWaktu').text('');
      $('#btn_sinkron_bed_bpjs').prop('disabled', false).html('<i class="fa fa-paper-plane"></i> Kirim ke BPJS Sekarang');
      $('#btn_reset_bed_simrs').show();
      $('#btn_tarik_ulang_bpjs').show();
      var url = mlite.url + '/' + mlite.admin + '/rawat_inap/bedStatus?t=' + mlite.token;
-     $.get(url, function(data) {
-       try {
-         var res = (typeof data === 'string') ? JSON.parse(data) : data;
-         rawSimrsBeds = res.beds ? JSON.parse(JSON.stringify(res.beds)) : [];
-         renderBedPreview(res);
-       } catch(e) {
-         $('#bedBpjsModalBody').html('<div class="alert alert-danger"><i class="fa fa-times"></i> Gagal memuat data kamar.</div>');
+     $.ajax({
+       url: url,
+       type: 'GET',
+       dataType: 'json',
+       timeout: 12000,
+       success: function(res) {
+         if (res && res.status === 'success' && res.beds && res.beds.length > 0) {
+           rawSimrsBeds = JSON.parse(JSON.stringify(res.beds));
+           renderBedPreview(res);
+         } else {
+           var pesan = (res && res.message) ? res.message : 'Tidak ada data kamar/bed yang aktif di database SIMRS.';
+           $('#bedBpjsModalBody').html('<div class="alert alert-warning"><i class="fa fa-exclamation-triangle"></i> ' + pesan + '</div>');
+         }
+       },
+       error: function(xhr, status, error) {
+         var detail = '';
+         if (xhr.status === 500) detail = ' (Internal Server Error 500)';
+         else if (xhr.status === 404) detail = ' (Endpoint Tidak Ditemukan 404)';
+         else if (xhr.status === 403) detail = ' (Akses Ditolak 403)';
+         else if (status === 'timeout') detail = ' (Koneksi Waktu Habis / Timeout)';
+         else if (status === 'parsererror') detail = ' (Format Respons Tidak Valid)';
+
+         $('#bedBpjsModalBody').html(
+           '<div class="alert alert-danger" style="margin-bottom:15px;">' +
+           '  <h4><i class="fa fa-exclamation-triangle"></i> Gagal Memuat Data Ketersediaan Tempat Tidur' + detail + '</h4>' +
+           '  <p>Terjadi kendala saat menghubungi server SIMRS. Silakan klik tombol di bawah untuk mencoba kembali.</p>' +
+           '</div>' +
+           '<div class="text-center">' +
+           '  <button type="button" class="btn btn-primary" onclick="loadBedBpjsModal()"><i class="fa fa-refresh"></i> Coba Muat Ulang</button>' +
+           '</div>'
+         );
        }
-     }).fail(function() {
-       $('#bedBpjsModalBody').html('<div class="alert alert-danger"><i class="fa fa-exclamation-triangle"></i> Gagal menghubungi server SIMRS. Silakan coba lagi.</div>');
      });
    }
 
@@ -226,6 +249,15 @@
      updateSummaryMetrics();
    });
 
+   // ---- Tombol Cepat: Set Semua Siap Diisi (0 Pasien Dirawat) ----
+   $(document).on('click', '#btn_semua_kosong', function() {
+     $('#bedBpjsModalBody table tbody tr').each(function() {
+       var tr = $(this);
+       var kap = parseInt(tr.find('.bed-kapasitas').val()) || 0;
+       tr.find('.bed-tersedia').val(kap).trigger('input');
+     });
+   });
+
    // ---- Tombol Reset ke hitungan asli SIMRS ----
    $(document).on('click', '#btn_reset_bed_simrs', function() {
      if (rawSimrsBeds && rawSimrsBeds.length > 0) {
@@ -250,7 +282,8 @@
    // Render tabel PREVIEW (dengan status koneksi BPJS & perbandingan jelas)
    function renderBedPreview(res) {
      if (res.status !== 'success' || !res.beds || res.beds.length === 0) {
-       $('#bedBpjsModalBody').html('<div class="alert alert-warning"><i class="fa fa-exclamation-triangle"></i> Tidak ada data bed ditemukan di database SIMRS.</div>');
+       var msg = (res && res.message) ? res.message : 'Tidak ada data bed ditemukan di database SIMRS.';
+       $('#bedBpjsModalBody').html('<div class="alert alert-warning"><i class="fa fa-exclamation-triangle"></i> ' + msg + '</div>');
        return;
      }
 

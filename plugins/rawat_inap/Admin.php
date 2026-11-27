@@ -3443,6 +3443,115 @@ class Admin extends AdminModule
     }
 
     /**
+     * Helper URL dasar BPJS Aplicare yang aman format, scheme, dan port.
+     */
+    private function _getAplicareBaseUrl(): string
+    {
+        $BpjsApiUrl = $this->settings->get('settings.BpjsApiUrl') 
+            ?: $this->settings->get('jkn_mobile.BpjsApiUrl') 
+            ?: $this->settings->get('vclaim.BpjsApiUrl') 
+            ?: '';
+
+        if (empty($BpjsApiUrl)) {
+            return '';
+        }
+
+        if (!preg_match('~^https?://~i', $BpjsApiUrl)) {
+            $BpjsApiUrl = 'https://' . $BpjsApiUrl;
+        }
+
+        $parsed = parse_url($BpjsApiUrl);
+        if (!$parsed || empty($parsed['host'])) {
+            return '';
+        }
+
+        $scheme = $parsed['scheme'] ?? 'https';
+        $host   = $parsed['host'];
+        $port   = !empty($parsed['port']) ? ':' . $parsed['port'] : '';
+
+        return "{$scheme}://{$host}{$port}";
+    }
+
+    /**
+     * Helper cURL mandiri khusus BPJS Aplicare dengan timeout memadai & isolasi error.
+     */
+    private function _callAplicare(string $method, string $url, ?string $payload, string $consid, string $secretkey, string $user_key, int $timeoutSeconds = 12)
+    {
+        $tStamp = strval(time());
+        $signature = hash_hmac('sha256', $consid . "&" . $tStamp, $secretkey, true);
+        $encodedSignature = base64_encode($signature);
+
+        $headers = [
+            'X-cons-id: ' . $consid,
+            'X-timestamp: ' . $tStamp,
+            'X-signature: ' . $encodedSignature,
+            'user_key: ' . $user_key,
+            'Accept: application/json',
+            'Content-Type: application/json',
+        ];
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, strtoupper($method));
+        if ($payload !== null) {
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+        }
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 8); // Beri waktu 8 detik untuk handshake jaringan BPJS
+        curl_setopt($ch, CURLOPT_TIMEOUT, $timeoutSeconds);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+        $output = curl_exec($ch);
+        if ($output === false) {
+            $err = curl_error($ch);
+            error_log("[rawat_inap] cURL error to {$url}: {$err}");
+        }
+        curl_close($ch);
+        return $output;
+    }
+
+    /**
+     * Kirim data tempat tidur ke BPJS Aplicare:
+     * Mencoba update terlebih dahulu; jika ruangan belum terdaftar di BPJS Aplicare, otomatis mendaftarkan via create.
+     */
+    private function _sendBedToAplicare(string $base_url, string $kode_ppk, string $payload, string $consid, string $secretkey, string $user_key): array
+    {
+        $url_update = $base_url . '/aplicaresws/rest/bed/update/' . $kode_ppk;
+        $url_create = $base_url . '/aplicaresws/rest/bed/create/' . $kode_ppk;
+
+        // 1. Coba update terlebih dahulu
+        $resp = $this->_callAplicare('POST', $url_update, $payload, $consid, $secretkey, $user_key, 12);
+        $respArr = is_string($resp) ? json_decode($resp, true) : (array) $resp;
+        $code = $respArr['metadata']['code'] ?? null;
+        $msg  = $respArr['metadata']['message'] ?? '';
+        $isSuccess = ($code == 200 || $code == 1 || stripos($msg, 'berhasil') !== false || stripos($msg, 'OK') !== false || stripos($msg, 'sukses') !== false);
+
+        // 2. Jika ruangan belum terdaftar di database BPJS Aplicare ("Data tidak ada di database"), otomatis create (daftarkan)
+        if (!$isSuccess && (stripos($msg, 'tidak ada') !== false || stripos($msg, 'belum') !== false)) {
+            usleep(250000); // jeda 0.25 detik
+            $respCreate = $this->_callAplicare('POST', $url_create, $payload, $consid, $secretkey, $user_key, 12);
+            $respCreateArr = is_string($respCreate) ? json_decode($respCreate, true) : (array) $respCreate;
+            $codeCreate = $respCreateArr['metadata']['code'] ?? null;
+            $msgCreate  = $respCreateArr['metadata']['message'] ?? '';
+            $isCreateSuccess = ($codeCreate == 200 || $codeCreate == 1 || stripos($msgCreate, 'berhasil') !== false || stripos($msgCreate, 'OK') !== false || stripos($msgCreate, 'sukses') !== false);
+
+            if ($isCreateSuccess) {
+                return ['ok' => true, 'pesan' => 'Terkirim ke BPJS'];
+            } else {
+                return ['ok' => false, 'pesan' => !empty($msgCreate) ? $msgCreate : 'Gagal mendaftar ke BPJS'];
+            }
+        }
+
+        if ($isSuccess) {
+            return ['ok' => true, 'pesan' => 'Terkirim ke BPJS'];
+        }
+
+        return ['ok' => false, 'pesan' => !empty($msg) ? $msg : 'Server BPJS tidak merespons (Timeout)'];
+    }
+
+    /**
      * Sinkronisasi data ketersediaan bed ke BPJS Aplicare.
      * Dipanggil otomatis saat pasien masuk/keluar kamar.
      */
@@ -3453,18 +3562,13 @@ class Admin extends AdminModule
             $secretkey  = $this->settings->get('settings.BpjsSecretKey') ?: $this->settings->get('jkn_mobile.BpjsSecretKey');
             $user_key   = $this->settings->get('settings.BpjsUserKey') ?: $this->settings->get('jkn_mobile.BpjsUserKey');
             $kode_ppk   = $this->settings->get('settings.ppk_bpjs');
-            $BpjsApiUrl = $this->settings->get('settings.BpjsApiUrl');
+            $base_url   = $this->_getAplicareBaseUrl();
 
-            if (empty($consid) || empty($kode_ppk) || empty($BpjsApiUrl)) {
+            if (empty($consid) || empty($kode_ppk) || empty($base_url)) {
                 return false;
             }
 
-            $parsed   = parse_url($BpjsApiUrl);
-            $base_url = $parsed['scheme'] . '://' . $parsed['host'];
-            $url      = $base_url . '/aplicaresws/rest/bed/update/' . $kode_ppk;
-
-            date_default_timezone_set('UTC');
-            $tStamp = strval(time() - strtotime('1970-01-01 00:00:00'));
+            $url = $base_url . '/aplicaresws/rest/bed/update/' . $kode_ppk;
 
             $kelas_map = [
                 'Kelas 1' => 'KL1', 'Kelas 2' => 'KL2', 'Kelas 3' => 'KL3',
@@ -3484,7 +3588,7 @@ class Admin extends AdminModule
                 $sql     .= ' AND k.kelas = ?';
                 $params[] = $kelas_kamar;
             }
-            $sql .= ' GROUP BY k.kd_bangsal, k.kelas';
+            $sql .= ' GROUP BY k.kd_bangsal, k.kelas, b.nm_bangsal';
 
             $stmt = $this->db()->pdo()->prepare($sql);
             $stmt->execute($params);
@@ -3508,20 +3612,24 @@ class Admin extends AdminModule
                     'tersediapriawanita' => (string) $bed['kosong'],
                 ]);
 
-                $resp = \Systems\Lib\BpjsService::postAplicare($url, $data, $consid, $secretkey, $user_key, $tStamp);
-                $respArr = is_string($resp) ? json_decode($resp, true) : (array) $resp;
-                if (isset($respArr['metadata']['code']) && $respArr['metadata']['code'] == 200) {
+                $res = $this->_sendBedToAplicare($base_url, $kode_ppk, $data, $consid, $secretkey, $user_key);
+                if ($res['ok']) {
                     $any_ok = true;
                 }
+                usleep(150000);
             }
 
             if ($any_ok) {
-                $cek = $this->db('mlite_settings')->where('module', 'rawat_inap')->where('field', 'last_bed_sync')->oneArray();
-                $now = date('Y-m-d H:i:s');
-                if ($cek) {
-                    $this->db('mlite_settings')->where('module', 'rawat_inap')->where('field', 'last_bed_sync')->save(['value' => $now]);
-                } else {
-                    $this->db('mlite_settings')->save(['module' => 'rawat_inap', 'field' => 'last_bed_sync', 'value' => $now]);
+                try {
+                    $cek = $this->db('mlite_settings')->where('module', 'rawat_inap')->where('field', 'last_bed_sync')->oneArray();
+                    $now = date('Y-m-d H:i:s');
+                    if ($cek) {
+                        $this->db('mlite_settings')->where('module', 'rawat_inap')->where('field', 'last_bed_sync')->save(['value' => $now]);
+                    } else {
+                        $this->db('mlite_settings')->save(['module' => 'rawat_inap', 'field' => 'last_bed_sync', 'value' => $now]);
+                    }
+                } catch (\Throwable $te) {
+                    // Ignore DB mlite_settings error if any
                 }
             }
 
@@ -3538,17 +3646,22 @@ class Admin extends AdminModule
      */
     public function getBedStatus()
     {
-        header('Content-Type: application/json');
+        header('Content-Type: application/json; charset=utf-8');
         try {
             $consid     = $this->settings->get('settings.BpjsConsID') ?: $this->settings->get('jkn_mobile.BpjsConsID');
             $secretkey  = $this->settings->get('settings.BpjsSecretKey') ?: $this->settings->get('jkn_mobile.BpjsSecretKey');
             $user_key   = $this->settings->get('settings.BpjsUserKey') ?: $this->settings->get('jkn_mobile.BpjsUserKey');
             $kode_ppk   = $this->settings->get('settings.ppk_bpjs');
-            $BpjsApiUrl = $this->settings->get('settings.BpjsApiUrl');
+            $base_url   = $this->_getAplicareBaseUrl();
 
             // Riwayat terakhir kali simpan/kirim ke BPJS dari SIMRS
-            $last_sync_row = $this->db('mlite_settings')->where('module', 'rawat_inap')->where('field', 'last_bed_sync')->oneArray();
-            $last_sync = $last_sync_row ? $last_sync_row['value'] : null;
+            $last_sync = null;
+            try {
+                $last_sync_row = $this->db('mlite_settings')->where('module', 'rawat_inap')->where('field', 'last_bed_sync')->oneArray();
+                $last_sync = !empty($last_sync_row['value']) ? $last_sync_row['value'] : null;
+            } catch (\Throwable $te) {
+                // Ignore DB mlite_settings error if any
+            }
 
             $kelas_map = [
                 'Kelas 1' => 'KL1', 'Kelas 2' => 'KL2', 'Kelas 3' => 'KL3',
@@ -3564,43 +3677,45 @@ class Admin extends AdminModule
                      FROM kamar k
                      JOIN bangsal b ON k.kd_bangsal = b.kd_bangsal
                      WHERE k.statusdata = '1'
-                     GROUP BY k.kd_bangsal, k.kelas
+                     GROUP BY k.kd_bangsal, k.kelas, b.nm_bangsal
                      ORDER BY b.nm_bangsal, k.kelas";
             $stmt = $this->db()->pdo()->prepare($sql);
             $stmt->execute();
             $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
-            // 2. Tarik data ketersediaan yang saat ini tercatat di server BPJS Aplicare
+            // 2. Tarik data ketersediaan yang saat ini tercatat di server BPJS Aplicare (isolasi try-catch agar kegagalan BPJS tidak membatalkan data SIMRS)
             $bpjs_beds = [];
             $bpjs_connected = false;
             $bpjs_status_msg = 'Kredensial BPJS belum lengkap';
 
-            if (!empty($consid) && !empty($kode_ppk) && !empty($BpjsApiUrl)) {
-                $parsed   = parse_url($BpjsApiUrl);
-                $base_url = $parsed['scheme'] . '://' . $parsed['host'];
+            if (!empty($consid) && !empty($kode_ppk) && !empty($base_url)) {
                 $url_read = $base_url . '/aplicaresws/rest/bed/read/' . $kode_ppk . '/1/100';
 
-                date_default_timezone_set('UTC');
-                $tStamp = strval(time() - strtotime('1970-01-01 00:00:00'));
-
-                $output = \Systems\Lib\BpjsService::get($url_read, null, $consid, $secretkey, $user_key, $tStamp);
-                $json = is_string($output) ? json_decode($output, true) : (array) $output;
-
-                if (!empty($json['response']['list']) && is_array($json['response']['list'])) {
-                    $bpjs_connected = true;
-                    $bpjs_status_msg = 'Berhasil terhubung ke server BPJS Aplicare';
-                    foreach ($json['response']['list'] as $item) {
-                        $key = ($item['koderuang'] ?? '') . '_' . ($item['kodekelas'] ?? '');
-                        $bpjs_beds[$key] = [
-                            'kapasitas'  => (int) ($item['kapasitas'] ?? 0),
-                            'tersedia'   => (int) ($item['tersedia'] ?? 0),
-                            'lastupdate' => $item['lastupdate'] ?? null,
-                        ];
+                try {
+                    $output = $this->_callAplicare('GET', $url_read, null, $consid, $secretkey, $user_key, 3);
+                    if ($output) {
+                        $json = json_decode($output, true);
+                        if (!empty($json['response']['list']) && is_array($json['response']['list'])) {
+                            $bpjs_connected = true;
+                            $bpjs_status_msg = 'Berhasil terhubung ke server BPJS Aplicare';
+                            foreach ($json['response']['list'] as $item) {
+                                $key = ($item['koderuang'] ?? '') . '_' . ($item['kodekelas'] ?? '');
+                                $bpjs_beds[$key] = [
+                                    'kapasitas'  => (int) ($item['kapasitas'] ?? 0),
+                                    'tersedia'   => (int) ($item['tersedia'] ?? 0),
+                                    'lastupdate' => $item['lastupdate'] ?? null,
+                                ];
+                            }
+                        } else {
+                            $code = $json['metadata']['code'] ?? '';
+                            $msg  = $json['metadata']['message'] ?? '';
+                            $bpjs_status_msg = ($msg ? $msg : 'Server BPJS merespons tanpa data kamar') . ($code ? " (Code: {$code})" : '');
+                        }
+                    } else {
+                        $bpjs_status_msg = 'Server BPJS Aplicare tidak merespons (Offline / Timeout)';
                     }
-                } else {
-                    $code = $json['metadata']['code'] ?? '';
-                    $msg  = $json['metadata']['message'] ?? '';
-                    $bpjs_status_msg = ($msg ? $msg : 'Server BPJS merespons tanpa data kamar') . ($code ? " (Code: {$code})" : '');
+                } catch (\Throwable $be) {
+                    $bpjs_status_msg = 'Gagal menghubungi BPJS: ' . $be->getMessage();
                 }
             }
 
@@ -3636,9 +3751,12 @@ class Admin extends AdminModule
                 'bpjs_status_msg' => $bpjs_status_msg,
                 'last_sync'       => $last_sync,
                 'waktu'           => date('d/m/Y H:i:s'),
-            ]);
+            ], JSON_UNESCAPED_UNICODE);
         } catch (\Throwable $e) {
-            echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+            echo json_encode([
+                'status'  => 'error',
+                'message' => 'Terjadi kesalahan sistem: ' . $e->getMessage()
+            ], JSON_UNESCAPED_UNICODE);
         }
         exit();
     }
@@ -3649,25 +3767,20 @@ class Admin extends AdminModule
      */
     public function postSinkronBedBpjs()
     {
-        header('Content-Type: application/json');
+        header('Content-Type: application/json; charset=utf-8');
         try {
             $consid     = $this->settings->get('settings.BpjsConsID') ?: $this->settings->get('jkn_mobile.BpjsConsID');
             $secretkey  = $this->settings->get('settings.BpjsSecretKey') ?: $this->settings->get('jkn_mobile.BpjsSecretKey');
             $user_key   = $this->settings->get('settings.BpjsUserKey') ?: $this->settings->get('jkn_mobile.BpjsUserKey');
             $kode_ppk   = $this->settings->get('settings.ppk_bpjs');
-            $BpjsApiUrl = $this->settings->get('settings.BpjsApiUrl');
+            $base_url   = $this->_getAplicareBaseUrl();
 
-            if (empty($consid) || empty($kode_ppk) || empty($BpjsApiUrl)) {
+            if (empty($consid) || empty($kode_ppk) || empty($base_url)) {
                 echo json_encode(['status' => 'error', 'message' => 'Konfigurasi API BPJS belum lengkap. Periksa pengaturan konsID, kode PPK, dan URL API BPJS.']);
                 exit();
             }
 
-            $parsed   = parse_url($BpjsApiUrl);
-            $base_url = $parsed['scheme'] . '://' . $parsed['host'];
-            $url      = $base_url . '/aplicaresws/rest/bed/update/' . $kode_ppk;
-
-            date_default_timezone_set('UTC');
-            $tStamp = strval(time() - strtotime('1970-01-01 00:00:00'));
+            $url = $base_url . '/aplicaresws/rest/bed/update/' . $kode_ppk;
 
             $kelas_map = [
                 'Kelas 1' => 'KL1', 'Kelas 2' => 'KL2', 'Kelas 3' => 'KL3',
@@ -3701,14 +3814,37 @@ class Admin extends AdminModule
                         'tersediapriawanita' => (string) $tersedia,
                     ]);
 
-                    $resp    = \Systems\Lib\BpjsService::postAplicare($url, $payload, $consid, $secretkey, $user_key, $tStamp);
-                    $respArr = is_string($resp) ? json_decode($resp, true) : (array) $resp;
-                    $ok      = isset($respArr['metadata']['code']) && $respArr['metadata']['code'] == 200;
-
-                    if ($ok) {
+                    $res = $this->_sendBedToAplicare($base_url, $kode_ppk, $payload, $consid, $secretkey, $user_key);
+                    if ($res['ok']) {
                         $sukses++;
                     } else {
                         $gagal++;
+                    }
+
+                    // Sinkronkan status tempat tidur di database SIMRS lokal (tabel kamar)
+                    try {
+                        $kamarQuery = $this->db('kamar')
+                            ->where('kd_bangsal', $bed['koderuang'])
+                            ->where('statusdata', '1');
+                        $kelasNama = $bed['kelas'] ?? (array_search($kode_kelas, $kelas_map) ?: null);
+                        if ($kelasNama) {
+                            $kamarQuery->where('kelas', $kelasNama);
+                        }
+                        $kamarList = $kamarQuery->toArray();
+
+                        $targetKosong = min($tersedia, count($kamarList));
+                        $currKosong = 0;
+                        foreach ($kamarList as $kItem) {
+                            $sttsTarget = ($currKosong < $targetKosong) ? 'KOSONG' : 'ISI';
+                            if ($sttsTarget === 'KOSONG') {
+                                $currKosong++;
+                            }
+                            if ($kItem['status'] !== $sttsTarget) {
+                                $this->db('kamar')->where('kd_kamar', $kItem['kd_kamar'])->save(['status' => $sttsTarget]);
+                            }
+                        }
+                    } catch (\Throwable $kEx) {
+                        error_log('[rawat_inap] Gagal update status kamar SIMRS: ' . $kEx->getMessage());
                     }
 
                     $results[] = [
@@ -3717,9 +3853,11 @@ class Admin extends AdminModule
                         'kapasitas' => $kapasitas,
                         'terisi'    => $terisi,
                         'tersedia'  => $tersedia,
-                        'ok'        => $ok,
-                        'pesan'     => $ok ? 'Terkirim' : ($respArr['metadata']['message'] ?? 'Gagal'),
+                        'ok'        => $res['ok'],
+                        'pesan'     => $res['pesan'],
                     ];
+
+                    usleep(250000); // jeda 0.25 detik antar request ke BPJS
                 }
             } else {
                 $sql  = "SELECT b.nm_bangsal, k.kd_bangsal, k.kelas,
@@ -3729,7 +3867,7 @@ class Admin extends AdminModule
                          FROM kamar k
                          JOIN bangsal b ON k.kd_bangsal = b.kd_bangsal
                          WHERE k.statusdata = '1'
-                         GROUP BY k.kd_bangsal, k.kelas
+                         GROUP BY k.kd_bangsal, k.kelas, b.nm_bangsal
                          ORDER BY b.nm_bangsal, k.kelas";
                 $stmt = $this->db()->pdo()->prepare($sql);
                 $stmt->execute();
@@ -3752,11 +3890,8 @@ class Admin extends AdminModule
                         'tersediapriawanita' => (string) $bed['kosong'],
                     ]);
 
-                    $resp    = \Systems\Lib\BpjsService::postAplicare($url, $payload, $consid, $secretkey, $user_key, $tStamp);
-                    $respArr = is_string($resp) ? json_decode($resp, true) : (array) $resp;
-                    $ok      = isset($respArr['metadata']['code']) && $respArr['metadata']['code'] == 200;
-
-                    if ($ok) {
+                    $res = $this->_sendBedToAplicare($base_url, $kode_ppk, $payload, $consid, $secretkey, $user_key);
+                    if ($res['ok']) {
                         $sukses++;
                     } else {
                         $gagal++;
@@ -3768,19 +3903,25 @@ class Admin extends AdminModule
                         'kapasitas'=> (int) $bed['jml'],
                         'terisi'   => (int) $bed['isi'],
                         'tersedia' => (int) $bed['kosong'],
-                        'ok'       => $ok,
-                        'pesan'    => $ok ? 'Terkirim' : ($respArr['metadata']['message'] ?? 'Gagal'),
+                        'ok'       => $res['ok'],
+                        'pesan'    => $res['pesan'],
                     ];
+
+                    usleep(150000); // jeda 0.15 detik antar request ke BPJS
                 }
             }
 
             if ($sukses > 0) {
                 $now = date('Y-m-d H:i:s');
-                $cek = $this->db('mlite_settings')->where('module', 'rawat_inap')->where('field', 'last_bed_sync')->oneArray();
-                if ($cek) {
-                    $this->db('mlite_settings')->where('module', 'rawat_inap')->where('field', 'last_bed_sync')->save(['value' => $now]);
-                } else {
-                    $this->db('mlite_settings')->save(['module' => 'rawat_inap', 'field' => 'last_bed_sync', 'value' => $now]);
+                try {
+                    $cek = $this->db('mlite_settings')->where('module', 'rawat_inap')->where('field', 'last_bed_sync')->oneArray();
+                    if ($cek) {
+                        $this->db('mlite_settings')->where('module', 'rawat_inap')->where('field', 'last_bed_sync')->save(['value' => $now]);
+                    } else {
+                        $this->db('mlite_settings')->save(['module' => 'rawat_inap', 'field' => 'last_bed_sync', 'value' => $now]);
+                    }
+                } catch (\Throwable $te) {
+                    // Ignore DB mlite_settings error if any
                 }
             }
 
@@ -3797,10 +3938,10 @@ class Admin extends AdminModule
                     : ($status === 'partial'
                         ? "⚠️ {$sukses} berhasil, {$gagal} gagal dikirim ke BPJS Aplicare."
                         : "❌ Gagal mengirim data ke BPJS Aplicare."),
-            ]);
+            ], JSON_UNESCAPED_UNICODE);
         } catch (\Throwable $e) {
             error_log('[rawat_inap] postSinkronBedBpjs error: ' . $e->getMessage());
-            echo json_encode(['status' => 'error', 'message' => 'Terjadi kesalahan: ' . $e->getMessage()]);
+            echo json_encode(['status' => 'error', 'message' => 'Terjadi kesalahan: ' . $e->getMessage()], JSON_UNESCAPED_UNICODE);
         }
         exit();
     }
