@@ -3559,40 +3559,45 @@ class Admin extends AdminModule
     }
 
     /**
+     * Hapus data tempat tidur dari BPJS Aplicare via endpoint bed/delete.
+     */
+    private function _deleteBedFromAplicare(string $base_url, string $kode_ppk, string $koderuang, string $kodekelas, string $consid, string $secretkey, string $user_key, $ch = null): array
+    {
+        $url_delete = $base_url . '/aplicaresws/rest/bed/delete/' . $kode_ppk;
+        $payload = json_encode([
+            'kodekelas' => $kodekelas,
+            'koderuang' => $koderuang,
+        ]);
+        $resp = $this->_callAplicare('POST', $url_delete, $payload, $consid, $secretkey, $user_key, 12, $ch);
+        $respArr = is_string($resp) ? json_decode($resp, true) : (array) $resp;
+        $code = $respArr['metadata']['code'] ?? null;
+        $msg  = $respArr['metadata']['message'] ?? '';
+        $isSuccess = ($code == 200 || $code == 1 || stripos($msg, 'berhasil') !== false || stripos($msg, 'OK') !== false || stripos($msg, 'sukses') !== false);
+        return [
+            'ok'    => $isSuccess,
+            'pesan' => !empty($msg) ? $msg : ($isSuccess ? 'Berhasil dihapus dari BPJS' : 'Gagal menghapus dari BPJS')
+        ];
+    }
+
+    /**
      * Master data 7 ruangan tempat tidur RSGM Gusti Hasan Aman yang terdaftar resmi di BPJS Aplicare.
      */
     private function _getMasterBpjsBeds(): array
     {
         return [
-            '6.K.KRIS' => [
-                'koderuang' => '6.K.KRIS',
-                'namaruang' => 'KRIS',
-                'kelas'     => 'Kelas 3',
-                'kodekelas' => 'KL3',
-                'kapasitas' => 4,
-                'tersedia'  => 4,
-            ],
-            '3.K3' => [
-                'koderuang' => '3.K3',
-                'namaruang' => 'Molars',
-                'kelas'     => 'Kelas 3',
-                'kodekelas' => 'KL3',
-                'kapasitas' => 4,
-                'tersedia'  => 4,
-            ],
-            '6.K.ISO' => [
-                'koderuang' => '6.K.ISO',
-                'namaruang' => 'RUANG ISOLASI',
-                'kelas'     => 'Ruang Isolasi',
-                'kodekelas' => 'ISO',
+            '3.K.VIP' => [
+                'koderuang' => '3.K.VIP',
+                'namaruang' => 'Premolar',
+                'kelas'     => 'VIP',
+                'kodekelas' => 'VIP',
                 'kapasitas' => 1,
                 'tersedia'  => 1,
             ],
-            '3.K.ICU' => [
-                'koderuang' => '3.K.ICU',
-                'namaruang' => 'RUANG ICU',
-                'kelas'     => 'ICU',
-                'kodekelas' => 'ICU',
+            '3.K1' => [
+                'koderuang' => '3.K1',
+                'namaruang' => 'Canines',
+                'kelas'     => 'Kelas 1',
+                'kodekelas' => 'KL1',
                 'kapasitas' => 1,
                 'tersedia'  => 1,
             ],
@@ -3604,19 +3609,35 @@ class Admin extends AdminModule
                 'kapasitas' => 2,
                 'tersedia'  => 2,
             ],
-            '3.K1' => [
-                'koderuang' => '3.K1',
-                'namaruang' => 'Canines',
-                'kelas'     => 'Kelas 1',
-                'kodekelas' => 'KL1',
+            '3.K3' => [
+                'koderuang' => '3.K3',
+                'namaruang' => 'Molars',
+                'kelas'     => 'Kelas 3',
+                'kodekelas' => 'KL3',
+                'kapasitas' => 4,
+                'tersedia'  => 4,
+            ],
+            '6.K.KRIS' => [
+                'koderuang' => '6.K.KRIS',
+                'namaruang' => 'KRIS',
+                'kelas'     => 'Kelas 3',
+                'kodekelas' => 'KL3',
+                'kapasitas' => 4,
+                'tersedia'  => 4,
+            ],
+            '3.K.ICU' => [
+                'koderuang' => '3.K.ICU',
+                'namaruang' => 'RUANG ICU',
+                'kelas'     => 'ICU',
+                'kodekelas' => 'ICU',
                 'kapasitas' => 1,
                 'tersedia'  => 1,
             ],
-            '3.K.VIP' => [
-                'koderuang' => '3.K.VIP',
-                'namaruang' => 'Premolar',
-                'kelas'     => 'VIP',
-                'kodekelas' => 'VIP',
+            '6.K.ISO' => [
+                'koderuang' => '6.K.ISO',
+                'namaruang' => 'RUANG ISOLASI',
+                'kelas'     => 'Ruang Isolasi',
+                'kodekelas' => 'ISO',
                 'kapasitas' => 1,
                 'tersedia'  => 1,
             ],
@@ -3682,6 +3703,7 @@ class Admin extends AdminModule
             }
 
             $master_beds = $this->_getMasterBpjsBeds();
+            $extra_bpjs_beds = [];
 
             $sql = "SELECT b.nm_bangsal, k.kd_bangsal, k.kelas,
                            COUNT(k.kd_kamar)              AS jml,
@@ -3778,6 +3800,7 @@ class Admin extends AdminModule
 
             // Inisialisasi daftar 7 ruangan master BPJS
             $master_beds = $this->_getMasterBpjsBeds();
+            $extra_bpjs_beds = [];
 
             $bpjs_connected = false;
             $bpjs_status_msg = 'Kredensial BPJS belum lengkap';
@@ -3796,14 +3819,25 @@ class Admin extends AdminModule
                                 $kr = $item['koderuang'] ?? '';
                                 if (!$kr) continue;
 
-                                if (isset($master_beds[$kr])) {
-                                    $master_beds[$kr]['kapasitas']  = (int) ($item['kapasitas'] ?? $master_beds[$kr]['kapasitas']);
-                                    $master_beds[$kr]['tersedia']   = (int) ($item['tersedia'] ?? $master_beds[$kr]['tersedia']);
-                                    $master_beds[$kr]['kodekelas']  = $item['kodekelas'] ?? $master_beds[$kr]['kodekelas'];
-                                    $master_beds[$kr]['namaruang']  = $item['namaruang'] ?? $master_beds[$kr]['namaruang'];
-                                    $master_beds[$kr]['lastupdate'] = $item['lastupdate'] ?? null;
+                                // Cocokkan koderuang dengan 7 ruangan master resmi RSGM
+                                $matchedKey = null;
+                                foreach ($master_beds as $k => $v) {
+                                    if (strcasecmp($k, $kr) === 0) {
+                                        $matchedKey = $k;
+                                        break;
+                                    }
+                                }
+
+                                if ($matchedKey !== null) {
+                                    $master_beds[$matchedKey]['kapasitas']  = (int) ($item['kapasitas'] ?? $master_beds[$matchedKey]['kapasitas']);
+                                    $master_beds[$matchedKey]['tersedia']   = (int) ($item['tersedia'] ?? $master_beds[$matchedKey]['tersedia']);
+                                    $master_beds[$matchedKey]['kodekelas']  = $item['kodekelas'] ?? $master_beds[$matchedKey]['kodekelas'];
+                                    $master_beds[$matchedKey]['namaruang']  = $item['namaruang'] ?? $master_beds[$matchedKey]['namaruang'];
+                                    $master_beds[$matchedKey]['lastupdate'] = $item['lastupdate'] ?? null;
                                 } else {
-                                    $master_beds[$kr] = [
+                                    // Kamar lama / duplikat yang ada di server BPJS yang bukan 7 ruangan resmi RSGM
+                                    // Pisahkan ke extra_bpjs_beds agar TIDAK merusak total kapasitas RSGM (tetap tepat 14 tempat tidur)
+                                    $extra_bpjs_beds[] = [
                                         'koderuang'  => $kr,
                                         'namaruang'  => $item['namaruang'] ?? $kr,
                                         'kelas'      => $item['namakelas'] ?? ($item['kodekelas'] ?? 'Kelas 3'),
@@ -3883,6 +3917,7 @@ class Admin extends AdminModule
             echo json_encode([
                 'status'          => 'success',
                 'beds'            => $beds,
+                'extra_bpjs_beds' => $extra_bpjs_beds,
                 'bpjs_connected'  => $bpjs_connected,
                 'bpjs_status_msg' => $bpjs_status_msg,
                 'last_sync'       => $last_sync,
@@ -4018,6 +4053,7 @@ class Admin extends AdminModule
                     }
                 } else {
                     $master_beds = $this->_getMasterBpjsBeds();
+            $extra_bpjs_beds = [];
 
                     $sql  = "SELECT b.nm_bangsal, k.kd_bangsal, k.kelas,
                                     COUNT(k.kd_kamar)              AS jml,
@@ -4105,6 +4141,80 @@ class Admin extends AdminModule
         } catch (\Throwable $e) {
             error_log('[rawat_inap] postSinkronBedBpjs error: ' . $e->getMessage());
             echo json_encode(['status' => 'error', 'message' => 'Terjadi kesalahan: ' . $e->getMessage()], JSON_UNESCAPED_UNICODE);
+        }
+        exit();
+    }
+
+    /**
+     * Endpoint untuk membersihkan/menghapus ruangan lama atau duplikat dari database BPJS Aplicare.
+     * URL: POST /admin/rawat_inap/hapusBedDuplikatBpjs
+     */
+    public function postHapusBedDuplikatBpjs()
+    {
+        @set_time_limit(60);
+        header('Content-Type: application/json; charset=utf-8');
+        try {
+            $consid     = $this->settings->get('settings.BpjsConsID') ?: $this->settings->get('jkn_mobile.BpjsConsID');
+            $secretkey  = $this->settings->get('settings.BpjsSecretKey') ?: $this->settings->get('jkn_mobile.BpjsSecretKey');
+            $user_key   = $this->settings->get('settings.BpjsUserKey') ?: $this->settings->get('jkn_mobile.BpjsUserKey');
+            $kode_ppk   = $this->settings->get('settings.ppk_bpjs');
+            $base_url   = $this->_getAplicareBaseUrl();
+
+            if (empty($consid) || empty($kode_ppk) || empty($base_url)) {
+                echo json_encode(['status' => 'error', 'message' => 'Konfigurasi API BPJS belum lengkap.']);
+                exit();
+            }
+
+            $rooms = !empty($_POST['rooms']) && is_array($_POST['rooms']) ? $_POST['rooms'] : [];
+            if (empty($rooms)) {
+                echo json_encode(['status' => 'error', 'message' => 'Tidak ada data ruangan yang dikirim untuk dibersihkan.']);
+                exit();
+            }
+
+            $ch = curl_init();
+            $sukses = 0;
+            $gagal = 0;
+            $details = [];
+            $master_beds = $this->_getMasterBpjsBeds();
+
+            try {
+                foreach ($rooms as $r) {
+                    $koderuang = trim($r['koderuang'] ?? '');
+                    $kodekelas = trim($r['kodekelas'] ?? '');
+                    if (empty($koderuang) || empty($kodekelas)) continue;
+
+                    // Proteksi keamanan: jangan pernah hapus salah satu dari 7 master ruang resmi RSGM!
+                    if (isset($master_beds[$koderuang])) {
+                        continue;
+                    }
+
+                    $res = $this->_deleteBedFromAplicare($base_url, $kode_ppk, $koderuang, $kodekelas, $consid, $secretkey, $user_key, $ch);
+                    if ($res['ok']) {
+                        $sukses++;
+                    } else {
+                        $gagal++;
+                    }
+                    $details[] = [
+                        'koderuang' => $koderuang,
+                        'namaruang' => $r['namaruang'] ?? $koderuang,
+                        'ok'        => $res['ok'],
+                        'pesan'     => $res['pesan']
+                    ];
+                    usleep(150000);
+                }
+            } finally {
+                if ($ch) curl_close($ch);
+            }
+
+            echo json_encode([
+                'status'  => 'success',
+                'sukses'  => $sukses,
+                'gagal'   => $gagal,
+                'details' => $details,
+                'message' => "Proses pembersihan selesai. {$sukses} ruangan lama berhasil dihapus dari server BPJS."
+            ]);
+        } catch (\Throwable $e) {
+            echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
         }
         exit();
     }

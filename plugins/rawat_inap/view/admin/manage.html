@@ -138,6 +138,7 @@
        success: function(res) {
          if (res && res.status === 'success' && res.beds && res.beds.length > 0) {
            rawSimrsBeds = JSON.parse(JSON.stringify(res.beds));
+           rawExtraBeds = (res.extra_bpjs_beds && res.extra_bpjs_beds.length > 0) ? JSON.parse(JSON.stringify(res.extra_bpjs_beds)) : [];
            renderBedPreview(res);
          } else {
            var pesan = (res && res.message) ? res.message : 'Tidak ada data kamar/bed yang aktif di database SIMRS.';
@@ -413,7 +414,28 @@
          + '</tr>';
      });
 
-     html += '</tbody></table></div>';
+          html += '</tbody></table></div>';
+
+     // Alert jika terdeteksi ruangan lama/duplikat di server BPJS yang bukan 7 ruangan resmi RSGM
+     if (res.extra_bpjs_beds && res.extra_bpjs_beds.length > 0) {
+       html += '<div id="alert_extra_beds" style="background:#fff8e7;border:1px solid #f0ad4e;border-radius:6px;padding:12px 16px;margin-top:12px;font-size:12px;color:#8a6d3b;">'
+         + '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">'
+         + '  <div style="flex:1;min-width:280px;">'
+         + '    <div style="font-weight:bold;color:#b94a48;margin-bottom:4px;"><i class="fa fa-exclamation-triangle"></i> Terdeteksi ' + res.extra_bpjs_beds.length + ' Ruangan Lama / Duplikat di Server BPJS Aplicare:</div>'
+         + '    <div style="margin-bottom:6px;">Ruangan ini berasal dari sinkronisasi sebelumnya dan <strong>sudah dipisahkan</strong> sehingga tidak dihitung dalam kapasitas RSGM (kapasitas RSGM tetap tepat 14 bed).</div>'
+         + '    <ul style="margin:0 0 0 18px;padding:0;font-size:11px;">';
+       res.extra_bpjs_beds.forEach(function(eb) {
+         html += '<li><strong>' + eb.namaruang + '</strong> (Kode: <code>' + eb.koderuang + '</code>, Kelas: ' + eb.kelas + ')</li>';
+       });
+       html += '    </ul>'
+         + '  </div>'
+         + '  <div>'
+         + '    <button type="button" id="btn_bersihkan_bed_lama" class="btn btn-sm btn-danger" style="font-weight:600;"><i class="fa fa-trash"></i> Bersihkan ' + res.extra_bpjs_beds.length + ' Ruangan Lama dari BPJS</button>'
+         + '  </div>'
+         + '</div>'
+         + '</div>';
+     }
+
      $('#bedBpjsModalBody').html(html);
    }
 
