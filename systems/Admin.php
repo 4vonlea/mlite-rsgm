@@ -14,6 +14,12 @@ class Admin extends Main
         $this->router->set('logout', function () {
             $this->logout();
         });
+
+        $this->router->set('keepalive', function () {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['status' => 'ok', 'ts' => time()]);
+            exit;
+        });
     }
 
     public function drawTheme($file)
@@ -84,6 +90,8 @@ class Admin extends Main
         $this->assign['is_admin'] = ($access == 'all') || ($this->getUserInfo('role', $id) == 'admin') || ($id == 1);
         $this->assign['can_merge_rm'] = \Systems\Lib\PasienMergeService::canManageMerge($this);
         $this->assign['rme_categories'] = [];
+        $this->assign['locked_user'] = empty($_SESSION['mlite_user']) ? $this->getLockedUserFromCookie() : null;
+        $this->assign['idle_timeout_seconds'] = self::IDLE_TIMEOUT_SECONDS;
 
         $this->tpl->set('mlite', $this->assign);
         echo $this->tpl->draw(THEMES.'/admin/'.$file, true);
@@ -653,6 +661,8 @@ class Admin extends Main
             $_SESSION['token']      = bin2hex(openssl_random_pseudo_bytes(6));
             $_SESSION['userAgent']  = $_SERVER['HTTP_USER_AGENT'];
             $_SESSION['IPaddress']  = $_SERVER['REMOTE_ADDR'];
+            $_SESSION['mlite_last_activity'] = time();
+            $this->setLockedUserCookie($row);
 
             // Enforce password change for default password ('12345678') or expired password (without OTP requirement)
             $forceChange = false;
@@ -720,6 +730,7 @@ class Admin extends Main
 
     private function logout()
     {
+        $this->clearLockedUserCookie();
         $_SESSION = [];
 
         // Delete remember_me token from database and cookie

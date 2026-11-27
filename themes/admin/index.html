@@ -1514,6 +1514,169 @@
       }
     });
     </script>
+
+    <!-- Modal Peringatan Idle Auto-Logout (15 Menit) -->
+    <div class="modal fade" id="modalIdleAutoLogout" tabindex="-1" role="dialog" data-backdrop="static" data-keyboard="false" aria-hidden="true">
+      <div class="modal-dialog modal-sm" role="document" style="margin-top:12%;">
+        <div class="modal-content" style="border-radius:10px; overflow:hidden; box-shadow:0 12px 32px rgba(15,23,42,0.28);">
+          <div class="modal-header" style="background:#0f172a; color:#fff; padding:12px 16px;">
+            <h4 class="modal-title" style="font-size:14px; font-weight:700; color:#fff;">
+              <i class="fa fa-clock-o text-warning"></i> Sesi Akan Dikunci Otomatis
+            </h4>
+          </div>
+          <div class="modal-body text-center" style="padding:18px 16px;">
+            <p style="font-size:12.5px; color:#334155; margin-bottom:10px;">
+              Tidak ada aktivitas terdeteksi. Demi keamanan data rekam medis, sesi akan keluar otomatis dalam:
+            </p>
+            <div style="font-size:28px; font-weight:800; color:#dc2626; line-height:1.1; margin-bottom:10px;">
+              <span id="idleCountdownSec">60</span> <small style="font-size:13px; font-weight:600; color:#64748b;">detik</small>
+            </div>
+            <p style="font-size:11px; color:#64748b; margin-bottom:0;">
+              Saat masuk kembali, Anda cukup mengisi <strong>Password</strong> saja.
+            </p>
+          </div>
+          <div class="modal-footer" style="background:#f8fafc; padding:10px 14px; text-align:center;">
+            <button type="button" class="btn btn-primary btn-sm btn-block" id="btnStayActiveMlite" style="font-weight:700;">
+              <i class="fa fa-check-circle"></i> Saya Masih Aktif — Lanjutkan Sesi
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+    (function() {
+      var IDLE_LIMIT_MS = {?=(int)($mlite['idle_timeout_seconds'] ?? 900)?} * 1000;
+      var WARN_BEFORE_MS = 60 * 1000;
+      var HEARTBEAT_INTERVAL_MS = 240 * 1000; // 4 menit
+      var STORAGE_KEY = 'mlite_idle_last_active_ts';
+      var KEEPALIVE_URL = '{?=url([ADMIN, "keepalive"])?}';
+      var lastLocalRecord = Date.now();
+      var lastHeartbeatSent = Date.now();
+      var hadActivitySinceHeartbeat = false;
+      var warningShown = false;
+      var lockingNow = false;
+
+      function getCleanLockUrl() {
+        var loc = window.location.href.split('#')[0];
+        // Hapus parameter t= dan idle_lock= agar saat unlock diarahkan kembali ke halaman yang sama dengan token baru
+        var parts = loc.split('?');
+        var base = parts[0];
+        var kept = [];
+        if (parts.length > 1 && parts[1]) {
+          var pairs = parts[1].split('&');
+          for (var i = 0; i < pairs.length; i++) {
+            var kv = pairs[i].split('=')[0];
+            if (kv && kv !== 't' && kv !== 'idle_lock' && kv !== 'switch_account') {
+              kept.push(pairs[i]);
+            }
+          }
+        }
+        kept.push('idle_lock=1');
+        return base + '?' + kept.join('&');
+      }
+
+      function triggerIdleLock() {
+        if (lockingNow) return;
+        lockingNow = true;
+        window.location.href = getCleanLockUrl();
+      }
+
+      function recordActivity(force) {
+        if (lockingNow) return;
+        var now = Date.now();
+        if (!force && (now - lastLocalRecord) < 4000) return;
+        lastLocalRecord = now;
+        hadActivitySinceHeartbeat = true;
+        try {
+          localStorage.setItem(STORAGE_KEY, String(now));
+        } catch (e) {}
+        if (warningShown) {
+          warningShown = false;
+          jQuery('#modalIdleAutoLogout').modal('hide');
+        }
+      }
+
+      function getSharedLastActive() {
+        try {
+          var v = parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10);
+          if (v > lastLocalRecord) {
+            lastLocalRecord = v;
+          }
+        } catch (e) {}
+        return lastLocalRecord;
+      }
+
+      // Inisialisasi awal saat halaman dimuat
+      try {
+        localStorage.setItem(STORAGE_KEY, String(lastLocalRecord));
+      } catch (e) {}
+
+      var activityEvents = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click'];
+      for (var ei = 0; ei < activityEvents.length; ei++) {
+        document.addEventListener(activityEvents[ei], function() {
+          recordActivity(false);
+        }, { passive: true });
+      }
+
+      window.addEventListener('storage', function(ev) {
+        if (ev && ev.key === STORAGE_KEY && ev.newValue) {
+          var ts = parseInt(ev.newValue, 10);
+          if (ts > lastLocalRecord) {
+            lastLocalRecord = ts;
+            if (warningShown && (Date.now() - ts) < (IDLE_LIMIT_MS - WARN_BEFORE_MS)) {
+              warningShown = false;
+              jQuery('#modalIdleAutoLogout').modal('hide');
+            }
+          }
+        }
+      });
+
+      jQuery('#btnStayActiveMlite').on('click', function() {
+        recordActivity(true);
+        lastHeartbeatSent = Date.now();
+        hadActivitySinceHeartbeat = false;
+        jQuery.getJSON(KEEPALIVE_URL);
+      });
+
+      // Tangkap respons AJAX 401 apabila sesi sudah terkunci di server
+      jQuery(document).ajaxError(function(event, xhr) {
+        if (xhr && xhr.status === 401 && !lockingNow) {
+          triggerIdleLock();
+        }
+      });
+
+      setInterval(function() {
+        if (lockingNow) return;
+        var now = Date.now();
+        var elapsed = now - getSharedLastActive();
+
+        if (elapsed >= IDLE_LIMIT_MS) {
+          triggerIdleLock();
+          return;
+        }
+
+        if (elapsed >= (IDLE_LIMIT_MS - WARN_BEFORE_MS)) {
+          var remainSec = Math.max(1, Math.ceil((IDLE_LIMIT_MS - elapsed) / 1000));
+          jQuery('#idleCountdownSec').text(remainSec);
+          if (!warningShown) {
+            warningShown = true;
+            jQuery('#modalIdleAutoLogout').modal('show');
+          }
+        } else if (warningShown) {
+          warningShown = false;
+          jQuery('#modalIdleAutoLogout').modal('hide');
+        }
+
+        // Kirim keepalive ke server tiap 4 menit HANYA bila user benar-benar beraktivitas
+        if (hadActivitySinceHeartbeat && (now - lastHeartbeatSent) >= HEARTBEAT_INTERVAL_MS) {
+          lastHeartbeatSent = now;
+          hadActivitySinceHeartbeat = false;
+          jQuery.getJSON(KEEPALIVE_URL);
+        }
+      }, 1000);
+    })();
+    </script>
     <script src="{?= url(THEMES.'/admin/js/scripts.js?v='.$mlite.version) ?}"></script>
     {loop: $mlite.footer}{$value}{/loop}  
 </body>

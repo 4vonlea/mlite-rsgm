@@ -132,6 +132,9 @@ abstract class Main
     private function setSession()
     {
         if (session_status() !== PHP_SESSION_ACTIVE) {
+            if ((int)ini_get('session.gc_maxlifetime') < 1800) {
+                @ini_set('session.gc_maxlifetime', '1800');
+            }
             ini_set('session.use_only_cookies', 1);
             session_name('mlite');
             session_set_cookie_params(0, (mlite_dir() === '/' ? '/' : mlite_dir().'/'));
@@ -143,6 +146,133 @@ abstract class Main
             }
             session_start();
         }
+    }
+
+    public const IDLE_TIMEOUT_SECONDS = 900; // 15 menit
+
+    protected function getLockCookieSecret(): string
+    {
+        return (defined('JWT_SECRET') ? JWT_SECRET : 'mlite_lock_key') . '|' . (defined('DBNAME') ? DBNAME : '');
+    }
+
+    protected function isHttpsRequest(): bool
+    {
+        return (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+            || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && strtolower((string)$_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https');
+    }
+
+    public function setLockedUserCookie(array $userRow): void
+    {
+        $username = trim((string)($userRow['username'] ?? ''));
+        if ($username === '') {
+            return;
+        }
+        $payload = json_encode([
+            'id'       => (int)($userRow['id'] ?? 0),
+            'username' => $username,
+            'fullname' => trim((string)($userRow['fullname'] ?? '')) ?: $username,
+            'role'     => trim((string)($userRow['role'] ?? '')),
+            'ts'       => time(),
+        ], JSON_UNESCAPED_UNICODE);
+        if ($payload === false) {
+            return;
+        }
+        $b64 = rtrim(strtr(base64_encode($payload), '+/', '-_'), '=');
+        $sig = hash_hmac('sha256', $b64, $this->getLockCookieSecret());
+        $val = $b64 . '.' . $sig;
+        $_COOKIE['mlite_last_user'] = $val;
+        setcookie('mlite_last_user', $val, [
+            'expires'  => time() + (60 * 60 * 24 * 7),
+            'path'     => '/',
+            'secure'   => $this->isHttpsRequest(),
+            'httponly' => true,
+            'samesite' => 'Lax',
+        ]);
+    }
+
+    public function getLockedUserFromCookie(): ?array
+    {
+        $raw = (string)($_COOKIE['mlite_last_user'] ?? '');
+        if ($raw === '' || strpos($raw, '.') === false) {
+            return null;
+        }
+        [$b64, $sig] = explode('.', $raw, 2);
+        if ($b64 === '' || $sig === '') {
+            return null;
+        }
+        $expected = hash_hmac('sha256', $b64, $this->getLockCookieSecret());
+        if (!hash_equals($expected, $sig)) {
+            return null;
+        }
+        $json = base64_decode(strtr($b64, '-_', '+/'), true);
+        if ($json === false) {
+            return null;
+        }
+        $data = json_decode($json, true);
+        if (!is_array($data) || empty($data['username'])) {
+            return null;
+        }
+        if (!empty($data['ts']) && (time() - (int)$data['ts']) > (60 * 60 * 24 * 7)) {
+            return null;
+        }
+        return [
+            'id'       => (int)($data['id'] ?? 0),
+            'username' => (string)$data['username'],
+            'fullname' => (string)($data['fullname'] ?? $data['username']),
+            'role'     => (string)($data['role'] ?? ''),
+        ];
+    }
+
+    public function clearLockedUserCookie(): void
+    {
+        unset($_COOKIE['mlite_last_user']);
+        setcookie('mlite_last_user', '', [
+            'expires'  => time() - 3600,
+            'path'     => '/',
+            'secure'   => $this->isHttpsRequest(),
+            'httponly' => true,
+            'samesite' => 'Lax',
+        ]);
+    }
+
+    public function lockIdleSession(): void
+    {
+        if (!empty($_SESSION['mlite_user'])) {
+            $uRow = $this->db('mlite_users')->where('id', (int)$_SESSION['mlite_user'])->oneArray();
+            if (is_array($uRow) && !empty($uRow['username'])) {
+                $this->setLockedUserCookie($uRow);
+            }
+        }
+
+        // Hapus token remember_me agar setelah idle 15 menit tetap wajib memasukkan password
+        if (isset($_COOKIE['mlite_remember'])) {
+            $token = explode(':', $_COOKIE['mlite_remember'], 2);
+            if (count($token) === 2 && ctype_digit($token[0]) && $token[1] !== '') {
+                try {
+                    $this->db('mlite_remember_me')->where('user_id', $token[0])->where('token', $token[1])->delete();
+                } catch (\Throwable $e) {
+                }
+            }
+            unset($_COOKIE['mlite_remember']);
+            setcookie('mlite_remember', '', [
+                'expires'  => time() - 3600,
+                'path'     => '/',
+                'secure'   => $this->isHttpsRequest(),
+                'httponly' => true,
+                'samesite' => 'Lax',
+            ]);
+        }
+
+        unset(
+            $_SESSION['mlite_user'],
+            $_SESSION['token'],
+            $_SESSION['userAgent'],
+            $_SESSION['IPaddress'],
+            $_SESSION['mlite_last_activity'],
+            $_SESSION['mlite_force_change']
+        );
+
+        $this->setNotify('warning', 'Sesi otomatis dikunci karena tidak ada aktivitas selama 15 menit. Masukkan password Anda untuk melanjutkan.');
     }    
 
     /**
@@ -166,6 +296,10 @@ abstract class Main
         if (isset($_SESSION['failure'])) {
             $result = ['text' => $_SESSION['failure'], 'type' => 'danger'];
             unset($_SESSION['failure']);
+            return $result;
+        } elseif (isset($_SESSION['warning'])) {
+            $result = ['text' => $_SESSION['warning'], 'type' => 'warning'];
+            unset($_SESSION['warning']);
             return $result;
         } elseif (isset($_SESSION['success'])) {
             $result = ['text' => $_SESSION['success'], 'type' => 'success'];
@@ -215,7 +349,21 @@ abstract class Main
 
     public function loginCheck()
     {
+        if (isset($_GET['switch_account']) && $_GET['switch_account'] == '1') {
+            $this->clearLockedUserCookie();
+        }
+
+        if (isset($_GET['idle_lock']) && $_GET['idle_lock'] == '1') {
+            $this->lockIdleSession();
+            return false;
+        }
+
         if (isset($_SESSION['mlite_user']) && isset($_SESSION['token']) && isset($_SESSION['userAgent']) && isset($_SESSION['IPaddress'])) {
+            $now = time();
+            if (isset($_SESSION['mlite_last_activity']) && ($now - (int)$_SESSION['mlite_last_activity']) >= self::IDLE_TIMEOUT_SECONDS) {
+                $this->lockIdleSession();
+                return false;
+            }
             
             if($this->settings->get('settings.keamanan') == 'ya') {
                 if ($_SESSION['IPaddress'] != $_SERVER['REMOTE_ADDR']) {
@@ -227,6 +375,7 @@ abstract class Main
             }
 
             if (empty(parseURL(1))) {
+                $_SESSION['mlite_last_activity'] = $now;
                 if(MULTI_APP) {
                     if(!empty(MULTI_APP_REDIRECT)) {
                         redirect(url([ADMIN, MULTI_APP_REDIRECT, 'main']));
@@ -238,6 +387,10 @@ abstract class Main
                 }
             } elseif (!isset($_GET['t']) || ($_SESSION['token'] != @$_GET['t'])) {
                 return false;
+            }
+
+            if (!isset($_GET['passive']) || $_GET['passive'] != '1') {
+                $_SESSION['mlite_last_activity'] = $now;
             }
 
             return true;
@@ -254,6 +407,8 @@ abstract class Main
                         $_SESSION['token']      = bin2hex(openssl_random_pseudo_bytes(6));
                         $_SESSION['userAgent']  = $_SERVER['HTTP_USER_AGENT'];
                         $_SESSION['IPaddress']  = $_SERVER['REMOTE_ADDR'];
+                        $_SESSION['mlite_last_activity'] = time();
+                        $this->setLockedUserCookie($row);
 
                         $this->db('mlite_remember_me')->where('mlite_remember_me.user_id', $token[0])->where('mlite_remember_me.token', $token[1])->save(['expiry' => time()+60*60*24*30]);
 

@@ -884,49 +884,63 @@ class PasienMergeService
             return ['status' => 'error', 'message' => 'RM Utama (' . $targetRm . ') sudah berstatus arsip/tergabung.'];
         }
 
-        // Kumpulkan semua tabel + kolom yang mereferensikan No. RM
+        // Kumpulkan semua tabel dasar (bukan VIEW/ARCHIVE/generated column) yang mereferensikan No. RM
         $targets = [];
         $colRows = $pdo->query(
-            "SELECT TABLE_NAME, COLUMN_NAME
-             FROM information_schema.COLUMNS
-             WHERE TABLE_SCHEMA = DATABASE()
-               AND COLUMN_NAME = 'no_rkm_medis'
-               AND TABLE_NAME NOT IN ('pasien', 'mlite_pasien_merge_log', 'set_no_rkm_medis')
-             ORDER BY (TABLE_NAME = 'reg_periksa') DESC, TABLE_NAME ASC"
+            "SELECT c.TABLE_NAME, c.COLUMN_NAME, UPPER(COALESCE(t.ENGINE, '')) AS ENGINE_NAME
+             FROM information_schema.COLUMNS c
+             INNER JOIN information_schema.TABLES t
+               ON t.TABLE_SCHEMA = c.TABLE_SCHEMA AND t.TABLE_NAME = c.TABLE_NAME
+             WHERE c.TABLE_SCHEMA = DATABASE()
+               AND t.TABLE_TYPE = 'BASE TABLE'
+               AND UPPER(COALESCE(t.ENGINE, 'INNODB')) IN ('INNODB', 'MYISAM', 'ARIA', 'MEMORY')
+               AND c.COLUMN_NAME = 'no_rkm_medis'
+               AND (c.EXTRA IS NULL OR UPPER(c.EXTRA) NOT LIKE '%GENERATED%')
+               AND c.TABLE_NAME NOT IN ('pasien', 'mlite_pasien_merge_log', 'set_no_rkm_medis')
+             ORDER BY (c.TABLE_NAME = 'reg_periksa') DESC, c.TABLE_NAME ASC"
         )->fetchAll(\PDO::FETCH_ASSOC);
 
         foreach ($colRows as $cr) {
             $t = (string)$cr['TABLE_NAME'];
             $c = (string)$cr['COLUMN_NAME'];
+            $eng = (string)($cr['ENGINE_NAME'] ?? 'INNODB');
             if (preg_match('/^[a-zA-Z0-9_]+$/', $t) && preg_match('/^[a-zA-Z0-9_]+$/', $c)) {
-                $targets[] = [$t, $c];
+                $targets[] = [$t, $c, $eng];
             }
         }
 
         // Tambahkan tabel BPJS dengan kolom alias `nomr`
         $aliasRows = $pdo->query(
-            "SELECT TABLE_NAME, COLUMN_NAME
-             FROM information_schema.COLUMNS
-             WHERE TABLE_SCHEMA = DATABASE()
-               AND TABLE_NAME IN ('bridging_sep', 'bridging_sep_internal')
-               AND COLUMN_NAME = 'nomr'"
+            "SELECT c.TABLE_NAME, c.COLUMN_NAME, UPPER(COALESCE(t.ENGINE, '')) AS ENGINE_NAME
+             FROM information_schema.COLUMNS c
+             INNER JOIN information_schema.TABLES t
+               ON t.TABLE_SCHEMA = c.TABLE_SCHEMA AND t.TABLE_NAME = c.TABLE_NAME
+             WHERE c.TABLE_SCHEMA = DATABASE()
+               AND t.TABLE_TYPE = 'BASE TABLE'
+               AND UPPER(COALESCE(t.ENGINE, 'INNODB')) IN ('INNODB', 'MYISAM', 'ARIA', 'MEMORY')
+               AND c.TABLE_NAME IN ('bridging_sep', 'bridging_sep_internal')
+               AND c.COLUMN_NAME = 'nomr'
+               AND (c.EXTRA IS NULL OR UPPER(c.EXTRA) NOT LIKE '%GENERATED%')"
         )->fetchAll(\PDO::FETCH_ASSOC);
         foreach ($aliasRows as $ar) {
             $t = (string)$ar['TABLE_NAME'];
             $c = (string)$ar['COLUMN_NAME'];
+            $eng = (string)($ar['ENGINE_NAME'] ?? 'INNODB');
             if (preg_match('/^[a-zA-Z0-9_]+$/', $t) && preg_match('/^[a-zA-Z0-9_]+$/', $c)) {
-                $targets[] = [$t, $c];
+                $targets[] = [$t, $c, $eng];
             }
         }
 
         $affectedTables = [];
         $totalRowsMoved = 0;
         $biodataUpdated = [];
+        $currentStep = 'inisialisasi transaksi';
 
         $pdo->beginTransaction();
         try {
             // 1. Pindahkan seluruh baris dari sourceRm -> targetRm lintas semua tabel
-            foreach ($targets as [$tbl, $col]) {
+            foreach ($targets as [$tbl, $col, $eng]) {
+                $currentStep = "cek data tabel {$tbl}.{$col}";
                 $stCount = $pdo->prepare("SELECT COUNT(*) FROM `{$tbl}` WHERE `{$col}` = ?");
                 $stCount->execute([$sourceRm]);
                 $beforeCnt = (int)$stCount->fetchColumn();
@@ -934,18 +948,38 @@ class PasienMergeService
                     continue;
                 }
 
-                $pdo->exec("SAVEPOINT sp_merge_tbl");
+                $currentStep = "pindah data tabel {$tbl}.{$col}";
+                $useSavepoint = ($eng === 'INNODB' || $eng === '');
+                if ($useSavepoint) {
+                    try {
+                        $pdo->exec("SAVEPOINT sp_merge_tbl");
+                    } catch (\Throwable $spErr) {
+                        $useSavepoint = false;
+                    }
+                }
+
                 $moved = 0;
                 $skipped = 0;
                 try {
                     $stUpd = $pdo->prepare("UPDATE `{$tbl}` SET `{$col}` = ? WHERE `{$col}` = ?");
                     $stUpd->execute([$targetRm, $sourceRm]);
                     $moved = $stUpd->rowCount();
-                    $pdo->exec("RELEASE SAVEPOINT sp_merge_tbl");
+                    if ($useSavepoint) {
+                        try {
+                            $pdo->exec("RELEASE SAVEPOINT sp_merge_tbl");
+                        } catch (\Throwable $spRelErr) {
+                        }
+                    }
                 } catch (\PDOException $pe) {
-                    $pdo->exec("ROLLBACK TO SAVEPOINT sp_merge_tbl");
-                    $pdo->exec("RELEASE SAVEPOINT sp_merge_tbl");
-                    if ((string)$pe->getCode() === '23000') {
+                    if ($useSavepoint) {
+                        try {
+                            $pdo->exec("ROLLBACK TO SAVEPOINT sp_merge_tbl");
+                            $pdo->exec("RELEASE SAVEPOINT sp_merge_tbl");
+                        } catch (\Throwable $spRbErr) {
+                        }
+                    }
+                    $sqlState = (string)($pe->errorInfo[0] ?? $pe->getCode());
+                    if ($sqlState === '23000') {
                         // Tabel 1-to-1 / unique key bentrok dengan baris yang sudah ada di targetRm
                         $stIgn = $pdo->prepare("UPDATE IGNORE `{$tbl}` SET `{$col}` = ? WHERE `{$col}` = ?");
                         $stIgn->execute([$targetRm, $sourceRm]);
@@ -968,6 +1002,7 @@ class PasienMergeService
 
             // 2. Opsional: lengkapi field biodata kosong di RM Utama dari RM Sumber
             if ($fillEmptyBiodata) {
+                $currentStep = 'lengkapi biodata kosong di tabel pasien';
                 $fillable = self::computeFillableBiodata($sourceRow, $targetRow);
                 if (!empty($fillable)) {
                     $setParts = [];
@@ -990,11 +1025,17 @@ class PasienMergeService
             }
 
             // 3. Rekam log penggabungan (sekaligus menandai sourceRm sebagai soft-archived)
+            $currentStep = 'simpan log mlite_pasien_merge_log';
             $userId = (int)($_SESSION['mlite_user'] ?? 0);
-            $actorUsername = (string)$core->getUserInfo('username', $userId);
-            $actorName = (string)($core->getUserInfo('fullname', $userId) ?: $actorUsername);
-            $actorRole = (string)$core->getUserInfo('role', $userId);
-            $ipAddr = (string)($_SERVER['REMOTE_ADDR'] ?? '');
+            $actorUsername = mb_substr((string)$core->getUserInfo('username', $userId), 0, 100);
+            $actorName = mb_substr((string)($core->getUserInfo('fullname', $userId) ?: $actorUsername), 0, 150);
+            $actorRole = mb_substr((string)$core->getUserInfo('role', $userId), 0, 50);
+            $ipAddr = mb_substr((string)($_SERVER['REMOTE_ADDR'] ?? ''), 0, 64);
+
+            $jsonFlags = JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE | JSON_PARTIAL_OUTPUT_ON_ERROR;
+            $affectedJson = json_encode($affectedTables, $jsonFlags);
+            $sourceJson = json_encode($sourceRow, $jsonFlags);
+            $targetJson = json_encode($targetRow, $jsonFlags);
 
             $stLog = $pdo->prepare(
                 "INSERT INTO `mlite_pasien_merge_log` (
@@ -1007,14 +1048,14 @@ class PasienMergeService
             $stLog->execute([
                 $sourceRm,
                 $targetRm,
-                (string)($sourceRow['nm_pasien'] ?? ''),
-                (string)($targetRow['nm_pasien'] ?? ''),
+                mb_substr((string)($sourceRow['nm_pasien'] ?? ''), 0, 100),
+                mb_substr((string)($targetRow['nm_pasien'] ?? ''), 0, 100),
                 $reason,
                 $fillEmptyBiodata ? 1 : 0,
                 $totalRowsMoved,
-                json_encode($affectedTables, JSON_UNESCAPED_UNICODE),
-                json_encode($sourceRow, JSON_UNESCAPED_UNICODE),
-                json_encode($targetRow, JSON_UNESCAPED_UNICODE),
+                $affectedJson !== false ? $affectedJson : '[]',
+                $sourceJson !== false ? $sourceJson : '{}',
+                $targetJson !== false ? $targetJson : '{}',
                 $actorUsername,
                 $actorName,
                 $actorRole,
@@ -1023,6 +1064,7 @@ class PasienMergeService
             ]);
             $logId = (int)$pdo->lastInsertId();
 
+            $currentStep = 'commit transaksi';
             $pdo->commit();
 
             return [
@@ -1037,12 +1079,16 @@ class PasienMergeService
             ];
         } catch (\Throwable $e) {
             if ($pdo->inTransaction()) {
-                $pdo->rollBack();
+                try {
+                    $pdo->rollBack();
+                } catch (\Throwable $rbErr) {
+                }
             }
-            error_log('[PasienMergeService::executeMerge] ' . $e->getMessage());
+            $errDetail = trim($e->getMessage());
+            error_log('[PasienMergeService::executeMerge] (' . $currentStep . ') ' . $errDetail);
             return [
                 'status'  => 'error',
-                'message' => 'Gagal menggabungkan rekam medis. Seluruh perubahan telah dibatalkan (rollback).',
+                'message' => 'Gagal menggabungkan rekam medis pada tahap [' . $currentStep . ']: ' . $errDetail . ' Seluruh perubahan telah dibatalkan (rollback).',
             ];
         }
     }

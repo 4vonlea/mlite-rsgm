@@ -227,6 +227,29 @@ if ($core->loginCheck()) {
     $core->drawTheme('index.html');
     $core->module->finishLoop();
 } else {
+    if (isset($_GET['switch_account']) && $_GET['switch_account'] == '1') {
+        $core->clearLockedUserCookie();
+        redirect(url([ADMIN]));
+        exit;
+    }
+
+    if (isset($_GET['idle_lock']) && $_GET['idle_lock'] == '1' && !isset($_POST['login'])) {
+        $cleanUri = preg_replace('/([?&])idle_lock=1(&|$)/', '$1', (string)($_SERVER['REQUEST_URI'] ?? ''));
+        $cleanUri = rtrim((string)$cleanUri, '?&');
+        redirect($cleanUri !== '' ? $cleanUri : url([ADMIN]));
+        exit;
+    }
+
+    if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower((string)$_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest' && !isset($_POST['login'])) {
+        http_response_code(401);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+            'status'  => 'idle_locked',
+            'message' => 'Sesi otomatis dikunci setelah 15 menit tanpa aktivitas. Silakan masukkan password kembali.'
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
     if (isset($_POST['login'])) {
         if ($core->login($_POST['username'], $_POST['password'], isset($_POST['remember_me']))) {
             if (!empty($_SESSION['mlite_force_change'])) {
