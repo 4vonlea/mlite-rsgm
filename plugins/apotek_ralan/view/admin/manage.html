@@ -610,6 +610,7 @@
       </div>
       <div class="panel-body">
         <div class="row">
+          <div id="banner_order_apotek_container" style="padding: 0 15px;"></div>
           <div id="notif"></div>
         </div>
         <div id="apotek_ralan" class="display">
@@ -638,3 +639,14 @@
        });
    });
 </script>
+
+<style>
+  @keyframes pulse-alarm {
+    0% { box-shadow: 0 0 0 0 rgba(217, 83, 79, 0.5); }
+    50% { box-shadow: 0 0 0 10px rgba(217, 83, 79, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(217, 83, 79, 0); }
+  }
+  .rsgm-alarm-active {
+    animation: pulse-alarm 2s infinite;
+  }
+</style>

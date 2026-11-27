@@ -1577,18 +1577,37 @@ class Admin extends AdminModule
           echo json_encode(htmlspecialchars_array($array), true);
           break;
          case "cek_order_apotek":
-           $tanggal = date('Y-m-d');
-           $stmt = $this->db()->pdo()->prepare("SELECT COUNT(*) AS jumlah,
+           $tanggal_awal  = !empty($_GET['tgl_awal']) ? $_GET['tgl_awal'] : date('Y-m-d');
+           $tanggal_akhir = !empty($_GET['tgl_akhir']) ? $_GET['tgl_akhir'] : date('Y-m-d');
+
+           // Hitung resep ralan yang BELUM divalidasi skrining pada periode tanggal tersebut
+           $sql_belum = "SELECT 
+                   COUNT(no_resep) AS jml_belum,
+                   COUNT(DISTINCT no_rawat) AS jml_pasien,
                    COALESCE(MAX(no_resep), '') AS terakhir
                  FROM resep_obat
-                 WHERE status = 'ralan' AND DATE(tgl_peresepan) = ?");
-           $stmt->execute([$tanggal]);
+                 WHERE status = 'ralan'
+                   AND DATE(tgl_peresepan) BETWEEN ? AND ?
+                   AND (tgl_perawatan IS NULL OR tgl_perawatan = '0000-00-00' OR tgl_perawatan = '0000:00:00' OR YEAR(tgl_perawatan) < 1970)";
+           $stmt = $this->db()->pdo()->prepare($sql_belum);
+           $stmt->execute([$tanggal_awal, $tanggal_akhir]);
            $cek = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+           $jml_belum  = (int) ($cek['jml_belum'] ?? 0);
+           $jml_pasien = (int) ($cek['jml_pasien'] ?? 0);
+
+           // Hitung total orderan resep pada periode tersebut
+           $stmt_tot = $this->db()->pdo()->prepare("SELECT COUNT(*) AS total FROM resep_obat WHERE status = 'ralan' AND DATE(tgl_peresepan) BETWEEN ? AND ?");
+           $stmt_tot->execute([$tanggal_awal, $tanggal_akhir]);
+           $tot = $stmt_tot->fetch(\PDO::FETCH_ASSOC);
+
            echo json_encode([
-             'status' => 'success',
-             'jumlah' => (int) ($cek['jumlah'] ?? 0),
-             'terakhir' => $cek['terakhir'] ?? '',
-             'waktu' => date('H:i:s')
+             'status'     => 'success',
+             'jml_belum'  => $jml_belum,
+             'jml_pasien' => $jml_pasien,
+             'jumlah'     => (int) ($tot['total'] ?? 0),
+             'terakhir'   => $cek['terakhir'] ?? '',
+             'waktu'      => date('H:i:s')
            ]);
            break;
         }

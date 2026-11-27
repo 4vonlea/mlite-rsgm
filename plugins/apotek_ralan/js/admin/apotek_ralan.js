@@ -171,6 +171,9 @@ $("#form_rincian").on("click", "#selesai", function(event){
   $("#display").show();
   $("#rincian").hide();
   $("#soap").hide();
+  if (typeof window.cekOrderBaruApotek === "function") {
+    window.cekOrderBaruApotek();
+  }
 });
 
 // ketika baris data diklik
@@ -553,6 +556,7 @@ $(document).on("click", "#rincian .batal_validasi_resep", function(event) {
           $.post(baseURL + '/apotek_ralan/rincian?t=' + mlite.token, { no_rawat: no_rawat }, function(html) {
             $("#rincian").html(html).show();
           });
+          if (typeof window.cekOrderBaruApotek === "function") { window.cekOrderBaruApotek(); } // batal_val
           $('#notif').html('<div class="alert alert-success alert-dismissible fade in" role="alert" style="border-radius:0px;margin-top:-15px;">' +
             '<i class="fa fa-check-circle"></i> ' + (res.message || 'Validasi resep berhasil dibatalkan.') +
             '<button type="button" class="close" data-dismiss="alert" aria-label="Close">&times;</button>' +
@@ -693,6 +697,7 @@ $(document).on("click", "#btn-validasi-submit", function() {
         '<i class="fa fa-check-circle"></i> Resep telah berhasil divalidasi!'+
         '<button type="button" class="close" data-dismiss="alert" aria-label="Close">&times;</button>'+
         '</div>').show();
+      if (typeof window.cekOrderBaruApotek === "function") { window.cekOrderBaruApotek(); } // val_submit
     }
   }).fail(function(xhr, status, error) {
     $('#modal-validasi-resep').modal('hide');
@@ -1004,14 +1009,20 @@ $(document).on('click', '.table-responsive [data-toggle="dropdown"]', function (
     }
 });
 
-// ---- Notifikasi suara order apotek baru (polling + websocket) ----
+// ---- Notifikasi suara order apotek baru (alarm berulang sampai divalidasi) ----
 (function(){
   if (!$('#apotek_ralan #display').length) { return; }
 
   var notifBaseURL = mlite.url + '/' + mlite.admin;
   var suaraAktif = localStorage.getItem('apotek_ralan_suara') !== 'mati';
-  var terakhirOrder = null;
+  var snoozeAktif = false;
+  var isAlarmRunning = false;
+  var alarmTimer = null;
+  var alarmAudio = null;
   var suaraSiap = false;
+  var currentJmlBelum = 0;
+  var currentJmlPasien = 0;
+  var terakhirOrder = null;
 
   function updateTombolSuara(){
     var tombol = $('#btn_suara_order_apotek');
@@ -1025,54 +1036,219 @@ $(document).on('click', '.table-responsive [data-toggle="dropdown"]', function (
     try {
       var Ctx = window.AudioContext || window.webkitAudioContext;
       if (Ctx) { var ctx = new Ctx(); if (ctx.resume) { ctx.resume(); } }
-      var audio = new Audio('{?=url()?}/assets/sound/alarm.mp3');
-      audio.volume = 0;
-      var janji = audio.play();
-      if (janji && janji.then) { janji.then(function(){ audio.pause(); audio.currentTime = 0; }).catch(function(){}); }
+      if (!alarmAudio) {
+        alarmAudio = new Audio('{?=url()?}/assets/sound/alarm.mp3');
+      }
+      alarmAudio.volume = 0;
+      var janji = alarmAudio.play();
+      if (janji && janji.then) {
+        janji.then(function(){
+          alarmAudio.pause();
+          alarmAudio.currentTime = 0;
+          alarmAudio.volume = 1;
+        }).catch(function(){});
+      }
       suaraSiap = true;
     } catch(e) {}
   }
 
-  window.mainkanSuaraOrderApotek = function(){
-    if (!suaraAktif) { return; }
+  function eksekusiPutarAlarm(){
+    if (!isAlarmRunning) { return; }
+    if (!suaraAktif || snoozeAktif || currentJmlBelum <= 0) {
+      hentikanAlarmLoop();
+      return;
+    }
+
     siapkanSuara();
     try {
-      var audio = new Audio('{?=url()?}/assets/sound/alarm.mp3');
-      var janji = audio.play();
-      if (janji && janji.catch) { janji.catch(function(){}); }
+      if (!alarmAudio) {
+        alarmAudio = new Audio('{?=url()?}/assets/sound/alarm.mp3');
+      }
+      alarmAudio.volume = 1;
+      alarmAudio.currentTime = 0;
+      alarmAudio.onended = function(){
+        if (alarmTimer) { clearTimeout(alarmTimer); }
+        // Jeda 3 detik setelah suara selesai berbunyi sebelum mengulang putaran berikutnya
+        alarmTimer = setTimeout(function(){
+          if (isAlarmRunning && suaraAktif && !snoozeAktif && currentJmlBelum > 0) {
+            eksekusiPutarAlarm();
+          } else {
+            hentikanAlarmLoop();
+          }
+        }, 3000);
+      };
+
+      var janji = alarmAudio.play();
+      if (janji && janji.catch) {
+        janji.catch(function(){
+          // Autoplay dicegah oleh browser, coba lagi setelah 3 detik
+          if (alarmTimer) { clearTimeout(alarmTimer); }
+          alarmTimer = setTimeout(function(){
+            if (isAlarmRunning && suaraAktif && !snoozeAktif && currentJmlBelum > 0) {
+              eksekusiPutarAlarm();
+            }
+          }, 3000);
+        });
+      }
     } catch(e) {}
+  }
+
+  function putarAlarmLoop(){
+    if (isAlarmRunning) { return; }
+    isAlarmRunning = true;
+    eksekusiPutarAlarm();
+  }
+
+  function hentikanAlarmLoop(){
+    isAlarmRunning = false;
+    if (alarmTimer) {
+      clearTimeout(alarmTimer);
+      alarmTimer = null;
+    }
+    if (alarmAudio) {
+      try {
+        alarmAudio.pause();
+        alarmAudio.currentTime = 0;
+        alarmAudio.onended = null;
+      } catch(e) {}
+    }
+  }
+
+  function renderBannerOrder(){
+    var container = $('#banner_order_apotek_container');
+    if (!container.length) { return; }
+
+    if (currentJmlBelum <= 0) {
+      container.empty();
+      return;
+    }
+
+    var html = '' +
+      '<div id="banner_order_apotek" class="alert alert-warning rsgm-alarm-active" style="margin-bottom:12px;border:2px solid #e08e0b;background:#fff8e7;color:#8a6d3b;box-shadow:0 3px 10px rgba(224,142,11,0.25);border-radius:6px;padding:12px 16px;">' +
+        '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">' +
+          '<div style="font-size:14px;line-height:1.5;">' +
+            '<i class="fa fa-bell fa-lg text-danger" style="margin-right:8px;font-size:18px;vertical-align:middle;"></i>' +
+            '<strong style="color:#b94a48;">PERHATIAN ORDERAN MASUK:</strong> Ada ' +
+            '<span class="badge" style="background:#d9534f;font-size:14px;padding:4px 8px;">' + currentJmlBelum + ' Resep Belum Divalidasi</span> ' +
+            '(<span class="badge" style="background:#f0ad4e;font-size:13px;padding:3px 7px;">' + currentJmlPasien + ' Pasien</span>). ' +
+            '<span style="font-size:12px;color:#666;"><i class="fa fa-volume-up text-primary"></i> Notifikasi suara berbunyi berulang sampai seluruh resep tervalidasi skrining.</span>' +
+          '</div>' +
+          '<div style="display:flex;align-items:center;gap:6px;">' +
+            '<button type="button" id="btn_refresh_tabel_order" class="btn btn-sm btn-primary" style="font-weight:600;"><i class="fa fa-refresh"></i> Segarkan Tabel</button>' +
+            '<button type="button" id="btn_snooze_order_apotek" class="btn btn-sm ' + (snoozeAktif ? 'btn-warning' : 'btn-default') + '" style="font-weight:600;" title="Diamkan suara alarm sementara">' +
+              '<i class="fa fa-' + (snoozeAktif ? 'volume-up' : 'bell-slash') + '"></i> ' + (snoozeAktif ? 'Nyalakan Bunyi' : 'Diamkan Sementara') +
+            '</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    container.html(html);
+  }
+
+  function cekOrderBaru(callback){
+    var tglAwal = $('#periode_rawat_jalan').val() || '';
+    var tglAkhir = $('#periode_rawat_jalan_akhir').val() || '';
+    var url = notifBaseURL + '/apotek_ralan/ajax?show=cek_order_apotek&t=' + mlite.token;
+    if (tglAwal && tglAkhir) {
+      url += '&tgl_awal=' + encodeURIComponent(tglAwal) + '&tgl_akhir=' + encodeURIComponent(tglAkhir);
+    }
+
+    $.get(url, function(data){
+      var res = (typeof data === 'string') ? JSON.parse(data) : data;
+      if (!res || res.status !== 'success') { return; }
+
+      var prevJmlBelum = currentJmlBelum;
+      currentJmlBelum = parseInt(res.jml_belum, 10) || 0;
+      currentJmlPasien = parseInt(res.jml_pasien, 10) || 0;
+      var kode = res.terakhir || '';
+
+      // Jika ada penambahan orderan baru masuk saat sedang snooze, otomatis batalkan snooze agar alarm berdering kembali
+      if (currentJmlBelum > prevJmlBelum && prevJmlBelum >= 0) {
+        snoozeAktif = false;
+      }
+
+      if (currentJmlBelum > 0) {
+        renderBannerOrder();
+        if (suaraAktif && !snoozeAktif) {
+          putarAlarmLoop();
+        }
+      } else {
+        // Semua orderan telah divalidasi (0 belum validasi)
+        hentikanAlarmLoop();
+        renderBannerOrder();
+        snoozeAktif = false;
+      }
+
+      // Deteksi adanya resep baru masuk secara realtime
+      if (terakhirOrder === null) {
+        terakhirOrder = kode;
+      } else if (kode && kode > terakhirOrder) {
+        terakhirOrder = kode;
+        if ($('#apotek_ralan #display').is(':visible')) {
+          $('#apotek_ralan #display').load(notifBaseURL + '/apotek_ralan/display?t=' + mlite.token);
+        }
+      } else if (kode) {
+        terakhirOrder = kode;
+      }
+
+      if (typeof callback === 'function') {
+        callback(res);
+      }
+    });
+  }
+
+  window.cekOrderBaruApotek = cekOrderBaru;
+  window.mainkanSuaraOrderApotek = function(){
+    if (currentJmlBelum > 0 && suaraAktif && !snoozeAktif) {
+      putarAlarmLoop();
+    }
   };
 
   updateTombolSuara();
+
   $(document).on('click', '#btn_suara_order_apotek', function(){
     suaraAktif = !suaraAktif;
     localStorage.setItem('apotek_ralan_suara', suaraAktif ? 'aktif' : 'mati');
     updateTombolSuara();
-    if (suaraAktif) { siapkanSuara(); mainkanSuaraOrderApotek(); }
-  });
-  $(document).one('click', function(){
-    if (suaraAktif) { siapkanSuara(); }
+    if (suaraAktif) {
+      siapkanSuara();
+      if (currentJmlBelum > 0 && !snoozeAktif) {
+        putarAlarmLoop();
+      }
+    } else {
+      hentikanAlarmLoop();
+    }
   });
 
-  function cekOrderBaru(){
-    $.get(notifBaseURL + '/apotek_ralan/ajax?show=cek_order_apotek&t=' + mlite.token, function(data){
-      var res = (typeof data === 'string') ? JSON.parse(data) : data;
-      if (!res || res.status !== 'success') { return; }
-      var kode = res.terakhir || '';
-      if (terakhirOrder === null) { terakhirOrder = kode; return; }
-      if (kode && kode > terakhirOrder) {
-        terakhirOrder = kode;
-        mainkanSuaraOrderApotek();
-        $('#apotek_ralan #display').show().load(notifBaseURL + '/apotek_ralan/display?t=' + mlite.token);
-        $('#notif').html('<div class="alert alert-warning alert-dismissible" style="margin-bottom:8px;"><button type="button" class="close" data-dismiss="alert">&times;</button><i class="fa fa-bell"></i> Ada order apotek baru masuk' + (res.waktu ? ' (' + res.waktu + ')' : '') + '.</div>');
-      } else if (kode) {
-        terakhirOrder = kode;
+  $(document).on('click', '#btn_snooze_order_apotek', function(){
+    snoozeAktif = !snoozeAktif;
+    if (snoozeAktif) {
+      hentikanAlarmLoop();
+    } else {
+      if (currentJmlBelum > 0 && suaraAktif) {
+        putarAlarmLoop();
       }
-    });
-  }
-  setInterval(cekOrderBaru, 8000);
+    }
+    renderBannerOrder();
+  });
+
+  $(document).on('click', '#btn_refresh_tabel_order', function(){
+    if ($('#apotek_ralan #display').length) {
+      $('#apotek_ralan #display').show().load(notifBaseURL + '/apotek_ralan/display?t=' + mlite.token);
+    }
+    cekOrderBaru();
+  });
+
+  $(document).one('click keydown', function(){
+    siapkanSuara();
+    if (suaraAktif && !snoozeAktif && currentJmlBelum > 0 && !isAlarmRunning) {
+      putarAlarmLoop();
+    }
+  });
+
+  setInterval(cekOrderBaru, 5000);
   cekOrderBaru();
 })();
+
 
 {if: $mlite.websocket == 'ya'}
 
@@ -1095,12 +1271,10 @@ $(document).on('click', '.table-responsive [data-toggle="dropdown"]', function (
       }
        if(output['action'] == 'permintaan_resep'){
          if(output['modul'] == 'dokter_ralan'){
-           if(typeof mainkanSuaraOrderApotek === 'function') {
+           if(typeof window.cekOrderBaruApotek === 'function') {
+             window.cekOrderBaruApotek();
+           } else if(typeof mainkanSuaraOrderApotek === 'function') {
              mainkanSuaraOrderApotek();
-           } else {
-             var audio = new Audio('{?=url()?}/assets/sound/alarm.mp3');
-             var janji = audio.play();
-             if(janji && janji.catch){ janji.catch(function(){}); }
            }
          }
        }
