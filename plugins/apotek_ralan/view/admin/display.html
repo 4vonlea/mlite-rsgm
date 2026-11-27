@@ -8,6 +8,7 @@
           <th>Nama Pasien</th>
           <th style="white-space: nowrap;">ID Kunjungan</th>
           <th style="white-space: nowrap;">Antrian</th>
+          <th style="white-space: nowrap;" title="Urutan order apotek masuk hari ini, reset tiap hari, lintas poliklinik">Order Apotek</th>
           <th style="white-space: nowrap; width: 1%;">Panggil</th>
           <th>Poliklinik</th>
           <th>Dokter</th>
@@ -31,6 +32,13 @@
           <td class="rsgm-cell-wrap"><span class="rsgm-patient-name">{?=isset_or($value.nm_pasien)?}</span></td>
           <td class="rsgm-visit-id">{?=isset_or($value.no_rawat)?}</td>
           <td style="white-space: nowrap;"><span class="rsgm-queue-pill">{?=isset_or($value.no_reg)?}</span></td>
+          <td style="white-space: nowrap; text-align: center;">
+            {if: !empty($value.apotek_no_order)}
+              <span class="label label-primary" style="font-size:12px;" title="Urutan order apotek masuk hari ini: {?=isset_or($value.apotek_no_order)?}">{?=isset_or($value.apotek_no_order)?}</span>
+            {else}
+              <span class="rsgm-cell-sub" style="display:inline;">-</span>
+            {/if}
+          </td>
           <td style="white-space: nowrap; text-align: center;">
             <button type="button"
               class="btn btn-xs btn-warning apotek-panggil"

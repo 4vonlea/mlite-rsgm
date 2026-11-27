@@ -96,6 +96,36 @@ class Admin extends AdminModule
         $stmt->execute($params);
         $rows = $stmt->fetchAll();
 
+        // Penghitung order apotek harian: tiap resep yang masuk dihitung 1, 2, 3, ...
+        // Lintas poliklinik, reset tiap hari, dan tidak terkait no_reg/JKN maupun karcis loket.
+        $apotek_order_no = [];
+        try {
+            $sql_order = "SELECT no_resep, no_rawat, DATE(tgl_peresepan) AS tgl_order
+                          FROM resep_obat
+                          WHERE status = 'ralan' AND tgl_peresepan BETWEEN ? AND ?
+                          ORDER BY tgl_order ASC, tgl_peresepan ASC, jam_peresepan ASC, no_resep ASC";
+            $stmt_order = $this->db()->pdo()->prepare($sql_order);
+            $stmt_order->execute([$tgl_kunjungan, $tgl_kunjungan_akhir]);
+            $counter_per_tgl = [];
+            foreach ($stmt_order->fetchAll(\PDO::FETCH_ASSOC) as $orow) {
+                $tgl_order = substr((string) ($orow['tgl_order'] ?? ''), 0, 10);
+                if ($tgl_order === '') {
+                    continue;
+                }
+                if (!isset($counter_per_tgl[$tgl_order])) {
+                    $counter_per_tgl[$tgl_order] = 0;
+                }
+                $counter_per_tgl[$tgl_order]++;
+                $kunci = $tgl_order . '|' . $orow['no_rawat'];
+                if (!isset($apotek_order_no[$kunci])) {
+                    $apotek_order_no[$kunci] = [];
+                }
+                $apotek_order_no[$kunci][] = $counter_per_tgl[$tgl_order];
+            }
+        } catch (\Throwable $e) {
+            error_log('[apotek_ralan] hitung order harian gagal: ' . $e->getMessage());
+        }
+
         $no_rawats = [];
         foreach ($rows as $row) {
           $no_rawats[] = $row['no_rawat'];
@@ -138,6 +168,10 @@ class Admin extends AdminModule
           $row['apotek_prioritas'] = $row['orderan'];
           $row['apotek_status'] = $st ? $st['status'] : 'Belum';
           $row['apotek_warna'] = $st ? $st['warna'] : 'default';
+
+          $tgl_baris = substr((string) ($row['tgl_registrasi'] ?? ''), 0, 10);
+          $nomor_order = $apotek_order_no[$tgl_baris . '|' . $row['no_rawat']] ?? [];
+          $row['apotek_no_order'] = !empty($nomor_order) ? implode(', ', $nomor_order) : null;
           $this->assign['list'][] = $row;
         }
         usort($this->assign['list'], function ($a, $b) {
@@ -1542,6 +1576,21 @@ class Admin extends AdminModule
           }
           echo json_encode(htmlspecialchars_array($array), true);
           break;
+         case "cek_order_apotek":
+           $tanggal = date('Y-m-d');
+           $stmt = $this->db()->pdo()->prepare("SELECT COUNT(*) AS jumlah,
+                   COALESCE(MAX(no_resep), '') AS terakhir
+                 FROM resep_obat
+                 WHERE status = 'ralan' AND DATE(tgl_peresepan) = ?");
+           $stmt->execute([$tanggal]);
+           $cek = $stmt->fetch(\PDO::FETCH_ASSOC);
+           echo json_encode([
+             'status' => 'success',
+             'jumlah' => (int) ($cek['jumlah'] ?? 0),
+             'terakhir' => $cek['terakhir'] ?? '',
+             'waktu' => date('H:i:s')
+           ]);
+           break;
         }
         exit();
     }

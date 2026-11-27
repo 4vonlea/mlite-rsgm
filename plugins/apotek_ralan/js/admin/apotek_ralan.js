@@ -1004,6 +1004,76 @@ $(document).on('click', '.table-responsive [data-toggle="dropdown"]', function (
     }
 });
 
+// ---- Notifikasi suara order apotek baru (polling + websocket) ----
+(function(){
+  if (!$('#apotek_ralan #display').length) { return; }
+
+  var notifBaseURL = mlite.url + '/' + mlite.admin;
+  var suaraAktif = localStorage.getItem('apotek_ralan_suara') !== 'mati';
+  var terakhirOrder = null;
+  var suaraSiap = false;
+
+  function updateTombolSuara(){
+    var tombol = $('#btn_suara_order_apotek');
+    if (!tombol.length) { return; }
+    tombol.html('<i class="fa fa-' + (suaraAktif ? 'volume-up' : 'volume-off') + '"></i> Suara: ' + (suaraAktif ? 'Aktif' : 'Mati'));
+    tombol.toggleClass('btn-default', suaraAktif).toggleClass('btn-link', !suaraAktif);
+  }
+
+  function siapkanSuara(){
+    if (suaraSiap) { return; }
+    try {
+      var Ctx = window.AudioContext || window.webkitAudioContext;
+      if (Ctx) { var ctx = new Ctx(); if (ctx.resume) { ctx.resume(); } }
+      var audio = new Audio('{?=url()?}/assets/sound/alarm.mp3');
+      audio.volume = 0;
+      var janji = audio.play();
+      if (janji && janji.then) { janji.then(function(){ audio.pause(); audio.currentTime = 0; }).catch(function(){}); }
+      suaraSiap = true;
+    } catch(e) {}
+  }
+
+  window.mainkanSuaraOrderApotek = function(){
+    if (!suaraAktif) { return; }
+    siapkanSuara();
+    try {
+      var audio = new Audio('{?=url()?}/assets/sound/alarm.mp3');
+      var janji = audio.play();
+      if (janji && janji.catch) { janji.catch(function(){}); }
+    } catch(e) {}
+  };
+
+  updateTombolSuara();
+  $(document).on('click', '#btn_suara_order_apotek', function(){
+    suaraAktif = !suaraAktif;
+    localStorage.setItem('apotek_ralan_suara', suaraAktif ? 'aktif' : 'mati');
+    updateTombolSuara();
+    if (suaraAktif) { siapkanSuara(); mainkanSuaraOrderApotek(); }
+  });
+  $(document).one('click', function(){
+    if (suaraAktif) { siapkanSuara(); }
+  });
+
+  function cekOrderBaru(){
+    $.get(notifBaseURL + '/apotek_ralan/ajax?show=cek_order_apotek&t=' + mlite.token, function(data){
+      var res = (typeof data === 'string') ? JSON.parse(data) : data;
+      if (!res || res.status !== 'success') { return; }
+      var kode = res.terakhir || '';
+      if (terakhirOrder === null) { terakhirOrder = kode; return; }
+      if (kode && kode > terakhirOrder) {
+        terakhirOrder = kode;
+        mainkanSuaraOrderApotek();
+        $('#apotek_ralan #display').show().load(notifBaseURL + '/apotek_ralan/display?t=' + mlite.token);
+        $('#notif').html('<div class="alert alert-warning alert-dismissible" style="margin-bottom:8px;"><button type="button" class="close" data-dismiss="alert">&times;</button><i class="fa fa-bell"></i> Ada order apotek baru masuk' + (res.waktu ? ' (' + res.waktu + ')' : '') + '.</div>');
+      } else if (kode) {
+        terakhirOrder = kode;
+      }
+    });
+  }
+  setInterval(cekOrderBaru, 8000);
+  cekOrderBaru();
+})();
+
 {if: $mlite.websocket == 'ya'}
 
   {if: $mlite.websocket_proxy != ''}
@@ -1023,12 +1093,17 @@ $(document).on('click', '.table-responsive [data-toggle="dropdown"]', function (
           $("#apotek_ralan #display").show().load(baseURL + '/apotek_ralan/display?t=' + mlite.token);
         }
       }
-      if(output['action'] == 'permintaan_resep'){
-        if(output['modul'] == 'dokter_ralan'){
-          var audio = new Audio('{?=url()?}/assets/sound/alarm.mp3');
-          audio.play();    
-        }
-      }
+       if(output['action'] == 'permintaan_resep'){
+         if(output['modul'] == 'dokter_ralan'){
+           if(typeof mainkanSuaraOrderApotek === 'function') {
+             mainkanSuaraOrderApotek();
+           } else {
+             var audio = new Audio('{?=url()?}/assets/sound/alarm.mp3');
+             var janji = audio.play();
+             if(janji && janji.catch){ janji.catch(function(){}); }
+           }
+         }
+       }
     }catch(e){
       console.log(e);
     }
