@@ -1111,18 +1111,23 @@ async function openFrista(noka) {
   });
 </script>
 <script type="text/javascript">
-  // ketika tombol antrian ditekan
+  // ketika tombol simpan SEP ditekan
   $("#form_sep").on("click","#simpan", function(event){
     var baseURL = mlite.url + '/' + mlite.admin;
     event.preventDefault();
 
-    var $btnSimpan = $('#simpan');
-    if ($btnSimpan.prop('disabled')) {
+    var $btnSimpan = $(this);
+    if (window.isSavingVclaimSep || $btnSimpan.prop('disabled')) {
       return false;
     }
+    window.isSavingVclaimSep = true;
     $btnSimpan.prop('disabled', true);
-    var originalBtnVal = $btnSimpan.val();
-    $btnSimpan.val('Memproses BPJS...');
+    var originalBtnVal = $btnSimpan.val() || 'Simpan';
+    $btnSimpan.val('⏳ Memproses BPJS...');
+
+    if (typeof window.showVclaimLoading === 'function') {
+      window.showVclaimLoading('Menyimpan & Menerbitkan SEP BPJS...', 'Sedang mengirim data ke server BPJS VClaim, mohon tunggu...');
+    }
 
     var url = baseURL + '/vclaim/savesep?t=' + mlite.token;
 
@@ -1240,17 +1245,47 @@ async function openFrista(noka) {
         prolanis_prb: prolanis_prb
       },
       success: function(result){
-        var messages = result.split(' ');
-        if (messages.length == 1) {
-          window.open(baseURL + '/vclaim/cetaksep/' + result + '?t=' + mlite.token);
+        var resText = (typeof result === 'string') ? result.trim() : '';
+        var messages = resText ? resText.split(' ') : [];
+        if (messages.length == 1 && messages[0] !== '') {
+          var noSepBaru = messages[0];
+          $('#get_no_sep').val(noSepBaru);
+          $('#no_sep_input').removeAttr('hidden');
+          var cetakUrl = baseURL + '/vclaim/cetaksep/' + encodeURIComponent(noSepBaru) + '?t=' + mlite.token;
+          if (typeof window.showVclaimInfoBanner === 'function') {
+            window.showVclaimInfoBanner(
+              'success',
+              'SEP Berhasil Diterbitkan & Tersimpan!',
+              'Nomor SEP: <strong style="font-size:15px;">' + noSepBaru + '</strong> telah berhasil disimpan ke BPJS & SIMRS. ' +
+              '<a href="' + cetakUrl + '" target="_blank" class="btn btn-xs btn-success" style="margin-left:8px;"><i class="fa fa-print"></i> Cetak SEP</a>'
+            );
+          }
+          // Refresh tabel daftar pasien di belakang layar (Oral Diagnosa / Rawat Jalan) agar badge No. SEP langsung muncul
+          if ($('#oral_diagnostic #display').length) {
+            $('#oral_diagnostic #display').load(baseURL + '/oral_diagnostic/display?t=' + mlite.token);
+          } else if ($('#rawat_jalan #display').length) {
+            $('#rawat_jalan #display').load(baseURL + '/rawat_jalan/display?t=' + mlite.token);
+          }
+          window.open(cetakUrl);
         } else if(messages.length > 1) {
-          alert(result)
+          alert(resText);
         } else {
           alert('Gagal menyimpan data ke database SIMRS');
         }
       },
+      error: function(xhr, status) {
+        if (status === 'timeout') {
+          alert('Waktu tunggu koneksi ke server BPJS habis (Timeout). Silakan coba klik Simpan kembali.');
+        } else {
+          alert('Terjadi kendala saat menghubungi server SIMRS / BPJS. Silakan coba lagi.');
+        }
+      },
       complete: function(){
+        window.isSavingVclaimSep = false;
         $btnSimpan.prop('disabled', false).val(originalBtnVal);
+        if (typeof window.hideVclaimLoading === 'function') {
+          window.hideVclaimLoading();
+        }
       }
     });
   });

@@ -443,7 +443,21 @@ class Admin extends AdminModule
       if ($flagProcedure !== '0' && $flagProcedure !== '1') {
         $flagProcedure = '0';
       }
-      $assesmentPel = '';
+      // Di BPJS VClaim 2.0, tujuanKunj='1' (Prosedur) WAJIB menyertakan kdPenunjang ('1'..'12').
+      // Jika petugas tidak memilih penunjang, berarti bukan kunjungan prosedur penunjang -> kembalikan ke Normal ('0') atau Konsul ('2')
+      if ($kdPenunjang === '') {
+        if (!empty($_POST['noskdp']) && ($_POST['jnspelayanan'] ?? '2') == '2') {
+          $tujuanKunj = '2';
+          $flagProcedure = '';
+          $assesmentPel = in_array($assesmentPel, ['1', '2', '3', '4', '5'], true) ? $assesmentPel : '5';
+        } else {
+          $tujuanKunj = '0';
+          $flagProcedure = '';
+          $assesmentPel = '';
+        }
+      } else {
+        $assesmentPel = '';
+      }
     } elseif ($tujuanKunj === '2') {
       // Konsul Dokter: flagProcedure & kdPenunjang WAJIB KOSONG, assesmentPel WAJIB '1'-'5'
       $flagProcedure = '';
@@ -527,12 +541,61 @@ class Admin extends AdminModule
       ]
     ];
 
-    $data = json_encode($data);
+    $payloadArr = $data;
+    $data = json_encode($payloadArr);
     // echo $data;
 
     $url = $this->api_url . 'SEP/2.0/insert';
     $output = BpjsService::post($url, $data, $this->consid, $this->secretkey, $this->user_key, $tStamp);
     $data = json_decode($output, true);
+
+    // Auto-Retry jika BPJS menolak karena kombinasi flagProcedure / tujuanKunj / assesmentPel / kdPenunjang
+    if ($data != null && isset($data['metaData']['code']) && $data['metaData']['code'] != 200) {
+      $errMsg = (string) ($data['metaData']['message'] ?? '');
+      if (stripos($errMsg, 'flagProcedure') !== false || stripos($errMsg, 'tujuanKunj') !== false || stripos($errMsg, 'assesmentPel') !== false || stripos($errMsg, 'kdPenunjang') !== false) {
+        // Coba kombinasi 1: jika ada SKDP rawat jalan -> Konsul Kontrol (tujuanKunj=2, flagProcedure='', assesmentPel=5), jika tidak -> Normal (tujuanKunj=0, flagProcedure='')
+        $hasSkdp = !empty(trim((string)($_POST['noskdp'] ?? ''))) && ($_POST['jnspelayanan'] ?? '2') == '2';
+        $retryCombinations = $hasSkdp
+          ? [
+              ['tujuanKunj' => '2', 'flagProcedure' => '', 'kdPenunjang' => '', 'assesmentPel' => '5'],
+              ['tujuanKunj' => '0', 'flagProcedure' => '', 'kdPenunjang' => '', 'assesmentPel' => ''],
+            ]
+          : [
+              ['tujuanKunj' => '0', 'flagProcedure' => '', 'kdPenunjang' => '', 'assesmentPel' => ''],
+              ['tujuanKunj' => '2', 'flagProcedure' => '', 'kdPenunjang' => '', 'assesmentPel' => '5'],
+            ];
+
+        foreach ($retryCombinations as $comb) {
+          if ($comb['tujuanKunj'] === $_POST['tujuanKunj'] && $comb['flagProcedure'] === $_POST['flagProcedure'] && $comb['assesmentPel'] === $_POST['assesmentPel']) {
+            continue;
+          }
+          $_POST['tujuanKunj'] = $comb['tujuanKunj'];
+          $_POST['flagProcedure'] = $comb['flagProcedure'];
+          $_POST['kdPenunjang'] = $comb['kdPenunjang'];
+          $_POST['assesmentPel'] = $comb['assesmentPel'];
+
+          $payloadArr['request']['t_sep']['tujuanKunj'] = $comb['tujuanKunj'];
+          $payloadArr['request']['t_sep']['flagProcedure'] = $comb['flagProcedure'];
+          $payloadArr['request']['t_sep']['kdPenunjang'] = $comb['kdPenunjang'];
+          $payloadArr['request']['t_sep']['assesmentPel'] = $comb['assesmentPel'];
+
+          $tStamp = strval(time());
+          $key = $this->consid . $this->secretkey . $tStamp;
+          $retryOutput = BpjsService::post($url, json_encode($payloadArr), $this->consid, $this->secretkey, $this->user_key, $tStamp);
+          $retryData = json_decode($retryOutput, true);
+          if ($retryData != null && isset($retryData['metaData']['code'])) {
+            $data = $retryData;
+            if ($data['metaData']['code'] == 200) {
+              break;
+            }
+            $newMsg = (string) ($data['metaData']['message'] ?? '');
+            if (stripos($newMsg, 'flagProcedure') === false && stripos($newMsg, 'tujuanKunj') === false && stripos($newMsg, 'assesmentPel') === false) {
+              break;
+            }
+          }
+        }
+      }
+    }
 
     if ($data == NULL) {
 
@@ -629,8 +692,8 @@ class Admin extends AdminModule
         $existingNoSep = $matches[1];
       }
 
-      // Jika pesan BPJS menyebutkan sudah pernah dibuatkan SEP namun no SEP tidak tertulis di teks
-      if (!$existingNoSep && (stripos($msg, 'sudah pernah') !== false || stripos($msg, 'dalam proses pelayanan') !== false)) {
+      // Jika pesan BPJS menyebutkan sudah pernah dibuatkan SEP, dalam proses pelayanan, atau gagal validasi namun SEP sudah terbentuk di BPJS hari ini
+      if (!$existingNoSep && (stripos($msg, 'sudah pernah') !== false || stripos($msg, 'dalam proses pelayanan') !== false || stripos($msg, 'flagProcedure') !== false || stripos($msg, 'tujuanKunj') !== false)) {
         $existingNoSep = $this->_findRecentSepFromBpjs($_POST['no_kartu'], $_POST['tglsep']);
       }
 

@@ -80,6 +80,10 @@ $("#form").on("click","#no_reg", function(event){
 
 $("#form").on("click", "#simpan", function(event){
   var baseURL = mlite.url + '/' + mlite.admin;
+  event.preventDefault();
+  var $btn = $(this);
+  if ($btn.prop('disabled')) return false;
+
   var no_rawat = $('input:text[name=no_rawat]').val();
   var no_reg = $('input:text[name=no_reg]').val();
   var tgl_registrasi = $('#tgl_registrasi').val();
@@ -93,15 +97,19 @@ $("#form").on("click", "#simpan", function(event){
 
   if(no_rawat == '') {
     alert('Nomor rawat masih kosong!')
+    return false;
   }
 
   if(no_reg == '') {
     alert('Nomor antrian masih kosong!')
+    return false;
   }
 
   if(no_rkm_medis == '') {
     alert('Data pasien rawat masih kosong! Silahkan pilih pasien.')
   } else {
+    var origHtml = $btn.html();
+    $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Menyimpan...');
     $.post(url,{
       no_rawat: no_rawat,
       no_reg: no_reg,
@@ -139,9 +147,10 @@ $("#form").on("click", "#simpan", function(event){
         "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
         "</div>").show();
       }
+    }).always(function(){
+      $btn.prop('disabled', false).html(origHtml);
     });
   }
-  event.preventDefault();
 });
 
 $("#display").on("click",".antrian", function(event){
@@ -303,6 +312,8 @@ $(document).on("click", ".sep", function(event){
   }
 
   // 3. Reset form SEP terlebih dahulu agar data pasien sebelumnya bersih total
+  window.isSavingVclaimSep = false;
+  $('#form_sep #simpan').prop('disabled', false).val('Simpan');
   if (typeof window.resetFormSep === 'function') {
     window.resetFormSep();
   }
@@ -409,6 +420,12 @@ $(document).on("click", ".sep", function(event){
         $('input:text[name=sep_eksekutif_nama]').val("Tidak");
         $('input:text[name=sep_kunjungan_kode]').val("0");
         $('input:text[name=sep_kunjungan_nama]').val("Normal");
+        $('input:text[name=sep_prosedur_kode]').val("");
+        $('input:text[name=sep_prosedur_nama]').val("");
+        $('input:text[name=sep_penunjang_kode]').val("");
+        $('input:text[name=sep_penunjang_nama]').val("");
+        $('input:text[name=sep_assesment_kode]').val("");
+        $('input:text[name=sep_assesment_nama]').val("");
         $('input:text[name=sep_cob_kode]').val("0");
         $('input:text[name=sep_cob_nama]').val("Tidak");
         $('input:text[name=sep_katarak_kode]').val("0");
@@ -597,6 +614,10 @@ $("#form_soap").on("click", "#simpan_soap", function(event){
   {else}
     var baseURL = mlite.url + '/' + mlite.admin;
     event.preventDefault();
+    var $btnSoap = $(this);
+    if ($btnSoap.prop('disabled')) return false;
+    var origSoapHtml = $btnSoap.html();
+    $btnSoap.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Menyimpan...');
 
     var no_rawat        = $('input:text[name=no_rawat]').val();
     var tgl_perawatan   = $('#form_soap input[name=tgl_perawatan]').val();
@@ -683,6 +704,8 @@ $("#form_soap").on("click", "#simpan_soap", function(event){
       "Data soap telah disimpan!"+
       "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>"+
       "</div>").show();
+    }).always(function() {
+      $btnSoap.prop('disabled', false).html(origSoapHtml);
     });
   {/if}
 });
@@ -1148,6 +1171,11 @@ $("#form_rincian").on("click", "#simpan_rincian", function(event){
     }
   }
 
+  var $btnRincian = $(this);
+  if ($btnRincian.prop('disabled')) return false;
+  var origRincianHtml = $btnRincian.html();
+  $btnRincian.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Menyimpan...');
+
   var url = baseURL + '/oral_diagnostic/savedetail?t=' + mlite.token;
   $.post(url, {no_rawat : no_rawat,
   kd_jenis_prw   : kd_jenis_prw,
@@ -1200,6 +1228,8 @@ $("#form_rincian").on("click", "#simpan_rincian", function(event){
     "</div>").show();
   }).fail(function(xhr) {
     bootbox.alert('Gagal menyimpan rincian tindakan (' + xhr.status + ').');
+  }).always(function() {
+    $btnRincian.prop('disabled', false).html(origRincianHtml);
   });
 });
 
