@@ -1971,9 +1971,36 @@ class Site extends SiteModule
                 $status_resep = 'Disiapkan';
             }
 
-            $noantrian = !empty($antrian_loket_map[$r['no_rkm_medis']]) 
-                ? 'F-' . $antrian_loket_map[$r['no_rkm_medis']] 
-                : (!empty($r['no_reg']) ? $r['no_reg'] : '-');
+            // Ekstrak nomor antrean lokal dari no_resep (mulai dari 1: 001, 002, 003, ...)
+            // Menghindari duplikat atau loncatan nomor antrean poliklinik / JKN Mobile
+            $noantrian_lokal = '';
+            if (!empty($r['no_resep']) && $r['no_resep'] != '-') {
+                // Standar SIMRS Khanza/mLITE: YYYYMMDDXXXX (misal: 202611270001 -> 1 -> '001')
+                if (strlen($r['no_resep']) >= 9 && is_numeric($r['no_resep'])) {
+                    $seq = (int)substr($r['no_resep'], 8);
+                    if ($seq > 0) {
+                        $noantrian_lokal = sprintf('%03d', $seq);
+                    }
+                }
+                if (empty($noantrian_lokal) && preg_match('/(\d{1,4})$/', $r['no_resep'], $m)) {
+                    $seq = (int)$m[1];
+                    if ($seq > 0) {
+                        $noantrian_lokal = sprintf('%03d', $seq);
+                    }
+                }
+            }
+
+            // Prioritas penomoran antrean di display apotek:
+            // 1. Nomor urut resep lokal farmasi (001, 002, 003, ...)
+            // 2. Karcis loket mandiri jika ada tiket antrian apotek (F-001, ...)
+            // 3. Fallback no_reg jika tidak ada nomor resep
+            if (!empty($noantrian_lokal)) {
+                $noantrian = $noantrian_lokal;
+            } elseif (!empty($antrian_loket_map[$r['no_rkm_medis']])) {
+                $noantrian = 'F-' . $antrian_loket_map[$r['no_rkm_medis']];
+            } else {
+                $noantrian = !empty($r['no_reg']) ? $r['no_reg'] : '-';
+            }
 
             $rows[] = [
                 'no_resep'       => $r['no_resep'],
@@ -3618,7 +3645,7 @@ class Site extends SiteModule
                 $badgeText = 'Selesai Dilayani';
               } elseif ($row['status_resep'] == 'Disiapkan') {
                 $badgeBg = '#f59e0b'; // kuning
-                $badgeText = 'Siap Ambil';
+                $badgeText = 'Sedang Disiapkan';
               }
               
               $jenisBadge = ($row['jenis_resep'] == 'Racikan') 

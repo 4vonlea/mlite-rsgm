@@ -2534,6 +2534,7 @@ class Admin extends AdminModule
         $kd_dokter   = trim($_POST['kd_dokter']   ?? '');
         $no_reg      = trim($_POST['no_reg']      ?? '');
         $unit        = trim($_POST['unit']        ?? 'Apotek Rawat Jalan');
+        $no_antrian  = trim($_POST['no_antrian']  ?? '');
 
         $now_time = date('H:i:s');
         $tgl      = date('Y-m-d');
@@ -2547,9 +2548,46 @@ class Admin extends AdminModule
             }
         }
 
+        // Tentukan nomor panggil antrean:
+        // Gunakan nomor urut lokal resep apotek hari ini (001, 002, ...) agar selaras dengan TV display apotek
+        $nomor_panggil = '';
+        if (!empty($no_antrian)) {
+            $nomor_panggil = $no_antrian;
+        } else {
+            // Ambil no_resep untuk no_rawat ini
+            if (!empty($no_rawat)) {
+                $resep = $this->db('resep_obat')
+                    ->where('no_rawat', $no_rawat)
+                    ->where(function($q) use ($tgl) {
+                        $q->where('tgl_peresepan', $tgl)
+                          ->orWhere('tgl_perawatan', $tgl)
+                          ->orWhere('tgl_penyerahan', $tgl);
+                    })
+                    ->desc('no_resep')
+                    ->oneArray();
+                if ($resep && !empty($resep['no_resep'])) {
+                    if (strlen($resep['no_resep']) >= 9 && is_numeric($resep['no_resep'])) {
+                        $seq = (int)substr($resep['no_resep'], 8);
+                        if ($seq > 0) {
+                            $nomor_panggil = sprintf('%03d', $seq);
+                        }
+                    }
+                    if (empty($nomor_panggil) && preg_match('/(\d{1,4})$/', $resep['no_resep'], $m)) {
+                        $seq = (int)$m[1];
+                        if ($seq > 0) {
+                            $nomor_panggil = sprintf('%03d', $seq);
+                        }
+                    }
+                }
+            }
+        }
+        if (empty($nomor_panggil)) {
+            $nomor_panggil = !empty($no_reg) ? $no_reg : '-';
+        }
+
         // 1. Update display TV Apotek (field di mlite_settings module 'anjungan')
         $display_fields = [
-            'panggil_apotek_nomor'    => $no_reg,
+            'panggil_apotek_nomor'    => $nomor_panggil,
             'panggil_apotek_nama'     => $nm_pasien,
             'panggil_apotek_unit'     => $unit,
             'panggil_apotek_lokasi'   => $nm_poli,
