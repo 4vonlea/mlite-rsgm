@@ -3559,13 +3559,46 @@ class Admin extends AdminModule
     }
 
     /**
+     * Resolusi kodekelas BPJS Aplicare dari kodekelas atau namakelas (misal "KELAS I" -> "KL1").
+     */
+    private function _resolveKodeKelasBpjs(string $kodekelas = '', string $namakelas = ''): string
+    {
+        $kk = strtoupper(trim($kodekelas));
+        $map = [
+            'KELAS I'       => 'KL1',
+            'KELAS 1'       => 'KL1',
+            'KELAS II'      => 'KL2',
+            'KELAS 2'       => 'KL2',
+            'KELAS III'     => 'KL3',
+            'KELAS 3'       => 'KL3',
+            'VIP'           => 'VIP',
+            'VVIP'          => 'VVP',
+            'UTAMA'         => 'UTM',
+            'ICU'           => 'ICU',
+            'ICCU'          => 'ICC',
+            'NICU'          => 'NIC',
+            'PICU'          => 'PIC',
+            'HCU'           => 'HCU',
+            'IGD'           => 'IGD',
+            'RUANG ISOLASI' => 'ISO',
+            'ISOLASI'       => 'ISO',
+            'BERSALIN'      => 'BSL',
+        ];
+        if (!empty($kk)) {
+            return $map[$kk] ?? $kk;
+        }
+        $nk = strtoupper(trim($namakelas));
+        return $map[$nk] ?? 'KL3';
+    }
+
+    /**
      * Hapus data tempat tidur dari BPJS Aplicare via endpoint bed/delete.
      */
     private function _deleteBedFromAplicare(string $base_url, string $kode_ppk, string $koderuang, string $kodekelas, string $consid, string $secretkey, string $user_key, $ch = null): array
     {
         $url_delete = $base_url . '/aplicaresws/rest/bed/delete/' . $kode_ppk;
         $payload = json_encode([
-            'kodekelas' => $kodekelas,
+            'kodekelas' => trim($kodekelas),
             'koderuang' => $koderuang,
         ]);
         $resp = $this->_callAplicare('POST', $url_delete, $payload, $consid, $secretkey, $user_key, 12, $ch);
@@ -3573,9 +3606,34 @@ class Admin extends AdminModule
         $code = $respArr['metadata']['code'] ?? null;
         $msg  = $respArr['metadata']['message'] ?? '';
         $isSuccess = ($code == 200 || $code == 1 || stripos($msg, 'berhasil') !== false || stripos($msg, 'OK') !== false || stripos($msg, 'sukses') !== false);
+
+        // Retry sekali jika timeout atau jaringan lambat
+        if (!$isSuccess && empty($code)) {
+            usleep(300000);
+            $resp = $this->_callAplicare('POST', $url_delete, $payload, $consid, $secretkey, $user_key, 12, $ch);
+            $respArr = is_string($resp) ? json_decode($resp, true) : (array) $resp;
+            $code = $respArr['metadata']['code'] ?? null;
+            $msg  = $respArr['metadata']['message'] ?? '';
+            $isSuccess = ($code == 200 || $code == 1 || stripos($msg, 'berhasil') !== false || stripos($msg, 'OK') !== false || stripos($msg, 'sukses') !== false);
+        }
+
+        // Jika koderuang mengandung spasi tepi dan belum berhasil, coba versi trim
+        if (!$isSuccess && trim($koderuang) !== $koderuang) {
+            usleep(200000);
+            $payloadTrim = json_encode([
+                'kodekelas' => trim($kodekelas),
+                'koderuang' => trim($koderuang),
+            ]);
+            $resp = $this->_callAplicare('POST', $url_delete, $payloadTrim, $consid, $secretkey, $user_key, 12, $ch);
+            $respArr = is_string($resp) ? json_decode($resp, true) : (array) $resp;
+            $code = $respArr['metadata']['code'] ?? null;
+            $msg  = $respArr['metadata']['message'] ?? '';
+            $isSuccess = ($code == 200 || $code == 1 || stripos($msg, 'berhasil') !== false || stripos($msg, 'OK') !== false || stripos($msg, 'sukses') !== false);
+        }
+
         return [
             'ok'    => $isSuccess,
-            'pesan' => !empty($msg) ? $msg : ($isSuccess ? 'Berhasil dihapus dari BPJS' : 'Gagal menghapus dari BPJS')
+            'pesan' => !empty($msg) ? $msg : ($isSuccess ? 'Berhasil dihapus dari BPJS' : 'Server BPJS tidak merespons (Timeout)')
         ];
     }
 
@@ -3837,11 +3895,15 @@ class Admin extends AdminModule
                                 } else {
                                     // Kamar lama / duplikat yang ada di server BPJS yang bukan 7 ruangan resmi RSGM
                                     // Pisahkan ke extra_bpjs_beds agar TIDAK merusak total kapasitas RSGM (tetap tepat 14 tempat tidur)
+                                    $resolvedKelas = $this->_resolveKodeKelasBpjs(
+                                        (string) ($item['kodekelas'] ?? ''),
+                                        (string) ($item['namakelas'] ?? '')
+                                    );
                                     $extra_bpjs_beds[] = [
                                         'koderuang'  => $kr,
                                         'namaruang'  => $item['namaruang'] ?? $kr,
                                         'kelas'      => $item['namakelas'] ?? ($item['kodekelas'] ?? 'Kelas 3'),
-                                        'kodekelas'  => $item['kodekelas'] ?? 'KL3',
+                                        'kodekelas'  => $resolvedKelas,
                                         'kapasitas'  => (int) ($item['kapasitas'] ?? 1),
                                         'tersedia'   => (int) ($item['tersedia'] ?? 1),
                                         'lastupdate' => $item['lastupdate'] ?? null,
@@ -4165,9 +4227,41 @@ class Admin extends AdminModule
                 exit();
             }
 
+            $master_beds = $this->_getMasterBpjsBeds();
             $rooms = !empty($_POST['rooms']) && is_array($_POST['rooms']) ? $_POST['rooms'] : [];
+
+            // Fallback: jika rooms tidak terkirim dari frontend, tarik otomatis daftar ruangan ekstra dari BPJS Aplicare
             if (empty($rooms)) {
-                echo json_encode(['status' => 'error', 'message' => 'Tidak ada data ruangan yang dikirim untuk dibersihkan.']);
+                $url_read = $base_url . '/aplicaresws/rest/bed/read/' . $kode_ppk . '/1/100';
+                $output = $this->_callAplicare('GET', $url_read, null, $consid, $secretkey, $user_key, 10);
+                if ($output) {
+                    $json = json_decode($output, true);
+                    if (!empty($json['response']['list']) && is_array($json['response']['list'])) {
+                        foreach ($json['response']['list'] as $item) {
+                            $kr = $item['koderuang'] ?? '';
+                            if (!$kr) continue;
+                            $isMaster = false;
+                            foreach ($master_beds as $mk => $mv) {
+                                if (strcasecmp($mk, $kr) === 0) {
+                                    $isMaster = true;
+                                    break;
+                                }
+                            }
+                            if (!$isMaster) {
+                                $rooms[] = [
+                                    'koderuang' => $kr,
+                                    'namaruang' => $item['namaruang'] ?? $kr,
+                                    'kelas'     => $item['namakelas'] ?? '',
+                                    'kodekelas' => $this->_resolveKodeKelasBpjs((string)($item['kodekelas'] ?? ''), (string)($item['namakelas'] ?? '')),
+                                ];
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (empty($rooms)) {
+                echo json_encode(['status' => 'error', 'message' => 'Tidak ada data ruangan lama yang ditemukan untuk dibersihkan.']);
                 exit();
             }
 
@@ -4175,16 +4269,22 @@ class Admin extends AdminModule
             $sukses = 0;
             $gagal = 0;
             $details = [];
-            $master_beds = $this->_getMasterBpjsBeds();
 
             try {
                 foreach ($rooms as $r) {
-                    $koderuang = trim($r['koderuang'] ?? '');
-                    $kodekelas = trim($r['kodekelas'] ?? '');
-                    if (empty($koderuang) || empty($kodekelas)) continue;
+                    $koderuang = (string) ($r['koderuang'] ?? '');
+                    $kodekelas = $this->_resolveKodeKelasBpjs((string) ($r['kodekelas'] ?? ''), (string) ($r['kelas'] ?? ''));
+                    if (trim($koderuang) === '' || empty($kodekelas)) continue;
 
                     // Proteksi keamanan: jangan pernah hapus salah satu dari 7 master ruang resmi RSGM!
-                    if (isset($master_beds[$koderuang])) {
+                    $isOfficial = false;
+                    foreach ($master_beds as $mk => $mv) {
+                        if (strcasecmp($mk, $koderuang) === 0) {
+                            $isOfficial = true;
+                            break;
+                        }
+                    }
+                    if ($isOfficial) {
                         continue;
                     }
 
@@ -4197,22 +4297,28 @@ class Admin extends AdminModule
                     $details[] = [
                         'koderuang' => $koderuang,
                         'namaruang' => $r['namaruang'] ?? $koderuang,
+                        'kodekelas' => $kodekelas,
                         'ok'        => $res['ok'],
                         'pesan'     => $res['pesan']
                     ];
-                    usleep(150000);
+                    usleep(200000);
                 }
             } finally {
                 if ($ch) curl_close($ch);
             }
 
+            $status = ($gagal === 0 && $sukses > 0) ? 'success' : (($sukses > 0) ? 'partial' : 'error');
             echo json_encode([
-                'status'  => 'success',
+                'status'  => $status,
                 'sukses'  => $sukses,
                 'gagal'   => $gagal,
                 'details' => $details,
-                'message' => "Proses pembersihan selesai. {$sukses} ruangan lama berhasil dihapus dari server BPJS."
-            ]);
+                'message' => $status === 'success'
+                    ? "Proses pembersihan selesai. Semua {$sukses} ruangan lama berhasil dihapus dari server BPJS Aplicare."
+                    : ($status === 'partial'
+                        ? "{$sukses} ruangan berhasil dihapus, {$gagal} ruangan gagal dihapus (silakan klik Bersihkan sekali lagi)."
+                        : "Gagal menghapus ruangan lama dari BPJS Aplicare.")
+            ], JSON_UNESCAPED_UNICODE);
         } catch (\Throwable $e) {
             echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
         }

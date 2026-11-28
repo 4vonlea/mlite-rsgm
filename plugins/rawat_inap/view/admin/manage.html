@@ -122,6 +122,7 @@
 
    // Cache data awal dari SIMRS & BPJS
    var rawSimrsBeds = [];
+   var rawExtraBeds = [];
 
    function loadBedBpjsModal() {
      $('#bedBpjsModalBody').html('<div class="text-center" style="padding:40px;"><i class="fa fa-spinner fa-spin fa-2x" style="color:#1a7abf;"></i><br><br><strong>Membaca data kamar SIMRS & status BPJS Aplicare...</strong><br><small class="text-muted">Mengambil status ketersediaan tempat tidur terkini</small></div>');
@@ -277,8 +278,64 @@
    // ---- Tombol Reset ke hitungan asli SIMRS ----
    $(document).on('click', '#btn_reset_bed_simrs', function() {
      if (rawSimrsBeds && rawSimrsBeds.length > 0) {
-       renderBedPreview({ status: 'success', beds: rawSimrsBeds, bpjs_connected: true });
+       renderBedPreview({ status: 'success', beds: rawSimrsBeds, extra_bpjs_beds: rawExtraBeds, bpjs_connected: true });
      }
+   });
+
+   // ---- Tombol Bersihkan Ruangan Lama / Duplikat dari BPJS Aplicare ----
+   $(document).on('click', '#btn_bersihkan_bed_lama', function(e) {
+     e.preventDefault();
+     var btn = $(this);
+     var jml = (rawExtraBeds && rawExtraBeds.length > 0) ? rawExtraBeds.length : '';
+     btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Menghapus ' + jml + ' ruangan dari BPJS...');
+
+     var url = mlite.url + '/' + mlite.admin + '/rawat_inap/hapusBedDuplikatBpjs?t=' + mlite.token;
+     $.ajax({
+       url: url,
+       type: 'POST',
+       data: { rooms: rawExtraBeds },
+       dataType: 'json',
+       timeout: 45000,
+       success: function(res) {
+         if (res && res.status === 'success') {
+           $('#alert_extra_beds').html(
+             '<div style="color:#2e7d32;font-weight:bold;"><i class="fa fa-check-circle fa-lg"></i> ' + (res.message || 'Ruangan lama berhasil dibersihkan dari server BPJS Aplicare.') + '</div>' +
+             '<div style="margin-top:4px;font-size:11px;color:#555;"><i class="fa fa-refresh fa-spin"></i> Memuat ulang data terbaru dari BPJS Aplicare...</div>'
+           ).css({ background: '#f0faf3', borderColor: '#27ae60' });
+           setTimeout(function() {
+             loadBedBpjsModal();
+           }, 1200);
+         } else {
+           var detailHtml = '';
+           if (res && res.details && res.details.length > 0) {
+             detailHtml = '<ul style="margin:6px 0 0 18px;padding:0;font-size:11px;">';
+             res.details.forEach(function(d) {
+               var st = d.ok ? '<span style="color:#27ae60;font-weight:bold;">✔ Terhapus</span>' : '<span style="color:#c0392b;font-weight:bold;">✘ Gagal (' + (d.pesan || 'Timeout') + ')</span>';
+               detailHtml += '<li><strong>' + d.namaruang + '</strong> (<code>' + d.koderuang + '</code>): ' + st + '</li>';
+             });
+             detailHtml += '</ul>';
+           }
+           $('#alert_extra_beds').html(
+             '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">' +
+             '  <div style="flex:1;">' +
+             '    <div style="font-weight:bold;color:#b94a48;"><i class="fa fa-info-circle"></i> ' + ((res && res.message) ? res.message : 'Sebagian ruangan belum terhapus karena gangguan koneksi BPJS.') + '</div>' +
+             detailHtml +
+             '  </div>' +
+             '  <div>' +
+             '    <button type="button" class="btn btn-sm btn-primary" onclick="loadBedBpjsModal()"><i class="fa fa-refresh"></i> Muat Ulang & Cek Lagi</button>' +
+             '  </div>' +
+             '</div>'
+           );
+         }
+       },
+       error: function(xhr, status) {
+         btn.prop('disabled', false).html('<i class="fa fa-trash"></i> Coba Bersihkan Lagi');
+         var errText = status === 'timeout'
+           ? 'Koneksi ke server BPJS membutuhkan waktu lama (Timeout). Sebagian ruangan mungkin sudah terhapus, silakan klik <strong>"Tarik dari BPJS & SIMRS"</strong> untuk mengecek.'
+           : 'Gagal menghubungi server SIMRS. Silakan coba lagi.';
+         $('#alert_extra_beds').append('<div style="margin-top:8px;color:#c0392b;font-weight:bold;"><i class="fa fa-exclamation-circle"></i> ' + errText + '</div>');
+       }
+     });
    });
 
    function updateSummaryMetrics() {
